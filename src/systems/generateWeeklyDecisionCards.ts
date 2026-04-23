@@ -1,5 +1,5 @@
 import { WEEKLY_DECISION_POOL } from "@/data/decisionCards";
-import { GAME_BALANCE } from "@/data/gameBalance";
+import { GAME_BALANCE } from "@/data/balance";
 import { pickUniqueItems } from "@/lib/seededRandom";
 import type { Season, WeeklyDecision } from "@/types/game";
 

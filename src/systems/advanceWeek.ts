@@ -1,4 +1,4 @@
-import { GAME_BALANCE, getSeasonForWeek } from "@/data/gameBalance";
+import { GAME_BALANCE, getSeasonForWeek } from "@/data/balance";
 import type { GameStoreState } from "@/types/game";
 
 export function advanceWeekState(gameState: GameStoreState): GameStoreState {

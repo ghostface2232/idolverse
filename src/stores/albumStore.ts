@@ -6,8 +6,8 @@ const initialAlbum: Album = {
   id: "album-aurora-001",
   title: "First Light",
   concept: {
-    genre: "dance",
-    mood: "fresh",
+    genre: "dancePop",
+    mood: "refreshing",
   },
   titleTrackCandidates: [
     {

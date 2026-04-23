@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { GAME_BALANCE } from "@/data/gameBalance";
+import { GAME_BALANCE } from "@/data/balance";
 import { BootScene } from "@/game/scenes/BootScene";
 import { SimulationScene } from "@/game/scenes/SimulationScene";
 
@@ -49,4 +49,3 @@ export function PhaserGame({ className = "" }: PhaserGameProps) {
     />
   );
 }
-

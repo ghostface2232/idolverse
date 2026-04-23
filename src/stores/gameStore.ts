@@ -1,6 +1,6 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-import { GAME_BALANCE, getSeasonForWeek } from "@/data/gameBalance";
+import { GAME_BALANCE, getSeasonForWeek } from "@/data/balance";
 import { INVESTOR_CONDITIONS } from "@/data/investors";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import type { GameStore, GameStoreState } from "@/types/game";

@@ -23,26 +23,26 @@ export type Position =
   | "variety"
   | "producing";
 export type Genre =
-  | "pop"
-  | "dance"
+  | "dancePop"
+  | "ballad"
   | "hiphop"
   | "rnb"
-  | "edm"
-  | "ballad"
-  | "cityPop"
   | "rock"
-  | "acoustic";
+  | "edm"
+  | "cityPop"
+  | "trot";
 export type ConceptMood =
-  | "fresh"
-  | "cute"
+  | "refreshing"
   | "dark"
   | "retro"
   | "girlCrush"
-  | "emotional"
-  | "artsy"
+  | "cute"
+  | "sophisticated"
+  | "powerful"
+  | "dreamy"
   | "y2k"
-  | "summer"
-  | "winter";
+  | "sexy";
+export type ConceptSynergyGrade = "S" | "A" | "B" | "C" | "D";
 export type Nationality =
   | "korean"
   | "japanese"
@@ -86,13 +86,102 @@ export type GameEventType =
   | "scandal"
   | "system";
 export type NotificationType = "info" | "success" | "warning" | "error";
+export type TrainingIntensity = "normal" | "hard" | "extreme";
+export type InvestorEffectSeverity = "low" | "medium" | "high" | "critical";
+export type InvestorPenaltyEffectType =
+  | "marketingCut"
+  | "followUpRefusal"
+  | "cashRecall"
+  | "broadcastDisadvantage"
+  | "collaborationBlock"
+  | "managementInterference"
+  | "equityPressure"
+  | "contractPenalty"
+  | "reputationDrop"
+  | "styleSupportCut";
+export type InvestorBonusEffectType =
+  | "platformBoost"
+  | "contentSubsidy"
+  | "broadcastPriority"
+  | "collaborationOpportunity"
+  | "extraFundingRound"
+  | "beautyCollab"
+  | "globalBeautySupport"
+  | "fashionWeekInvite"
+  | "stylistSupport";
+export type RandomEventTone = "positive" | "negative" | "neutral";
+export type PromotionRequirementPhase =
+  | "training+"
+  | "debut+"
+  | "growth+"
+  | "peak";
+export type PromotionActivityId =
+  | "musicShow"
+  | "varietyShow"
+  | "youtubeContent"
+  | "fanSign"
+  | "liveBroadcast"
+  | "fanCafeEvent"
+  | "smallConcert"
+  | "midConcert"
+  | "largeConcert"
+  | "domeConcert";
+export type AwardShowId = "mma" | "mama" | "goldenDisk";
+export type AwardCategory = "rookie" | "bonsang" | "daesang" | "popularity";
+export type CompetitorTemplateId =
+  | "traditionalMajor"
+  | "viralCharacter"
+  | "performanceMonster"
+  | "globalSpecialist"
+  | "survivalOrigin";
+export type InterludeTemplateId =
+  | "selfContent"
+  | "fanManagement"
+  | "individualSchedule"
+  | "liveBroadcast"
+  | "controversyIgnore"
+  | "controversyClarify"
+  | "controversyApologize"
+  | "vacation";
+export type TraineeStatKey =
+  | "visual"
+  | "vocal"
+  | "dance"
+  | "charm"
+  | "stamina"
+  | "diligence"
+  | "mental";
+
+export interface RangeValue {
+  min: number;
+  max: number;
+}
 
 export interface InvestorCondition {
   id: string;
   metric: string;
-  target: string;
+  target: number | string;
   deadlineWeeks: number;
-  penalty: string;
+  description: string;
+  penalty?: string;
+}
+
+export interface InvestorEffect<TType extends string = string> {
+  type: TType;
+  severity?: InvestorEffectSeverity;
+  description: string;
+}
+
+export interface InvestorCompany {
+  id: string;
+  name: string;
+  type: InvestorType;
+  description: string;
+  fundAmount: number;
+  conditions: InvestorCondition[];
+  penaltyEffects: InvestorEffect<InvestorPenaltyEffectType>[];
+  bonusEffects: InvestorEffect<InvestorBonusEffectType>[];
+  personality: string;
 }
 
 export interface Notification {
@@ -261,6 +350,95 @@ export interface InterludeActivity {
   effects: Record<string, number>;
 }
 
+export interface RandomEventCondition {
+  phase?: GamePhase | GamePhase[];
+  minWeek?: number;
+  maxWeek?: number;
+  minFame?: number;
+  minPublic?: number;
+  minFandom?: number;
+  minGlobal?: number;
+  minIndustry?: number;
+  maxSatisfaction?: number;
+  minStress?: number;
+  requiresSecurity?: boolean;
+  requiresVacation?: boolean;
+  lowChemistryPair?: boolean;
+}
+
+export interface RandomEventTemplate {
+  id: string;
+  type: RandomEventTone;
+  title: string;
+  description: string;
+  probability: number;
+  conditions: RandomEventCondition;
+  effects: Record<string, number>;
+  choices?: EventChoice[];
+}
+
+export interface PromotionActivity {
+  id: PromotionActivityId;
+  name: string;
+  cost: number;
+  duration: number;
+  successFactors?: Array<TraineeStatKey | "teamwork" | "visualStyle">;
+  effects: Record<string, number>;
+  requirements: {
+    phase?: PromotionRequirementPhase;
+    minPublic?: number;
+    minFandom?: number;
+    minIndustry?: number;
+  };
+  sideEffect?: string;
+  income?: number;
+}
+
+export interface AwardShow {
+  id: AwardShowId;
+  name: string;
+  categories: AwardCategory[];
+  weights: {
+    digital: number;
+    albumSales: number;
+    votes: number;
+    judges: number;
+  };
+  description: string;
+}
+
+export interface CompetitorTemplate {
+  id: CompetitorTemplateId;
+  name: string;
+  type: CompetitorType;
+  description: string;
+  statRanges: Partial<Record<TraineeStatKey | "marketing" | "global", RangeValue>>;
+  fandomRange: RangeValue;
+  publicRange: RangeValue;
+  globalRange: RangeValue;
+  industryRange: RangeValue;
+  comebackIntervalWeeks?: RangeValue;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface EventCompetitorTemplate extends CompetitorTemplate {
+  triggerType: EventRivalTriggerType;
+  durationWeeks: RangeValue;
+  intensityRange: RangeValue;
+}
+
+export interface InterludeTemplate {
+  id: InterludeTemplateId;
+  name: string;
+  cost?: number;
+  duration: number | RangeValue;
+  effects: Record<string, number>;
+  risks?: string[];
+  successFactors?: TraineeStatKey[];
+  targetMemberStatBonus?: Partial<Record<TraineeStatKey, number>>;
+}
+
 export interface GameStoreState {
   currentWeek: number;
   currentSeason: Season;
@@ -296,7 +474,9 @@ export interface TraineeStoreActions {
   updateStats: (traineeId: string, stats: Partial<Trainee["stats"]>) => void;
   updateCondition: (
     traineeId: string,
-    updates: Partial<Pick<Trainee, "condition" | "stress" | "mood" | "injuryWeeks" | "currentActivity">>,
+    updates: Partial<
+      Pick<Trainee, "condition" | "stress" | "mood" | "injuryWeeks" | "currentActivity">
+    >,
   ) => void;
   assignPosition: (
     traineeId: string,
@@ -418,9 +598,7 @@ export interface FinanceStoreState {
 export interface FinanceStoreActions {
   addMoney: (amount: number) => void;
   subtractMoney: (amount: number) => void;
-  updateFixedCosts: (
-    costs: Partial<FinanceStoreState["fixedCosts"]>,
-  ) => void;
+  updateFixedCosts: (costs: Partial<FinanceStoreState["fixedCosts"]>) => void;
   upgrade: (
     target:
       | "dormLevel"
@@ -472,10 +650,7 @@ export interface EventStoreActions {
   addEvent: (event: GameEvent) => void;
   resolveEvent: (eventId: string) => void;
   startInterlude: (activity: InterludeActivity) => void;
-  endInterlude: (
-    type: InterludeActivityType,
-    targetMemberId?: string,
-  ) => void;
+  endInterlude: (type: InterludeActivityType, targetMemberId?: string) => void;
 }
 
 export type EventStore = EventStoreState & EventStoreActions;

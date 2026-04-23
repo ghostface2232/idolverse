@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { GAME_BALANCE } from "@/data/gameBalance";
+import { GAME_BALANCE } from "@/data/balance";
 import { EventBus, PhaserEvents } from "@/game/EventBus";
 import { financeVanillaStore } from "@/stores/financeStore";
 import { gameVanillaStore } from "@/stores/gameStore";

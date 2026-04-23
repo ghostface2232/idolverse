@@ -1,7 +1,7 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-import { SEASON_CONCEPT_BONUSES } from "@/data/gameBalance";
-import { SEASONAL_NEWS_POOL } from "@/data/marketHeadlines";
+import { SEASON_MOOD_FIT } from "@/data/concepts";
+import { DEFAULT_MARKET_TRENDS, SEASONAL_NEWS_POOL } from "@/data/kpopCalendar";
 import type { CalendarStore, CalendarStoreState, Season } from "@/types/game";
 
 function createInitialNews(season: Season) {
@@ -14,18 +14,13 @@ function createInitialNews(season: Season) {
 
 const initialCalendarState: CalendarStoreState = {
   currentSeason: "spring",
-  seasonConceptBonus: SEASON_CONCEPT_BONUSES.spring,
+  seasonConceptBonus: SEASON_MOOD_FIT.spring,
   kpopNews: createInitialNews("spring"),
   upcomingCompetitorComebacks: [
     { week: 3, competitorId: "rival-nova", competitorName: "NOVA" },
     { week: 6, competitorId: "rival-aegis", competitorName: "AEGIS" },
   ],
-  marketTrend: {
-    hotGenre: "dance",
-    coldGenre: "ballad",
-    hotMood: "fresh",
-    coldMood: "dark",
-  },
+  marketTrend: DEFAULT_MARKET_TRENDS.spring,
 };
 
 export const calendarVanillaStore = createStore<CalendarStore>()((set) => ({
@@ -33,7 +28,8 @@ export const calendarVanillaStore = createStore<CalendarStore>()((set) => ({
   updateSeason: (season) =>
     set(() => ({
       currentSeason: season,
-      seasonConceptBonus: SEASON_CONCEPT_BONUSES[season],
+      seasonConceptBonus: SEASON_MOOD_FIT[season],
+      marketTrend: DEFAULT_MARKET_TRENDS[season],
     })),
   addNews: (news) =>
     set((state) => ({
