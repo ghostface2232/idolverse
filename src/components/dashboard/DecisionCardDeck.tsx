@@ -1,9 +1,12 @@
 import { Card } from "@/components/common/Card";
-import { useAppStore } from "@/stores/appStore";
+import { useCalendarStore } from "@/stores/calendarStore";
+import { useGameStore } from "@/stores/gameStore";
 
 export function DecisionCardDeck() {
-  const headline = useAppStore((state) => state.event.marketHeadline);
-  const cards = useAppStore((state) => state.event.weeklyDecisionCards);
+  const headline = useCalendarStore(
+    (state) => state.kpopNews[0]?.headline ?? "The market is quiet for now.",
+  );
+  const cards = useGameStore((state) => state.weeklyDecisions);
 
   return (
     <Card className="space-y-4">
@@ -53,4 +56,3 @@ export function DecisionCardDeck() {
     </Card>
   );
 }
-

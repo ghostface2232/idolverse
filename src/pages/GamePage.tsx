@@ -5,24 +5,26 @@ import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { WeeklySummary } from "@/components/dashboard/WeeklySummary";
 import { EventBus, PhaserEvents } from "@/game/EventBus";
 import { PhaserGame } from "@/game/PhaserGame";
-import { useAppStore } from "@/stores/appStore";
-import type { SimulationFocus } from "@/types/game";
+import { useAlbumStore } from "@/stores/albumStore";
+import { useFinanceStore } from "@/stores/financeStore";
+import { useGameStore } from "@/stores/gameStore";
+import type { GameSpeed } from "@/types/game";
 
-const focusOptions: Array<{ value: SimulationFocus; label: string }> = [
-  { value: "practice-room", label: "Practice" },
-  { value: "stage-blocking", label: "Stage" },
-  { value: "dorm", label: "Dorm" },
+const speedOptions: Array<{ value: GameSpeed; label: string }> = [
+  { value: 0, label: "Pause" },
+  { value: 1, label: "1x" },
+  { value: 2, label: "2x" },
+  { value: 3, label: "3x" },
 ];
 
 export function GamePage() {
-  const advanceWeek = useAppStore((state) => state.advanceWeek);
-  const toggleSimulationPause = useAppStore(
-    (state) => state.toggleSimulationPause,
-  );
-  const setSimulationFocus = useAppStore((state) => state.setSimulationFocus);
-  const game = useAppStore((state) => state.game);
-  const album = useAppStore((state) => state.album);
-  const finance = useAppStore((state) => state.finance);
+  const advanceWeek = useGameStore((state) => state.advanceWeek);
+  const setGameSpeed = useGameStore((state) => state.setGameSpeed);
+  const currentWeek = useGameStore((state) => state.currentWeek);
+  const currentYear = useGameStore((state) => state.currentYear);
+  const gameSpeed = useGameStore((state) => state.gameSpeed);
+  const currentAlbum = useAlbumStore((state) => state.currentAlbum);
+  const money = useFinanceStore((state) => state.money);
 
   const handleAdvanceWeek = () => {
     advanceWeek();
@@ -58,10 +60,10 @@ export function GamePage() {
 
                 <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-3">
                   <div className="rounded-2xl bg-slate-900/82 px-3 py-2 text-xs text-slate-200 backdrop-blur">
-                    {album.activeConcept} concept
+                    {currentAlbum?.concept.mood ?? "No active album"} concept
                   </div>
                   <div className="rounded-2xl bg-slate-900/82 px-3 py-2 text-xs text-slate-200 backdrop-blur">
-                    {game.simulationPaused ? "Paused" : "Running"}
+                    {gameSpeed === 0 ? "Paused" : `${gameSpeed}x running`}
                   </div>
                 </div>
               </div>
@@ -70,30 +72,37 @@ export function GamePage() {
             <div className="w-full space-y-4 lg:max-w-[320px]">
               <div className="grid grid-cols-2 gap-3">
                 <Button onClick={handleAdvanceWeek}>Advance Week</Button>
-                <Button tone="secondary" onClick={toggleSimulationPause}>
-                  {game.simulationPaused ? "Resume Sim" : "Pause Sim"}
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
-                  View Focus
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {focusOptions.map((option) => (
+                <div className="grid grid-cols-4 gap-2">
+                  {speedOptions.map((option) => (
                     <Button
                       key={option.value}
-                      tone={
-                        option.value === game.simulationFocus
-                          ? "primary"
-                          : "ghost"
-                      }
-                      onClick={() => setSimulationFocus(option.value)}
+                      tone={option.value === gameSpeed ? "primary" : "ghost"}
+                      onClick={() => setGameSpeed(option.value)}
                       className="px-2 text-xs"
                     >
                       {option.label}
                     </Button>
                   ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                  Progress
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-slate-800/72 p-3">
+                    <p className="text-slate-400">Current Week</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                      Y{currentYear} / W{currentWeek}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-800/72 p-3">
+                    <p className="text-slate-400">Album Mood</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                      {currentAlbum?.concept.mood ?? "None"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -104,13 +113,20 @@ export function GamePage() {
                     {new Intl.NumberFormat("ko-KR", {
                       notation: "compact",
                       maximumFractionDigits: 1,
-                    }).format(finance.cash)}
+                    }).format(money)}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-slate-800/72 p-3">
                   <p className="text-slate-400">Readiness</p>
                   <p className="mt-2 text-lg font-semibold text-slate-100">
-                    {album.releaseReadiness}%
+                    {Math.round(
+                      ((currentAlbum?.progress.song ?? 0) +
+                        (currentAlbum?.progress.visual ?? 0) +
+                        (currentAlbum?.progress.choreography ?? 0) +
+                        (currentAlbum?.progress.marketing ?? 0)) /
+                        4,
+                    )}
+                    %
                   </p>
                 </div>
               </div>
@@ -128,4 +144,3 @@ export function GamePage() {
     </main>
   );
 }
-

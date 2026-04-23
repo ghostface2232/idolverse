@@ -1,7 +1,8 @@
 import Phaser from "phaser";
 import { GAME_BALANCE } from "@/data/gameBalance";
 import { EventBus, PhaserEvents } from "@/game/EventBus";
-import { appStore, type AppStore } from "@/stores/appStore";
+import { financeVanillaStore } from "@/stores/financeStore";
+import { gameVanillaStore } from "@/stores/gameStore";
 
 export class SimulationScene extends Phaser.Scene {
   private background?: Phaser.GameObjects.Graphics;
@@ -35,14 +36,17 @@ export class SimulationScene extends Phaser.Scene {
       .setDepth(2);
 
     this.drawSimulation(this.scale.width, this.scale.height);
-    this.syncWithStore(appStore.getState());
+    this.syncWithStore();
 
     this.unsubscribers.push(
-      appStore.subscribe((state) => state.game, () => {
-        this.syncWithStore(appStore.getState());
+      gameVanillaStore.subscribe(() => {
+        this.syncWithStore();
       }),
-      appStore.subscribe((state) => state.finance.cash, () => {
-        this.syncWithStore(appStore.getState());
+      gameVanillaStore.subscribe(() => {
+        this.syncWithStore();
+      }),
+      financeVanillaStore.subscribe(() => {
+        this.syncWithStore();
       }),
     );
 
@@ -58,16 +62,19 @@ export class SimulationScene extends Phaser.Scene {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
   }
 
-  private syncWithStore(state: AppStore) {
+  private syncWithStore() {
+    const gameState = gameVanillaStore.getState();
+    const financeState = financeVanillaStore.getState();
+
     this.weekLabel?.setText(
       [
-        `W${state.game.currentWeek.toString().padStart(2, "0")} ${state.game.season.toUpperCase()}`,
-        `Cash ${formatCompactWon(state.finance.cash)}`,
+        `Y${gameState.currentYear} W${gameState.currentWeek.toString().padStart(2, "0")} ${gameState.currentSeason.toUpperCase()}`,
+        `Cash ${formatCompactWon(financeState.money)}`,
       ].join("  |  "),
     );
 
     this.footerLabel?.setText(
-      `${state.game.simulationFocus.toUpperCase()} VIEW  ${state.game.simulationPaused ? "PAUSED" : "LIVE"}`,
+      `SIMULATION VIEW  ${gameState.gameSpeed === 0 ? "PAUSED" : `${gameState.gameSpeed}X LIVE`}`,
     );
   }
 
