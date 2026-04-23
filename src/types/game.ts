@@ -293,6 +293,7 @@ export interface CompetitorGroup {
   id: string;
   name: string;
   agency: string;
+  gender: GroupGender;
   type: CompetitorType;
   stats: {
     vocal: number;
@@ -313,6 +314,14 @@ export interface CompetitorGroup {
   debutYear: number;
   strengths: string[];
   weaknesses: string[];
+}
+
+export interface BackgroundGroup {
+  id: string;
+  name: string;
+  agency: string;
+  gender: GroupGender;
+  chartScore: number;
 }
 
 export interface EventCompetitor extends CompetitorGroup {
@@ -415,7 +424,7 @@ export interface CompetitorTemplate {
   type: CompetitorType;
   description: string;
   agencyPool: string[];
-  groupNamePool: string[];
+  groupNamePool: Record<GroupGender, string[]>;
   statRanges: Partial<Record<TraineeStatKey | "marketing" | "global", RangeValue>>;
   fandomRange: RangeValue;
   publicRange: RangeValue;
@@ -561,6 +570,7 @@ export type FandomStore = FandomStoreState & FandomStoreActions;
 export interface CompetitorStoreState {
   permanentRivals: CompetitorGroup[];
   eventRivals: EventCompetitor[];
+  backgroundGroups: BackgroundGroup[];
 }
 
 export interface CompetitorStoreActions {

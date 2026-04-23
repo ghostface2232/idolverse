@@ -1,6 +1,7 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type {
+  BackgroundGroup,
   CompetitorGroup,
   CompetitorStore,
   CompetitorStoreState,
@@ -10,8 +11,9 @@ import type {
 const initialPermanentRivals: CompetitorGroup[] = [
   {
     id: "rival-nova",
-    name: "NOVA",
-    agency: "MajorOne",
+    name: "루미나라",
+    agency: "크라운뮤직",
+    gender: "female",
     type: "traditional",
     stats: { vocal: 74, dance: 77, visual: 83, marketing: 88 },
     fandom: 6400,
@@ -20,13 +22,14 @@ const initialPermanentRivals: CompetitorGroup[] = [
     industry: 52,
     activeWeeks: 24,
     debutYear: 1,
-    strengths: ["Polished debut system", "Reliable broadcast support"],
-    weaknesses: ["Low individuality", "Safe concept bias"],
+    strengths: ["완성형 시스템", "안정적인 방송 편성"],
+    weaknesses: ["낮은 개성", "보수적 콘셉트"],
   },
   {
     id: "rival-pulse",
-    name: "PULSE",
-    agency: "ClipLab",
+    name: "피킷",
+    agency: "버즈팩토리",
+    gender: "female",
     type: "viral",
     stats: { vocal: 59, dance: 72, visual: 78, marketing: 93 },
     fandom: 5100,
@@ -35,13 +38,14 @@ const initialPermanentRivals: CompetitorGroup[] = [
     industry: 29,
     activeWeeks: 17,
     debutYear: 1,
-    strengths: ["Short-form virality", "High variety conversion"],
-    weaknesses: ["Weak musical reputation", "Controversy prone"],
+    strengths: ["숏폼 바이럴", "높은 예능 전환율"],
+    weaknesses: ["음악성 평판 약세", "논란 리스크"],
   },
   {
     id: "rival-aegis",
-    name: "AEGIS",
-    agency: "StageCraft",
+    name: "볼티지",
+    agency: "레드아크",
+    gender: "female",
     type: "performance",
     stats: { vocal: 68, dance: 91, visual: 69, marketing: 58 },
     fandom: 4700,
@@ -50,14 +54,46 @@ const initialPermanentRivals: CompetitorGroup[] = [
     industry: 58,
     activeWeeks: 31,
     debutYear: 1,
-    strengths: ["Elite stages", "Strong industry respect"],
-    weaknesses: ["Weak casual reach", "Limited humor appeal"],
+    strengths: ["압도적 무대", "높은 업계 신뢰"],
+    weaknesses: ["대중 확장 느림", "예능 약세"],
+  },
+];
+
+const initialBackgroundGroups: BackgroundGroup[] = [
+  {
+    id: "bg-magnus",
+    name: "매그너스",
+    agency: "크라운뮤직",
+    gender: "male",
+    chartScore: 72,
+  },
+  {
+    id: "bg-hardbeat",
+    name: "하드비트",
+    agency: "레드아크",
+    gender: "male",
+    chartScore: 65,
+  },
+  {
+    id: "bg-cross",
+    name: "크로스",
+    agency: "스텔라쉽",
+    gender: "male",
+    chartScore: 58,
+  },
+  {
+    id: "bg-genesis",
+    name: "제네시스",
+    agency: "골든리프",
+    gender: "male",
+    chartScore: 45,
   },
 ];
 
 const initialCompetitorState: CompetitorStoreState = {
   permanentRivals: initialPermanentRivals,
   eventRivals: [],
+  backgroundGroups: initialBackgroundGroups,
 };
 
 export const competitorVanillaStore = createStore<CompetitorStore>()((set) => ({
