@@ -11,5 +11,21 @@ export const hasSupabaseEnv = Boolean(
 );
 
 export const supabase = hasSupabaseEnv
-  ? createClient(supabaseUrl, supabasePublishableKey)
+  ? createClient(supabaseUrl, supabasePublishableKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   : null;
+
+export function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      "Supabase environment variables are missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.",
+    );
+  }
+
+  return supabase;
+}

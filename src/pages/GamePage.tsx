@@ -1,10 +1,10 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
-import { AuthPanel } from "@/components/auth/AuthPanel";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { WeeklySummary } from "@/components/dashboard/WeeklySummary";
 import { EventBus, PhaserEvents } from "@/game/EventBus";
 import { PhaserGame } from "@/game/PhaserGame";
+import { useAutoSave } from "@/lib/saveSystem";
 import { useAlbumStore } from "@/stores/albumStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { useGameStore } from "@/stores/gameStore";
@@ -17,7 +17,13 @@ const speedOptions: Array<{ value: GameSpeed; label: string }> = [
   { value: 3, label: "3x" },
 ];
 
-export function GamePage() {
+interface GamePageProps {
+  userId: string;
+}
+
+export function GamePage({ userId }: GamePageProps) {
+  useAutoSave(userId);
+
   const advanceWeek = useGameStore((state) => state.advanceWeek);
   const setGameSpeed = useGameStore((state) => state.setGameSpeed);
   const currentWeek = useGameStore((state) => state.currentWeek);
@@ -139,7 +145,6 @@ export function GamePage() {
 
       <aside className="w-full shrink-0 space-y-4 lg:w-[360px]">
         <WeeklySummary />
-        <AuthPanel />
       </aside>
     </main>
   );

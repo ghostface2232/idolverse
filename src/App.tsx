@@ -1,6 +1,10 @@
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { GamePage } from "@/pages/GamePage";
 
 export default function App() {
-  return <GamePage />;
+  return (
+    <AuthGuard>
+      {(user) => <GamePage userId={user.id} />}
+    </AuthGuard>
+  );
 }
-

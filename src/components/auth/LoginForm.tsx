@@ -1,0 +1,100 @@
+import { useState, useTransition } from "react";
+import { Button } from "@/components/common/Button";
+import { getSupabaseClient } from "@/lib/supabase";
+
+interface LoginFormProps {
+  onSwitchMode: () => void;
+}
+
+export function LoginForm({ onSwitchMode }: LoginFormProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    startTransition(async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (error) {
+          throw error;
+        }
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to sign in.",
+        );
+      }
+    });
+  };
+
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="space-y-2">
+        <label
+          htmlFor="login-email"
+          className="text-sm font-medium text-slate-200"
+        >
+          Email
+        </label>
+        <input
+          id="login-email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          className="min-h-11 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/30"
+          placeholder="producer@idolverse.gg"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="login-password"
+          className="text-sm font-medium text-slate-200"
+        >
+          Password
+        </label>
+        <input
+          id="login-password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className="min-h-11 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/30"
+          placeholder="Your password"
+          required
+        />
+      </div>
+
+      {errorMessage ? (
+        <p className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <div className="space-y-3">
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? "Signing In..." : "Sign In"}
+        </Button>
+        <Button
+          type="button"
+          tone="ghost"
+          className="w-full"
+          onClick={onSwitchMode}
+          disabled={isPending}
+        >
+          Create Account
+        </Button>
+      </div>
+    </form>
+  );
+}
