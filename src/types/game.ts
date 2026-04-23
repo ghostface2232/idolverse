@@ -142,7 +142,9 @@ export type InterludeTemplateId =
   | "controversyIgnore"
   | "controversyClarify"
   | "controversyApologize"
-  | "vacation";
+  | "vacation"
+  | "pictorial"
+  | "fanMeeting";
 export type TraineeStatKey =
   | "visual"
   | "vocal"
@@ -412,6 +414,8 @@ export interface CompetitorTemplate {
   name: string;
   type: CompetitorType;
   description: string;
+  agencyPool: string[];
+  groupNamePool: string[];
   statRanges: Partial<Record<TraineeStatKey | "marketing" | "global", RangeValue>>;
   fandomRange: RangeValue;
   publicRange: RangeValue;

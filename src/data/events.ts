@@ -6,10 +6,10 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "positive",
     title: "바이럴 직캠 폭발",
     description: "한 멤버의 무대 직캠이 급속도로 퍼지며 팀 전체 인지도가 오른다.",
-    probability: 0.08, // 긍정 이벤트는 가끔 터져야 기대감이 생기지만 남발되면 안 된다.
+    probability: 0.08,
     conditions: {
-      minWeek: 4, // 데뷔 직후 약간의 누적 무대가 쌓여야 설득력이 생긴다.
-      minFame: 15, // 완전 무명 상태에서는 바이럴도 확산력이 부족하다.
+      minWeek: 4,
+      minFame: 15,
     },
     effects: {
       public: 12,
@@ -22,9 +22,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "positive",
     title: "유명 작곡가 협업 제의",
     description: "업계 히트메이커가 다음 타이틀 후보를 제안해 왔다.",
-    probability: 0.04, // 강한 보상 이벤트는 희소해야 선택의 무게가 생긴다.
+    probability: 0.04,
     conditions: {
-      minIndustry: 25, // 업계 평판이 어느 정도 쌓여야 톱라인 제안이 들어온다.
+      minIndustry: 25,
       phase: ["training", "debut", "growth"],
     },
     effects: {
@@ -57,9 +57,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "positive",
     title: "팬 감동 에피소드 확산",
     description: "멤버의 진심 어린 대응이 커뮤니티에서 화제가 되며 팬덤 충성도가 오른다.",
-    probability: 0.06, // 중간급 긍정 이벤트는 정서적 보상으로 자주 보이는 편이 좋다.
+    probability: 0.06,
     conditions: {
-      minFandom: 20, // 팬 커뮤니티 규모가 어느 정도 있어야 이야기가 퍼진다.
+      minFandom: 20,
     },
     effects: {
       fandom: 3,
@@ -72,7 +72,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "positive",
     title: "숨겨진 재능 발견",
     description: "주목받지 못했던 멤버의 특별한 재능이 드러나 팀의 활용 폭이 넓어진다.",
-    probability: 0.05, // 성장형 이벤트는 희귀하지만 캠페인마다 몇 번은 보여야 한다.
+    probability: 0.05,
     conditions: {
       phase: ["training", "debut", "growth"],
     },
@@ -87,9 +87,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "positive",
     title: "경쟁 그룹 팬 유입",
     description: "경쟁 그룹의 공백기와 실수로 일부 팬이 우리 쪽으로 넘어온다.",
-    probability: 0.03, // 순수한 팬 유입은 강한 눈덩이 효과를 내므로 낮게 둔다.
+    probability: 0.03,
     conditions: {
-      minPublic: 25, // 어느 정도 비교 대상이 될 수준은 되어야 한다.
+      minPublic: 25,
       minFandom: 20,
     },
     effects: {
@@ -99,13 +99,74 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
   },
   {
+    id: "fan-challenge-viral",
+    type: "positive",
+    title: "팬 챌린지 바이럴",
+    description: "팬이 만든 틱톡 챌린지가 폭발적으로 확산되며 곡이 재조명된다.",
+    probability: 0.05,
+    conditions: {
+      minFandom: 25,
+      minWeek: 6,
+    },
+    effects: {
+      public: 10,
+      global: 8,
+      fandom: 3,
+    },
+  },
+  {
+    id: "brand-ad-offer",
+    type: "positive",
+    title: "브랜드 광고 제안",
+    description: "유명 브랜드에서 그룹 광고 모델을 제안해 왔다.",
+    probability: 0.04,
+    conditions: {
+      minPublic: 30,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      industry: 3,
+    },
+    choices: [
+      {
+        label: "계약한다",
+        description: "안정적인 수입과 브랜드 이미지를 확보한다.",
+        tradeoff: "광고 스케줄로 팀 훈련 시간이 줄어든다.",
+        effects: { money: 80000000, public: 5, industry: 4, condition: -3 },
+      },
+      {
+        label: "거절한다",
+        description: "음악 활동에 집중한다.",
+        tradeoff: "수입 기회를 놓치지만 팀 컨디션을 지킨다.",
+        effects: { satisfaction: 3, fandomLoyalty: 2 },
+      },
+    ],
+  },
+  {
+    id: "chart-surprise",
+    type: "positive",
+    title: "음원 차트 서프라이즈",
+    description: "예상 밖의 유입으로 음원 순위가 급등한다.",
+    probability: 0.03,
+    conditions: {
+      minWeek: 8,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      public: 8,
+      fandom: 5,
+      global: 4,
+      industry: 3,
+    },
+  },
+  {
     id: "injury-scare",
     type: "negative",
     title: "훈련 중 부상",
     description: "과훈련 여파로 핵심 멤버가 다쳐 예정된 일정 일부를 조정해야 한다.",
-    probability: 0.05, // 부상은 충분히 체감되되 지나치게 자주 터지면 운영이 경직된다.
+    probability: 0.05,
     conditions: {
-      minStress: 55, // 스트레스 관리 실패가 부상의 핵심 원인으로 읽혀야 한다.
+      minStress: 55,
     },
     effects: {
       condition: -18,
@@ -118,9 +179,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "악성 루머 확산",
     description: "근거 없는 루머가 커뮤니티와 숏폼 플랫폼을 통해 번진다.",
-    probability: 0.04, // 루머는 낮지 않은 빈도로 등장해야 위기 대응이 의미를 가진다.
+    probability: 0.04,
     conditions: {
-      minPublic: 18, // 아무도 모르면 루머도 크게 번지지 않는다.
+      minPublic: 18,
     },
     effects: {
       public: -6,
@@ -147,10 +208,10 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "연애 스캔들 포착",
     description: "휴식 중 사적인 장면이 포착되어 팬덤이 흔들린다.",
-    probability: 0.03, // 연애 스캔들은 강도가 높은 만큼 기본 확률은 낮게 유지한다.
+    probability: 0.03,
     conditions: {
-      minPublic: 25, // 인지도가 있어야 스캔들이 시장 이슈가 된다.
-      requiresVacation: true, // 휴가나 개인 일정이 많을수록 체감상 더 설득력 있다.
+      minPublic: 25,
+      requiresVacation: true,
     },
     effects: {
       fandomDisappointment: 12,
@@ -182,7 +243,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "핵심 스태프 이직 위기",
     description: "외부에서 더 좋은 조건을 제시하며 스태프를 빼가려 한다.",
-    probability: 0.04, // 스태프 리스크는 장기 운영 압박을 만드는 보조 위협이다.
+    probability: 0.04,
     conditions: {
       phase: ["debut", "growth", "peak"],
     },
@@ -210,10 +271,10 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "멤버 갈등 폭발",
     description: "케미가 나쁜 멤버 쌍의 갈등이 공개적으로 드러날 조짐을 보인다.",
-    probability: 0.04, // 케미 시스템이 체감되려면 갈등 이벤트가 종종 보여야 한다.
+    probability: 0.04,
     conditions: {
-      lowChemistryPair: true, // 낮은 케미를 방치했을 때만 발생하도록 연결한다.
-      maxSatisfaction: 45, // 팀 전체 분위기가 나쁠수록 터지기 쉬워야 한다.
+      lowChemistryPair: true,
+      maxSatisfaction: 45,
     },
     effects: {
       chemistry: -15,
@@ -226,10 +287,10 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "사생팬 문제",
     description: "숙소와 동선을 집요하게 추적하는 사생 문제가 발생한다.",
-    probability: 0.03, // 강한 페널티성 이벤트이므로 출현 빈도는 낮게 둔다.
+    probability: 0.03,
     conditions: {
-      minFame: 30, // 어느 정도 유명해져야 사생 문제가 현실화된다.
-      requiresSecurity: false, // 보안팀 미도입 상태를 데이터 해석에 사용하기 좋다.
+      minFame: 30,
+      requiresSecurity: false,
     },
     effects: {
       stress: 12,
@@ -238,11 +299,93 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
   },
   {
+    id: "sns-controversy",
+    type: "negative",
+    title: "SNS 과거 발언 발굴",
+    description: "멤버의 과거 SNS 게시물이 발굴되어 논란이 일어난다.",
+    probability: 0.03,
+    conditions: {
+      minPublic: 20,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      public: -5,
+      fandomDisappointment: 8,
+      industry: -4,
+    },
+    choices: [
+      {
+        label: "즉시 사과문 발표",
+        description: "빠르게 인정하고 반성의 뜻을 전한다.",
+        tradeoff: "사태가 빨리 진정되지만 이미지에 흠집이 남는다.",
+        effects: { money: -10000000, fandomDisappointment: -3, industry: 1 },
+      },
+      {
+        label: "맥락 해명",
+        description: "당시 상황과 맥락을 설명하는 입장문을 낸다.",
+        tradeoff: "해명이 먹히면 피해가 줄지만 실패하면 더 커진다.",
+        effects: { money: -15000000, public: -2, fandomDisappointment: -1 },
+      },
+      {
+        label: "무대응",
+        description: "관심이 옮겨가길 기다린다.",
+        tradeoff: "비용은 없지만 여론이 장기간 불안정해진다.",
+        effects: { fandomDisappointment: 12, public: -8, industry: -2 },
+      },
+    ],
+  },
+  {
+    id: "health-issue",
+    type: "negative",
+    title: "멤버 건강 이슈",
+    description: "과로 누적으로 한 멤버가 건강 문제를 호소한다.",
+    probability: 0.04,
+    conditions: {
+      minStress: 50,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      condition: -20,
+      stress: 5,
+      satisfaction: -6,
+    },
+    choices: [
+      {
+        label: "즉시 휴식 부여",
+        description: "해당 멤버를 당분간 일정에서 제외한다.",
+        tradeoff: "컨디션은 회복되지만 팀 활동에 공백이 생긴다.",
+        effects: { condition: 15, satisfaction: 8, public: -3 },
+      },
+      {
+        label: "일정 축소 후 유지",
+        description: "부담을 줄이되 완전히 빠지지는 않게 한다.",
+        tradeoff: "공백은 최소화하지만 악화 위험이 남아 있다.",
+        effects: { condition: 5, satisfaction: 2, stress: 3 },
+      },
+    ],
+  },
+  {
+    id: "fandom-split",
+    type: "negative",
+    title: "팬덤 내부 분열",
+    description: "개인팬과 그룹팬 사이 갈등이 커뮤니티에서 가시화된다.",
+    probability: 0.03,
+    conditions: {
+      minFandom: 35,
+      phase: ["growth", "peak"],
+    },
+    effects: {
+      fandomLoyalty: -6,
+      fandomDisappointment: 8,
+      public: -2,
+    },
+  },
+  {
     id: "tv-audition-offer",
     type: "neutral",
     title: "TV 오디션 출연 기회",
     description: "한 멤버가 화제성 높은 오디션 프로그램 특별 코너 제안을 받는다.",
-    probability: 0.06, // 중립 기회 이벤트는 플레이 리듬을 바꾸는 장치로 자주 보이면 좋다.
+    probability: 0.06,
     conditions: {
       phase: ["training", "debut", "growth"],
     },
@@ -269,9 +412,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "neutral",
     title: "해외 초청 행사",
     description: "작은 규모의 해외 행사에서 공연 초청이 들어온다.",
-    probability: 0.05, // 해외 기회는 가끔 등장해야 글로벌 축이 살아난다.
+    probability: 0.05,
     conditions: {
-      minGlobal: 18, // 글로벌 씨앗이 생긴 뒤에만 자연스럽다.
+      minGlobal: 18,
     },
     effects: {
       global: 5,
@@ -289,6 +432,61 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         description: "이번 주는 국내 지표를 지킨다.",
         tradeoff: "해외 성장 속도는 느려진다.",
         effects: { public: 2, global: -1 },
+      },
+    ],
+  },
+  {
+    id: "reality-show-offer",
+    type: "neutral",
+    title: "리얼리티 프로그램 제안",
+    description: "OTT 플랫폼에서 그룹 밀착 리얼리티 촬영을 제안한다.",
+    probability: 0.04,
+    conditions: {
+      minFandom: 20,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      public: 2,
+    },
+    choices: [
+      {
+        label: "수락한다",
+        description: "콘텐츠를 통해 팬덤과 대중성을 동시에 노린다.",
+        tradeoff: "촬영 일정이 훈련과 겹치고 사생활 노출 부담이 있다.",
+        effects: { fandom: 6, public: 5, global: 3, condition: -4, stress: 5 },
+      },
+      {
+        label: "거절한다",
+        description: "음악 활동에 집중한다.",
+        tradeoff: "노출 기회는 사라지지만 팀 리듬을 유지한다.",
+        effects: { satisfaction: 3, chemistry: 2 },
+      },
+    ],
+  },
+  {
+    id: "ost-offer",
+    type: "neutral",
+    title: "인기 드라마 OST 참여 기회",
+    description: "화제의 드라마 제작팀에서 메인 보컬에게 OST 참여를 제안한다.",
+    probability: 0.04,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      public: 2,
+    },
+    choices: [
+      {
+        label: "참여한다",
+        description: "드라마 흥행 시 음원 차트 진입과 대중 인지도 상승을 노린다.",
+        tradeoff: "해당 멤버의 팀 활동 시간이 줄어든다.",
+        effects: { public: 7, industry: 4, money: 20000000, chemistry: -2 },
+      },
+      {
+        label: "거절한다",
+        description: "팀 활동에 집중한다.",
+        tradeoff: "개인 인지도 상승 기회를 놓친다.",
+        effects: { chemistry: 2, satisfaction: 1 },
       },
     ],
   },
