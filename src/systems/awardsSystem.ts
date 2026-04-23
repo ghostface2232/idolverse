@@ -1,0 +1,185 @@
+import { AWARD_SHOWS } from "@/data/awards";
+import { AWARD_ELIGIBILITY_THRESHOLDS } from "@/data/balance";
+import { createSeededRandom } from "@/lib/seededRandom";
+import type {
+  AwardCategory,
+  AwardShow,
+  AwardShowId,
+  CompetitorGroup,
+  EventCompetitor,
+} from "@/types/game";
+
+export interface AwardContender {
+  id: string;
+  name: string;
+  isPlayer: boolean;
+  debutYear: number;
+  digitalIndex: number;
+  albumSalesIndex: number;
+  fanVotes: number;
+  judgesScore: number;
+}
+
+export interface AwardWinner {
+  category: AwardCategory;
+  winnerId: string;
+  winnerName: string;
+  score: number;
+  isPlayer: boolean;
+}
+
+export interface AwardShowResult {
+  showId: AwardShowId;
+  showName: string;
+  winners: AwardWinner[];
+}
+
+export interface PlayerYearMetrics {
+  digitalIndex: number;
+  albumSalesIndex: number;
+  fanVotes: number;
+  judgesScore: number;
+}
+
+export function buildContenderFromPlayer(
+  id: string,
+  name: string,
+  metrics: PlayerYearMetrics,
+  debutYear: number,
+): AwardContender {
+  return {
+    id,
+    name,
+    isPlayer: true,
+    debutYear,
+    ...metrics,
+  };
+}
+
+export function buildContenderFromCompetitor(
+  competitor: CompetitorGroup | EventCompetitor,
+): AwardContender {
+  const avgStats =
+    (competitor.stats.vocal +
+      competitor.stats.dance +
+      competitor.stats.visual) /
+    3;
+
+  return {
+    id: competitor.id,
+    name: competitor.name,
+    isPlayer: false,
+    debutYear: competitor.debutYear,
+    digitalIndex:
+      competitor.public * 0.6 +
+      (competitor.currentAlbum?.quality ?? 0) * 0.4,
+    albumSalesIndex:
+      (competitor.fandom / 100) * 60 + competitor.industry * 0.4,
+    fanVotes:
+      (competitor.fandom / 100) * 70 + (competitor.global / 100) * 30,
+    judgesScore: competitor.industry * 0.5 + avgStats * 0.5,
+  };
+}
+
+function computeScore(
+  contender: AwardContender,
+  weights: AwardShow["weights"],
+): number {
+  return (
+    contender.digitalIndex * weights.digital +
+    contender.albumSalesIndex * weights.albumSales +
+    contender.fanVotes * weights.votes +
+    contender.judgesScore * weights.judges
+  );
+}
+
+function isEligibleForCategory(
+  contender: AwardContender,
+  category: AwardCategory,
+  currentYear: number,
+): boolean {
+  const yearsSinceDebut = currentYear - contender.debutYear + 1;
+
+  switch (category) {
+    case "rookie":
+      return (
+        yearsSinceDebut >= AWARD_ELIGIBILITY_THRESHOLDS.rookie.minYear &&
+        yearsSinceDebut <= AWARD_ELIGIBILITY_THRESHOLDS.rookie.maxYear
+      );
+    case "bonsang":
+      return (
+        contender.digitalIndex >=
+          AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minDigitalIndex &&
+        contender.albumSalesIndex >=
+          AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minAlbumSalesIndex
+      );
+    case "daesang":
+      return (
+        contender.digitalIndex >=
+          AWARD_ELIGIBILITY_THRESHOLDS.daesang.minDigitalIndex &&
+        contender.albumSalesIndex >=
+          AWARD_ELIGIBILITY_THRESHOLDS.daesang.minAlbumSalesIndex &&
+        contender.judgesScore >=
+          AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry
+      );
+    case "popularity":
+      return true;
+    default:
+      return false;
+  }
+}
+
+export function evaluateAwards(
+  contenders: readonly AwardContender[],
+  currentYear: number,
+  seed: number,
+): AwardShowResult[] {
+  const random = createSeededRandom(seed);
+  const shows = Object.values(AWARD_SHOWS);
+  const results: AwardShowResult[] = [];
+
+  for (const show of shows) {
+    const winners: AwardWinner[] = [];
+
+    for (const category of show.categories) {
+      const eligible = contenders.filter((c) =>
+        isEligibleForCategory(c, category, currentYear),
+      );
+
+      if (eligible.length === 0) continue;
+
+      const scored = eligible
+        .map((c) => ({
+          contender: c,
+          score: computeScore(c, show.weights) + random() * 3,
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      const winner = scored[0];
+      winners.push({
+        category,
+        winnerId: winner.contender.id,
+        winnerName: winner.contender.name,
+        score: winner.score,
+        isPlayer: winner.contender.isPlayer,
+      });
+    }
+
+    results.push({
+      showId: show.id as AwardShowId,
+      showName: show.name,
+      winners,
+    });
+  }
+
+  return results;
+}
+
+export function getPlayerAwardWins(
+  results: readonly AwardShowResult[],
+  playerId: string,
+): AwardWinner[] {
+  return results.flatMap((r) =>
+    r.winners.filter((w) => w.winnerId === playerId),
+  );
+}

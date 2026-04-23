@@ -7,7 +7,7 @@ import {
   processTrainingWeek,
   type TrainingSchedule,
 } from "@/systems/trainingSystem";
-import { updateChemistry, getTeamChemistryModifier } from "@/systems/chemistrySystem";
+import { updateChemistry } from "@/systems/chemistrySystem";
 import {
   updateSatisfaction,
   type WeekContext as SatisfactionContext,
@@ -16,7 +16,6 @@ import { progressAlbum } from "@/systems/albumSystem";
 import {
   simulateCompetitorWeek,
   spawnEventCompetitor,
-  getMarketCompetition,
 } from "@/systems/competitorSystem";
 import {
   rollRandomEvents,
@@ -29,9 +28,31 @@ import {
   type Fandom4Axis,
   type WeeklyFandomContext,
 } from "@/systems/fandomSystem";
-import { SATISFACTION_WARNING_THRESHOLD } from "@/data/balance";
-import { SEASONAL_NEWS_POOL } from "@/data/kpopCalendar";
-import { pickUniqueItems } from "@/lib/seededRandom";
+import {
+  generateWeeklyNews,
+  updateSeasonTrend,
+} from "@/systems/calendarSystem";
+import {
+  executePromotion,
+  checkExcessiveCommercial,
+  type PromotionOrder,
+  type PromotionResult,
+} from "@/systems/promotionSystem";
+import {
+  processWeeklyFinances,
+  checkInvestorConditions,
+  applyInvestorPenalty,
+  type RevenueContext,
+} from "@/systems/economySystem";
+import {
+  evaluateAwards,
+  buildContenderFromPlayer,
+  buildContenderFromCompetitor,
+  getPlayerAwardWins,
+  type AwardShowResult,
+} from "@/systems/awardsSystem";
+import { SATISFACTION_WARNING_THRESHOLD, GAME_BALANCE } from "@/data/balance";
+import { INVESTOR_COMPANIES } from "@/data/investors";
 import type {
   Album,
   AlbumStoreState,
@@ -69,7 +90,12 @@ export interface GameSnapshot {
 
 export interface PlayerDecisions {
   trainingSchedule: TrainingSchedule;
-  resolvedDecisions: { cardId: string; optionId: string; effects: Record<string, number> }[];
+  resolvedDecisions: {
+    cardId: string;
+    optionId: string;
+    effects: Record<string, number>;
+  }[];
+  promotionOrders?: PromotionOrder[];
 }
 
 export interface WeekReport {
@@ -83,13 +109,22 @@ export interface WeekReport {
   injuries: { traineeId: string; traineeName: string }[];
   conflicts: { a: string; b: string; resolved: boolean }[];
   competitorComebacks: string[];
+  promotionResults: PromotionResult[];
+  awardResults: AwardShowResult[] | null;
+}
+
+const AWARDS_WEEK = GAME_BALANCE.weeksPerYear - 2;
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
 }
 
 export function processWeek(
   snapshot: GameSnapshot,
   decisions: PlayerDecisions,
 ): { newState: GameSnapshot; weekReport: WeekReport } {
-  const seed = snapshot.game.currentWeek * 997 + snapshot.game.currentYear * 31;
+  const seed =
+    snapshot.game.currentWeek * 997 + snapshot.game.currentYear * 31;
   const report: WeekReport = {
     week: snapshot.game.currentWeek,
     season: snapshot.game.currentSeason,
@@ -101,10 +136,14 @@ export function processWeek(
     injuries: [],
     conflicts: [],
     competitorComebacks: [],
+    promotionResults: [],
+    awardResults: null,
   };
 
   let trainees = [...snapshot.trainee.trainees];
-  let album = snapshot.album.currentAlbum ? { ...snapshot.album.currentAlbum } : null;
+  let album = snapshot.album.currentAlbum
+    ? { ...snapshot.album.currentAlbum }
+    : null;
   let fandomAxis: Fandom4Axis = {
     public: snapshot.fandom.public,
     fandom: snapshot.fandom.fandom,
@@ -118,45 +157,182 @@ export function processWeek(
   const manager = staff.find((s) => s.role === "manager") ?? null;
   const upgrades = snapshot.finance.upgrades;
 
-  // 1. Apply player decisions
+  // ── 0. Awards (year-end, evaluated first so results feed into later steps)
+  let playerWonAward = false;
+  if (snapshot.game.currentWeek === AWARDS_WEEK) {
+    const contenders = [
+      buildContenderFromPlayer(
+        "player",
+        snapshot.game.groupName,
+        {
+          digitalIndex:
+            fandomAxis.public * 0.6 +
+            (album?.quality ?? 0) * 0.4,
+          albumSalesIndex:
+            fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
+          fanVotes:
+            fandomAxis.fandom * 0.5 +
+            fandomAxis.fandomLoyalty * 0.3 +
+            fandomAxis.global * 0.2,
+          judgesScore:
+            fandomAxis.industry * 0.5 +
+            (album?.quality ?? 0) * 0.3 +
+            (trainees.reduce(
+              (s, t) => s + (t.stats.vocal + t.stats.dance + t.stats.visual) / 3,
+              0,
+            ) /
+              Math.max(trainees.length, 1)) *
+              0.2,
+        },
+        1,
+      ),
+      ...snapshot.competitor.permanentRivals.map(buildContenderFromCompetitor),
+      ...snapshot.competitor.eventRivals.map(buildContenderFromCompetitor),
+    ];
+
+    const awardResults = evaluateAwards(
+      contenders,
+      snapshot.game.currentYear,
+      seed + 50,
+    );
+    report.awardResults = awardResults;
+
+    const playerWins = getPlayerAwardWins(awardResults, "player");
+    playerWonAward = playerWins.length > 0;
+
+    for (const win of playerWins) {
+      report.warnings.push(
+        `🏆 ${awardResults.find((r) => r.winners.includes(win))?.showName} ${categoryLabel(win.category)} 수상!`,
+      );
+    }
+  }
+
+  // ── 1. Apply player decisions
   for (const d of decisions.resolvedDecisions) {
     for (const [key, value] of Object.entries(d.effects)) {
       if (key === "money") money += value;
-      if (key === "public") fandomAxis.public = Math.max(0, Math.min(100, fandomAxis.public + value));
-      if (key === "fandomLoyalty") fandomAxis.fandomLoyalty = Math.max(0, Math.min(100, fandomAxis.fandomLoyalty + value));
-      if (key === "fandomDisappointment") fandomAxis.fandomDisappointment = Math.max(0, Math.min(100, fandomAxis.fandomDisappointment + value));
-      if (key === "global") fandomAxis.global = Math.max(0, fandomAxis.global + value);
-      if (key === "industry") fandomAxis.industry = Math.max(0, Math.min(100, fandomAxis.industry + value));
+      if (key === "public")
+        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
+      if (key === "fandomLoyalty")
+        fandomAxis.fandomLoyalty = clamp(
+          fandomAxis.fandomLoyalty + value,
+          0,
+          100,
+        );
+      if (key === "fandomDisappointment")
+        fandomAxis.fandomDisappointment = clamp(
+          fandomAxis.fandomDisappointment + value,
+          0,
+          100,
+        );
+      if (key === "global")
+        fandomAxis.global = Math.max(0, fandomAxis.global + value);
+      if (key === "industry")
+        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
       if (key === "chemistry") {
         trainees = trainees.map((t) => ({
           ...t,
           chemistry: Object.fromEntries(
-            Object.entries(t.chemistry).map(([k, v]) => [k, Math.max(-100, Math.min(100, v + value))]),
+            Object.entries(t.chemistry).map(([k, v]) => [
+              k,
+              clamp(v + value, -100, 100),
+            ]),
           ),
         }));
       }
       if (key === "condition") {
         trainees = trainees.map((t) => ({
           ...t,
-          condition: Math.max(0, Math.min(100, t.condition + value)),
+          condition: clamp(t.condition + value, 0, 100),
         }));
       }
       if (key === "stress") {
         trainees = trainees.map((t) => ({
           ...t,
-          stress: Math.max(0, Math.min(100, t.stress + value)),
+          stress: clamp(t.stress + value, 0, 100),
         }));
       }
       if (key === "satisfaction") {
         trainees = trainees.map((t) => ({
           ...t,
-          satisfaction: Math.max(0, Math.min(100, t.satisfaction + value)),
+          satisfaction: clamp(t.satisfaction + value, 0, 100),
         }));
       }
     }
   }
 
-  // 2. Training
+  // ── 2. Promotions (before training so activity flags are set)
+  const promotionOrders = decisions.promotionOrders ?? [];
+  let promotionTotalIncome = 0;
+  let promotionTotalCost = 0;
+  const promoCtx = {
+    phase: snapshot.game.currentPhase,
+    public: fandomAxis.public,
+    fandom: fandomAxis.fandom,
+    industry: fandomAxis.industry,
+  };
+
+  for (let i = 0; i < promotionOrders.length; i++) {
+    const result = executePromotion(
+      promotionOrders[i],
+      trainees,
+      staff,
+      promoCtx,
+      seed + 60 + i,
+    );
+    if (!result) continue;
+
+    report.promotionResults.push(result);
+    promotionTotalIncome += result.income;
+    promotionTotalCost += result.cost;
+    report.warnings.push(...result.warnings);
+
+    for (const change of result.memberActivityChanges) {
+      trainees = trainees.map((t) =>
+        t.id === change.traineeId
+          ? { ...t, currentActivity: change.activity }
+          : t,
+      );
+    }
+
+    for (const [key, value] of Object.entries(result.effects)) {
+      if (key === "public")
+        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
+      if (key === "fandom")
+        fandomAxis.fandom = Math.max(0, fandomAxis.fandom + value);
+      if (key === "fandomLoyalty")
+        fandomAxis.fandomLoyalty = clamp(
+          fandomAxis.fandomLoyalty + value,
+          0,
+          100,
+        );
+      if (key === "fandomDisappointment")
+        fandomAxis.fandomDisappointment = clamp(
+          fandomAxis.fandomDisappointment + value,
+          0,
+          100,
+        );
+      if (key === "global")
+        fandomAxis.global = Math.max(0, fandomAxis.global + value);
+      if (key === "industry")
+        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
+    }
+  }
+
+  const excessiveCommercialPenalty = checkExcessiveCommercial(
+    countRecentCommercialWeeks(snapshot.finance.incomeHistory),
+    promotionOrders,
+  );
+  if (excessiveCommercialPenalty > 0) {
+    fandomAxis.fandomDisappointment = clamp(
+      fandomAxis.fandomDisappointment + excessiveCommercialPenalty,
+      0,
+      100,
+    );
+    report.warnings.push("과도한 상업 활동으로 팬 실망도 상승");
+  }
+
+  // ── 3. Training
   const albumConcept = album?.concept.mood ?? null;
   const trainingResult = processTrainingWeek(
     trainees,
@@ -173,7 +349,7 @@ export function processWeek(
     );
   }
 
-  // 3. Chemistry
+  // ── 4. Chemistry
   const chemResult = updateChemistry(trainees, false, seed + 1);
   trainees = trainees.map((t) => {
     const update = chemResult.updates.find((u) => u.traineeId === t.id);
@@ -181,19 +357,21 @@ export function processWeek(
   });
   report.conflicts = chemResult.conflicts;
 
-  // 4. Satisfaction
-  const lastReleasedAlbum = snapshot.album.releasedAlbums[snapshot.album.releasedAlbums.length - 1];
+  // ── 5. Satisfaction
+  const lastReleasedAlbum =
+    snapshot.album.releasedAlbums[snapshot.album.releasedAlbums.length - 1];
   const satCtx: SatisfactionContext = {
     currentPhase: snapshot.game.currentPhase,
     albumConcept,
     trainingIntensity: decisions.trainingSchedule.intensity,
     facilityLevel: Math.min(upgrades.dormLevel, upgrades.studioLevel),
-    weeksSinceDebut: snapshot.game.currentPhase === "training"
-      ? snapshot.game.currentWeek
-      : 0,
+    weeksSinceDebut:
+      snapshot.game.currentPhase === "training"
+        ? snapshot.game.currentWeek
+        : 0,
     debutWeek: snapshot.game.currentPhase !== "training" ? 1 : null,
     currentWeek: snapshot.game.currentWeek,
-    recentAward: false,
+    recentAward: playerWonAward,
     musicShowWin: false,
     goodFanReaction: fandomAxis.fandomLoyalty > 60,
   };
@@ -210,12 +388,12 @@ export function processWeek(
     );
   }
 
-  // 5. Album progress
+  // ── 6. Album progress
   if (album) {
     album = progressAlbum(album, staff, trainees);
   }
 
-  // 6. Competitor simulation
+  // ── 7. Competitor simulation
   const compResult = simulateCompetitorWeek(
     snapshot.competitor.permanentRivals,
     snapshot.competitor.backgroundGroups,
@@ -238,7 +416,7 @@ export function processWeek(
     .map((e) => ({ ...e, duration: e.duration - 1 }))
     .filter((e) => e.duration > 0);
 
-  // 7. Random events
+  // ── 8. Random events
   const eventCtx: EventContext = {
     currentWeek: snapshot.game.currentWeek,
     currentPhase: snapshot.game.currentPhase,
@@ -254,63 +432,117 @@ export function processWeek(
   for (const re of rolledEvents) {
     report.events.push(re.gameEvent);
     for (const [key, value] of Object.entries(re.template.effects)) {
-      if (key === "public") fandomAxis.public = Math.max(0, Math.min(100, fandomAxis.public + value));
-      if (key === "fandom") fandomAxis.fandom = Math.max(0, fandomAxis.fandom + value);
-      if (key === "global") fandomAxis.global = Math.max(0, fandomAxis.global + value);
-      if (key === "industry") fandomAxis.industry = Math.max(0, Math.min(100, fandomAxis.industry + value));
-      if (key === "fandomDisappointment") fandomAxis.fandomDisappointment = Math.max(0, Math.min(100, fandomAxis.fandomDisappointment + value));
+      if (key === "public")
+        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
+      if (key === "fandom")
+        fandomAxis.fandom = Math.max(0, fandomAxis.fandom + value);
+      if (key === "global")
+        fandomAxis.global = Math.max(0, fandomAxis.global + value);
+      if (key === "industry")
+        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
+      if (key === "fandomDisappointment")
+        fandomAxis.fandomDisappointment = clamp(
+          fandomAxis.fandomDisappointment + value,
+          0,
+          100,
+        );
     }
   }
 
-  const vacationScandal = rollVacationScandal(trainees, upgrades.hasSecurity, seed + 3);
+  const vacationScandal = rollVacationScandal(
+    trainees,
+    upgrades.hasSecurity,
+    seed + 3,
+  );
   if (vacationScandal) {
     report.warnings.push(`${vacationScandal.traineeName} 연애 스캔들 발생`);
-    fandomAxis.fandomDisappointment = Math.min(100, fandomAxis.fandomDisappointment + 12);
+    fandomAxis.fandomDisappointment = Math.min(
+      100,
+      fandomAxis.fandomDisappointment + 12,
+    );
     fandomAxis.public = Math.min(100, fandomAxis.public + 4);
   }
 
-  // 8. Calendar/news
-  const seasonNews = SEASONAL_NEWS_POOL[snapshot.game.currentSeason] ?? [];
-  const pickedNews = pickUniqueItems(seasonNews, 1, seed + 4);
-  const newsItems: KPopNews[] = pickedNews.map((n, i) => ({
-    ...n,
-    id: `news-w${snapshot.game.currentWeek}-${i}`,
-    week: snapshot.game.currentWeek,
-  }));
+  // ── 9. Calendar / news
+  const newsItems = generateWeeklyNews(
+    snapshot.game.currentWeek,
+    snapshot.game.currentSeason,
+    compResult.competitors,
+    seed + 4,
+  );
   report.news = newsItems;
 
-  // 9. Finance
-  const weeklyExpense = snapshot.finance.weeklyFixedTotal;
-  money -= weeklyExpense;
-  report.finance.expenses = { fixedCosts: weeklyExpense };
+  // ── 10. Finance (using economySystem)
+  const weeksAfterRelease =
+    lastReleasedAlbum?.releaseWeek != null
+      ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
+      : null;
+  const chartRank =
+    snapshot.fandom.chartPositions.melon > 0
+      ? snapshot.fandom.chartPositions.melon
+      : null;
 
-  const streamingRevenue = Math.round(fandomAxis.fandom * 0.3 + fandomAxis.global * 0.1);
-  money += streamingRevenue;
-  report.finance.income = { streaming: streamingRevenue };
+  const revenueCtx: RevenueContext = {
+    fandom: fandomAxis.fandom,
+    global: fandomAxis.global,
+    chartRank,
+    weeksAfterAlbumRelease:
+      weeksAfterRelease !== null && weeksAfterRelease >= 0
+        ? weeksAfterRelease
+        : null,
+    promotionIncome: promotionTotalIncome,
+    promotionCost: promotionTotalCost,
+  };
+  const financeResult = processWeeklyFinances(snapshot.finance, revenueCtx);
+  money = financeResult.money;
+  report.finance.income = financeResult.income;
+  report.finance.expenses = financeResult.expenses;
+  report.warnings.push(...financeResult.warnings);
 
-  if (money < 0) {
-    report.warnings.push(`자금 부족: ${money.toLocaleString()}원`);
-  }
+  // ── 11. Fandom 4-axis
+  const concertThisWeek = promotionOrders.some(
+    (o) =>
+      o.activityId === "smallConcert" ||
+      o.activityId === "midConcert" ||
+      o.activityId === "largeConcert" ||
+      o.activityId === "domeConcert",
+  );
+  const fanServiceThisWeek = promotionOrders.some(
+    (o) =>
+      o.activityId === "fanSign" ||
+      o.activityId === "fanCafeEvent" ||
+      o.activityId === "liveBroadcast",
+  );
 
-  // 10. Fandom 4-axis
   const fandomCtx: WeeklyFandomContext = {
-    hadVarietyAppearance: trainees.some((t) => t.currentActivity === "entertainment"),
-    hadViralEvent: rolledEvents.some((e) => e.template.id === "viral-performance-cut" || e.template.id === "fan-challenge-viral"),
-    chartRank: null,
-    isActive: album !== null || trainees.some((t) => t.currentActivity === "entertainment"),
+    hadVarietyAppearance: trainees.some(
+      (t) => t.currentActivity === "entertainment",
+    ),
+    hadViralEvent: rolledEvents.some(
+      (e) =>
+        e.template.id === "viral-performance-cut" ||
+        e.template.id === "fan-challenge-viral",
+    ),
+    chartRank,
+    isActive:
+      album !== null ||
+      trainees.some((t) => t.currentActivity === "entertainment") ||
+      promotionOrders.length > 0,
     albumReleaseThisWeek: false,
-    concertThisWeek: false,
-    fanServiceThisWeek: false,
-    scandalThisWeek: vacationScandal !== null || rolledEvents.some((e) => e.template.type === "negative"),
+    concertThisWeek,
+    fanServiceThisWeek,
+    scandalThisWeek:
+      vacationScandal !== null ||
+      rolledEvents.some((e) => e.template.type === "negative"),
     conceptBreakThisWeek: false,
-    excessiveCommercial: false,
+    excessiveCommercial: excessiveCommercialPenalty > 0,
     spotifyStreaming: fandomAxis.global > 1000,
     youtubeActivity: fandomAxis.global > 500,
     overseasPromotion: false,
     foreignMembers: trainees.filter((t) => t.nationality !== "korean"),
     musicQualityHigh: fandomAxis.industry > 50,
     stageExcellent: false,
-    awardWin: false,
+    awardWin: playerWonAward,
     qualityDecline: false,
   };
   const fandomResult = updateFandom(fandomAxis, fandomCtx);
@@ -323,21 +555,108 @@ export function processWeek(
     }
   }
 
-  // 11. Advance week
+  // ── 12. Investor condition check
+  const investor = INVESTOR_COMPANIES.find(
+    (c) => c.type === snapshot.game.investorType,
+  );
+  let investorPenaltyActive = snapshot.game.investorPenaltyActive;
+  if (investor) {
+    const investorMetrics = buildInvestorMetrics(
+      snapshot,
+      fandomAxis,
+      trainees,
+      report.awardResults,
+    );
+    const investorChecks = checkInvestorConditions(
+      investor,
+      investorMetrics,
+      snapshot.game.currentWeek,
+    );
+    const failedConditions = investorChecks.filter((c) => !c.met);
+
+    if (failedConditions.length > 0) {
+      investorPenaltyActive = true;
+      const penalties = applyInvestorPenalty(investor);
+      for (const penalty of penalties) {
+        report.warnings.push(`투자사 페널티: ${penalty.description}`);
+        if (penalty.effects.money) money += penalty.effects.money;
+        if (penalty.effects.public)
+          fandomAxis.public = clamp(
+            fandomAxis.public + penalty.effects.public,
+            0,
+            100,
+          );
+        if (penalty.effects.global)
+          fandomAxis.global = Math.max(
+            0,
+            fandomAxis.global + (penalty.effects.global ?? 0),
+          );
+        if (penalty.effects.industry)
+          fandomAxis.industry = clamp(
+            fandomAxis.industry + penalty.effects.industry,
+            0,
+            100,
+          );
+        if (penalty.effects.satisfaction) {
+          trainees = trainees.map((t) => ({
+            ...t,
+            satisfaction: clamp(
+              t.satisfaction + (penalty.effects.satisfaction ?? 0),
+              0,
+              100,
+            ),
+          }));
+        }
+        if (penalty.effects.stress) {
+          trainees = trainees.map((t) => ({
+            ...t,
+            stress: clamp(
+              t.stress + (penalty.effects.stress ?? 0),
+              0,
+              100,
+            ),
+          }));
+        }
+      }
+    }
+  }
+
+  // ── 13. Advance week
   const advancedGame = advanceWeekState(snapshot.game);
 
-  // 12. Generate next week's decision cards
-  const hasPendingScandal = rolledEvents.some((e) => e.template.type === "negative" && e.gameEvent.choices && e.gameEvent.choices.length > 0);
+  // ── 13.5 Season trend update
+  let updatedCalendar = { ...snapshot.calendar };
+  if (advancedGame.currentSeason !== snapshot.game.currentSeason) {
+    const newTrend = updateSeasonTrend(
+      advancedGame.currentSeason,
+      seed + 100,
+    );
+    updatedCalendar = {
+      ...updatedCalendar,
+      currentSeason: advancedGame.currentSeason,
+      marketTrend: newTrend,
+    };
+  }
+
+  // ── 14. Generate next week's decision cards
+  const hasPendingScandal = rolledEvents.some(
+    (e) =>
+      e.template.type === "negative" &&
+      e.gameEvent.choices &&
+      e.gameEvent.choices.length > 0,
+  );
   const cardCtx: DecisionCardContext = {
     phase: advancedGame.currentPhase,
     hasPendingScandal,
     hasInjuredMember: trainees.some((t) => t.injuryWeeks > 0),
-    investorPressure: snapshot.game.investorPenaltyActive,
+    investorPressure: investorPenaltyActive,
     hasCurrentAlbum: album !== null,
     weeksSinceLastAlbum: lastReleasedAlbum?.releaseWeek
       ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
       : null,
-    lowSatisfactionMember: trainees.some((t) => t.satisfaction <= SATISFACTION_WARNING_THRESHOLD),
+    lowSatisfactionMember: trainees.some(
+      (t) => t.satisfaction <= SATISFACTION_WARNING_THRESHOLD,
+    ),
   };
   const nextDecisions = generateWeeklyDecisionCards(
     advancedGame.currentWeek,
@@ -345,10 +664,11 @@ export function processWeek(
     cardCtx,
   );
 
-  // Assemble new state
+  // ── Assemble new state
   const newState: GameSnapshot = {
     game: {
       ...advancedGame,
+      investorPenaltyActive,
       weeklyDecisions: nextDecisions,
       notifications: [
         ...snapshot.game.notifications,
@@ -395,7 +715,7 @@ export function processWeek(
       ],
     },
     calendar: {
-      ...snapshot.calendar,
+      ...updatedCalendar,
       currentSeason: advancedGame.currentSeason,
       kpopNews: [...newsItems, ...snapshot.calendar.kpopNews].slice(0, 8),
       upcomingCompetitorComebacks: compResult.comebacks.map((name) => ({
@@ -414,4 +734,92 @@ export function processWeek(
   };
 
   return { newState, weekReport: report };
+}
+
+function categoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    rookie: "신인상",
+    bonsang: "본상",
+    daesang: "대상",
+    popularity: "인기상",
+  };
+  return labels[category] ?? category;
+}
+
+function countRecentCommercialWeeks(
+  incomeHistory: readonly { week: number; breakdown: Record<string, number> }[],
+): number {
+  const recent = incomeHistory.slice(-2);
+  return recent.filter((w) => w.breakdown.promotions && w.breakdown.promotions > 0)
+    .length;
+}
+
+function buildInvestorMetrics(
+  snapshot: GameSnapshot,
+  fandomAxis: Fandom4Axis,
+  trainees: readonly Trainee[],
+  awardResults: AwardShowResult[] | null,
+): {
+  snsFollowers: number;
+  spotifyStreams: number;
+  musicShowWins: number;
+  highestAwardLevel: string | null;
+  quarterlyRevenue: number;
+  cumulativeRevenue: number;
+  visualAverage: number;
+  adContracts: number;
+  trendFit: number;
+  styleScore: number;
+} {
+  const last13 = snapshot.finance.incomeHistory.slice(-13);
+  const quarterlyRevenue = last13.reduce(
+    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
+    0,
+  );
+  const cumulativeRevenue = snapshot.finance.incomeHistory.reduce(
+    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
+    0,
+  );
+  const visualAvg =
+    trainees.length > 0
+      ? trainees.reduce((s, t) => s + t.stats.visual, 0) / trainees.length
+      : 0;
+
+  let highestAward: string | null = null;
+  if (awardResults) {
+    const playerWins = getPlayerAwardWins(awardResults, "player");
+    for (const win of playerWins) {
+      if (
+        !highestAward ||
+        awardLevelRank(win.category) > awardLevelRank(highestAward)
+      ) {
+        highestAward = win.category;
+      }
+    }
+  }
+
+  return {
+    snsFollowers: Math.round(
+      fandomAxis.global * 1000 + fandomAxis.public * 500,
+    ),
+    spotifyStreams: Math.round(fandomAxis.global * 10000),
+    musicShowWins: 0,
+    highestAwardLevel: highestAward,
+    quarterlyRevenue,
+    cumulativeRevenue,
+    visualAverage: visualAvg,
+    adContracts: 0,
+    trendFit: fandomAxis.industry,
+    styleScore: visualAvg,
+  };
+}
+
+function awardLevelRank(level: string): number {
+  const ranks: Record<string, number> = {
+    popularity: 1,
+    rookie: 2,
+    bonsang: 3,
+    daesang: 4,
+  };
+  return ranks[level] ?? 0;
 }
