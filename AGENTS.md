@@ -1,0 +1,39 @@
+## Project Overview
+Idolverse: A K-Pop idol management simulation web game.
+Kairosoft-style pixel art, mobile-first, weekly time progression.
+Core gameplay: Strategic choices based on trade-offs. Results are determined by the combination of members, their chemistry, and their concepts.
+
+## Architecture
+- React 19 (UI) + Phaser 3 (pixel art simulation view) hybrid
+- State sharing via a vanilla Zustand v5 store (React: useStore, Phaser: getState/setState/subscribe)
+- EventBus for React <-> Phaser event communication
+- Supabase Auth + PostgreSQL
+
+## State Design Principles
+- All game state is centralized in the Zustand store
+- Separated into 9 domains: gameStore, traineeStore, staffStore, albumStore, fandomStore, competitorStore, financeStore, calendarStore, eventStore
+- System logic is implemented as pure functions in src/systems/. Takes the current state and returns a new state. Separated from UI/rendering code.
+
+## Core Game Rules (Always refer to these when implementing code)
+- Each week, players make only 3–4 key decision cards; the rest are automatically handled by the manager AI
+- Every choice has an opportunity cost (e.g., sending a member to variety shows skips training; skipping training lowers their condition)
+- Members have specific positions (Leader/Main Vocalist/Main Dancer/Center/Visual/Variety/Producing)
+- Each member pair has a chemistry value (-100 to +100) that affects team efficiency
+- Each member has a concept affinity; repeatedly using an unsuitable concept accumulates dissatisfaction -> defection
+- Fans/fame is divided into 4 categories: public recognition, core fandom, overseas fandom, and industry reputation
+- Investor type dictates the overall gameplay style (IT = Digital KPIs, Entertainment = Stage/Awards, VC = ROI, Cosmetics = Visuals)
+- Competitive groups: 3–5 teams (5 types) at any given time + event-based pop-up groups
+- 52-week seasonal cycle (Spring/Summer/Fall/Winter) influences concept demand and the market
+
+## UI Rules
+- Mobile-first: 360px baseline, desktop scales to max-width
+- Tailwind CSS, avoid inline styles
+- Dark theme by default (background #0f172a–#1e293b, accent pink #ec4899 + cyan #06b6d4)
+- Touch area minimum 44px
+- Pixel fonts only within the game view; system fonts for UI panels
+
+## Code Style
+- TypeScript strict mode
+- Functional components; do not use React.FC
+- Centralize constants and balance values in src/data/; no magic numbers
+- Commit: feat/fix/refactor/style/data
