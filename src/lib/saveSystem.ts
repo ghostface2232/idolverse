@@ -43,6 +43,7 @@ export interface SaveSlotSummary {
   slotNumber: number;
   saveName: string | null;
   groupName: string | null;
+  companyName: string | null;
   playedWeeks: number | null;
   currentPhase: GamePhase | null;
   updatedAt: string | null;
@@ -97,6 +98,15 @@ function deserializeGameState(value: unknown): GameStateSnapshot {
   }
 
   return value as unknown as GameStateSnapshot;
+}
+
+function readSavedCompanyName(saveData: unknown) {
+  if (!isRecord(saveData) || !isRecord(saveData.gameStore)) {
+    return null;
+  }
+
+  const companyName = saveData.gameStore.companyName;
+  return typeof companyName === "string" ? companyName : null;
 }
 
 function extractGameStoreState(): GameStoreState {
@@ -317,7 +327,7 @@ export async function listSaves(userId: string): Promise<SaveSlotSummary[]> {
   const { data, error } = await supabase
     .from("saves")
     .select(
-      "slot_number, save_name, played_weeks, current_phase, group_name, updated_at",
+      "slot_number, save_data, save_name, played_weeks, current_phase, group_name, updated_at",
     )
     .eq("user_id", userId)
     .order("slot_number", { ascending: true })
@@ -337,6 +347,7 @@ export async function listSaves(userId: string): Promise<SaveSlotSummary[]> {
       slotNumber,
       saveName: row?.save_name ?? null,
       groupName: row?.group_name ?? null,
+      companyName: row ? readSavedCompanyName(row.save_data) : null,
       playedWeeks: row?.played_weeks ?? null,
       currentPhase: row?.current_phase ?? null,
       updatedAt: row?.updated_at ?? null,

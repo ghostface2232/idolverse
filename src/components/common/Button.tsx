@@ -1,16 +1,20 @@
 import type { ButtonHTMLAttributes } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  tone?: "primary" | "secondary" | "ghost";
+  tone?: "primary" | "secondary" | "ghost" | "danger" | "success";
 }
 
 const toneClasses: Record<NonNullable<ButtonProps["tone"]>, string> = {
   primary:
-    "bg-brand-pink text-white shadow-[0_12px_30px_rgba(236,72,153,0.28)] hover:bg-pink-400",
+    "border-brand-pink bg-brand-pink text-white shadow-[0_5px_0_#9d174d,0_14px_30px_rgba(236,72,153,0.28)] hover:bg-pink-400 active:translate-y-1 active:shadow-[0_2px_0_#9d174d,0_8px_18px_rgba(236,72,153,0.2)]",
   secondary:
-    "bg-slate-800 text-slate-100 ring-1 ring-white/10 hover:bg-slate-700",
+    "border-slate-500 bg-slate-800 text-slate-100 shadow-[0_5px_0_#334155] hover:bg-slate-700 active:translate-y-1 active:shadow-[0_2px_0_#334155]",
   ghost:
-    "bg-transparent text-slate-200 ring-1 ring-white/12 hover:bg-white/6",
+    "border-slate-600 bg-slate-950/30 text-slate-200 shadow-[0_5px_0_rgba(71,85,105,0.75)] hover:bg-white/6 active:translate-y-1 active:shadow-[0_2px_0_rgba(71,85,105,0.75)]",
+  danger:
+    "border-red-400 bg-red-500 text-white shadow-[0_5px_0_#991b1b] hover:bg-red-400 active:translate-y-1 active:shadow-[0_2px_0_#991b1b]",
+  success:
+    "border-emerald-400 bg-emerald-500 text-slate-950 shadow-[0_5px_0_#047857] hover:bg-emerald-400 active:translate-y-1 active:shadow-[0_2px_0_#047857]",
 };
 
 export function Button({
@@ -23,7 +27,7 @@ export function Button({
     <button
       type={type}
       className={[
-        "inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition",
+        "inline-flex min-h-11 items-center justify-center rounded-2xl border-2 px-4 py-3 text-sm font-black tracking-wide transition duration-150 ease-out",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan/80",
         "disabled:cursor-not-allowed disabled:opacity-50",
         toneClasses[tone],

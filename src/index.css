@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "DungGeunMo";
+  src: url("/DungGeunMo.woff2") format("woff2");
+  font-display: swap;
+}
+
 @theme {
   --color-brand-pink: #ec4899;
   --color-brand-cyan: #06b6d4;
@@ -12,6 +18,7 @@
 :root {
   color-scheme: dark;
   font-family:
+    "DungGeunMo",
     "Pretendard Variable",
     "Pretendard",
     "Segoe UI",
@@ -93,4 +100,80 @@ select {
 
 .stat-progress.from-brand-cyan::-moz-progress-bar {
   background: linear-gradient(90deg, #06b6d4, #67e8f9);
+}
+
+.stat-progress.stat-progress-vital::-webkit-progress-value {
+  background: linear-gradient(90deg, #ef4444 0%, #facc15 52%, #10b981 100%);
+}
+
+.stat-progress.stat-progress-vital::-moz-progress-bar {
+  background: linear-gradient(90deg, #ef4444 0%, #facc15 52%, #10b981 100%);
+}
+
+.pixel-grid-bg {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.neon-sign {
+  animation: neon-pulse 2.4s ease-in-out infinite;
+}
+
+.pixel-star {
+  animation: pixel-twinkle 1.8s steps(2, end) infinite;
+}
+
+.animate-modal-fade {
+  animation: modal-fade 150ms ease-out both;
+}
+
+.typing-caret::after {
+  content: "▌";
+  margin-left: 0.2rem;
+  color: #06b6d4;
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes neon-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.65))
+      drop-shadow(0 0 18px rgba(6, 182, 212, 0.35));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 18px rgba(236, 72, 153, 0.9))
+      drop-shadow(0 0 28px rgba(6, 182, 212, 0.7));
+  }
+}
+
+@keyframes pixel-twinkle {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
 }

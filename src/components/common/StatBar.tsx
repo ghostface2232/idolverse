@@ -4,16 +4,7 @@ interface StatBarProps {
   tone?: "pink" | "cyan";
 }
 
-const toneClasses: Record<NonNullable<StatBarProps["tone"]>, string> = {
-  pink: "from-brand-pink to-pink-300",
-  cyan: "from-brand-cyan to-cyan-300",
-};
-
-export function StatBar({
-  label,
-  value,
-  tone = "pink",
-}: StatBarProps) {
+export function StatBar({ label, value }: StatBarProps) {
   const clampedValue = Math.max(0, Math.min(value, 100));
 
   return (
@@ -23,7 +14,7 @@ export function StatBar({
         <span>{clampedValue}</span>
       </div>
       <progress
-        className={`stat-progress ${toneClasses[tone]}`}
+        className="stat-progress stat-progress-vital"
         value={clampedValue}
         max={100}
       />
