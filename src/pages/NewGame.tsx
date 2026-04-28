@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { BadgeIcon } from "@/components/common/BadgeIcon";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
@@ -26,39 +25,34 @@ type Step = "prologue" | "investor" | "group";
 const PROLOGUE_TEXT =
   "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 당신은 능력과 열정을 겸비한 동료들과 함께 수많은 스타를 배출해 냈고, 이제 새로운 길을 향해 나아가려 합니다...";
 
+const PROLOGUE_IMAGE_SRC = "/images/prologue-director.png";
+
 const investorStyles: Record<
   InvestorType,
-  { icon: string; label: string; color: string; badgeTone: "pink" | "cyan" | "emerald" | "amber" }
+  {
+    color: string;
+    logoSrc: string;
+  }
 > = {
   it: {
-    icon: "PC",
-    label: "IT",
     color: "border-blue-300/60 bg-blue-500/14",
-    badgeTone: "cyan",
+    logoSrc: "/images/investors/nextbeat.png",
   },
   entertainment: {
-    icon: "MIC",
-    label: "엔터",
     color: "border-violet-300/60 bg-violet-500/14",
-    badgeTone: "pink",
+    logoSrc: "/images/investors/crownmusic-ent.png",
   },
   vc: {
-    icon: "ROI",
-    label: "VC",
     color: "border-emerald-300/60 bg-emerald-500/14",
-    badgeTone: "emerald",
+    logoSrc: "/images/investors/summit-capital.png",
   },
   cosmetic: {
-    icon: "LIP",
-    label: "코스메틱",
     color: "border-pink-300/60 bg-pink-500/14",
-    badgeTone: "pink",
+    logoSrc: "/images/investors/lumiere-beauty.png",
   },
   fashion: {
-    icon: "FIT",
-    label: "패션",
     color: "border-amber-300/60 bg-amber-500/14",
-    badgeTone: "amber",
+    logoSrc: "/images/investors/maison-group.png",
   },
 };
 
@@ -89,6 +83,8 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
   const [groupGender, setGroupGender] = useState<GroupGender>("female");
   const [companyName, setCompanyName] = useState(() => pickRandom(COMPANY_NAME_CANDIDATES));
   const [groupName, setGroupName] = useState(() => pickRandom(GROUP_NAME_CANDIDATES));
+  const investorScrollerRef = useRef<HTMLDivElement | null>(null);
+  const investorCardRefs = useRef(new Map<string, HTMLElement>());
 
   const displayedText = PROLOGUE_TEXT.slice(0, visibleLength);
   const isPrologueComplete = visibleLength >= PROLOGUE_TEXT.length;
@@ -109,6 +105,49 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
     () => selectedInvestor.conditions.map((condition) => condition.description).slice(0, 2),
     [selectedInvestor],
   );
+
+  const selectCenteredInvestor = () => {
+    const scroller = investorScrollerRef.current;
+
+    if (!scroller) {
+      return;
+    }
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const scrollerCenter = scrollerRect.left + scrollerRect.width / 2;
+    let nearestInvestor = selectedInvestor;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (const investor of INVESTOR_COMPANIES) {
+      const card = investorCardRefs.current.get(investor.id);
+
+      if (!card) {
+        continue;
+      }
+
+      const cardRect = card.getBoundingClientRect();
+      const cardCenter = cardRect.left + cardRect.width / 2;
+      const distance = Math.abs(cardCenter - scrollerCenter);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestInvestor = investor;
+      }
+    }
+
+    if (nearestInvestor.id !== selectedInvestor.id) {
+      setSelectedInvestor(nearestInvestor);
+    }
+  };
+
+  const focusInvestorCard = (investor: InvestorCompany) => {
+    setSelectedInvestor(investor);
+    investorCardRefs.current.get(investor.id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  };
 
   const startGame = () => {
     const firstWeek = 1;
@@ -145,11 +184,11 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
   };
 
   return (
-    <main className="pixel-grid-bg min-h-screen bg-slate-950 px-4 py-6">
-      <div className="mx-auto flex w-full max-w-md flex-col gap-4">
+    <main className="pixel-grid-bg h-screen overflow-hidden bg-slate-950 py-6">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 px-4">
         <header className="flex items-center justify-between gap-3">
           <Button tone="ghost" onClick={onCancel}>
-            메뉴
+            처음으로
           </Button>
           <div className="flex gap-2">
             {(["prologue", "investor", "group"] as Step[]).map((item, index) => (
@@ -166,110 +205,133 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         </header>
 
         {step === "prologue" ? (
-          <Card className="min-h-[520px] space-y-6 border-brand-cyan/40">
-            <div className="rounded-[24px] border-2 border-brand-pink/50 bg-slate-950/70 p-5">
+          <section key="prologue" className="animate-step-fade flex h-full flex-col gap-4 overflow-hidden">
+            <div className="rounded-[28px] border-2 border-brand-pink/50 bg-slate-900/84 px-5 py-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.76)]">
               <PixelText as="h1" className="text-3xl text-pink-200">
                 PROLOGUE
               </PixelText>
-              <p className="mt-2 text-xs font-black uppercase tracking-[0.28em] text-brand-cyan">
+              <p className="mt-2 text-xs uppercase tracking-[0.28em] text-brand-cyan">
                 Director's new road
               </p>
             </div>
 
-            <button
-              className="min-h-[280px] w-full rounded-[24px] border-2 border-slate-600 bg-slate-950/58 p-5 text-left text-lg leading-9 text-slate-100 transition hover:border-brand-cyan/70"
-              onClick={() => setVisibleLength(PROLOGUE_TEXT.length)}
-            >
-              <span className={isPrologueComplete ? "" : "typing-caret"}>
-                {displayedText}
-              </span>
-            </button>
+            <Card className="relative min-h-0 flex-1 overflow-hidden border-brand-cyan/40 p-0">
+              <img
+                src={PROLOGUE_IMAGE_SRC}
+                alt="K-pop director looking over a neon city from a rooftop studio"
+                className="absolute inset-0 h-full w-full object-cover [image-rendering:auto]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/6 via-transparent to-slate-950/92" />
 
-            <Button
-              className="w-full"
-              disabled={!isPrologueComplete}
-              onClick={() => setStep("investor")}
-            >
-              다음
-            </Button>
-          </Card>
+              <div className="absolute inset-x-0 bottom-0 space-y-6 p-4 pb-6">
+                <button
+                  className="w-full whitespace-normal break-keep px-2 py-1 text-center text-lg leading-10 text-slate-50 transition [overflow-wrap:anywhere] [text-shadow:0_2px_0_#0f172a,0_0_14px_rgba(15,23,42,0.95)] hover:text-cyan-100"
+                  onClick={() => setVisibleLength(PROLOGUE_TEXT.length)}
+                >
+                  <span className={isPrologueComplete ? "" : "typing-caret"}>
+                    {displayedText}
+                  </span>
+                </button>
+
+                <Button
+                  className="w-full"
+                  disabled={!isPrologueComplete}
+                  onClick={() => setStep("investor")}
+                >
+                  다음
+                </Button>
+              </div>
+            </Card>
+          </section>
         ) : null}
 
         {step === "investor" ? (
-          <section className="space-y-4">
-            <div>
-              <PixelText as="h1" className="text-3xl text-brand-cyan">
-                투자사 선택
-              </PixelText>
-              <p className="mt-2 text-sm text-slate-400">
-                투자자는 시작 자금과 플레이 압력을 동시에 결정합니다.
-              </p>
-            </div>
+          <section key="investor" className="animate-step-fade flex h-full flex-col gap-4">
+            <div className="min-h-0 flex-1 flex flex-col">
+              <div className="pt-2">
+                <PixelText as="h1" className="text-3xl text-brand-cyan">
+                  투자사 선택
+                </PixelText>
+                <p className="mt-2 text-sm text-slate-400">
+                  투자자는 시작 자금과 플레이 압력을 동시에 결정합니다.
+                </p>
+              </div>
 
-            <div className="flex snap-x gap-4 overflow-x-auto pb-3">
-              {INVESTOR_COMPANIES.map((investor) => {
-                const style = investorStyles[investor.type];
-                const isSelected = selectedInvestor.id === investor.id;
+              <div className="relative left-1/2 flex min-h-0 w-screen -translate-x-1/2 flex-1 items-center">
+                <div
+                  ref={investorScrollerRef}
+                  className="flex w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden px-8 py-3 scroll-smooth"
+                  onScroll={selectCenteredInvestor}
+                >
+                {INVESTOR_COMPANIES.map((investor) => {
+                  const style = investorStyles[investor.type];
+                  const isSelected = selectedInvestor.id === investor.id;
 
-                return (
-                  <article
-                    key={investor.id}
-                    role="button"
-                    tabIndex={0}
-                    className={[
-                      "min-w-[300px] cursor-pointer snap-center rounded-[28px] border-2 p-4 text-left shadow-[0_10px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out",
-                      style.color,
-                      isSelected ? "ring-2 ring-brand-cyan" : "hover:border-brand-cyan/70",
-                    ].join(" ")}
-                    onClick={() => setSelectedInvestor(investor)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setSelectedInvestor(investor);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <BadgeIcon
-                          icon={style.icon}
-                          label={style.label}
-                          tone={style.badgeTone}
-                        />
-                        <h2 className="mt-4 text-xl font-black text-slate-50">
-                          {investor.name}
-                        </h2>
-                        <p className="mt-1 text-sm leading-5 text-slate-300">
-                          {investor.description}
-                        </p>
-                      </div>
-                    </div>
-                    <MoneyDisplay amount={investor.fundAmount} className="mt-4 text-base" />
-                    <ul className="mt-4 space-y-2 text-sm text-slate-200">
-                      {investor.conditions.slice(0, 2).map((condition) => (
-                        <li key={condition.id}>- {condition.description}</li>
-                      ))}
-                    </ul>
-                    <Button
-                      tone="ghost"
-                      className="mt-4 w-full"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setDetailInvestor(investor);
+                  return (
+                    <article
+                      key={investor.id}
+                      ref={(node) => {
+                        if (node) {
+                          investorCardRefs.current.set(investor.id, node);
+                        } else {
+                          investorCardRefs.current.delete(investor.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className={[
+                        "flex min-w-[300px] cursor-pointer snap-center flex-col items-center rounded-[28px] border-2 p-4 text-center shadow-[0_10px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out [word-break:keep-all] [overflow-wrap:break-word]",
+                        style.color,
+                        isSelected
+                          ? "border-brand-cyan ring-4 ring-brand-cyan/45"
+                          : "hover:border-brand-cyan/70",
+                      ].join(" ")}
+                      onClick={() => focusInvestorCard(investor)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          focusInvestorCard(investor);
+                        }
                       }}
                     >
-                      상세 보기
-                    </Button>
-                  </article>
-                );
-              })}
+                      <div className="mb-3 w-1/2 overflow-hidden rounded-xl border-2 border-slate-600/80 bg-slate-950/72 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
+                        <img
+                          src={style.logoSrc}
+                          alt={`${investor.name} investor logo graphic`}
+                          className="aspect-square w-full object-cover"
+                        />
+                      </div>
+                      <h2 className="text-xl text-slate-50">
+                        {investor.name}
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-100 [text-shadow:0_1px_0_rgba(15,23,42,0.85)]">
+                        {investor.description}
+                      </p>
+                      <MoneyDisplay amount={investor.fundAmount} size="2xl" className="mt-3" />
+                      <div className="w-full pt-3">
+                        <Button
+                          tone="ghost"
+                          className="w-full"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDetailInvestor(investor);
+                          }}
+                        >
+                          상세 보기
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })}
+                </div>
+              </div>
             </div>
 
-            <Card className="space-y-3">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-cyan">
+            <Card className="space-y-3 pb-5 text-center [word-break:keep-all] [overflow-wrap:break-word]">
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-cyan">
                 Selected
               </p>
-              <h2 className="text-xl font-black text-slate-50">{selectedInvestor.name}</h2>
+              <h2 className="text-xl text-slate-50">{selectedInvestor.name}</h2>
               {conditionSummary.map((condition) => (
                 <p key={condition} className="text-sm text-slate-300">
                   {condition}
@@ -277,7 +339,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               ))}
             </Card>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pb-2">
               <Button tone="ghost" onClick={() => setStep("prologue")}>
                 이전
               </Button>
@@ -289,68 +351,70 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         ) : null}
 
         {step === "group" ? (
-          <section className="space-y-4">
-            <div>
-              <PixelText as="h1" className="text-3xl text-brand-cyan">
-                그룹 설정
-              </PixelText>
-              <p className="mt-2 text-sm text-slate-400">
-                첫 프로젝트의 정체성을 정합니다. 이름은 이후 UI에서 교체 가능합니다.
-              </p>
-            </div>
+          <section key="group" className="animate-step-fade flex h-full flex-col gap-4 overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-4">
+              <div className="pt-2">
+                <PixelText as="h1" className="text-3xl text-brand-cyan">
+                  그룹 설정
+                </PixelText>
+                <p className="mt-2 text-sm text-slate-400">
+                  첫 프로젝트의 정체성을 정합니다. 이름은 이후 UI에서 교체 가능합니다.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "female" as GroupGender, label: "여자 그룹", icon: "GIRL" },
-                { value: "male" as GroupGender, label: "남자 그룹", icon: "BOY" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  className={[
-                    "min-h-36 rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition",
-                    groupGender === option.value
-                      ? "border-brand-pink ring-2 ring-brand-pink/50"
-                      : "border-slate-600 hover:border-brand-cyan",
-                  ].join(" ")}
-                  onClick={() => setGroupGender(option.value)}
-                >
-                  <PixelText as="p" className="text-3xl text-slate-100">
-                    {option.icon}
-                  </PixelText>
-                  <p className="mt-4 font-black text-slate-50">{option.label}</p>
-                </button>
-              ))}
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: "female" as GroupGender, label: "여자 그룹", icon: "GIRL" },
+                  { value: "male" as GroupGender, label: "남자 그룹", icon: "BOY" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    className={[
+                      "min-h-36 rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition",
+                      groupGender === option.value
+                        ? "border-brand-pink ring-2 ring-brand-pink/50"
+                        : "border-slate-600 hover:border-brand-cyan",
+                    ].join(" ")}
+                    onClick={() => setGroupGender(option.value)}
+                  >
+                    <PixelText as="p" className="text-3xl text-slate-100">
+                      {option.icon}
+                    </PixelText>
+                    <p className="mt-4 text-slate-50">{option.label}</p>
+                  </button>
+                ))}
+              </div>
 
-            <Card className="space-y-4">
-              <label className="block space-y-2">
-                <span className="text-sm font-black text-slate-200">회사명</span>
-                <input
-                  value={companyName}
-                  onChange={(event) => setCompanyName(event.target.value)}
-                  className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan"
-                />
-              </label>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-black text-slate-200">그룹명</span>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
+              <Card className="space-y-4">
+                <label className="block space-y-2">
+                  <span className="text-sm text-slate-200">회사명</span>
                   <input
-                    value={groupName}
-                    onChange={(event) => setGroupName(event.target.value)}
+                    value={companyName}
+                    onChange={(event) => setCompanyName(event.target.value)}
                     className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan"
                   />
-                  <Button
-                    tone="secondary"
-                    onClick={() => setGroupName(pickRandom(GROUP_NAME_CANDIDATES))}
-                  >
-                    랜덤
-                  </Button>
-                </div>
-              </label>
-            </Card>
+                </label>
 
-            <div className="grid grid-cols-2 gap-3">
+                <label className="block space-y-2">
+                  <span className="text-sm text-slate-200">그룹명</span>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <input
+                      value={groupName}
+                      onChange={(event) => setGroupName(event.target.value)}
+                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan"
+                    />
+                    <Button
+                      tone="secondary"
+                      onClick={() => setGroupName(pickRandom(GROUP_NAME_CANDIDATES))}
+                    >
+                      랜덤
+                    </Button>
+                  </div>
+                </label>
+              </Card>
+            </div>
+
+            <div className="mt-auto grid grid-cols-2 gap-3 pb-2 pt-4">
               <Button tone="ghost" onClick={() => setStep("investor")}>
                 이전
               </Button>
@@ -378,28 +442,28 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
             </Button>
           }
         >
-          <div className="space-y-5 text-sm leading-6">
+          <div className="space-y-5 text-center text-sm leading-6 [word-break:keep-all] [overflow-wrap:break-word]">
             <div>
-              <p className="font-black text-slate-100">조건 전문</p>
+              <p className="text-slate-100">조건 전문</p>
               <ul className="mt-2 space-y-2 text-slate-300">
                 {detailInvestor.conditions.map((condition) => (
-                  <li key={condition.id}>- {condition.description}</li>
+                  <li key={condition.id}>{condition.description}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="font-black text-red-300">미달성 페널티</p>
+              <p className="text-red-300">미달성 페널티</p>
               <ul className="mt-2 space-y-2 text-red-200">
                 {detailInvestor.penaltyEffects.map((effect) => (
-                  <li key={effect.type}>- {effect.description}</li>
+                  <li key={effect.type}>{effect.description}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="font-black text-emerald-300">달성 보너스</p>
+              <p className="text-emerald-300">달성 보너스</p>
               <ul className="mt-2 space-y-2 text-emerald-200">
                 {detailInvestor.bonusEffects.map((effect) => (
-                  <li key={effect.type}>- {effect.description}</li>
+                  <li key={effect.type}>{effect.description}</li>
                 ))}
               </ul>
             </div>
@@ -431,9 +495,9 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
             </div>
           }
         >
-          <p className="text-sm leading-6 text-slate-300">
+          <p className="text-center text-sm leading-6 text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
             이 투자사를 선택하면 게임 플레이스타일이{" "}
-            <span className="font-black text-brand-cyan">
+            <span className="text-brand-cyan">
               {describePlaystyle(confirmInvestor)}
             </span>
             에 맞춰집니다.

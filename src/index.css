@@ -38,6 +38,7 @@ html,
 body,
 #root {
   min-height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -127,6 +128,22 @@ select {
 
 .animate-modal-fade {
   animation: modal-fade 150ms ease-out both;
+}
+
+.animate-step-fade {
+  animation: step-fade 350ms ease-out both;
+}
+
+@keyframes step-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .typing-caret::after {
