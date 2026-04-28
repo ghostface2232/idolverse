@@ -96,7 +96,7 @@ function deserializeGameState(value: unknown): GameStateSnapshot {
     }
   }
 
-  return value as GameStateSnapshot;
+  return value as unknown as GameStateSnapshot;
 }
 
 function extractGameStoreState(): GameStoreState {
@@ -361,6 +361,18 @@ export async function deleteSave(userId: string, slotNumber: number) {
   }
 }
 
+export async function autoSave(
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+  gameState = captureGameState(),
+) {
+  if (gameState.gameStore.currentWeek % AUTO_SAVE_INTERVAL_WEEKS !== 0) {
+    return null;
+  }
+
+  return saveGame(userId, slotNumber, gameState);
+}
+
 export function useAutoSave(
   userId: string | null,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
@@ -376,11 +388,7 @@ export function useAutoSave(
       return;
     }
 
-    if (currentWeek % AUTO_SAVE_INTERVAL_WEEKS !== 0) {
-      return;
-    }
-
-    void saveGame(userId, slotNumber, captureGameState()).catch((error: unknown) => {
+    void autoSave(userId, slotNumber).catch((error: unknown) => {
       console.error("Auto-save failed.", error);
     });
   }, [currentWeek, slotNumber, userId]);
