@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { GamePage } from "@/pages/GamePage";
+import { FoundingFlow } from "@/pages/FoundingFlow";
+import { GameDashboard } from "@/pages/GameDashboard";
 import { MainMenu } from "@/pages/MainMenu";
 import { NewGame } from "@/pages/NewGame";
 
-type AppScreen = "menu" | "newGame" | "game";
+type AppScreen = "menu" | "newGame" | "founding" | "game";
 
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>("menu");
@@ -16,13 +17,22 @@ export default function App() {
           return (
             <NewGame
               onCancel={() => setScreen("menu")}
-              onStartGame={() => setScreen("game")}
+              onStartGame={() => setScreen("founding")}
+            />
+          );
+        }
+
+        if (screen === "founding") {
+          return (
+            <FoundingFlow
+              onComplete={() => setScreen("game")}
+              onCancel={() => setScreen("menu")}
             />
           );
         }
 
         if (screen === "game") {
-          return <GamePage userId={user.id} />;
+          return <GameDashboard userId={user.id} />;
         }
 
         return (

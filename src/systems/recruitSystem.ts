@@ -100,9 +100,10 @@ export function generateTraineeCandidates(
   method: RecruitmentMethod,
   groupGender: GroupGender,
   seed: number,
+  requestedCount?: number,
 ): Trainee[] {
   const random = createSeededRandom(seed);
-  const count = 3 + Math.floor(random() * 3);
+  const count = requestedCount ?? 3 + Math.floor(random() * 3);
 
   const budgetTier = budget >= 100000000 ? 2 : budget >= 50000000 ? 1 : 0;
   const baseMin = 30 + budgetTier * 10;
@@ -179,9 +180,10 @@ export function generateStaffCandidates(
   role: StaffRole,
   salaryRange: { min: number; max: number },
   seed: number,
+  requestedCount?: number,
 ): Staff[] {
   const random = createSeededRandom(seed);
-  const count = 2 + Math.floor(random() * 2);
+  const count = requestedCount ?? 3 + Math.floor(random() * 2);
 
   const candidates: Staff[] = [];
 

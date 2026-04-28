@@ -15,17 +15,17 @@ function calculateWeeklyFixedTotal(costs: FinanceStoreState["fixedCosts"]) {
 }
 
 const initialFixedCosts: FinanceStoreState["fixedCosts"] = {
-  dormitory: 3500000,
-  studio: 4200000,
-  staffSalary: 19400000,
-  livingExpense: 2600000,
-  equipment: 1300000,
+  dormitory: 0,
+  studio: 0,
+  staffSalary: 0,
+  livingExpense: 0,
+  equipment: 0,
   healthcare: 0,
   security: 0,
 };
 
 const initialFinanceState: FinanceStoreState = {
-  money: 180000000,
+  money: 0,
   fixedCosts: initialFixedCosts,
   upgrades: {
     dormLevel: 1,
@@ -34,7 +34,7 @@ const initialFinanceState: FinanceStoreState = {
     hasHealthcare: false,
     hasSecurity: false,
   },
-  weeklyFixedTotal: calculateWeeklyFixedTotal(initialFixedCosts),
+  weeklyFixedTotal: 0,
   incomeHistory: [],
   expenseHistory: [],
 };
