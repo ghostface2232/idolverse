@@ -58,6 +58,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
     upgrades.dormLevel = sel.dormLevel;
     upgrades.studioLevel = sel.studioLevel;
     upgrades.equipmentLevel = sel.equipmentLevel;
+    upgrades.livingExpenseLevel = sel.livingExpenseLevel;
 
     financeVanillaStore.setState({ upgrades }, false);
     onNext();

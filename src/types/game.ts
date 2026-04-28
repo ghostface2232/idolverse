@@ -601,6 +601,7 @@ export interface FinanceStoreState {
     dormLevel: 1 | 2 | 3 | 4;
     studioLevel: 1 | 2 | 3 | 4;
     equipmentLevel: 1 | 2 | 3 | 4;
+    livingExpenseLevel: 1 | 2 | 3 | 4;
     hasHealthcare: boolean;
     hasSecurity: boolean;
   };

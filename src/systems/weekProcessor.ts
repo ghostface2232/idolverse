@@ -340,6 +340,7 @@ export function processWeek(
     manager,
     albumConcept,
     seed,
+    { dormLevel: upgrades.dormLevel, studioLevel: upgrades.studioLevel },
   );
   trainees = trainingResult.trainees;
   report.injuries = trainingResult.injuries;
@@ -364,7 +365,8 @@ export function processWeek(
     currentPhase: snapshot.game.currentPhase,
     albumConcept,
     trainingIntensity: decisions.trainingSchedule.intensity,
-    facilityLevel: Math.min(upgrades.dormLevel, upgrades.studioLevel),
+    dormLevel: upgrades.dormLevel,
+    livingExpenseLevel: upgrades.livingExpenseLevel,
     weeksSinceDebut:
       snapshot.game.currentPhase === "training"
         ? snapshot.game.currentWeek
@@ -390,7 +392,7 @@ export function processWeek(
 
   // ── 6. Album progress
   if (album) {
-    album = progressAlbum(album, staff, trainees);
+    album = progressAlbum(album, staff, trainees, upgrades.equipmentLevel);
   }
 
   // ── 7. Competitor simulation
