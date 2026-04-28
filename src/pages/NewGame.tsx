@@ -184,7 +184,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
   };
 
   return (
-    <main className="pixel-grid-bg h-screen overflow-hidden bg-slate-950 py-6">
+    <main className="pixel-grid-bg h-dvh overflow-hidden bg-slate-950 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 px-4">
         <header className="flex items-center justify-between gap-3">
           <Button tone="ghost" onClick={onCancel}>
@@ -362,29 +362,6 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "female" as GroupGender, label: "여자 그룹", icon: "GIRL" },
-                  { value: "male" as GroupGender, label: "남자 그룹", icon: "BOY" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    className={[
-                      "min-h-36 rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition",
-                      groupGender === option.value
-                        ? "border-brand-pink ring-2 ring-brand-pink/50"
-                        : "border-slate-600 hover:border-brand-cyan",
-                    ].join(" ")}
-                    onClick={() => setGroupGender(option.value)}
-                  >
-                    <PixelText as="p" className="text-3xl text-slate-100">
-                      {option.icon}
-                    </PixelText>
-                    <p className="mt-4 text-slate-50">{option.label}</p>
-                  </button>
-                ))}
-              </div>
-
               <Card className="space-y-4">
                 <label className="block space-y-2">
                   <span className="text-sm text-slate-200">회사명</span>
@@ -412,6 +389,29 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                   </div>
                 </label>
               </Card>
+
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: "female" as GroupGender, label: "여자 그룹", icon: "GIRL" },
+                  { value: "male" as GroupGender, label: "남자 그룹", icon: "BOY" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    className={[
+                      "min-h-36 rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition",
+                      groupGender === option.value
+                        ? "border-brand-pink ring-2 ring-brand-pink/50"
+                        : "border-slate-600 hover:border-brand-cyan",
+                    ].join(" ")}
+                    onClick={() => setGroupGender(option.value)}
+                  >
+                    <PixelText as="p" className="text-3xl text-slate-100">
+                      {option.icon}
+                    </PixelText>
+                    <p className="mt-4 text-slate-50">{option.label}</p>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="mt-auto grid grid-cols-2 gap-3 pb-2 pt-4">

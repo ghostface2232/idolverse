@@ -24,7 +24,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
-    <main className="pixel-grid-bg relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
+    <main className="pixel-grid-bg relative flex h-dvh items-center justify-center overflow-hidden px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(236,72,153,0.24),transparent_28%),radial-gradient(circle_at_82%_78%,rgba(6,182,212,0.2),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_52%,#1e293b_100%)]" />
       <div className="absolute inset-x-0 top-10 mx-auto h-20 w-56 rounded-full bg-brand-pink/20 blur-3xl" />
       {starClasses.map((className, index) => (
