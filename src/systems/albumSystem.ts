@@ -1,5 +1,6 @@
 import {
   CONCEPT_SYNERGY_BONUS,
+  EQUIPMENT_ALBUM_MULT,
   FANDOM_EXPECTATION_RISKY,
   FANDOM_EXPECTATION_SAFE,
   GAME_BALANCE,
@@ -28,6 +29,7 @@ export function progressAlbum(
   album: Album,
   staff: readonly Staff[],
   trainees: readonly Trainee[],
+  equipmentLevel: 1 | 2 | 3 | 4,
 ): Album {
   const producer = staff.find((s) => s.role === "producer");
   const designer = staff.find((s) => s.role === "designer");
@@ -44,9 +46,10 @@ export function progressAlbum(
   const avgVisual =
     trainees.reduce((s, t) => s + t.stats.visual, 0) / Math.max(trainees.length, 1);
 
-  const songGain = 2 + producerAbility * 0.06 + avgVocal * 0.02;
-  const visualGain = 2 + designerAbility * 0.04 + avgVisual * 0.03;
-  const choreoGain = 2 + avgDance * 0.05;
+  const equipmentMult = EQUIPMENT_ALBUM_MULT[equipmentLevel];
+  const songGain = (2 + producerAbility * 0.06 + avgVocal * 0.02) * equipmentMult;
+  const visualGain = (2 + designerAbility * 0.04 + avgVisual * 0.03) * equipmentMult;
+  const choreoGain = (2 + avgDance * 0.05) * equipmentMult;
   const marketGain = 2 + marketerAbility * 0.05;
 
   return {

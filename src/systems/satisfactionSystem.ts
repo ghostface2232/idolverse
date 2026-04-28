@@ -1,5 +1,7 @@
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
+  DORM_SATISFACTION_BONUS,
+  LIVING_EXPENSE_SATISFACTION_BONUS,
   SATISFACTION_CONCEPT_MISMATCH_PENALTY,
   SATISFACTION_LEAVE_THRESHOLD,
   SATISFACTION_OVERWORK_PENALTY,
@@ -17,7 +19,8 @@ export interface WeekContext {
   currentPhase: GamePhase;
   albumConcept: ConceptMood | null;
   trainingIntensity: TrainingIntensity;
-  facilityLevel: number;
+  dormLevel: 1 | 2 | 3 | 4;
+  livingExpenseLevel: 1 | 2 | 3 | 4;
   weeksSinceDebut: number;
   debutWeek: number | null;
   currentWeek: number;
@@ -48,7 +51,6 @@ export interface SatisfactionResult {
 
 const CONCEPT_AFFINITY_HIGH = 65;
 const CONCEPT_AFFINITY_LOW = 35;
-const FACILITY_GOOD_THRESHOLD = 3;
 const DEBUT_DELAY_THRESHOLD_WEEKS = 20;
 const REST_ACTIVITIES = new Set(["rest", "vacation"]);
 
@@ -110,12 +112,16 @@ function computeDelta(
     reasons.push("높은 스트레스 속 강훈련");
   }
 
-  if (ctx.facilityLevel < 2) {
-    delta -= 2;
-    reasons.push("열악한 시설");
-  } else if (ctx.facilityLevel >= FACILITY_GOOD_THRESHOLD) {
-    delta += 1;
-    reasons.push("좋은 시설");
+  const dormBonus = DORM_SATISFACTION_BONUS[ctx.dormLevel];
+  if (dormBonus !== 0) {
+    delta += dormBonus;
+    reasons.push(dormBonus < 0 ? "열악한 숙소" : "좋은 숙소");
+  }
+
+  const livingBonus = LIVING_EXPENSE_SATISFACTION_BONUS[ctx.livingExpenseLevel];
+  if (livingBonus !== 0) {
+    delta += livingBonus;
+    reasons.push(livingBonus < 0 ? "부족한 생활비" : "넉넉한 생활비");
   }
 
   if (hasConflictingPeer(trainee, trainees)) {

@@ -96,6 +96,41 @@ export const TITLE_TRACK_TYPE_WEIGHTS = {
   },
 } as const;
 
+export const DORM_CONDITION_MULT: Record<1 | 2 | 3 | 4, number> = {
+  1: 1.0,
+  2: 1.2,
+  3: 1.4,
+  4: 1.6,
+};
+
+export const DORM_SATISFACTION_BONUS: Record<1 | 2 | 3 | 4, number> = {
+  1: -1,
+  2: 0,
+  3: 1,
+  4: 2,
+};
+
+export const STUDIO_TRAINING_MULT: Record<1 | 2 | 3 | 4, number> = {
+  1: 1.0,
+  2: 1.15,
+  3: 1.3,
+  4: 1.5,
+};
+
+export const EQUIPMENT_ALBUM_MULT: Record<1 | 2 | 3 | 4, number> = {
+  1: 1.0,
+  2: 1.1,
+  3: 1.2,
+  4: 1.35,
+};
+
+export const LIVING_EXPENSE_SATISFACTION_BONUS: Record<1 | 2 | 3 | 4, number> = {
+  1: -1,
+  2: 0,
+  3: 1,
+  4: 2,
+};
+
 export const FACILITY_LEVEL_COSTS = {
   dormitory: {
     1: 5000000, // A low-end dorm keeps the early-game burn rate survivable.

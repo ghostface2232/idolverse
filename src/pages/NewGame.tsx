@@ -198,6 +198,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           dormLevel: 1,
           studioLevel: 1,
           equipmentLevel: 1,
+          livingExpenseLevel: 1,
           hasHealthcare: false,
           hasSecurity: false,
         },

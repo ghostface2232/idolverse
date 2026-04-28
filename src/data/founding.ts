@@ -18,10 +18,10 @@ export interface LivingExpenseTier {
 
 export const FOUNDING_FACILITY_TIERS = {
   dormitory: [
-    { level: 1, name: "원룸", monthlyCost: 1_500_000, effect: "컨디션 회복 기본" },
+    { level: 1, name: "원룸", monthlyCost: 1_500_000, effect: "컨디션 회복 기본, 만족도 -1/주" },
     { level: 2, name: "투룸", monthlyCost: 3_000_000, effect: "컨디션 회복 +20%" },
-    { level: 3, name: "아파트", monthlyCost: 5_000_000, effect: "컨디션 회복 +40%, 만족도 +5" },
-    { level: 4, name: "고급", monthlyCost: 8_000_000, effect: "컨디션 회복 +60%, 만족도 +10" },
+    { level: 3, name: "아파트", monthlyCost: 5_000_000, effect: "컨디션 회복 +40%, 만족도 +1/주" },
+    { level: 4, name: "고급", monthlyCost: 8_000_000, effect: "컨디션 회복 +60%, 만족도 +2/주" },
   ] satisfies FacilityTier[],
   studio: [
     { level: 1, name: "소형", monthlyCost: 1_000_000, effect: "트레이닝 효율 기본" },
@@ -36,10 +36,10 @@ export const FOUNDING_FACILITY_TIERS = {
     { level: 4, name: "최상", monthlyCost: 3_500_000, effect: "앨범 품질 +35%" },
   ] satisfies FacilityTier[],
   livingExpense: [
-    { level: 1, name: "최소", perPersonCost: 500_000, effect: "만족도 유지" },
-    { level: 2, name: "기본", perPersonCost: 1_000_000, effect: "만족도 +5" },
-    { level: 3, name: "넉넉", perPersonCost: 1_500_000, effect: "만족도 +10" },
-    { level: 4, name: "풍족", perPersonCost: 2_000_000, effect: "만족도 +15" },
+    { level: 1, name: "최소", perPersonCost: 500_000, effect: "만족도 -1/주" },
+    { level: 2, name: "기본", perPersonCost: 1_000_000, effect: "만족도 유지" },
+    { level: 3, name: "넉넉", perPersonCost: 1_500_000, effect: "만족도 +1/주" },
+    { level: 4, name: "풍족", perPersonCost: 2_000_000, effect: "만족도 +2/주" },
   ] satisfies LivingExpenseTier[],
 } as const;
 

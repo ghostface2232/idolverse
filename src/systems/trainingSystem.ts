@@ -1,10 +1,12 @@
 import {
+  DORM_CONDITION_MULT,
   GAME_BALANCE,
   INJURY_PROBABILITY_BASE,
   INJURY_STAMINA_FACTOR,
   INJURY_STRESS_FACTOR,
   STRESS_DECREASE_RATE,
   STRESS_INCREASE_RATE,
+  STUDIO_TRAINING_MULT,
   TRAINING_BASE_GROWTH,
   TRAINING_INTENSITY_MULTIPLIER,
 } from "@/data/balance";
@@ -127,15 +129,23 @@ function rollInjury(
   return random() < prob;
 }
 
+export interface FacilityLevels {
+  dormLevel: 1 | 2 | 3 | 4;
+  studioLevel: 1 | 2 | 3 | 4;
+}
+
 export function processTrainingWeek(
   trainees: readonly Trainee[],
   schedule: TrainingSchedule,
   manager: Staff | null,
   albumConcept: ConceptMood | null,
   weekSeed: number,
+  facilityLevels: FacilityLevels,
 ): TrainingResult {
   const managerEff = getManagerEfficiency(manager);
   const managerAbility = manager?.ability ?? 25;
+  const dormConditionMult = DORM_CONDITION_MULT[facilityLevels.dormLevel];
+  const studioTrainingMult = STUDIO_TRAINING_MULT[facilityLevels.studioLevel];
   const injuries: TrainingResult["injuries"] = [];
 
   const updated = trainees.map((trainee, idx) => {
@@ -164,7 +174,7 @@ export function processTrainingWeek(
           ? STRESS_DECREASE_RATE.vacation
           : STRESS_DECREASE_RATE.rest;
       t.stress = clamp01(t.stress + rate);
-      t.condition = clamp01(t.condition + 10);
+      t.condition = clamp01(t.condition + 10 * dormConditionMult);
       return t;
     }
 
@@ -186,7 +196,8 @@ export function processTrainingWeek(
         diligenceMult *
         potentialMult *
         conceptBonus *
-        allocation[stat];
+        allocation[stat] *
+        studioTrainingMult;
       t.stats[stat] = clampStat(t.stats[stat] + growth);
     }
 
