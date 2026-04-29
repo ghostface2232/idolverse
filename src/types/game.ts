@@ -526,7 +526,7 @@ export interface AlbumStoreActions {
   ) => void;
   updateProgress: (progress: Partial<Album["progress"]>) => void;
   selectTitleTrack: (trackId: string) => void;
-  releaseAlbum: (releaseWeek?: number) => void;
+  releaseAlbum: (releaseWeek: number | undefined, equipmentLevel: 1 | 2 | 3 | 4) => void;
   addToHistory: (mood: ConceptMood) => void;
 }
 
