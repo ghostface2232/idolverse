@@ -21,20 +21,26 @@ export function Button({
   type = "button",
   tone = "primary",
   className = "",
+  children,
   ...props
 }: ButtonProps) {
   return (
     <button
       type={type}
       className={[
-        "inline-flex min-h-11 items-center justify-center rounded-2xl border-2 px-4 py-3 text-sm font-black tracking-wide transition duration-150 ease-out",
+        "inline-flex min-h-11 items-center justify-center rounded-2xl border-2 px-4 py-3 text-sm tracking-wide transition duration-150 ease-out",
+        "[font-family:'DungGeunMo',monospace]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan/80",
         "disabled:cursor-not-allowed disabled:opacity-50",
         toneClasses[tone],
         className,
       ].join(" ")}
       {...props}
-    />
+    >
+      <span className="[font-family:'DungGeunMo',monospace]">
+        {children}
+      </span>
+    </button>
   );
 }
 

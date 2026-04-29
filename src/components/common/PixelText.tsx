@@ -12,7 +12,7 @@ export function PixelText({
   return (
     <Component
       className={[
-        "font-black uppercase tracking-[0.08em] text-slate-50 [font-family:'DungGeunMo',monospace] [text-shadow:2px_2px_0_#0f172a,4px_4px_0_rgba(6,182,212,0.34)]",
+        "uppercase tracking-[0.08em] [font-family:'DungGeunMo',monospace] [text-shadow:2px_2px_0_#0f172a,4px_4px_0_rgba(6,182,212,0.34)]",
         className,
       ].join(" ")}
       {...props}

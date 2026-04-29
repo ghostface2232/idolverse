@@ -2,41 +2,71 @@ import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { StatBar } from "@/components/common/StatBar";
+import { getStaffProfileClassNames } from "@/data/staffProfiles";
 import type { Staff } from "@/types/game";
 
 interface StaffCandidateCardProps {
   staff: Staff;
   alreadyHired: boolean;
+  roleFilled?: boolean;
   onHire: (staff: Staff) => void;
+  onCancelHire: (staff: Staff) => void;
 }
 
-export function StaffCandidateCard({ staff, alreadyHired, onHire }: StaffCandidateCardProps) {
+export function StaffCandidateCard({
+  staff,
+  alreadyHired,
+  roleFilled = false,
+  onHire,
+  onCancelHire,
+}: StaffCandidateCardProps) {
+  const disabled = roleFilled && !alreadyHired;
+  const buttonLabel = alreadyHired ? "채용 취소" : roleFilled ? "채용 마감" : "채용";
+  const hasProfileImage =
+    staff.profileImagePath !== undefined && staff.profileSpriteIndex !== undefined;
+
   return (
     <Card
       className={[
         "space-y-3 [word-break:keep-all] [overflow-wrap:break-word]",
-        alreadyHired ? "opacity-50" : "",
+        disabled && !alreadyHired ? "opacity-50" : "",
       ].join(" ")}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-base text-slate-50">{staff.name}</p>
-          {staff.specialty && (
-            <p className="mt-1 text-xs text-slate-400">{staff.specialty}</p>
-          )}
+      <div className="flex gap-3">
+        <div
+          aria-hidden="true"
+          className={[
+            "h-20 w-20 shrink-0 rounded-2xl border-2 bg-slate-950/45",
+            hasProfileImage
+              ? [
+                  "border-slate-500",
+                  getStaffProfileClassNames(staff.role, staff.profileSpriteIndex ?? 0),
+                ].join(" ")
+              : "border-dashed border-slate-600",
+          ].join(" ")}
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-base text-slate-50">{staff.name}</p>
+              {staff.specialty && (
+                <p className="mt-1 text-xs text-slate-400">{staff.specialty}</p>
+              )}
+            </div>
+            <MoneyDisplay amount={staff.salary} size="sm" />
+          </div>
+
+          <StatBar label="능력" value={staff.ability} />
         </div>
-        <MoneyDisplay amount={staff.salary} size="sm" />
       </div>
 
-      <StatBar label="능력" value={staff.ability} />
-
       <Button
-        tone="primary"
+        tone={alreadyHired ? "ghost" : "primary"}
         className="w-full"
-        disabled={alreadyHired}
-        onClick={() => onHire(staff)}
+        disabled={disabled}
+        onClick={() => (alreadyHired ? onCancelHire(staff) : onHire(staff))}
       >
-        {alreadyHired ? "채용 완료" : "채용"}
+        {buttonLabel}
       </Button>
     </Card>
   );

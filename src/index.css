@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css");
 
 @font-face {
   font-family: "DungGeunMo";
@@ -18,7 +19,6 @@
 :root {
   color-scheme: dark;
   font-family:
-    "DungGeunMo",
     "Pretendard Variable",
     "Pretendard",
     "Segoe UI",
@@ -129,6 +129,68 @@ select {
     linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   background-size: 18px 18px;
+}
+
+.staff-profile-sprite {
+  background-repeat: no-repeat;
+  background-size: 400% 300%;
+  image-rendering: pixelated;
+}
+
+.manager-profile-sprite {
+  background-image: url("/images/staff/manager-profiles-spritesheet.png");
+}
+
+.producer-profile-sprite {
+  background-image: url("/images/staff/producer-profiles-spritesheet.png");
+}
+
+.staff-profile-sprite-0 {
+  background-position: 0% 0%;
+}
+
+.staff-profile-sprite-1 {
+  background-position: 33.333% 0%;
+}
+
+.staff-profile-sprite-2 {
+  background-position: 66.667% 0%;
+}
+
+.staff-profile-sprite-3 {
+  background-position: 100% 0%;
+}
+
+.staff-profile-sprite-4 {
+  background-position: 0% 50%;
+}
+
+.staff-profile-sprite-5 {
+  background-position: 33.333% 50%;
+}
+
+.staff-profile-sprite-6 {
+  background-position: 66.667% 50%;
+}
+
+.staff-profile-sprite-7 {
+  background-position: 100% 50%;
+}
+
+.staff-profile-sprite-8 {
+  background-position: 0% 100%;
+}
+
+.staff-profile-sprite-9 {
+  background-position: 33.333% 100%;
+}
+
+.staff-profile-sprite-10 {
+  background-position: 66.667% 100%;
+}
+
+.staff-profile-sprite-11 {
+  background-position: 100% 100%;
 }
 
 .neon-sign {

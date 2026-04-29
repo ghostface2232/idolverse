@@ -1,8 +1,8 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
-import { PixelText } from "@/components/common/PixelText";
 import { FacilityTierSelector } from "@/components/founding/FacilityTierSelector";
+import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { FOUNDING_FACILITY_TIERS, FOUNDING_ONETIME_UPGRADES } from "@/data/founding";
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
@@ -67,9 +67,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
-        <PixelText as="h2" className="pt-2 text-2xl text-brand-cyan">
-          시설 투자
-        </PixelText>
+        <FoundingTitleBar title="시설 투자" />
 
         <FacilityTierSelector
           category="숙소"

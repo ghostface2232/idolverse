@@ -1,4 +1,3 @@
-import { FoundingMoneyBar } from "@/components/founding/FoundingMoneyBar";
 import { StepIndicator } from "@/components/founding/StepIndicator";
 import { StaffHiring } from "@/pages/founding/StaffHiring";
 import { FacilityInvestment } from "@/pages/founding/FacilityInvestment";
@@ -47,9 +46,6 @@ export function FoundingFlow({ onComplete, onCancel }: FoundingFlowProps) {
             <StepIndicator currentStep={step} />
           </div>
         </header>
-
-        <FoundingMoneyBar />
-
         <section
           key={step}
           className="animate-step-fade flex min-h-0 flex-1 flex-col"

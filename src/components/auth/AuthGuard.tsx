@@ -70,7 +70,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
           <p className="text-xs uppercase tracking-[0.28em] text-brand-cyan">
             Authentication
           </p>
-          <h1 className="text-2xl font-semibold text-slate-50">
+          <h1 className="text-2xl text-slate-50">
             Checking Session
           </h1>
           <p className="text-sm text-slate-400">
@@ -89,7 +89,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             <p className="text-xs uppercase tracking-[0.28em] text-brand-cyan">
               Supabase Setup
             </p>
-            <h1 className="text-2xl font-semibold text-slate-50">
+            <h1 className="text-2xl text-slate-50">
               Authentication Is Not Configured
             </h1>
             <p className="text-sm leading-6 text-slate-400">
@@ -113,7 +113,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 <p className="text-xs uppercase tracking-[0.32em] text-brand-cyan">
                   Idolverse Access
                 </p>
-                <h1 className="max-w-md text-3xl font-semibold leading-tight text-slate-50 lg:text-4xl">
+                <h1 className="max-w-md text-3xl leading-tight text-slate-50 lg:text-4xl">
                   Manage the group, sync progress, and keep your weekly run safe.
                 </h1>
                 <p className="max-w-xl text-sm leading-6 text-slate-400">
@@ -127,7 +127,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     Slots
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-100">3</p>
+                  <p className="mt-2 text-2xl text-slate-100">3</p>
                   <p className="mt-1 text-sm text-slate-400">
                     Fixed save slots per account
                   </p>
@@ -136,7 +136,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     Auto Save
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-100">5w</p>
+                  <p className="mt-2 text-2xl text-slate-100">5w</p>
                   <p className="mt-1 text-sm text-slate-400">
                     Triggered on week transitions
                   </p>
@@ -145,7 +145,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     Payload
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-100">9</p>
+                  <p className="mt-2 text-2xl text-slate-100">9</p>
                   <p className="mt-1 text-sm text-slate-400">
                     Zustand domains serialized
                   </p>
@@ -172,7 +172,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-slate-50">
+                <h2 className="text-xl text-slate-50">
                   {mode === "login" ? "Producer Login" : "Create Producer Account"}
                 </h2>
                 <p className="text-sm text-slate-400">

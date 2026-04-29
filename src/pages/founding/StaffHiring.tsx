@@ -2,9 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
-import { PixelText } from "@/components/common/PixelText";
 import { StaffCandidateCard } from "@/components/founding/StaffCandidateCard";
-import { FOUNDING_RECRUITMENT_COSTS, STAFF_MISSING_WARNINGS, STAFF_ROLE_LABELS } from "@/data/founding";
+import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
+import {
+  FOUNDING_RECRUITMENT_COSTS,
+  STAFF_MISSING_WARNINGS,
+  STAFF_ROLE_LABELS,
+  STAFF_ROLE_ORDER,
+} from "@/data/founding";
+import { getStaffProfileByName, STAFF_PROFILE_SPRITESHEETS } from "@/data/staffProfiles";
 import { STAFF_SALARY_BANDS } from "@/data/balance";
 import { generateStaffCandidates } from "@/systems/recruitSystem";
 import { useStaffStore } from "@/stores/staffStore";
@@ -13,7 +19,36 @@ import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import type { Staff, StaffRole } from "@/types/game";
 
-const ROLES: StaffRole[] = ["manager", "producer", "designer", "marketer"];
+const STAFF_CANDIDATE_COUNT = 4;
+
+const salaryRange = {
+  min: STAFF_SALARY_BANDS[0].annualSalary,
+  max: STAFF_SALARY_BANDS[STAFF_SALARY_BANDS.length - 1].annualSalary,
+};
+
+function withLinkedProfiles(role: StaffRole, staffList: Staff[]): Staff[] {
+  const profileImagePath = STAFF_PROFILE_SPRITESHEETS[role];
+  if (profileImagePath === undefined) {
+    return staffList;
+  }
+
+  return staffList.map((member) => {
+    if (member.profileSpriteIndex !== undefined) {
+      return { ...member, profileImagePath };
+    }
+
+    const profile = getStaffProfileByName(role, member.name);
+    if (profile === null) {
+      return member;
+    }
+
+    return {
+      ...member,
+      profileImagePath: profile.profileImagePath,
+      profileSpriteIndex: profile.profileSpriteIndex,
+    };
+  });
+}
 
 interface StaffHiringProps {
   onNext: () => void;
@@ -29,33 +64,53 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
   const candidates = useFoundingStore((s) => s.staffCandidates);
   const seed = useFoundingStore((s) => s.staffCandidateSeed);
 
-  const salaryRange = {
-    min: STAFF_SALARY_BANDS[0].annualSalary,
-    max: STAFF_SALARY_BANDS[STAFF_SALARY_BANDS.length - 1].annualSalary,
-  };
+  const role = activeRole;
+  const roleIndex = STAFF_ROLE_ORDER.indexOf(role);
+  const currentCandidates = candidates[role];
+  const currentRoleHires = staff.filter((s) => s.role === role);
+  const currentRoleHire = currentRoleHires[0] ?? null;
+  const displayedCandidates = currentRoleHire
+    ? [
+        currentRoleHire,
+        ...currentCandidates.filter((candidate) => candidate.id !== currentRoleHire.id),
+      ]
+    : currentCandidates;
+  const displayCandidates = withLinkedProfiles(role, displayedCandidates);
+  const hasCurrentRole = currentRoleHires.length > 0;
+  const isManagerStep = role === "manager";
+  const isFinalStaffStep = role === "marketer";
 
-  const generateAll = useCallback(
-    (s: number) => {
-      for (const role of ROLES) {
-        const list = generateStaffCandidates(role, salaryRange, s + ROLES.indexOf(role), 4);
-        foundingVanillaStore.getState().setStaffCandidates(role, list);
-      }
-    },
-    [salaryRange],
-  );
+  const generateRole = useCallback((targetRole: StaffRole, s: number) => {
+    const roleOffset = STAFF_ROLE_ORDER.indexOf(targetRole);
+    const list = generateStaffCandidates(
+      targetRole,
+      salaryRange,
+      s + roleOffset,
+      STAFF_CANDIDATE_COUNT,
+    );
+    foundingVanillaStore.getState().setStaffCandidates(targetRole, list);
+  }, []);
 
   useEffect(() => {
-    if (candidates.manager.length === 0) {
-      generateAll(seed);
+    if (currentCandidates.length === 0) {
+      generateRole(role, seed);
     }
-  }, [candidates.manager.length, generateAll, seed]);
+  }, [currentCandidates.length, generateRole, role, seed]);
 
   const hiredIds = new Set(staff.map((s) => s.id));
-  const hasManager = staff.some((s) => s.role === "manager");
 
   const handleHire = (target: Staff) => {
+    if (staff.some((s) => s.role === target.role)) return;
     staffVanillaStore.getState().hireStaff(target);
     const totalSalary = [...staff, target].reduce((sum, s) => sum + s.salary, 0);
+    financeVanillaStore.getState().updateFixedCosts({ staffSalary: totalSalary });
+  };
+
+  const handleCancelHire = (target: Staff) => {
+    staffVanillaStore.getState().fireStaff(target.id);
+    const totalSalary = staff
+      .filter((s) => s.id !== target.id)
+      .reduce((sum, s) => sum + s.salary, 0);
     financeVanillaStore.getState().updateFixedCosts({ staffSalary: totalSalary });
   };
 
@@ -64,68 +119,79 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
     financeVanillaStore.getState().subtractMoney(FOUNDING_RECRUITMENT_COSTS.staffRefresh);
     const newSeed = Date.now();
     foundingVanillaStore.getState().setStaffCandidateSeed(newSeed);
-    generateAll(newSeed);
+    generateRole(role, newSeed);
   };
 
   const handleNext = () => {
-    const missingRoles = ROLES.filter(
-      (role) => role !== "manager" && !staff.some((s) => s.role === role),
-    );
-    if (missingRoles.length > 0) {
+    if (!hasCurrentRole && !isManagerStep) {
       setWarningOpen(true);
     } else {
-      onNext();
+      advanceRole();
     }
   };
 
-  const missingWarnings = ROLES
-    .filter((role) => !staff.some((s) => s.role === role))
-    .filter((role) => role !== "manager");
+  const advanceRole = () => {
+    if (isFinalStaffStep) {
+      onNext();
+      return;
+    }
 
-  const roleCounts = ROLES.map((role) => ({
-    role,
-    count: staff.filter((s) => s.role === role).length,
-  }));
+    setActiveRole(STAFF_ROLE_ORDER[roleIndex + 1]);
+  };
+
+  const goPreviousRole = () => {
+    if (roleIndex > 0) {
+      setActiveRole(STAFF_ROLE_ORDER[roleIndex - 1]);
+    }
+  };
+
+  const nextButtonLabel = isFinalStaffStep ? "시설 투자로" : "다음 역할";
 
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
-        <PixelText as="h2" className="pt-2 text-2xl text-brand-cyan">
-          스태프 채용
-        </PixelText>
+        <FoundingTitleBar title={`${STAFF_ROLE_LABELS[role]} 채용`} />
 
-        <Card className="flex items-center gap-3 py-2 text-xs text-slate-300">
-          {roleCounts.map(({ role, count }) => (
-            <span key={role} className={count > 0 ? "text-emerald-300" : "text-slate-500"}>
-              {STAFF_ROLE_LABELS[role]} {count}명
+        <Card className="space-y-2 py-3 text-xs text-slate-300">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-400">
+              스태프 {roleIndex + 1}/{STAFF_ROLE_ORDER.length}
             </span>
-          ))}
+            <span className={hasCurrentRole ? "text-emerald-300" : "text-amber-300"}>
+              {currentRoleHire ? `${currentRoleHire.name} 채용됨` : "미채용"}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-1">
+            {STAFF_ROLE_ORDER.map((staffRole) => {
+              const hired = staff.some((s) => s.role === staffRole);
+              const active = staffRole === role;
+
+              return (
+                <div
+                  key={staffRole}
+                  className={[
+                    "h-1.5 rounded-full transition",
+                    hired
+                      ? "bg-emerald-400"
+                      : active
+                        ? "bg-brand-cyan"
+                        : "bg-slate-700",
+                  ].join(" ")}
+                />
+              );
+            })}
+          </div>
         </Card>
 
-        <div className="flex gap-1">
-          {ROLES.map((role) => (
-            <button
-              key={role}
-              className={[
-                "flex-1 rounded-xl px-2 py-2 text-xs transition",
-                activeRole === role
-                  ? "bg-brand-cyan/20 text-brand-cyan"
-                  : "bg-slate-800 text-slate-400 hover:text-slate-200",
-              ].join(" ")}
-              onClick={() => setActiveRole(role)}
-            >
-              {STAFF_ROLE_LABELS[role]}
-            </button>
-          ))}
-        </div>
-
         <div className="space-y-3">
-          {candidates[activeRole].map((candidate) => (
+          {displayCandidates.map((candidate) => (
             <StaffCandidateCard
               key={candidate.id}
               staff={candidate}
               alreadyHired={hiredIds.has(candidate.id)}
+              roleFilled={hasCurrentRole}
               onHire={(s) => setConfirmTarget(s)}
+              onCancelHire={handleCancelHire}
             />
           ))}
         </div>
@@ -141,9 +207,11 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 pb-2 pt-2">
-        <div />
-        <Button disabled={!hasManager} onClick={handleNext}>
-          다음 단계
+        <Button tone="ghost" disabled={roleIndex === 0} onClick={goPreviousRole}>
+          이전 역할
+        </Button>
+        <Button disabled={isManagerStep && !hasCurrentRole} onClick={handleNext}>
+          {nextButtonLabel}
         </Button>
       </div>
 
@@ -179,7 +247,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
 
       {warningOpen && (
         <Modal
-          title="미채용 역할 경고"
+          title="미채용 경고"
           onClose={() => setWarningOpen(false)}
           footer={
             <div className="grid grid-cols-2 gap-3">
@@ -189,21 +257,17 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
               <Button
                 onClick={() => {
                   setWarningOpen(false);
-                  onNext();
+                  advanceRole();
                 }}
               >
-                계속 진행
+                건너뛰기
               </Button>
             </div>
           }
         >
-          <div className="space-y-2 text-center text-sm [word-break:keep-all] [overflow-wrap:break-word]">
-            {missingWarnings.map((role) => (
-              <p key={role} className="text-amber-300">
-                {STAFF_MISSING_WARNINGS[role]}
-              </p>
-            ))}
-          </div>
+          <p className="text-center text-sm text-amber-300 [word-break:keep-all] [overflow-wrap:break-word]">
+            {STAFF_MISSING_WARNINGS[role]}
+          </p>
         </Modal>
       )}
     </>

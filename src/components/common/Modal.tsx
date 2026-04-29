@@ -28,7 +28,7 @@ export function Modal({
         aria-labelledby="modal-title"
       >
         <header className="flex items-center justify-between gap-3 border-b-2 border-slate-700 bg-slate-800 px-5 py-4">
-          <h2 id="modal-title" className="text-lg font-black text-slate-50">
+          <h2 id="modal-title" className="text-lg text-slate-50">
             {title}
           </h2>
           <Button

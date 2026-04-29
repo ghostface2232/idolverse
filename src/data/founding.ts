@@ -2,6 +2,13 @@ import type { Nationality, Position, StaffRole, TraineeStatKey } from "@/types/g
 
 export type FoundingStep = "staff" | "facility" | "audition" | "position";
 
+export const STAFF_ROLE_ORDER = [
+  "manager",
+  "producer",
+  "designer",
+  "marketer",
+] as const satisfies readonly StaffRole[];
+
 export interface FacilityTier {
   level: 1 | 2 | 3 | 4;
   name: string;

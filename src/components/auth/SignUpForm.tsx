@@ -52,7 +52,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="signup-email"
-          className="text-sm font-medium text-slate-200"
+          className="text-sm text-slate-200"
         >
           Email
         </label>
@@ -71,7 +71,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="signup-password"
-          className="text-sm font-medium text-slate-200"
+          className="text-sm text-slate-200"
         >
           Password
         </label>
@@ -91,7 +91,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="signup-password-confirm"
-          className="text-sm font-medium text-slate-200"
+          className="text-sm text-slate-200"
         >
           Confirm Password
         </label>

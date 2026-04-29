@@ -14,7 +14,7 @@ export function DecisionCardDeck() {
         <p className="text-xs uppercase tracking-[0.28em] text-brand-pink">
           Decision Queue
         </p>
-        <h2 className="text-lg font-semibold text-slate-50">
+        <h2 className="text-lg text-slate-50">
           Core Weekly Choices
         </h2>
         <p className="text-sm text-slate-400">{headline}</p>
@@ -31,7 +31,7 @@ export function DecisionCardDeck() {
                 <p className="text-xs uppercase tracking-[0.22em] text-brand-cyan">
                   {card.category}
                 </p>
-                <h3 className="mt-1 text-sm font-semibold text-slate-100">
+                <h3 className="mt-1 text-sm text-slate-100">
                   {card.title}
                 </h3>
               </div>

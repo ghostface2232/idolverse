@@ -1,4 +1,5 @@
 import { GAME_BALANCE, STAFF_SALARY_BANDS } from "@/data/balance";
+import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
 import {
   CHINESE_NAMES,
   ENGLISH_NAMES,
@@ -176,6 +177,10 @@ const STAFF_NAME_POOL = [
   "황채원", "안지우", "송예성", "전하린", "홍수빈",
 ];
 
+const STAFF_MONTHLY_SALARY_UNIT = 100_000;
+const STAFF_ABILITY_MIN = 15;
+const STAFF_ABILITY_MAX = 95;
+
 export function generateStaffCandidates(
   role: StaffRole,
   salaryRange: { min: number; max: number },
@@ -186,6 +191,7 @@ export function generateStaffCandidates(
   const count = requestedCount ?? 3 + Math.floor(random() * 2);
 
   const candidates: Staff[] = [];
+  const roleProfiles = pickStaffProfiles(role, count, random);
 
   for (let i = 0; i < count; i++) {
     const salary = salaryRange.min + Math.floor(random() * (salaryRange.max - salaryRange.min));
@@ -196,19 +202,36 @@ export function generateStaffCandidates(
         ability = band.minAbility + Math.floor(random() * (band.maxAbility - band.minAbility));
       }
     }
-    ability = clamp(ability + Math.floor((random() - 0.5) * 10), 1, 100);
+    ability = clamp(
+      ability + Math.floor((random() - 0.5) * 10),
+      STAFF_ABILITY_MIN,
+      STAFF_ABILITY_MAX,
+    );
 
     const specialties = STAFF_SPECIALTY_POOL[role];
     const specialty = specialties[Math.floor(random() * specialties.length)];
-    const name = STAFF_NAME_POOL[Math.floor(random() * STAFF_NAME_POOL.length)];
+    const roleProfile = roleProfiles[i] ?? null;
+    const name =
+      roleProfile?.name ?? STAFF_NAME_POOL[Math.floor(random() * STAFF_NAME_POOL.length)];
+    const profile =
+      STAFF_PROFILES[role] !== undefined && roleProfile !== null
+        ? {
+            profileImagePath: roleProfile.profileImagePath,
+            profileSpriteIndex: roleProfile.profileSpriteIndex,
+          }
+        : {};
+
+    const monthlySalary =
+      Math.floor(salary / 12 / STAFF_MONTHLY_SALARY_UNIT) * STAFF_MONTHLY_SALARY_UNIT;
 
     candidates.push({
       id: `staff-recruit-${seed}-${i}`,
       name,
       role,
       ability,
-      salary: Math.round(salary / 12),
+      salary: monthlySalary,
       specialty,
+      ...profile,
     });
   }
 

@@ -48,7 +48,7 @@ export function GamePage({ userId }: GamePageProps) {
                   <p className="text-xs uppercase tracking-[0.28em] text-brand-cyan">
                     Simulation View
                   </p>
-                  <h1 className="mt-1 text-2xl font-semibold text-slate-50">
+                  <h1 className="mt-1 text-2xl text-slate-50">
                     Idolverse Control Room
                   </h1>
                   <p className="mt-1 text-sm text-slate-400">
@@ -99,13 +99,13 @@ export function GamePage({ userId }: GamePageProps) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-slate-800/72 p-3">
                     <p className="text-slate-400">Current Week</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                    <p className="mt-2 text-lg text-slate-100">
                       Y{currentYear} / W{currentWeek}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-800/72 p-3">
                     <p className="text-slate-400">Album Mood</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                    <p className="mt-2 text-lg text-slate-100">
                       {currentAlbum?.concept.mood ?? "None"}
                     </p>
                   </div>
@@ -115,7 +115,7 @@ export function GamePage({ userId }: GamePageProps) {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-2xl bg-slate-800/72 p-3">
                   <p className="text-slate-400">Cash Runway</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-100">
+                  <p className="mt-2 text-lg text-slate-100">
                     {new Intl.NumberFormat("ko-KR", {
                       notation: "compact",
                       maximumFractionDigits: 1,
@@ -124,7 +124,7 @@ export function GamePage({ userId }: GamePageProps) {
                 </div>
                 <div className="rounded-2xl bg-slate-800/72 p-3">
                   <p className="text-slate-400">Readiness</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-100">
+                  <p className="mt-2 text-lg text-slate-100">
                     {Math.round(
                       ((currentAlbum?.progress.song ?? 0) +
                         (currentAlbum?.progress.visual ?? 0) +

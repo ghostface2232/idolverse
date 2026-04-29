@@ -245,6 +245,8 @@ export interface Staff {
   ability: number;
   salary: number;
   specialty?: string;
+  profileImagePath?: string;
+  profileSpriteIndex?: number;
 }
 
 export interface TitleTrack {

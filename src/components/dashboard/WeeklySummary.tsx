@@ -24,7 +24,7 @@ export function WeeklySummary() {
         <p className="text-xs uppercase tracking-[0.28em] text-brand-cyan">
           Weekly Snapshot
         </p>
-        <h2 className="text-xl font-semibold text-slate-50">
+        <h2 className="text-xl text-slate-50">
           Week {currentWeek} · {currentSeason}
         </h2>
         <p className="text-sm text-slate-400">{investor.focus}</p>
@@ -33,13 +33,13 @@ export function WeeklySummary() {
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl bg-slate-800/70 p-3">
           <p className="text-slate-400">Members</p>
-          <p className="mt-2 text-lg font-semibold text-slate-100">
+          <p className="mt-2 text-lg text-slate-100">
             {trainees.length}
           </p>
         </div>
         <div className="rounded-2xl bg-slate-800/70 p-3">
           <p className="text-slate-400">Investor</p>
-          <p className="mt-2 text-lg font-semibold text-slate-100">
+          <p className="mt-2 text-lg text-slate-100">
             {investor.label}
           </p>
         </div>

@@ -39,13 +39,13 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
 
       <Card className="relative z-10 w-full max-w-[360px] space-y-6 border-brand-cyan/50 bg-slate-900/86 p-5 text-center">
         <div className="neon-sign rounded-[28px] border-2 border-brand-pink/70 bg-slate-950/70 px-4 py-7 shadow-[inset_0_0_28px_rgba(236,72,153,0.16)]">
-          <p className="text-xs font-black uppercase tracking-[0.34em] text-brand-cyan">
+          <p className="text-xs uppercase tracking-[0.34em] text-brand-cyan">
             K-POP Manager Sim
           </p>
           <PixelText as="h1" className="mt-3 text-5xl leading-none text-pink-200">
             IDOLVERSE
           </PixelText>
-          <p className="mt-3 text-xs font-bold text-slate-400">
+          <p className="mt-3 text-xs text-slate-400">
             Pixel neon title placeholder
           </p>
         </div>
@@ -71,7 +71,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
         </div>
 
         <div className="rounded-2xl border border-slate-600 bg-slate-950/55 px-4 py-3 text-left text-xs leading-5 text-slate-400">
-          <p className="font-black text-slate-200">Manager Note</p>
+          <p className="text-slate-200">Manager Note</p>
           <p>3-4개의 핵심 카드로 한 주를 운영하고, 나머지는 매니저 AI가 처리합니다.</p>
         </div>
       </Card>
@@ -98,7 +98,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
           <div className="space-y-4 text-sm leading-6 text-slate-300">
             <p>사운드, 알림, 접근성 옵션은 이후 단계에서 연결할 예정입니다.</p>
             <div className="rounded-2xl border border-slate-600 bg-slate-950/50 p-4">
-              <p className="font-black text-slate-100">현재 설정</p>
+              <p className="text-slate-100">현재 설정</p>
               <p>다크 테마: ON</p>
               <p>모바일 기준 폭: 360px</p>
               <p>소셜 로그인: 1차 범위 제외</p>

@@ -40,7 +40,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="login-email"
-          className="text-sm font-medium text-slate-200"
+          className="text-sm text-slate-200"
         >
           Email
         </label>
@@ -59,7 +59,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
       <div className="space-y-2">
         <label
           htmlFor="login-password"
-          className="text-sm font-medium text-slate-200"
+          className="text-sm text-slate-200"
         >
           Password
         </label>

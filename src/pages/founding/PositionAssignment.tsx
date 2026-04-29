@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
-import { PixelText } from "@/components/common/PixelText";
+import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
   calculatePositionFitness,
@@ -82,9 +82,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
-        <PixelText as="h2" className="pt-2 text-2xl text-brand-cyan">
-          포지션 배정
-        </PixelText>
+        <FoundingTitleBar title="포지션 배정" />
 
         <div className="space-y-2">
           <p className="text-xs text-slate-400">멤버 목록</p>

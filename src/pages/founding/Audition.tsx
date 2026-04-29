@@ -1,7 +1,7 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
-import { PixelText } from "@/components/common/PixelText";
+import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { TraineeCandidateCard } from "@/components/founding/TraineeCandidateCard";
 import { FOUNDING_RECRUITMENT_COSTS } from "@/data/founding";
 import { generateTraineeCandidates } from "@/systems/recruitSystem";
@@ -66,9 +66,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
-        <PixelText as="h2" className="pt-2 text-2xl text-brand-cyan">
-          연습생 모집
-        </PixelText>
+        <FoundingTitleBar title="연습생 모집" />
 
         {!executed ? (
           <>

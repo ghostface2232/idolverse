@@ -24,7 +24,7 @@ export function BadgeIcon({
   return (
     <span
       className={[
-        "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black",
+        "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs",
         toneClasses[tone],
         className,
       ].join(" ")}

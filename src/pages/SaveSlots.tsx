@@ -122,7 +122,7 @@ export function SaveSlots({
     >
       {!embedded ? (
         <header className="space-y-2 text-center">
-          <PixelText as="h1" className="text-3xl text-brand-cyan">
+          <PixelText as="h1" className="text-3xl text-slate-50">
             SAVE SLOTS
           </PixelText>
           <p className="text-sm text-slate-400">프로듀서 계정당 3개의 클라우드 슬롯</p>
@@ -143,10 +143,10 @@ export function SaveSlots({
             <Card key={save.slotNumber} className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-brand-cyan">
+                  <p className="text-xs uppercase tracking-[0.22em] text-brand-cyan">
                     Slot {save.slotNumber}
                   </p>
-                  <h2 className="mt-1 text-xl font-black text-slate-50">
+                  <h2 className="mt-1 text-xl text-slate-50">
                     {save.hasData ? save.groupName : "빈 슬롯"}
                   </h2>
                   <p className="mt-1 text-sm text-slate-400">
@@ -155,7 +155,7 @@ export function SaveSlots({
                       : "새로운 프로듀싱을 시작할 수 있습니다."}
                   </p>
                 </div>
-                <span className="rounded-full border border-slate-500 bg-slate-950/60 px-3 py-1 text-xs font-black text-slate-200">
+                <span className="rounded-full border border-slate-500 bg-slate-950/60 px-3 py-1 text-xs text-slate-200">
                   {save.hasData ? formatPhase(save.currentPhase) : "EMPTY"}
                 </span>
               </div>
@@ -164,13 +164,13 @@ export function SaveSlots({
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-2xl bg-slate-950/50 p-3">
                     <p className="text-slate-500">진행 주차</p>
-                    <p className="mt-1 font-black text-slate-100">
+                    <p className="mt-1 text-slate-100">
                       {save.playedWeeks?.toLocaleString("ko-KR")}주
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-950/50 p-3">
                     <p className="text-slate-500">마지막 저장</p>
-                    <p className="mt-1 font-black text-slate-100">
+                    <p className="mt-1 text-slate-100">
                       {formatSavedAt(save.updatedAt)}
                     </p>
                   </div>

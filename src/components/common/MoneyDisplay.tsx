@@ -19,8 +19,10 @@ export function MoneyDisplay({ amount, size = "sm", className = "" }: MoneyDispl
         className,
       ].join(" ")}
     >
-      <span aria-hidden="true">₩</span>
-      {new Intl.NumberFormat("ko-KR").format(amount)}
+      <span className="[font-family:'DungGeunMo',monospace]">
+        <span aria-hidden="true">₩</span>
+        {new Intl.NumberFormat("ko-KR").format(amount)}
+      </span>
     </span>
   );
 }

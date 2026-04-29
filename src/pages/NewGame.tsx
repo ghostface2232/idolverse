@@ -280,7 +280,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           <section key="investor" className="animate-step-fade flex h-full flex-col gap-4">
             <div className="min-h-0 flex-1 flex flex-col">
               <div className="pt-2">
-                <PixelText as="h1" className="text-3xl text-brand-cyan">
+                <PixelText as="h1" className="text-3xl text-slate-50">
                   투자사 선택
                 </PixelText>
                 <p className="mt-2 text-sm text-slate-400">
@@ -332,9 +332,9 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                           className="aspect-square w-full object-cover"
                         />
                       </div>
-                      <h2 className="text-xl text-slate-50">
+                      <PixelText as="h2" className="text-xl text-slate-50 [text-shadow:none]">
                         {investor.name}
-                      </h2>
+                      </PixelText>
                       <p className="mt-2 text-sm leading-6 text-slate-100 [text-shadow:0_1px_0_rgba(15,23,42,0.85)]">
                         {investor.description}
                       </p>
@@ -362,7 +362,9 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               <p className="text-xs uppercase tracking-[0.24em] text-brand-cyan">
                 Selected
               </p>
-              <h2 className="text-xl text-slate-50">{selectedInvestor.name}</h2>
+              <PixelText as="h2" className="text-xl text-slate-50 [text-shadow:none]">
+                {selectedInvestor.name}
+              </PixelText>
               {conditionSummary.map((condition) => (
                 <p key={condition} className="text-sm text-slate-300">
                   {condition}
@@ -385,7 +387,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           <section key="group" className="animate-step-fade flex h-full flex-col gap-4 overflow-hidden">
             <div className="min-h-0 flex-1 space-y-4">
               <div className="pt-2">
-                <PixelText as="h1" className="text-3xl text-brand-cyan">
+                <PixelText as="h1" className="text-3xl text-slate-50">
                   그룹 설정
                 </PixelText>
                 <p className="mt-2 text-sm text-slate-400">
