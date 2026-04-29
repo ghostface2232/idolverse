@@ -9,6 +9,7 @@ import {
 } from "@/systems/trainingSystem";
 import { updateChemistry } from "@/systems/chemistrySystem";
 import {
+  getEffectiveSatisfaction,
   updateSatisfaction,
   type WeekContext as SatisfactionContext,
 } from "@/systems/satisfactionSystem";
@@ -657,7 +658,12 @@ export function processWeek(
       ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
       : null,
     lowSatisfactionMember: trainees.some(
-      (t) => t.satisfaction <= SATISFACTION_WARNING_THRESHOLD,
+      (t) =>
+        getEffectiveSatisfaction(
+          t.satisfaction,
+          upgrades.dormLevel,
+          upgrades.livingExpenseLevel,
+        ) <= SATISFACTION_WARNING_THRESHOLD,
     ),
   };
   const nextDecisions = generateWeeklyDecisionCards(

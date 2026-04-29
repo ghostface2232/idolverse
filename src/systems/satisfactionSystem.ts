@@ -2,9 +2,11 @@ import {
   CHEMISTRY_CONFLICT_THRESHOLD,
   DORM_SATISFACTION_BONUS,
   LIVING_EXPENSE_SATISFACTION_BONUS,
+  SATISFACTION_BASELINE,
   SATISFACTION_CONCEPT_MISMATCH_PENALTY,
   SATISFACTION_LEAVE_THRESHOLD,
   SATISFACTION_OVERWORK_PENALTY,
+  SATISFACTION_REGRESSION_RATE,
   SATISFACTION_WARNING_THRESHOLD,
 } from "@/data/balance";
 import type {
@@ -34,6 +36,7 @@ export interface SatisfactionDelta {
   traineeName: string;
   before: number;
   after: number;
+  effective: number;
   reasons: string[];
 }
 
@@ -89,9 +92,8 @@ function computeDelta(
   trainee: Trainee,
   ctx: WeekContext,
   trainees: readonly Trainee[],
-): { delta: number; weeklyAdjustment: number; reasons: string[] } {
+): { delta: number; reasons: string[] } {
   let delta = 0;
-  let weeklyAdjustment = 0;
   const reasons: string[] = [];
 
   if (ctx.albumConcept) {
@@ -111,18 +113,6 @@ function computeDelta(
   } else if (ctx.trainingIntensity === "hard" && trainee.stress > 70) {
     delta += SATISFACTION_OVERWORK_PENALTY;
     reasons.push("높은 스트레스 속 강훈련");
-  }
-
-  const dormBonus = DORM_SATISFACTION_BONUS[ctx.dormLevel];
-  if (dormBonus !== 0) {
-    weeklyAdjustment += dormBonus;
-    reasons.push(dormBonus < 0 ? "열악한 숙소" : "좋은 숙소");
-  }
-
-  const livingBonus = LIVING_EXPENSE_SATISFACTION_BONUS[ctx.livingExpenseLevel];
-  if (livingBonus !== 0) {
-    weeklyAdjustment += livingBonus;
-    reasons.push(livingBonus < 0 ? "부족한 생활비" : "넉넉한 생활비");
   }
 
   if (hasConflictingPeer(trainee, trainees)) {
@@ -164,7 +154,39 @@ function computeDelta(
     reasons.push("팬 반응 좋음");
   }
 
-  return { delta, weeklyAdjustment, reasons };
+  return { delta, reasons };
+}
+
+function applyRegression(base: number): { value: number; regressed: boolean } {
+  if (base > SATISFACTION_BASELINE) {
+    return {
+      value: Math.max(SATISFACTION_BASELINE, base - SATISFACTION_REGRESSION_RATE),
+      regressed: true,
+    };
+  }
+  return { value: base, regressed: false };
+}
+
+export function getFacilitySatisfactionOffset(
+  dormLevel: 1 | 2 | 3 | 4,
+  livingExpenseLevel: 1 | 2 | 3 | 4,
+): number {
+  return (
+    DORM_SATISFACTION_BONUS[dormLevel] +
+    LIVING_EXPENSE_SATISFACTION_BONUS[livingExpenseLevel]
+  );
+}
+
+export function getEffectiveSatisfaction(
+  baseSatisfaction: number,
+  dormLevel: 1 | 2 | 3 | 4,
+  livingExpenseLevel: 1 | 2 | 3 | 4,
+): number {
+  return clamp(
+    baseSatisfaction + getFacilitySatisfactionOffset(dormLevel, livingExpenseLevel),
+    0,
+    100,
+  );
 }
 
 export function updateSatisfaction(
@@ -175,16 +197,23 @@ export function updateSatisfaction(
   const leaveRisks: LeaveRiskResult[] = [];
 
   for (const trainee of trainees) {
-    const { delta, weeklyAdjustment, reasons } = computeDelta(trainee, ctx, trainees);
+    const { delta, reasons } = computeDelta(trainee, ctx, trainees);
     const before = trainee.satisfaction;
-    const after = clamp(before + delta, 0, 100);
-    const effective = clamp(after + weeklyAdjustment, 0, 100);
+    const { value: regressed, regressed: didRegress } = applyRegression(before);
+    if (didRegress) reasons.push("기준점 회귀");
+    const after = clamp(regressed + delta, 0, 100);
+    const effective = getEffectiveSatisfaction(
+      after,
+      ctx.dormLevel,
+      ctx.livingExpenseLevel,
+    );
 
     deltas.push({
       traineeId: trainee.id,
       traineeName: trainee.name,
       before,
       after,
+      effective,
       reasons,
     });
 

@@ -49,6 +49,8 @@ export const SATISFACTION_CONCEPT_MISMATCH_PENALTY = -5; // Repeating the wrong 
 export const SATISFACTION_OVERWORK_PENALTY = -3; // Overwork should chip away steadily rather than trigger instant collapse.
 export const SATISFACTION_WARNING_THRESHOLD = 30; // At this point, the player should feel urgent retention pressure.
 export const SATISFACTION_LEAVE_THRESHOLD = 10; // This is low enough that ignoring it is a clear strategic failure.
+export const SATISFACTION_BASELINE = 50; // Base satisfaction regresses toward this value so past bonuses fade over time.
+export const SATISFACTION_REGRESSION_RATE = 1; // Fixed weekly decay above the baseline keeps small bonuses ephemeral and big ones lasting.
 
 export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inactive week.
 export const FANDOM_DISAPPOINTMENT_SCANDAL = 15; // Scandals need to be one of the fastest ways to damage loyalty.
