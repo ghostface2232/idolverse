@@ -89,8 +89,9 @@ function computeDelta(
   trainee: Trainee,
   ctx: WeekContext,
   trainees: readonly Trainee[],
-): { delta: number; reasons: string[] } {
+): { delta: number; weeklyAdjustment: number; reasons: string[] } {
   let delta = 0;
+  let weeklyAdjustment = 0;
   const reasons: string[] = [];
 
   if (ctx.albumConcept) {
@@ -114,13 +115,13 @@ function computeDelta(
 
   const dormBonus = DORM_SATISFACTION_BONUS[ctx.dormLevel];
   if (dormBonus !== 0) {
-    delta += dormBonus;
+    weeklyAdjustment += dormBonus;
     reasons.push(dormBonus < 0 ? "열악한 숙소" : "좋은 숙소");
   }
 
   const livingBonus = LIVING_EXPENSE_SATISFACTION_BONUS[ctx.livingExpenseLevel];
   if (livingBonus !== 0) {
-    delta += livingBonus;
+    weeklyAdjustment += livingBonus;
     reasons.push(livingBonus < 0 ? "부족한 생활비" : "넉넉한 생활비");
   }
 
@@ -163,7 +164,7 @@ function computeDelta(
     reasons.push("팬 반응 좋음");
   }
 
-  return { delta, reasons };
+  return { delta, weeklyAdjustment, reasons };
 }
 
 export function updateSatisfaction(
@@ -174,9 +175,10 @@ export function updateSatisfaction(
   const leaveRisks: LeaveRiskResult[] = [];
 
   for (const trainee of trainees) {
-    const { delta, reasons } = computeDelta(trainee, ctx, trainees);
+    const { delta, weeklyAdjustment, reasons } = computeDelta(trainee, ctx, trainees);
     const before = trainee.satisfaction;
     const after = clamp(before + delta, 0, 100);
+    const effective = clamp(after + weeklyAdjustment, 0, 100);
 
     deltas.push({
       traineeId: trainee.id,
@@ -186,19 +188,19 @@ export function updateSatisfaction(
       reasons,
     });
 
-    if (after <= SATISFACTION_LEAVE_THRESHOLD) {
+    if (effective <= SATISFACTION_LEAVE_THRESHOLD) {
       leaveRisks.push({
         traineeId: trainee.id,
         traineeName: trainee.name,
         level: "leaving",
-        satisfaction: after,
+        satisfaction: effective,
       });
-    } else if (after <= SATISFACTION_WARNING_THRESHOLD) {
+    } else if (effective <= SATISFACTION_WARNING_THRESHOLD) {
       leaveRisks.push({
         traineeId: trainee.id,
         traineeName: trainee.name,
         level: "warning",
-        satisfaction: after,
+        satisfaction: effective,
       });
     }
   }

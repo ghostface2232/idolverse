@@ -30,10 +30,10 @@ export const FOUNDING_FACILITY_TIERS = {
     { level: 4, name: "프리미엄", monthlyCost: 6_000_000, effect: "트레이닝 효율 +50%" },
   ] satisfies FacilityTier[],
   equipment: [
-    { level: 1, name: "기본", monthlyCost: 500_000, effect: "앨범 품질 기본" },
-    { level: 2, name: "중급", monthlyCost: 1_200_000, effect: "앨범 품질 +10%" },
+    { level: 1, name: "기본", monthlyCost: 500_000, effect: "앨범 품질 -20%" },
+    { level: 2, name: "중급", monthlyCost: 1_200_000, effect: "앨범 품질 기본" },
     { level: 3, name: "고급", monthlyCost: 2_000_000, effect: "앨범 품질 +20%" },
-    { level: 4, name: "최상", monthlyCost: 3_500_000, effect: "앨범 품질 +35%" },
+    { level: 4, name: "최상", monthlyCost: 3_500_000, effect: "앨범 품질 +30%" },
   ] satisfies FacilityTier[],
   livingExpense: [
     { level: 1, name: "최소", perPersonCost: 500_000, effect: "만족도 -1/주" },
