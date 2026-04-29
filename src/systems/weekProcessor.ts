@@ -392,7 +392,7 @@ export function processWeek(
 
   // ── 6. Album progress
   if (album) {
-    album = progressAlbum(album, staff, trainees, upgrades.equipmentLevel);
+    album = progressAlbum(album, staff, trainees);
   }
 
   // ── 7. Competitor simulation

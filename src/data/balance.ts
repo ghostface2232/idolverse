@@ -118,10 +118,10 @@ export const STUDIO_TRAINING_MULT: Record<1 | 2 | 3 | 4, number> = {
 };
 
 export const EQUIPMENT_ALBUM_MULT: Record<1 | 2 | 3 | 4, number> = {
-  1: 1.0,
-  2: 1.1,
+  1: 0.8,
+  2: 1.0,
   3: 1.2,
-  4: 1.35,
+  4: 1.3,
 };
 
 export const LIVING_EXPENSE_SATISFACTION_BONUS: Record<1 | 2 | 3 | 4, number> = {

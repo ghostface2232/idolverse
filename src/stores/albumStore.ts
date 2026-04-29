@@ -1,5 +1,6 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
+import { EQUIPMENT_ALBUM_MULT } from "@/data/balance";
 import type { Album, AlbumStore, AlbumStoreState } from "@/types/game";
 
 const initialAlbum: Album = {
@@ -59,7 +60,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
 }
 
-function calculateAlbumQuality(album: Album) {
+function calculateAlbumQuality(album: Album, equipmentLevel: 1 | 2 | 3 | 4) {
   const progressAverage =
     (album.progress.song +
       album.progress.visual +
@@ -73,12 +74,11 @@ function calculateAlbumQuality(album: Album) {
     (album.externalCollaborators.composer ? 4 : 0) +
     (album.externalCollaborators.choreographer ? 3 : 0);
 
-  return clamp(
+  const base =
     Math.round(progressAverage * 0.45 + titleTrackQuality * 0.35 + fitAverage * 0.2) +
-      collaboratorBonus,
-    0,
-    100,
-  );
+    collaboratorBonus;
+
+  return clamp(Math.round(base * EQUIPMENT_ALBUM_MULT[equipmentLevel]), 0, 100);
 }
 
 export const albumVanillaStore = createStore<AlbumStore>()((set) => ({
@@ -119,13 +119,13 @@ export const albumVanillaStore = createStore<AlbumStore>()((set) => ({
           }
         : null,
     })),
-  releaseAlbum: (releaseWeek) =>
+  releaseAlbum: (releaseWeek, equipmentLevel) =>
     set((state) => {
       if (!state.currentAlbum) {
         return state;
       }
 
-      const quality = calculateAlbumQuality(state.currentAlbum);
+      const quality = calculateAlbumQuality(state.currentAlbum, equipmentLevel);
       const releasedAlbum: Album = {
         ...state.currentAlbum,
         quality,
