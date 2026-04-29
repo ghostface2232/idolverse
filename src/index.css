@@ -137,14 +137,6 @@ select {
   image-rendering: pixelated;
 }
 
-.manager-profile-sprite {
-  background-image: url("/images/staff/manager-profiles-spritesheet.png");
-}
-
-.producer-profile-sprite {
-  background-image: url("/images/staff/producer-profiles-spritesheet.png");
-}
-
 .staff-profile-sprite-0 {
   background-position: 0% 0%;
 }

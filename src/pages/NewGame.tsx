@@ -17,6 +17,7 @@ import { traineeVanillaStore } from "@/stores/traineeStore";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import { getSeasonForWeek } from "@/data/balance";
 import type { GroupGender, InvestorCompany, InvestorType } from "@/types/game";
+import { assetUrl } from "@/utils/assets";
 
 interface NewGameProps {
   onStartGame: () => void;
@@ -28,7 +29,7 @@ type Step = "prologue" | "investor" | "group";
 const PROLOGUE_TEXT =
   "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 당신은 능력과 열정을 겸비한 동료들과 함께 수많은 스타를 배출해 냈고, 이제 새로운 길을 향해 나아가려 합니다...";
 
-const PROLOGUE_IMAGE_SRC = "/images/prologue-director.png";
+const PROLOGUE_IMAGE_SRC = assetUrl("/prologue-director.png");
 
 const investorStyles: Record<
   InvestorType,
@@ -39,23 +40,23 @@ const investorStyles: Record<
 > = {
   it: {
     color: "border-blue-300/60 bg-blue-500/14",
-    logoSrc: "/images/investors/nextbeat.png",
+    logoSrc: assetUrl("/investors/nextbeat.png"),
   },
   entertainment: {
     color: "border-violet-300/60 bg-violet-500/14",
-    logoSrc: "/images/investors/crownmusic-ent.png",
+    logoSrc: assetUrl("/investors/crownmusic-ent.png"),
   },
   vc: {
     color: "border-emerald-300/60 bg-emerald-500/14",
-    logoSrc: "/images/investors/summit-capital.png",
+    logoSrc: assetUrl("/investors/summit-capital.png"),
   },
   cosmetic: {
     color: "border-pink-300/60 bg-pink-500/14",
-    logoSrc: "/images/investors/lumiere-beauty.png",
+    logoSrc: assetUrl("/investors/lumiere-beauty.png"),
   },
   fashion: {
     color: "border-amber-300/60 bg-amber-500/14",
-    logoSrc: "/images/investors/maison-group.png",
+    logoSrc: assetUrl("/investors/maison-group.png"),
   },
 };
 

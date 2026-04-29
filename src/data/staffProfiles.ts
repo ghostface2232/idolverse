@@ -9,8 +9,8 @@ export interface StaffProfile {
 }
 
 export const STAFF_PROFILE_SPRITESHEETS: Partial<Record<StaffRole, string>> = {
-  manager: "/images/staff/manager-profiles-spritesheet.png",
-  producer: "/images/staff/producer-profiles-spritesheet.png",
+  manager: "/staff/manager-profiles-spritesheet.png",
+  producer: "/staff/producer-profiles-spritesheet.png",
 };
 
 export const STAFF_PROFILES: Partial<Record<StaffRole, readonly StaffProfile[]>> = {
@@ -31,14 +31,14 @@ export const STAFF_PROFILES: Partial<Record<StaffRole, readonly StaffProfile[]>>
   producer: [
     { name: "유나리", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 0 },
     { name: "배소라", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 1 },
-    { name: "문혜진", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 2 },
-    { name: "오예진", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 3 },
+    { name: "신민재", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 2 },
+    { name: "송예성", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 3 },
     { name: "신리나", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 4 },
     { name: "채민지", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 5 },
     { name: "한지호", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 6 },
     { name: "오서준", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 7 },
-    { name: "신민재", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 8 },
-    { name: "송예성", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 9 },
+    { name: "문혜진", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 8 },
+    { name: "오예진", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 9 },
     { name: "이도현", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 10 },
     { name: "남기우", profileImagePath: STAFF_PROFILE_SPRITESHEETS.producer, profileSpriteIndex: 11 },
   ],
@@ -70,6 +70,6 @@ export function pickStaffProfiles(
   return picked;
 }
 
-export function getStaffProfileClassNames(role: StaffRole, spriteIndex: number): string {
-  return `staff-profile-sprite ${role}-profile-sprite staff-profile-sprite-${spriteIndex}`;
+export function getStaffProfileClassNames(spriteIndex: number): string {
+  return `staff-profile-sprite staff-profile-sprite-${spriteIndex}`;
 }

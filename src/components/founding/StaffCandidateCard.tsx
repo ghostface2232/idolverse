@@ -4,6 +4,7 @@ import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { StatBar } from "@/components/common/StatBar";
 import { getStaffProfileClassNames } from "@/data/staffProfiles";
 import type { Staff } from "@/types/game";
+import { assetUrl } from "@/utils/assets";
 
 interface StaffCandidateCardProps {
   staff: Staff;
@@ -40,10 +41,15 @@ export function StaffCandidateCard({
             hasProfileImage
               ? [
                   "border-slate-500",
-                  getStaffProfileClassNames(staff.role, staff.profileSpriteIndex ?? 0),
+                  getStaffProfileClassNames(staff.profileSpriteIndex ?? 0),
                 ].join(" ")
               : "border-dashed border-slate-600",
           ].join(" ")}
+          style={
+            hasProfileImage && staff.profileImagePath
+              ? { backgroundImage: `url(${assetUrl(staff.profileImagePath)})` }
+              : undefined
+          }
         />
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
