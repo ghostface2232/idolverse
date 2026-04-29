@@ -27,7 +27,7 @@ interface NewGameProps {
 type Step = "prologue" | "investor" | "group";
 
 const PROLOGUE_TEXT =
-  "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 당신은 능력과 열정을 겸비한 동료들과 함께 수많은 스타를 배출해 냈고, 이제 새로운 길을 향해 나아가려 합니다...";
+  "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 당신은 능력과 열정을 겸비한 동료들과 함께 수많은 스타를 배출해 냈고, 이제 새로운 길을 향해 나아가려 합니다... 바로 당신만의 회사와 그룹을 만드는 것이죠.";
 
 const PROLOGUE_IMAGE_SRC = assetUrl("/prologue-director.png");
 
