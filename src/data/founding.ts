@@ -150,13 +150,13 @@ export const FOUNDING_RECRUITMENT_COSTS = {
 } as const;
 
 export const POSITION_FITNESS_WEIGHTS: Record<Position, Partial<Record<TraineeStatKey, number>>> = {
-  leader: { mental: 0.4, charm: 0.3, diligence: 0.3 },
+  leader: { mental: 0.4, charm: 0.3, stamina: 0.3 },
   mainVocal: { vocal: 0.7, stamina: 0.15, mental: 0.15 },
   mainDancer: { dance: 0.7, stamina: 0.2, visual: 0.1 },
   center: { visual: 0.4, charm: 0.3, dance: 0.15, vocal: 0.15 },
   visual: { visual: 0.6, charm: 0.3, stamina: 0.1 },
   variety: { charm: 0.5, mental: 0.3, vocal: 0.1, visual: 0.1 },
-  producing: { diligence: 0.4, vocal: 0.3, mental: 0.3 },
+  producing: { stamina: 0.4, vocal: 0.3, mental: 0.3 },
 };
 
 export const POSITION_LABELS: Record<Position, string> = {

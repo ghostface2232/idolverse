@@ -151,7 +151,6 @@ export type TraineeStatKey =
   | "dance"
   | "charm"
   | "stamina"
-  | "diligence"
   | "mental";
 
 export interface RangeValue {
@@ -222,7 +221,6 @@ export interface Trainee {
     dance: number;
     charm: number;
     stamina: number;
-    diligence: number;
     mental: number;
   };
   position: Position | null;

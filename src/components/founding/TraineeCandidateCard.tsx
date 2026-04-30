@@ -3,7 +3,7 @@ import { Card } from "@/components/common/Card";
 import { StatBar } from "@/components/common/StatBar";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { NATIONALITY_FLAGS, potentialToStars } from "@/data/founding";
-import type { Trainee } from "@/types/game";
+import type { Trainee, TraineeStatKey } from "@/types/game";
 
 interface TraineeCandidateCardProps {
   trainee: Trainee;
@@ -17,9 +17,17 @@ const STAT_LABELS: Record<string, string> = {
   dance: "댄스",
   charm: "매력",
   stamina: "체력",
-  diligence: "성실",
   mental: "멘탈",
 };
+
+const STAT_DISPLAY_ORDER: TraineeStatKey[] = [
+  "visual",
+  "vocal",
+  "dance",
+  "charm",
+  "stamina",
+  "mental",
+];
 
 export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCandidateCardProps) {
   const stars = potentialToStars(trainee.potential);
@@ -59,8 +67,8 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
         </div>
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          {Object.entries(trainee.stats).map(([key, value]) => (
-            <StatBar key={key} label={STAT_LABELS[key] ?? key} value={value} />
+          {STAT_DISPLAY_ORDER.map((key) => (
+            <StatBar key={key} label={STAT_LABELS[key]} value={trainee.stats[key]} />
           ))}
         </div>
 

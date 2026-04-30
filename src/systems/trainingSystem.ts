@@ -179,7 +179,7 @@ export function processTrainingWeek(
     }
 
     const intensityMult = TRAINING_INTENSITY_MULTIPLIER[schedule.intensity];
-    const diligenceMult = t.stats.diligence / 50;
+    const staminaMult = t.stats.stamina / 50;
     const potentialMult = 0.5 + t.potential / 100;
     const allocation = computeManagerFocusAllocation(
       t,
@@ -193,7 +193,7 @@ export function processTrainingWeek(
         TRAINING_BASE_GROWTH *
         intensityMult *
         (managerEff / 1.0) *
-        diligenceMult *
+        staminaMult *
         potentialMult *
         conceptBonus *
         allocation[stat] *

@@ -1,13 +1,12 @@
 import { GAME_BALANCE, STAFF_SALARY_BANDS } from "@/data/balance";
 import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
 import {
-  CHINESE_NAMES,
-  ENGLISH_NAMES,
-  JAPANESE_NAMES,
-  KOREAN_GIVEN_NAMES,
+  CHINESE_NAMES_BY_GENDER,
+  ENGLISH_NAMES_BY_GENDER,
+  JAPANESE_NAMES_BY_GENDER,
+  KOREAN_GIVEN_NAMES_BY_GENDER,
   KOREAN_SURNAMES,
-  STAGE_NAME_POOL,
-  THAI_NAMES,
+  THAI_NAMES_BY_GENDER,
 } from "@/data/names";
 import { CONCEPT_MOODS } from "@/data/concepts";
 import { createSeededRandom } from "@/lib/seededRandom";
@@ -28,12 +27,13 @@ const NATIONALITY_WEIGHTS: { nationality: Nationality; weight: number }[] = [
   { nationality: "american", weight: 0.02 },
 ];
 
-const NATIONALITY_NAME_POOLS: Record<string, readonly string[]> = {
-  korean: KOREAN_GIVEN_NAMES,
-  japanese: JAPANESE_NAMES,
-  chinese: CHINESE_NAMES,
-  thai: THAI_NAMES,
-  american: ENGLISH_NAMES,
+const NATIONALITY_NAME_POOLS: Record<Nationality, Record<GroupGender, readonly string[]>> = {
+  korean: KOREAN_GIVEN_NAMES_BY_GENDER,
+  japanese: JAPANESE_NAMES_BY_GENDER,
+  chinese: CHINESE_NAMES_BY_GENDER,
+  thai: THAI_NAMES_BY_GENDER,
+  american: ENGLISH_NAMES_BY_GENDER,
+  other: ENGLISH_NAMES_BY_GENDER,
 };
 
 function clamp(v: number, min: number, max: number): number {
@@ -54,14 +54,17 @@ function pickWeighted(
 
 function generateName(
   nationality: Nationality,
+  groupGender: GroupGender,
   random: () => number,
 ): string {
+  const pool = NATIONALITY_NAME_POOLS[nationality][groupGender];
+
   if (nationality === "korean") {
     const surname = KOREAN_SURNAMES[Math.floor(random() * KOREAN_SURNAMES.length)];
-    const given = KOREAN_GIVEN_NAMES[Math.floor(random() * KOREAN_GIVEN_NAMES.length)];
+    const given = pool[Math.floor(random() * pool.length)];
     return `${surname}${given}`;
   }
-  const pool = NATIONALITY_NAME_POOLS[nationality] ?? ENGLISH_NAMES;
+
   return pool[Math.floor(random() * pool.length)];
 }
 
@@ -116,7 +119,7 @@ export function generateTraineeCandidates(
 
   for (let i = 0; i < count; i++) {
     const nationality = pickWeighted(NATIONALITY_WEIGHTS, random());
-    const name = generateName(nationality, random);
+    const name = generateName(nationality, groupGender, random);
     const isForeign = nationality !== "korean";
 
     const genStat = () =>
@@ -134,7 +137,6 @@ export function generateTraineeCandidates(
       dance: genStat(),
       charm: clamp(genStat() - charmPenalty, 1, GAME_BALANCE.maxStatValue),
       stamina: genStat(),
-      diligence: genStat(),
       mental: genStat(),
     };
 
