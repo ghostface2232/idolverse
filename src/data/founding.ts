@@ -14,6 +14,8 @@ export interface FacilityTier {
   name: string;
   monthlyCost: number;
   effect: string;
+  illustrationImagePath?: string;
+  illustrationSpriteIndex?: number;
 }
 
 export interface LivingExpenseTier {
@@ -25,10 +27,38 @@ export interface LivingExpenseTier {
 
 export const FOUNDING_FACILITY_TIERS = {
   dormitory: [
-    { level: 1, name: "원룸", monthlyCost: 1_500_000, effect: "컨디션 회복 기본, 만족도 -1/주" },
-    { level: 2, name: "투룸", monthlyCost: 3_000_000, effect: "컨디션 회복 +20%" },
-    { level: 3, name: "아파트", monthlyCost: 5_000_000, effect: "컨디션 회복 +40%, 만족도 +1/주" },
-    { level: 4, name: "고급", monthlyCost: 8_000_000, effect: "컨디션 회복 +60%, 만족도 +2/주" },
+    {
+      level: 1,
+      name: "원룸",
+      monthlyCost: 1_500_000,
+      effect: "컨디션 회복 기본, 만족도 -1/주",
+      illustrationImagePath: "/facilities/dormitory-spritesheet.png",
+      illustrationSpriteIndex: 0,
+    },
+    {
+      level: 2,
+      name: "투룸",
+      monthlyCost: 3_000_000,
+      effect: "컨디션 회복 +20%",
+      illustrationImagePath: "/facilities/dormitory-spritesheet.png",
+      illustrationSpriteIndex: 1,
+    },
+    {
+      level: 3,
+      name: "아파트",
+      monthlyCost: 5_000_000,
+      effect: "컨디션 회복 +40%, 만족도 +1/주",
+      illustrationImagePath: "/facilities/dormitory-spritesheet.png",
+      illustrationSpriteIndex: 2,
+    },
+    {
+      level: 4,
+      name: "고급",
+      monthlyCost: 8_000_000,
+      effect: "컨디션 회복 +60%, 만족도 +2/주",
+      illustrationImagePath: "/facilities/dormitory-spritesheet.png",
+      illustrationSpriteIndex: 3,
+    },
   ] satisfies FacilityTier[],
   studio: [
     { level: 1, name: "소형", monthlyCost: 1_000_000, effect: "트레이닝 효율 기본" },

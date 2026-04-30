@@ -10,7 +10,7 @@ import {
   STAFF_ROLE_LABELS,
   STAFF_ROLE_ORDER,
 } from "@/data/founding";
-import { getStaffProfileByName, STAFF_PROFILE_SPRITESHEETS } from "@/data/staffProfiles";
+import { getStaffProfileByName } from "@/data/staffProfiles";
 import { STAFF_SALARY_BANDS } from "@/data/balance";
 import { generateStaffCandidates } from "@/systems/recruitSystem";
 import { useStaffStore } from "@/stores/staffStore";
@@ -27,14 +27,9 @@ const salaryRange = {
 };
 
 function withLinkedProfiles(role: StaffRole, staffList: Staff[]): Staff[] {
-  const profileImagePath = STAFF_PROFILE_SPRITESHEETS[role];
-  if (profileImagePath === undefined) {
-    return staffList;
-  }
-
   return staffList.map((member) => {
-    if (member.profileSpriteIndex !== undefined) {
-      return { ...member, profileImagePath };
+    if (member.profileImagePath !== undefined && member.profileSpriteIndex !== undefined) {
+      return member;
     }
 
     const profile = getStaffProfileByName(role, member.name);

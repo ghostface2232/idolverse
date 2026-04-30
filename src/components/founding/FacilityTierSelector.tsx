@@ -1,4 +1,5 @@
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { assetUrl } from "@/utils/assets";
 
 interface Tier {
   level: number;
@@ -6,6 +7,8 @@ interface Tier {
   monthlyCost?: number;
   perPersonCost?: number;
   effect: string;
+  illustrationImagePath?: string;
+  illustrationSpriteIndex?: number;
 }
 
 interface FacilityTierSelectorProps {
@@ -28,6 +31,9 @@ export function FacilityTierSelector({
         {tiers.map((tier) => {
           const isSelected = tier.level === selectedLevel;
           const cost = tier.monthlyCost ?? tier.perPersonCost ?? 0;
+          const hasIllustration =
+            tier.illustrationImagePath !== undefined &&
+            tier.illustrationSpriteIndex !== undefined;
 
           return (
             <button
@@ -41,6 +47,20 @@ export function FacilityTierSelector({
               ].join(" ")}
               onClick={() => onSelect(tier.level)}
             >
+              {hasIllustration && (
+                <div
+                  aria-hidden="true"
+                  className={[
+                    "mb-2 aspect-square w-full rounded-lg border bg-slate-950/50",
+                    isSelected ? "border-brand-cyan/70" : "border-slate-700",
+                    "facility-option-sprite",
+                    `facility-option-sprite-${tier.illustrationSpriteIndex ?? 0}`,
+                  ].join(" ")}
+                  style={{
+                    backgroundImage: `url(${assetUrl(tier.illustrationImagePath ?? "")})`,
+                  }}
+                />
+              )}
               <p className="text-sm text-slate-50">{tier.name}</p>
               <MoneyDisplay amount={cost} size="sm" className="mt-1" />
               {tier.perPersonCost !== undefined && (
