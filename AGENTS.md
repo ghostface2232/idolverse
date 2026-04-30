@@ -18,6 +18,8 @@ Core gameplay: Strategic choices based on trade-offs. Results are determined by 
 - Each week, players make only 3–4 key decision cards; the rest are automatically handled by the manager AI
 - Every choice has an opportunity cost (e.g., sending a member to variety shows skips training; skipping training lowers their condition)
 - Members have specific positions (Leader/Main Vocalist/Main Dancer/Center/Visual/Variety/Producing)
+- Trainee stats are visual, vocal, dance, charm, stamina, and mental. Stamina includes the old diligence role; do not add a separate diligence stat.
+- Audition candidate names must match the selected group gender (`groupGender`).
 - Each member pair has a chemistry value (-100 to +100) that affects team efficiency
 - Each member has a concept affinity; repeatedly using an unsuitable concept accumulates dissatisfaction -> defection
 - Fans/fame is divided into 4 categories: public recognition, core fandom, overseas fandom, and industry reputation

@@ -51,6 +51,12 @@ Position assignments do not need to match ability scores 100%. You can assign a 
 
 The reason positions are important is that you must create a combination capable of covering each role, rather than simply selecting the five members with the highest average stats. You need both a member with 90 in Vocal and 30 in Dance and a member with 30 in Vocal and 90 in Dance to fill the Main Vocalist and Main Dancer roles.
 
+### Member Ability Stats
+
+Current trainee stats are Visual, Vocal, Dance, Charm, Stamina, and Mental. Stamina covers both physical endurance and steady training absorption; there is no separate Diligence stat.
+
+Audition candidates are generated from gender-specific name pools based on the selected group gender, so girl group auditions produce female names and boy group auditions produce male names.
+
 ### Member Chemistry System
 
 Each member pair has a chemistry value ranging from -100 to +100.
