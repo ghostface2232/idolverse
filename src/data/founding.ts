@@ -23,6 +23,8 @@ export interface LivingExpenseTier {
   name: string;
   perPersonCost: number;
   effect: string;
+  illustrationImagePath?: string;
+  illustrationSpriteIndex?: number;
 }
 
 export const FOUNDING_FACILITY_TIERS = {
@@ -61,10 +63,38 @@ export const FOUNDING_FACILITY_TIERS = {
     },
   ] satisfies FacilityTier[],
   studio: [
-    { level: 1, name: "소형", monthlyCost: 1_000_000, effect: "트레이닝 효율 기본" },
-    { level: 2, name: "중형", monthlyCost: 2_500_000, effect: "트레이닝 효율 +15%" },
-    { level: 3, name: "대형", monthlyCost: 4_000_000, effect: "트레이닝 효율 +30%" },
-    { level: 4, name: "프리미엄", monthlyCost: 6_000_000, effect: "트레이닝 효율 +50%" },
+    {
+      level: 1,
+      name: "소형",
+      monthlyCost: 1_000_000,
+      effect: "트레이닝 효율 기본",
+      illustrationImagePath: "/facilities/studio-spritesheet.png",
+      illustrationSpriteIndex: 0,
+    },
+    {
+      level: 2,
+      name: "중형",
+      monthlyCost: 2_500_000,
+      effect: "트레이닝 효율 +15%",
+      illustrationImagePath: "/facilities/studio-spritesheet.png",
+      illustrationSpriteIndex: 1,
+    },
+    {
+      level: 3,
+      name: "대형",
+      monthlyCost: 4_000_000,
+      effect: "트레이닝 효율 +30%",
+      illustrationImagePath: "/facilities/studio-spritesheet.png",
+      illustrationSpriteIndex: 2,
+    },
+    {
+      level: 4,
+      name: "프리미엄",
+      monthlyCost: 6_000_000,
+      effect: "트레이닝 효율 +50%",
+      illustrationImagePath: "/facilities/studio-spritesheet.png",
+      illustrationSpriteIndex: 3,
+    },
   ] satisfies FacilityTier[],
   equipment: [
     { level: 1, name: "기본", monthlyCost: 500_000, effect: "앨범 품질 -20%" },
@@ -73,10 +103,38 @@ export const FOUNDING_FACILITY_TIERS = {
     { level: 4, name: "최상", monthlyCost: 3_500_000, effect: "앨범 품질 +30%" },
   ] satisfies FacilityTier[],
   livingExpense: [
-    { level: 1, name: "최소", perPersonCost: 500_000, effect: "만족도 -1/주" },
-    { level: 2, name: "기본", perPersonCost: 1_000_000, effect: "만족도 유지" },
-    { level: 3, name: "넉넉", perPersonCost: 1_500_000, effect: "만족도 +1/주" },
-    { level: 4, name: "풍족", perPersonCost: 2_000_000, effect: "만족도 +2/주" },
+    {
+      level: 1,
+      name: "최소",
+      perPersonCost: 500_000,
+      effect: "만족도 -1/주",
+      illustrationImagePath: "/facilities/money-spritesheet.png",
+      illustrationSpriteIndex: 0,
+    },
+    {
+      level: 2,
+      name: "기본",
+      perPersonCost: 1_000_000,
+      effect: "만족도 유지",
+      illustrationImagePath: "/facilities/money-spritesheet.png",
+      illustrationSpriteIndex: 1,
+    },
+    {
+      level: 3,
+      name: "넉넉",
+      perPersonCost: 1_500_000,
+      effect: "만족도 +1/주",
+      illustrationImagePath: "/facilities/money-spritesheet.png",
+      illustrationSpriteIndex: 2,
+    },
+    {
+      level: 4,
+      name: "풍족",
+      perPersonCost: 2_000_000,
+      effect: "만족도 +2/주",
+      illustrationImagePath: "/facilities/money-spritesheet.png",
+      illustrationSpriteIndex: 3,
+    },
   ] satisfies LivingExpenseTier[],
 } as const;
 
