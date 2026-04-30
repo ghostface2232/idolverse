@@ -73,9 +73,7 @@ export class SimulationScene extends Phaser.Scene {
       ].join("  |  "),
     );
 
-    this.footerLabel?.setText(
-      `SIMULATION VIEW  ${gameState.gameSpeed === 0 ? "PAUSED" : `${gameState.gameSpeed}X LIVE`}`,
-    );
+    this.footerLabel?.setText("SIMULATION VIEW");
   }
 
   private pulseSimulation() {

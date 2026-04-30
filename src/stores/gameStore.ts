@@ -16,7 +16,6 @@ const initialGameState: GameStoreState = {
   investorType: "entertainment",
   investorConditions: INVESTOR_CONDITIONS.entertainment,
   investorPenaltyActive: false,
-  gameSpeed: 0,
   weeklyDecisions: generateWeeklyDecisionCards(1, getSeasonForWeek(1)),
   notifications: [
     {
@@ -62,10 +61,6 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
           : state.notifications,
       };
     }),
-  setGameSpeed: (speed) =>
-    set(() => ({
-      gameSpeed: speed,
-    })),
   addNotification: (notification) =>
     set((state) => ({
       notifications: [

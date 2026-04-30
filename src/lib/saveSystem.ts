@@ -112,7 +112,6 @@ function readSavedCompanyName(saveData: unknown) {
 function extractGameStoreState(): GameStoreState {
   const {
     advanceWeek: _advanceWeek,
-    setGameSpeed: _setGameSpeed,
     addNotification: _addNotification,
     clearNotifications: _clearNotifications,
     setTrainingSchedule: _setTrainingSchedule,
@@ -240,12 +239,14 @@ export function captureGameState(): GameStateSnapshot {
 }
 
 export function hydrateGameState(gameState: GameStateSnapshot) {
-  const gameStore = gameState.gameStore.trainingSchedule
-    ? gameState.gameStore
+  const { gameSpeed: _legacyGameSpeed, ...rest } =
+    gameState.gameStore as GameStoreState & { gameSpeed?: unknown };
+  const gameStore: GameStoreState = rest.trainingSchedule
+    ? rest
     : {
-        ...gameState.gameStore,
+        ...rest,
         trainingSchedule: {
-          intensity: "normal" as const,
+          intensity: "normal",
           focus: null,
           restDay: false,
         },

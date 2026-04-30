@@ -13,7 +13,6 @@ export type InvestorType =
   | "vc"
   | "cosmetic"
   | "fashion";
-export type GameSpeed = 0 | 1 | 2 | 3;
 export type Position =
   | "leader"
   | "mainVocal"
@@ -470,7 +469,6 @@ export interface GameStoreState {
   investorType: InvestorType;
   investorConditions: InvestorCondition[];
   investorPenaltyActive: boolean;
-  gameSpeed: GameSpeed;
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;
@@ -478,7 +476,6 @@ export interface GameStoreState {
 
 export interface GameStoreActions {
   advanceWeek: () => void;
-  setGameSpeed: (speed: GameSpeed) => void;
   addNotification: (notification: Omit<Notification, "id"> & { id?: string }) => void;
   clearNotifications: () => void;
   setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;

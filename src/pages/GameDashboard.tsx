@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { BadgeIcon } from "@/components/common/BadgeIcon";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -16,7 +16,7 @@ import { Training } from "@/pages/Training";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useFinanceStore } from "@/stores/financeStore";
-import type { GameEvent, GameSpeed } from "@/types/game";
+import type { GameEvent } from "@/types/game";
 import type { PlayerDecisions, WeekReport as WeekReportData } from "@/systems/weekProcessor";
 
 const SEASON_LABELS: Record<string, string> = {
@@ -33,12 +33,6 @@ const TABS = [
   { key: "activity", icon: "V", label: "활동" },
   { key: "settings", icon: "S", label: "설정" },
 ] as const;
-
-const AUTO_ADVANCE_INTERVALS: Record<Exclude<GameSpeed, 0>, number> = {
-  1: 3000,
-  2: 1500,
-  3: 800,
-};
 
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -60,8 +54,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const currentWeek = useGameStore((s) => s.currentWeek);
   const currentYear = useGameStore((s) => s.currentYear);
   const currentSeason = useGameStore((s) => s.currentSeason);
-  const gameSpeed = useGameStore((s) => s.gameSpeed);
-  const setGameSpeed = useGameStore((s) => s.setGameSpeed);
   const weeklyDecisions = useGameStore((s) => s.weeklyDecisions);
   const notifications = useGameStore((s) => s.notifications);
   const trainingSchedule = useGameStore((s) => s.trainingSchedule);
@@ -90,94 +82,44 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     );
   }, [userId]);
 
-  const handleAdvanceWeek = useCallback(
-    (mode: "manual" | "auto" = "manual") => {
-      if ((mode === "manual" && !decisionsComplete) || isAdvancingRef.current) {
-        return;
-      }
-
-      const currentResolvedDecisions =
-        mode === "auto" && !decisionsComplete
-          ? weeklyDecisions.flatMap((card) => {
-              const option = card.options[0];
-
-              return option
-                ? [
-                    {
-                      cardId: card.id,
-                      optionId: option.id,
-                      effects: option.effects,
-                    },
-                  ]
-                : [];
-            })
-          : resolvedDecisions;
-
-      if (currentResolvedDecisions.length !== weeklyDecisions.length) {
-        return;
-      }
-
-      isAdvancingRef.current = true;
-
-      try {
-        const report = runWeek({
-          trainingSchedule: {
-            intensity: trainingSchedule.intensity,
-            focus: trainingSchedule.focus ?? undefined,
-            restDay: trainingSchedule.restDay,
-          },
-          resolvedDecisions: currentResolvedDecisions,
-          promotionOrders: [],
-        });
-
-        setResolvedDecisions([]);
-        setDecisionsComplete(false);
-        EventBus.emit(PhaserEvents.reactAdvanceWeek);
-        triggerAutoSave();
-
-        if (report.events.length > 0) {
-          setGameSpeed(0);
-        }
-
-        if (mode === "manual" || report.warnings.length > 0) {
-          setActiveWeekReport(report);
-          setEventQueue(report.events);
-        } else {
-          setEventQueue(report.events);
-        }
-      } finally {
-        isAdvancingRef.current = false;
-      }
-    },
-    [
-      decisionsComplete,
-      resolvedDecisions,
-      setGameSpeed,
-      trainingSchedule,
-      triggerAutoSave,
-      weeklyDecisions,
-    ],
-  );
-
-  useEffect(() => {
+  const handleAdvanceWeek = useCallback(() => {
     if (
-      gameSpeed === 0 ||
-      activeWeekReport ||
-      activeEvent
+      !decisionsComplete ||
+      isAdvancingRef.current ||
+      resolvedDecisions.length !== weeklyDecisions.length
     ) {
       return;
     }
 
-    const interval = window.setInterval(() => {
-      handleAdvanceWeek("auto");
-    }, AUTO_ADVANCE_INTERVALS[gameSpeed]);
+    isAdvancingRef.current = true;
 
-    return () => window.clearInterval(interval);
+    try {
+      const report = runWeek({
+        trainingSchedule: {
+          intensity: trainingSchedule.intensity,
+          focus: trainingSchedule.focus ?? undefined,
+          restDay: trainingSchedule.restDay,
+        },
+        resolvedDecisions,
+        promotionOrders: [],
+      });
+
+      setResolvedDecisions([]);
+      setDecisionsComplete(false);
+      EventBus.emit(PhaserEvents.reactAdvanceWeek);
+      triggerAutoSave();
+
+      setActiveWeekReport(report);
+      setEventQueue(report.events);
+    } finally {
+      isAdvancingRef.current = false;
+    }
   }, [
-    activeEvent,
-    activeWeekReport,
-    gameSpeed,
-    handleAdvanceWeek,
+    decisionsComplete,
+    resolvedDecisions,
+    trainingSchedule,
+    triggerAutoSave,
+    weeklyDecisions,
   ]);
 
   const handleResolveEvent = (event: GameEvent, choiceIndex: number | null) => {
@@ -198,22 +140,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
           />
         </div>
         <MoneyDisplay amount={money} size="sm" />
-        <div className="flex gap-1">
-          {([0, 1, 2, 3] as GameSpeed[]).map((speed) => (
-            <button
-              key={speed}
-              className={[
-                "rounded-lg px-2 py-1 text-xs transition",
-                gameSpeed === speed
-                  ? "bg-brand-cyan/20 text-brand-cyan"
-                  : "text-slate-500 hover:text-slate-300",
-              ].join(" ")}
-              onClick={() => setGameSpeed(speed)}
-            >
-              {speed === 0 ? "⏸" : `${speed}x`}
-            </button>
-          ))}
-        </div>
       </header>
 
       <section className="flex-1 overflow-y-auto px-4 py-4">
@@ -230,7 +156,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             <Button
               className="w-full"
               disabled={!decisionsComplete}
-              onClick={() => handleAdvanceWeek("manual")}
+              onClick={handleAdvanceWeek}
             >
               다음 주 진행
             </Button>
