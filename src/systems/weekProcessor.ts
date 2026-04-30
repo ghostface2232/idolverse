@@ -493,6 +493,7 @@ export function processWeek(
       weeksAfterRelease !== null && weeksAfterRelease >= 0
         ? weeksAfterRelease
         : null,
+    hasReleasedAlbum: snapshot.album.releasedAlbums.length > 0,
     promotionIncome: promotionTotalIncome,
     promotionCost: promotionTotalCost,
   };

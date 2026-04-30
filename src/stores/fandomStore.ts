@@ -3,17 +3,17 @@ import { createStore } from "zustand/vanilla";
 import type { FandomStore, FandomStoreState } from "@/types/game";
 
 const initialFandomState: FandomStoreState = {
-  public: 26,
-  fandom: 4200,
-  fandomLoyalty: 64,
-  fandomDisappointment: 11,
-  global: 1800,
-  industry: 31,
+  public: 5,
+  fandom: 0,
+  fandomLoyalty: 50,
+  fandomDisappointment: 0,
+  global: 0,
+  industry: 8,
   chartPositions: {
-    melon: 74,
-    spotify: 88,
-    youtube: 65,
-    albumSales: 52,
+    melon: 0,
+    spotify: 0,
+    youtube: 0,
+    albumSales: 0,
   },
   weeklyRevenue: {
     streaming: 0,

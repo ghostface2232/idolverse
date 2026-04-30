@@ -11,7 +11,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     type: "it",
     description:
       "숏폼 플랫폼과 자체 음원 스트리밍을 운영하는 디지털 중심 기업",
-    fundAmount: 1800000000,
+    fundAmount: 1200000000,
     conditions: [
       {
         id: "nextbeat-followers",
@@ -65,7 +65,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     type: "entertainment",
     description:
       "방송 네트워크와 선배 아티스트 IP를 보유한 대형 엔터테인먼트 그룹",
-    fundAmount: 1200000000,
+    fundAmount: 900000000,
     conditions: [
       {
         id: "crownmusic-win",
@@ -114,7 +114,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     type: "vc",
     description:
       "회수 기간과 수익 구조를 집요하게 추적하는 공격적 성장형 펀드",
-    fundAmount: 2400000000,
+    fundAmount: 1500000000,
     conditions: [
       {
         id: "summit-quarterly",
@@ -164,7 +164,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     type: "cosmetic",
     description:
       "비주얼 브랜딩과 광고 전환률에 민감한 글로벌 뷰티 기업",
-    fundAmount: 1100000000,
+    fundAmount: 700000000,
     conditions: [
       {
         id: "lumiere-visual",
@@ -213,7 +213,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     type: "fashion",
     description:
       "트렌드 적합도와 스타일 파급력을 중시하는 프리미엄 패션 하우스",
-    fundAmount: 1000000000,
+    fundAmount: 500000000,
     conditions: [
       {
         id: "maison-trend",

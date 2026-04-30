@@ -16,6 +16,7 @@ export interface RevenueContext {
   global: number;
   chartRank: number | null;
   weeksAfterAlbumRelease: number | null;
+  hasReleasedAlbum: boolean;
   promotionIncome: number;
   promotionCost: number;
 }
@@ -73,11 +74,9 @@ export function processWeeklyFinances(
     money -= ctx.promotionCost;
   }
 
-  const streaming = calculateStreamingRevenue(
-    ctx.fandom,
-    ctx.global,
-    ctx.chartRank,
-  );
+  const streaming = ctx.hasReleasedAlbum
+    ? calculateStreamingRevenue(ctx.fandom, ctx.global, ctx.chartRank)
+    : 0;
   if (streaming > 0) {
     income.streaming = streaming;
     money += streaming;
