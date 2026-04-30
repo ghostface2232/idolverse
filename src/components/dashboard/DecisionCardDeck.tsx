@@ -1,12 +1,55 @@
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/common/Card";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
+import type { PlayerDecisions } from "@/systems/weekProcessor";
 
-export function DecisionCardDeck() {
+interface DecisionCardDeckProps {
+  onSelectionChange?: (
+    resolvedDecisions: PlayerDecisions["resolvedDecisions"],
+    isComplete: boolean,
+  ) => void;
+}
+
+export function DecisionCardDeck({ onSelectionChange }: DecisionCardDeckProps) {
   const headline = useCalendarStore(
     (state) => state.kpopNews[0]?.headline ?? "The market is quiet for now.",
   );
   const cards = useGameStore((state) => state.weeklyDecisions);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
+    {},
+  );
+  const cardSignature = useMemo(
+    () => cards.map((card) => card.id).join(":"),
+    [cards],
+  );
+  const resolvedDecisions = useMemo(
+    () =>
+      cards.flatMap((card) => {
+        const optionId = selectedOptions[card.id];
+        const option = card.options.find((candidate) => candidate.id === optionId);
+
+        return option
+          ? [
+              {
+                cardId: card.id,
+                optionId: option.id,
+                effects: option.effects,
+              },
+            ]
+          : [];
+      }),
+    [cards, selectedOptions],
+  );
+  const isComplete = cards.length > 0 && resolvedDecisions.length === cards.length;
+
+  useEffect(() => {
+    setSelectedOptions({});
+  }, [cardSignature]);
+
+  useEffect(() => {
+    onSelectionChange?.(resolvedDecisions, isComplete);
+  }, [isComplete, onSelectionChange, resolvedDecisions]);
 
   return (
     <Card className="space-y-4">
@@ -40,14 +83,30 @@ export function DecisionCardDeck() {
               </span>
             </div>
             <p className="mt-2 text-sm text-slate-400">{card.summary}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 grid gap-2">
               {card.options.map((option) => (
-                <span
+                <button
                   key={option.id}
-                  className="rounded-full bg-slate-900/80 px-2.5 py-1 text-xs text-slate-200 ring-1 ring-white/8"
+                  className={[
+                    "min-h-11 rounded-2xl border px-3 py-2 text-left text-xs transition",
+                    selectedOptions[card.id] === option.id
+                      ? "border-brand-pink bg-brand-pink/18 text-slate-50"
+                      : "border-white/8 bg-slate-900/80 text-slate-200 hover:border-brand-cyan/50",
+                  ].join(" ")}
+                  onClick={() =>
+                    setSelectedOptions((current) => ({
+                      ...current,
+                      [card.id]: option.id,
+                    }))
+                  }
                 >
-                  {option.label}
-                </span>
+                  <span className="block text-sm text-slate-100">
+                    {option.label}
+                  </span>
+                  <span className="mt-1 block text-slate-400">
+                    {option.tradeoff}
+                  </span>
+                </button>
               ))}
             </div>
           </article>

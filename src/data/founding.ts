@@ -149,6 +149,59 @@ export const FOUNDING_RECRUITMENT_COSTS = {
   staffRefresh: 5_000_000,
 } as const;
 
+export const RECRUITMENT_HEADCOUNT_MULTIPLIER: Record<5 | 7 | 9 | 12, number> = {
+  5: 1.0,
+  7: 1.4,
+  9: 1.8,
+  12: 2.4,
+};
+
+export const RECRUITMENT_MAX_EXTRA_BUDGET = 100_000_000;
+
+export function getRecruitmentStatRange(extraBudget: number): {
+  min: number;
+  max: number;
+} {
+  const ratio = Math.max(
+    0,
+    Math.min(1, extraBudget / RECRUITMENT_MAX_EXTRA_BUDGET),
+  );
+  return {
+    min: Math.round(30 + ratio * 20),
+    max: Math.round(65 + ratio * 30),
+  };
+}
+
+interface RecruitmentBudgetMilestone {
+  threshold: number;
+  label: string;
+}
+
+const RECRUITMENT_BUDGET_MILESTONES: RecruitmentBudgetMilestone[] = [
+  { threshold: 0, label: "기본" },
+  { threshold: 50_000_000, label: "심화" },
+  { threshold: 75_000_000, label: "프리미엄" },
+];
+
+export function getRecruitmentBudgetLabel(extraBudget: number): string {
+  let active = RECRUITMENT_BUDGET_MILESTONES[0];
+  for (const m of RECRUITMENT_BUDGET_MILESTONES) {
+    if (extraBudget >= m.threshold) active = m;
+  }
+  return active.label;
+}
+
+export function getStatBandLabel(min: number, max: number): string {
+  const band = (v: number) => {
+    if (v < 40) return "낮음";
+    if (v < 70) return "중간";
+    return "높음";
+  };
+  const lo = band(min);
+  const hi = band(max);
+  return lo === hi ? lo : `${lo}-${hi}`;
+}
+
 export const POSITION_FITNESS_WEIGHTS: Record<Position, Partial<Record<TraineeStatKey, number>>> = {
   leader: { mental: 0.4, charm: 0.3, stamina: 0.3 },
   mainVocal: { vocal: 0.7, stamina: 0.15, mental: 0.15 },
@@ -170,6 +223,11 @@ export const POSITION_LABELS: Record<Position, string> = {
 };
 
 export const REQUIRED_POSITIONS: Position[] = ["leader", "mainVocal", "mainDancer", "center"];
+export const OPTIONAL_POSITIONS: Position[] = ["visual", "variety", "producing"];
+
+export function isRequiredPosition(position: Position): boolean {
+  return REQUIRED_POSITIONS.includes(position);
+}
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   manager: "매니저",

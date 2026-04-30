@@ -115,6 +115,7 @@ function extractGameStoreState(): GameStoreState {
     setGameSpeed: _setGameSpeed,
     addNotification: _addNotification,
     clearNotifications: _clearNotifications,
+    setTrainingSchedule: _setTrainingSchedule,
     ...state
   } = gameVanillaStore.getState();
 
@@ -239,7 +240,18 @@ export function captureGameState(): GameStateSnapshot {
 }
 
 export function hydrateGameState(gameState: GameStateSnapshot) {
-  gameVanillaStore.setState(gameState.gameStore, false);
+  const gameStore = gameState.gameStore.trainingSchedule
+    ? gameState.gameStore
+    : {
+        ...gameState.gameStore,
+        trainingSchedule: {
+          intensity: "normal" as const,
+          focus: null,
+          restDay: false,
+        },
+      };
+
+  gameVanillaStore.setState(gameStore, false);
   traineeVanillaStore.setState(gameState.traineeStore, false);
   staffVanillaStore.setState(gameState.staffStore, false);
   albumVanillaStore.setState(gameState.albumStore, false);

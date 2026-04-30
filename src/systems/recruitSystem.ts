@@ -109,9 +109,9 @@ export function generateTraineeCandidates(
   const random = createSeededRandom(seed);
   const count = requestedCount ?? 3 + Math.floor(random() * 3);
 
-  const budgetTier = budget >= 100000000 ? 2 : budget >= 50000000 ? 1 : 0;
-  const baseMin = 30 + budgetTier * 10;
-  const baseMax = 65 + budgetTier * 15;
+  const budgetRatio = clamp(budget / 100_000_000, 0, 1);
+  const baseMin = 30 + budgetRatio * 20;
+  const baseMax = 65 + budgetRatio * 30;
 
   const methodBonus = method.type === "scout" ? 8 : method.type === "trainee_transfer" ? 5 : 0;
 

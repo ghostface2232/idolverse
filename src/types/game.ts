@@ -348,6 +348,7 @@ export interface EventChoice {
 export interface GameEvent {
   id: string;
   type: GameEventType;
+  tone?: RandomEventTone;
   title: string;
   description: string;
   choices?: EventChoice[];
@@ -452,6 +453,12 @@ export interface InterludeTemplate {
   targetMemberStatBonus?: Partial<Record<TraineeStatKey, number>>;
 }
 
+export interface TrainingScheduleState {
+  intensity: TrainingIntensity;
+  focus: TraineeStatKey | null;
+  restDay: boolean;
+}
+
 export interface GameStoreState {
   currentWeek: number;
   currentSeason: Season;
@@ -466,6 +473,7 @@ export interface GameStoreState {
   gameSpeed: GameSpeed;
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
+  trainingSchedule: TrainingScheduleState;
 }
 
 export interface GameStoreActions {
@@ -473,6 +481,7 @@ export interface GameStoreActions {
   setGameSpeed: (speed: GameSpeed) => void;
   addNotification: (notification: Omit<Notification, "id"> & { id?: string }) => void;
   clearNotifications: () => void;
+  setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;
 }
 
 export type GameStore = GameStoreState & GameStoreActions;

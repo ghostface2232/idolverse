@@ -1,7 +1,7 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { Staff, StaffRole, Trainee, Position } from "@/types/game";
-import type { FoundingStep } from "@/data/founding";
+import { isRequiredPosition, type FoundingStep } from "@/data/founding";
 
 interface FacilitySelections {
   dormLevel: 1 | 2 | 3 | 4;
@@ -19,12 +19,11 @@ interface FoundingStoreState {
   facilitySelections: FacilitySelections;
   auditionMethod: "open" | "scout";
   auditionExtraBudget: number;
-  auditionHeadcount: 3 | 5 | 7 | 9;
+  auditionHeadcount: 5 | 7 | 9 | 12;
   auditionCandidates: Trainee[];
   auditionExecuted: boolean;
   selectedTraineeIds: string[];
-  positionAssignments: Record<string, Position | null>;
-  subPositionAssignments: Record<string, Position | null>;
+  positionAssignments: Partial<Record<Position, string | null>>;
 }
 
 interface FoundingStoreActions {
@@ -34,12 +33,11 @@ interface FoundingStoreActions {
   updateFacilitySelection: (updates: Partial<FacilitySelections>) => void;
   setAuditionMethod: (method: "open" | "scout") => void;
   setAuditionExtraBudget: (budget: number) => void;
-  setAuditionHeadcount: (count: 3 | 5 | 7 | 9) => void;
+  setAuditionHeadcount: (count: 5 | 7 | 9 | 12) => void;
   setAuditionCandidates: (candidates: Trainee[]) => void;
   setAuditionExecuted: (executed: boolean) => void;
   toggleTraineeSelection: (traineeId: string) => void;
-  assignPosition: (traineeId: string, position: Position | null) => void;
-  assignSubPosition: (traineeId: string, position: Position | null) => void;
+  assignPosition: (position: Position, traineeId: string | null) => void;
   resetFoundingStore: () => void;
 }
 
@@ -64,7 +62,6 @@ const initialFoundingState: FoundingStoreState = {
   auditionExecuted: false,
   selectedTraineeIds: [],
   positionAssignments: {},
-  subPositionAssignments: {},
 };
 
 export const foundingVanillaStore = createStore<FoundingStore>()((set) => ({
@@ -93,21 +90,42 @@ export const foundingVanillaStore = createStore<FoundingStore>()((set) => ({
           : [...ids, traineeId],
       };
     }),
-  assignPosition: (traineeId, position) =>
+  assignPosition: (position, traineeId) =>
     set((state) => {
-      const assignments = { ...state.positionAssignments };
-      for (const [id, pos] of Object.entries(assignments)) {
-        if (pos === position && position !== null) {
-          assignments[id] = null;
+      const assignments: Partial<Record<Position, string | null>> = {
+        ...state.positionAssignments,
+      };
+
+      if (traineeId === null) {
+        assignments[position] = null;
+        return { positionAssignments: assignments };
+      }
+
+      if (isRequiredPosition(position)) {
+        for (const slot of Object.keys(assignments) as Position[]) {
+          if (
+            slot !== position &&
+            isRequiredPosition(slot) &&
+            assignments[slot] === traineeId
+          ) {
+            assignments[slot] = null;
+          }
+        }
+      } else {
+        for (const slot of Object.keys(assignments) as Position[]) {
+          if (
+            slot !== position &&
+            !isRequiredPosition(slot) &&
+            assignments[slot] === traineeId
+          ) {
+            assignments[slot] = null;
+          }
         }
       }
-      assignments[traineeId] = position;
+
+      assignments[position] = traineeId;
       return { positionAssignments: assignments };
     }),
-  assignSubPosition: (traineeId, position) =>
-    set((state) => ({
-      subPositionAssignments: { ...state.subPositionAssignments, [traineeId]: position },
-    })),
   resetFoundingStore: () => set({ ...initialFoundingState, staffCandidateSeed: Date.now() }),
 }));
 

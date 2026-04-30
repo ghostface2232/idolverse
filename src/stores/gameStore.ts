@@ -16,7 +16,7 @@ const initialGameState: GameStoreState = {
   investorType: "entertainment",
   investorConditions: INVESTOR_CONDITIONS.entertainment,
   investorPenaltyActive: false,
-  gameSpeed: 1,
+  gameSpeed: 0,
   weeklyDecisions: generateWeeklyDecisionCards(1, getSeasonForWeek(1)),
   notifications: [
     {
@@ -27,6 +27,11 @@ const initialGameState: GameStoreState = {
       week: 1,
     },
   ],
+  trainingSchedule: {
+    intensity: "normal",
+    focus: null,
+    restDay: false,
+  },
 };
 
 export const gameVanillaStore = createStore<GameStore>()((set) => ({
@@ -76,6 +81,13 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
   clearNotifications: () =>
     set(() => ({
       notifications: [],
+    })),
+  setTrainingSchedule: (schedule) =>
+    set((state) => ({
+      trainingSchedule: {
+        ...state.trainingSchedule,
+        ...schedule,
+      },
     })),
 }));
 

@@ -6,6 +6,7 @@ import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
   calculatePositionFitness,
+  isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
 } from "@/data/founding";
@@ -29,6 +30,13 @@ interface PositionAssignmentProps {
   onPrev: () => void;
 }
 
+function getTraineePositions(
+  traineeId: string,
+  assignments: Partial<Record<Position, string | null>>,
+): Position[] {
+  return ALL_POSITIONS.filter((pos) => assignments[pos] === traineeId);
+}
+
 export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentProps) {
   const [selectingPosition, setSelectingPosition] = useState<Position | null>(null);
 
@@ -36,30 +44,41 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
   const assignments = useFoundingStore((s) => s.positionAssignments);
 
   const assignedMap = new Map<Position, Trainee>();
-  for (const trainee of trainees) {
-    const pos = assignments[trainee.id];
-    if (pos) assignedMap.set(pos, trainee);
+  for (const pos of ALL_POSITIONS) {
+    const id = assignments[pos];
+    if (!id) continue;
+    const t = trainees.find((tr) => tr.id === id);
+    if (t) assignedMap.set(pos, t);
   }
 
   const allRequiredFilled = REQUIRED_POSITIONS.every((pos) => assignedMap.has(pos));
 
   const handleAssign = (traineeId: string) => {
     if (!selectingPosition) return;
-    foundingVanillaStore.getState().assignPosition(traineeId, selectingPosition);
+    foundingVanillaStore.getState().assignPosition(selectingPosition, traineeId);
     setSelectingPosition(null);
   };
 
   const handleComplete = () => {
     for (const trainee of trainees) {
-      const pos = assignments[trainee.id] ?? null;
-      traineeVanillaStore.getState().assignPosition(trainee.id, pos);
+      const traineePositions = getTraineePositions(trainee.id, assignments);
+      const required =
+        traineePositions.find((p) => isRequiredPosition(p)) ?? null;
+      const optional =
+        traineePositions.find((p) => !isRequiredPosition(p)) ?? null;
+      const primary = required ?? optional;
+      const sub = required && optional ? optional : null;
+      traineeVanillaStore
+        .getState()
+        .assignPosition(trainee.id, primary, sub);
     }
 
-    // Initialize chemistry between all pairs
     for (let i = 0; i < trainees.length; i++) {
       for (let j = i + 1; j < trainees.length; j++) {
-        const value = Math.floor(Math.random() * 40) - 10; // -10 ~ +30
-        traineeVanillaStore.getState().updateChemistry(trainees[i].id, trainees[j].id, value);
+        const value = Math.floor(Math.random() * 40) - 10;
+        traineeVanillaStore
+          .getState()
+          .updateChemistry(trainees[i].id, trainees[j].id, value);
       }
     }
 
@@ -84,13 +103,18 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
         <FoundingTitleBar title="포지션 배정" />
 
+        <p className="text-[11px] text-slate-400">
+          필수 포지션(리더/메인보컬/메인댄서/센터)은 서로 중복 불가. 그 외(비주얼/예능/프로듀싱)는 필수 포지션 멤버와 겸직 가능.
+        </p>
+
         <div className="space-y-2">
           <p className="text-xs text-slate-400">멤버 목록</p>
           <div className="grid grid-cols-2 gap-2">
             {trainees.map((trainee) => {
-              const pos = assignments[trainee.id];
+              const positions = getTraineePositions(trainee.id, assignments);
               const avgStat = Math.round(
-                Object.values(trainee.stats).reduce((a, b) => a + b, 0) / 7,
+                Object.values(trainee.stats).reduce((a, b) => a + b, 0) /
+                  Object.keys(trainee.stats).length,
               );
 
               return (
@@ -98,7 +122,9 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                   <p className="text-sm text-slate-50">{trainee.name}</p>
                   <p className="text-xs text-slate-400">평균 {avgStat}</p>
                   <p className="text-[10px] text-brand-cyan">
-                    {pos ? POSITION_LABELS[pos] : "미배정"}
+                    {positions.length === 0
+                      ? "미배정"
+                      : positions.map((p) => POSITION_LABELS[p]).join(" · ")}
                   </p>
                 </Card>
               );
@@ -146,21 +172,30 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
         >
           <div className="space-y-2">
             {trainees.map((trainee) => {
-              const fitness = calculatePositionFitness(trainee.stats, selectingPosition);
-              const currentPos = assignments[trainee.id];
+              const fitness = calculatePositionFitness(
+                trainee.stats,
+                selectingPosition,
+              );
+              const heldPositions = getTraineePositions(trainee.id, assignments);
+              const isHere = heldPositions.includes(selectingPosition);
 
               return (
                 <button
                   key={trainee.id}
                   type="button"
-                  className="flex w-full items-center justify-between rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-3 text-left transition hover:border-brand-cyan/50"
+                  className={[
+                    "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition",
+                    isHere
+                      ? "border-brand-cyan bg-cyan-500/10"
+                      : "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/50",
+                  ].join(" ")}
                   onClick={() => handleAssign(trainee.id)}
                 >
                   <div>
                     <span className="text-sm text-slate-50">{trainee.name}</span>
-                    {currentPos && (
+                    {heldPositions.length > 0 && (
                       <span className="ml-2 text-xs text-slate-500">
-                        ({POSITION_LABELS[currentPos]})
+                        ({heldPositions.map((p) => POSITION_LABELS[p]).join(", ")})
                       </span>
                     )}
                   </div>
@@ -174,10 +209,9 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               type="button"
               className="w-full rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-3 text-center text-xs text-slate-400 transition hover:border-red-400/50"
               onClick={() => {
-                const current = assignedMap.get(selectingPosition);
-                if (current) {
-                  foundingVanillaStore.getState().assignPosition(current.id, null);
-                }
+                foundingVanillaStore
+                  .getState()
+                  .assignPosition(selectingPosition, null);
                 setSelectingPosition(null);
               }}
             >

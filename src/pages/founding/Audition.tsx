@@ -3,7 +3,13 @@ import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { TraineeCandidateCard } from "@/components/founding/TraineeCandidateCard";
-import { FOUNDING_RECRUITMENT_COSTS } from "@/data/founding";
+import {
+  FOUNDING_RECRUITMENT_COSTS,
+  RECRUITMENT_HEADCOUNT_MULTIPLIER,
+  getRecruitmentBudgetLabel,
+  getRecruitmentStatRange,
+  getStatBandLabel,
+} from "@/data/founding";
 import { generateTraineeCandidates } from "@/systems/recruitSystem";
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
@@ -15,7 +21,19 @@ interface AuditionProps {
   onPrev: () => void;
 }
 
-const HEADCOUNTS = [3, 5, 7, 9] as const;
+const HEADCOUNTS = [5, 7, 9, 12] as const;
+const MIN_SELECT_COUNT = 3;
+
+function formatKRW(amount: number): string {
+  if (amount >= 100_000_000) {
+    const eok = Math.floor(amount / 100_000_000);
+    const remainderMan = Math.floor((amount % 100_000_000) / 10_000);
+    return remainderMan > 0
+      ? `₩${eok}억 ${remainderMan.toLocaleString()}만`
+      : `₩${eok}억`;
+  }
+  return `₩${Math.floor(amount / 10_000).toLocaleString()}만`;
+}
 
 export function Audition({ onNext, onPrev }: AuditionProps) {
   const money = useFinanceStore((s) => s.money);
@@ -28,11 +46,19 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
   const executed = useFoundingStore((s) => s.auditionExecuted);
   const selectedIds = useFoundingStore((s) => s.selectedTraineeIds);
 
-  const baseCost =
+  const baseUnit =
     method === "scout"
       ? FOUNDING_RECRUITMENT_COSTS.scout
       : FOUNDING_RECRUITMENT_COSTS.openAudition;
+  const headcountMult = RECRUITMENT_HEADCOUNT_MULTIPLIER[headcount];
+  const baseCost = Math.round(baseUnit * headcountMult);
   const totalCost = baseCost + extraBudget;
+  const methodBonus = method === "scout" ? 8 : 0;
+  const statRange = getRecruitmentStatRange(extraBudget);
+  const adjustedMin = Math.min(100, statRange.min + methodBonus);
+  const adjustedMax = Math.min(100, statRange.max + methodBonus);
+  const tierLabel = getRecruitmentBudgetLabel(extraBudget);
+  const statBandLabel = getStatBandLabel(adjustedMin, adjustedMax);
 
   const handleExecute = () => {
     if (money < totalCost) return;
@@ -97,68 +123,79 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                       className="mt-1"
                     />
                     <p className="mt-1 text-[10px] text-slate-400">
-                      {m === "open" ? "능력치 분포 넓음" : "능력치 하한 보장"}
+                      {m === "open"
+                        ? "능력치 분포 넓음"
+                        : "능력치 +8 보장"}
                     </p>
                   </button>
                 ))}
               </div>
             </div>
 
-            <Card className="space-y-2">
-              <p className="text-sm text-slate-200">추가 예산</p>
+            <Card className="space-y-3">
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm text-slate-200">추가 예산</p>
+                <p className="text-xs text-brand-cyan">
+                  {tierLabel} 풀 · 능력치 {statBandLabel}
+                </p>
+              </div>
               <input
                 type="range"
                 min={0}
                 max={100_000_000}
-                step={10_000_000}
+                step={5_000_000}
                 value={extraBudget}
                 onChange={(e) => store.setAuditionExtraBudget(Number(e.target.value))}
                 className="w-full accent-brand-cyan"
               />
               <div className="flex justify-between text-xs text-slate-400">
-                <span>₩0</span>
-                <span className="text-slate-200">
-                  +₩{(extraBudget / 10000).toLocaleString()}만
-                </span>
-                <span>₩1억</span>
+                <span>{formatKRW(0)}</span>
+                <span className="text-slate-200">+{formatKRW(extraBudget)}</span>
+                <span>{formatKRW(100_000_000)}</span>
               </div>
+              <p className="text-[10px] text-slate-500">
+                예산을 늘릴수록 능력치 상·하한이 점진 상승합니다.
+                {method === "scout" && " 스카우트는 +8 보너스."}
+              </p>
             </Card>
 
             <div className="space-y-2">
               <p className="text-sm text-slate-200">모집 인원</p>
               <div className="flex gap-2">
-                {HEADCOUNTS.map((n) => (
-                  <button
-                    key={n}
-                    className={[
-                      "flex-1 rounded-xl border-2 py-2 text-sm transition",
-                      headcount === n
-                        ? "border-brand-cyan bg-cyan-500/10 text-brand-cyan"
-                        : "border-slate-600 bg-slate-800/60 text-slate-400",
-                    ].join(" ")}
-                    onClick={() => store.setAuditionHeadcount(n)}
-                  >
-                    {n}명
-                  </button>
-                ))}
+                {HEADCOUNTS.map((n) => {
+                  const cost = Math.round(
+                    baseUnit * RECRUITMENT_HEADCOUNT_MULTIPLIER[n],
+                  );
+                  return (
+                    <button
+                      key={n}
+                      className={[
+                        "flex flex-1 flex-col items-center gap-0.5 rounded-xl border-2 py-2 text-sm transition",
+                        headcount === n
+                          ? "border-brand-cyan bg-cyan-500/10 text-brand-cyan"
+                          : "border-slate-600 bg-slate-800/60 text-slate-400",
+                      ].join(" ")}
+                      onClick={() => store.setAuditionHeadcount(n)}
+                    >
+                      <span>{n}명</span>
+                      <span className="text-[10px] text-slate-400">
+                        {formatKRW(cost)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {headcount < 5 && (
-                <p className="text-xs text-amber-300">포지션 커버를 위해 최소 5명을 권장합니다.</p>
-              )}
             </div>
 
-            <Button
-              className="w-full"
-              disabled={money < totalCost}
-              onClick={handleExecute}
-            >
-              오디션 실행 (₩{(totalCost / 10000).toLocaleString()}만)
-            </Button>
+            <Card className="flex items-center justify-between text-sm">
+              <span className="text-slate-300">총 비용</span>
+              <span className="text-brand-cyan">{formatKRW(totalCost)}</span>
+            </Card>
           </>
         ) : (
           <>
             <Card className="text-center text-sm text-slate-300">
-              선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 3명
+              선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 {MIN_SELECT_COUNT}명
             </Card>
 
             <div className="space-y-3">
@@ -180,11 +217,16 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
           이전
         </Button>
         {executed ? (
-          <Button disabled={selectedIds.length < 3} onClick={handleNext}>
+          <Button
+            disabled={selectedIds.length < MIN_SELECT_COUNT}
+            onClick={handleNext}
+          >
             다음 단계
           </Button>
         ) : (
-          <div />
+          <Button disabled={money < totalCost} onClick={handleExecute}>
+            오디션 실행 ({formatKRW(totalCost)})
+          </Button>
         )}
       </div>
     </>

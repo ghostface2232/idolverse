@@ -48,6 +48,7 @@ export function rollRandomEvents(
         gameEvent: {
           id: `event-${template.id}-w${ctx.currentWeek}`,
           type: mapEventType(template.type),
+          tone: template.type,
           title: template.title,
           description: template.description,
           choices: template.choices,
