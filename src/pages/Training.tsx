@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/common/Card";
+import { TabPanel } from "@/components/common/TabPanel";
 import { TraineeDetail } from "@/components/TraineeDetail";
 import { CHEMISTRY_CONFLICT_THRESHOLD } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
@@ -155,7 +156,11 @@ function ToggleGroup<T extends string | null>({
   );
 }
 
-export function Training() {
+interface TrainingProps {
+  onBack: () => void;
+}
+
+export function Training({ onBack }: TrainingProps) {
   const trainees = useTraineeStore((s) => s.trainees);
   const trainingSchedule = useGameStore((s) => s.trainingSchedule);
   const upgrades = useFinanceStore((s) => s.upgrades);
@@ -186,7 +191,8 @@ export function Training() {
       ?.description ?? "";
 
   return (
-    <div className="space-y-4">
+    <TabPanel title="트레이닝" onBack={onBack}>
+      <div className="space-y-4">
       <Card className="space-y-4">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-brand-pink">
@@ -407,6 +413,7 @@ export function Training() {
           onClose={() => setOpenTraineeId(null)}
         />
       )}
-    </div>
+      </div>
+    </TabPanel>
   );
 }
