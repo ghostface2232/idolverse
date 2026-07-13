@@ -13,6 +13,8 @@ export const GAME_BALANCE = {
   maxStatValue: 100, // All visible character-facing stats stay on the same 0-100 scale.
 } as const;
 
+export const WEEKS_PER_MONTH = GAME_BALANCE.weeksPerYear / 12; // Fixed costs are priced monthly but charged weekly at this ratio.
+
 export const TRAINING_BASE_GROWTH = 0.8; // A single week should matter, but not outscale album-level decisions.
 
 export const TRAINING_INTENSITY_MULTIPLIER: Record<TrainingIntensity, number> = {
@@ -38,8 +40,8 @@ export const STRESS_DECREASE_RATE = {
 } as const;
 
 export const INJURY_PROBABILITY_BASE = 0.02; // Even careful teams need a low background risk for tension.
-export const INJURY_STAMINA_FACTOR = -0.03; // High stamina slightly suppresses the base risk curve.
-export const INJURY_STRESS_FACTOR = 0.05; // Stress should be the clearest player-controlled injury lever.
+export const INJURY_STAMINA_FACTOR = 0.0003; // Applied to (100 - stamina): stamina 0 adds +3%p weekly risk, stamina 100 adds none.
+export const INJURY_STRESS_FACTOR = 0.0008; // Stress is the clearest player-controlled lever: +8%p weekly risk at stress 100.
 
 export const CHEMISTRY_JOINT_TRAINING_GAIN = 2; // Shared practice should improve team feel slowly, not instantly.
 export const CHEMISTRY_CONFLICT_THRESHOLD = -50; // Below this, conflict is severe enough to justify explicit events.

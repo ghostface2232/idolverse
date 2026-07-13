@@ -1,5 +1,6 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
+import { WEEKS_PER_MONTH } from "@/data/balance";
 import type { FinanceStore, FinanceStoreState } from "@/types/game";
 
 const UPGRADE_COSTS = {
@@ -10,8 +11,10 @@ const UPGRADE_COSTS = {
   hasSecurity: 6000000,
 } as const;
 
-function calculateWeeklyFixedTotal(costs: FinanceStoreState["fixedCosts"]) {
-  return Object.values(costs).reduce((sum, value) => sum + value, 0);
+// fixedCosts entries are monthly amounts (facility tiers, staff salaries) — convert before weekly deduction.
+export function calculateWeeklyFixedTotal(costs: FinanceStoreState["fixedCosts"]) {
+  const monthlyTotal = Object.values(costs).reduce((sum, value) => sum + value, 0);
+  return Math.round(monthlyTotal / WEEKS_PER_MONTH);
 }
 
 const initialFixedCosts: FinanceStoreState["fixedCosts"] = {

@@ -180,7 +180,8 @@ export function processTrainingWeek(
 
     const intensityMult = TRAINING_INTENSITY_MULTIPLIER[schedule.intensity];
     const staminaMult = t.stats.stamina / 50;
-    const potentialMult = 0.5 + t.potential / 100;
+    // potential is already a growth multiplier on the 0.8–1.7 scale (see recruitSystem/potentialToStars).
+    const potentialMult = t.potential;
     const allocation = computeManagerFocusAllocation(
       t,
       managerAbility,
