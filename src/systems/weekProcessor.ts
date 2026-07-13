@@ -380,11 +380,10 @@ export function processWeek(
   const rolledEvents = rollRandomEvents(eventCtx, seed + 2);
   for (const re of rolledEvents) {
     report.events.push(re.gameEvent);
-    // 선택지가 있는 이벤트는 즉시 효과를 적용하지 않는다 — 선택 해결 시
-    // weekRunner.applyEventChoice가 선택지 효과를 적용한다 (이중 적용 방지).
-    if (!re.gameEvent.choices || re.gameEvent.choices.length === 0) {
-      applyToState(re.template.effects);
-    }
+    // base effects는 이벤트 자체의 영향(예: 루머로 인한 피해)이고,
+    // 선택지 effects는 대응에 따른 보정이다. base는 발생 시점에 1회 적용하고
+    // 선택지 effects는 해결 시점에 weekRunner.applyEventChoice가 적용한다.
+    applyToState(re.template.effects);
   }
 
   const vacationScandal = rollVacationScandal(
