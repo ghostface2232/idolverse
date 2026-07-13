@@ -14,7 +14,7 @@ const initialEventState: EventStoreState = {
           label: "Extend rehearsal hours",
           description: "Push through the delay with overtime.",
           tradeoff: "Condition drops and stress spikes.",
-          effects: { choreography: 6, stress: 5, condition: -4 },
+          effects: { albumChoreography: 6, stress: 5, condition: -4 },
         },
         {
           label: "Delay the milestone",

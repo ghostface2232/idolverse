@@ -249,7 +249,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     effects: {
       industry: -2,
-      marketing: -4,
+      albumMarketing: -4,
     },
     choices: [
       {

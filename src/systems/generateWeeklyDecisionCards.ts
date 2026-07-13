@@ -112,7 +112,7 @@ const EMERGENCY_CARDS: WeeklyDecision[] = [
         label: "개별 면담",
         description: "시간을 들여 불만을 듣고 해결책을 모색한다.",
         tradeoff: "만족도가 회복되지만 팀 훈련 시간이 줄어든다.",
-        effects: { satisfaction: 8, chemistry: 2, trainee_vocal: -1, trainee_dance: -1 },
+        effects: { satisfaction: 8, chemistry: 2, vocal: -1, dance: -1 },
       },
       {
         id: "reward",
@@ -166,7 +166,7 @@ const INTERLUDE_CARDS: WeeklyDecision[] = [
         label: "즉시 시작",
         description: "컴백 공백을 최소화하고 빠르게 돌아간다.",
         tradeoff: "시장 존재감은 유지하지만 팀 피로가 누적된다.",
-        effects: { public: 2, stress: 5, album_song: 3 },
+        effects: { public: 2, stress: 5, albumSong: 3 },
       },
       {
         id: "wait-recover",

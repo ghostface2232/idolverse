@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
-import type { GameEvent, RandomEventTone } from "@/types/game";
+import type { GameEvent, RandomEventTone, EffectMap } from "@/types/game";
 
 interface EventModalProps {
   event: GameEvent;
@@ -112,7 +112,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
   );
 }
 
-function EffectList({ effects }: { effects: Record<string, number> }) {
+function EffectList({ effects }: { effects: EffectMap }) {
   const entries = Object.entries(effects);
 
   if (entries.length === 0) {

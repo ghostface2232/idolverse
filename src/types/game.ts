@@ -152,6 +152,38 @@ export type TraineeStatKey =
   | "stamina"
   | "mental";
 
+/**
+ * 게임 내 모든 효과(결정 카드/이벤트/프로모션/투자사 페널티)가 사용할 수 있는
+ * 키의 단일 계약. 여기 없는 키는 컴파일 에러가 되므로 조용히 소실될 수 없다.
+ * 적용 규칙은 src/systems/applyEffects.ts 한 곳에서만 구현한다.
+ */
+export type EffectKey =
+  // 재정
+  | "money"
+  // 팬덤 축
+  | "public"
+  | "fandom"
+  | "fandomLoyalty"
+  | "fandomDisappointment"
+  | "global"
+  | "industry"
+  // 게임 상태 플래그 (value > 0 → true)
+  | "investorPressure"
+  // 전체 트레이니 공통
+  | "condition"
+  | "stress"
+  | "satisfaction"
+  | "chemistry"
+  // 트레이니 능력치 (전원 적용)
+  | TraineeStatKey
+  // 진행 중 앨범 (currentAlbum이 있을 때만 적용)
+  | "albumSong"
+  | "albumChoreography"
+  | "albumVisual"
+  | "albumMarketing";
+
+export type EffectMap = Partial<Record<EffectKey, number>>;
+
 export interface RangeValue {
   min: number;
   max: number;
@@ -197,7 +229,7 @@ export interface WeeklyDecisionOption {
   label: string;
   description: string;
   tradeoff: string;
-  effects: Record<string, number>;
+  effects: EffectMap;
 }
 
 export interface WeeklyDecision {
@@ -341,7 +373,7 @@ export interface EventChoice {
   label: string;
   description: string;
   tradeoff: string;
-  effects: Record<string, number>;
+  effects: EffectMap;
 }
 
 export interface GameEvent {
@@ -358,7 +390,7 @@ export interface InterludeActivity {
   type: InterludeActivityType;
   targetMemberId?: string;
   weeksRemaining: number;
-  effects: Record<string, number>;
+  effects: EffectMap;
 }
 
 export interface RandomEventCondition {
@@ -384,7 +416,7 @@ export interface RandomEventTemplate {
   description: string;
   probability: number;
   conditions: RandomEventCondition;
-  effects: Record<string, number>;
+  effects: EffectMap;
   choices?: EventChoice[];
 }
 
@@ -394,7 +426,7 @@ export interface PromotionActivity {
   cost: number;
   duration: number;
   successFactors?: Array<TraineeStatKey | "teamwork" | "visualStyle">;
-  effects: Record<string, number>;
+  effects: EffectMap;
   requirements: {
     phase?: PromotionRequirementPhase;
     minPublic?: number;
@@ -446,7 +478,7 @@ export interface InterludeTemplate {
   name: string;
   cost?: number;
   duration: number | RangeValue;
-  effects: Record<string, number>;
+  effects: EffectMap;
   risks?: string[];
   successFactors?: TraineeStatKey[];
   targetMemberStatBonus?: Partial<Record<TraineeStatKey, number>>;

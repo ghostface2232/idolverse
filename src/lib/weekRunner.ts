@@ -1,7 +1,8 @@
 import { processWeek, type GameSnapshot, type PlayerDecisions } from "@/systems/weekProcessor";
+import { applyEffects } from "@/systems/applyEffects";
 import { captureGameState, hydrateGameState } from "@/lib/saveSystem";
 import { eventVanillaStore } from "@/stores/eventStore";
-import type { GameEvent } from "@/types/game";
+import type { EffectMap, GameEvent } from "@/types/game";
 
 export function buildGameSnapshot(): GameSnapshot {
   const snapshot = captureGameState();
@@ -46,7 +47,7 @@ export function applyEventChoice(event: GameEvent, choiceIndex: number) {
   const choice = event.choices?.[choiceIndex] ?? null;
   const snapshot = buildGameSnapshot();
   const effects = choice?.effects ?? {};
-  const nextSnapshot = applyEffects(snapshot, effects);
+  const nextSnapshot = applySnapshotEffects(snapshot, effects);
 
   applyGameSnapshot({
     ...nextSnapshot,
@@ -71,138 +72,49 @@ export function applyEventChoice(event: GameEvent, choiceIndex: number) {
   };
 }
 
-function applyEffects(
+function applySnapshotEffects(
   snapshot: GameSnapshot,
-  effects: Record<string, number>,
+  effects: EffectMap,
 ): GameSnapshot {
-  let money = snapshot.finance.money;
-  let publicScore = snapshot.fandom.public;
-  let fandom = snapshot.fandom.fandom;
-  let fandomLoyalty = snapshot.fandom.fandomLoyalty;
-  let fandomDisappointment = snapshot.fandom.fandomDisappointment;
-  let global = snapshot.fandom.global;
-  let industry = snapshot.fandom.industry;
-  let investorPenaltyActive = snapshot.game.investorPenaltyActive;
-  let currentAlbum = snapshot.album.currentAlbum
-    ? {
-        ...snapshot.album.currentAlbum,
-        progress: { ...snapshot.album.currentAlbum.progress },
-      }
-    : null;
-  let trainees = snapshot.trainee.trainees.map((trainee) => ({
-    ...trainee,
-    stats: { ...trainee.stats },
-    chemistry: { ...trainee.chemistry },
-  }));
-
-  for (const [key, value] of Object.entries(effects)) {
-    if (key === "money") money += value;
-    if (key === "public") publicScore = clamp(publicScore + value, 0, 100);
-    if (key === "fandom") fandom = Math.max(0, fandom + value);
-    if (key === "fandomLoyalty") {
-      fandomLoyalty = clamp(fandomLoyalty + value, 0, 100);
-    }
-    if (key === "fandomDisappointment") {
-      fandomDisappointment = clamp(fandomDisappointment + value, 0, 100);
-    }
-    if (key === "global") global = Math.max(0, global + value);
-    if (key === "industry") industry = clamp(industry + value, 0, 100);
-    if (key === "investorPressure") investorPenaltyActive = value > 0;
-
-    if (key === "condition" || key === "stress" || key === "satisfaction") {
-      trainees = trainees.map((trainee) => ({
-        ...trainee,
-        [key]: clamp(trainee[key] + value, 0, 100),
-      }));
-    }
-
-    if (key === "chemistry") {
-      trainees = trainees.map((trainee) => ({
-        ...trainee,
-        chemistry: Object.fromEntries(
-          Object.entries(trainee.chemistry).map(([targetId, chemistry]) => [
-            targetId,
-            clamp(chemistry + value, -100, 100),
-          ]),
-        ),
-      }));
-    }
-
-    if (
-      key === "visual" ||
-      key === "vocal" ||
-      key === "dance" ||
-      key === "charm" ||
-      key === "stamina" ||
-      key === "mental"
-    ) {
-      trainees = trainees.map((trainee) => ({
-        ...trainee,
-        stats: {
-          ...trainee.stats,
-          [key]: clamp(trainee.stats[key] + value, 0, 100),
-        },
-      }));
-    }
-
-    if (currentAlbum) {
-      if (key === "albumSong" || key === "song") {
-        currentAlbum.progress.song = clamp(currentAlbum.progress.song + value, 0, 100);
-      }
-      if (key === "choreography") {
-        currentAlbum.progress.choreography = clamp(
-          currentAlbum.progress.choreography + value,
-          0,
-          100,
-        );
-      }
-      if (key === "albumVisual") {
-        currentAlbum.progress.visual = clamp(
-          currentAlbum.progress.visual + value,
-          0,
-          100,
-        );
-      }
-      if (key === "marketing") {
-        currentAlbum.progress.marketing = clamp(
-          currentAlbum.progress.marketing + value,
-          0,
-          100,
-        );
-      }
-    }
-  }
+  const result = applyEffects(
+    {
+      money: snapshot.finance.money,
+      fandom: {
+        public: snapshot.fandom.public,
+        fandom: snapshot.fandom.fandom,
+        fandomLoyalty: snapshot.fandom.fandomLoyalty,
+        fandomDisappointment: snapshot.fandom.fandomDisappointment,
+        global: snapshot.fandom.global,
+        industry: snapshot.fandom.industry,
+      },
+      trainees: snapshot.trainee.trainees,
+      album: snapshot.album.currentAlbum,
+      investorPenaltyActive: snapshot.game.investorPenaltyActive,
+    },
+    effects,
+  );
 
   return {
     ...snapshot,
     game: {
       ...snapshot.game,
-      investorPenaltyActive,
+      investorPenaltyActive: result.investorPenaltyActive,
     },
     trainee: {
       ...snapshot.trainee,
-      trainees,
+      trainees: result.trainees,
     },
     album: {
       ...snapshot.album,
-      currentAlbum,
+      currentAlbum: result.album,
     },
     fandom: {
       ...snapshot.fandom,
-      public: publicScore,
-      fandom,
-      fandomLoyalty,
-      fandomDisappointment,
-      global,
-      industry,
+      ...result.fandom,
     },
     finance: {
       ...snapshot.finance,
-      money,
+      money: result.money,
     },
   };
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
 }
