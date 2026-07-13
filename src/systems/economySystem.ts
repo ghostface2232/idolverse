@@ -1,4 +1,5 @@
 import type {
+  EffectMap,
   FinanceStoreState,
   InvestorCompany,
   InvestorCondition,
@@ -191,7 +192,7 @@ function meetsAwardLevel(actual: string, required: string): boolean {
 
 export interface InvestorPenaltyResult {
   effectType: string;
-  effects: Record<string, number>;
+  effects: EffectMap;
   description: string;
 }
 
@@ -199,7 +200,7 @@ export function applyInvestorPenalty(
   investor: InvestorCompany,
 ): InvestorPenaltyResult[] {
   return investor.penaltyEffects.map((effect) => {
-    const effects: Record<string, number> = {};
+    const effects: EffectMap = {};
 
     switch (effect.type) {
       case "marketingCut":

@@ -1,4 +1,5 @@
 import { advanceWeekState } from "@/systems/advanceWeek";
+import { applyEffects } from "@/systems/applyEffects";
 import {
   generateWeeklyDecisionCards,
   type DecisionCardContext,
@@ -57,6 +58,7 @@ import { INVESTOR_COMPANIES } from "@/data/investors";
 import type {
   Album,
   AlbumStoreState,
+  EffectMap,
   BackgroundGroup,
   CalendarStoreState,
   CompetitorGroup,
@@ -94,7 +96,7 @@ export interface PlayerDecisions {
   resolvedDecisions: {
     cardId: string;
     optionId: string;
-    effects: Record<string, number>;
+    effects: EffectMap;
   }[];
   promotionOrders?: PromotionOrder[];
 }
@@ -154,9 +156,23 @@ export function processWeek(
     industry: snapshot.fandom.industry,
   };
   let money = snapshot.finance.money;
+  let investorPenaltyActive = snapshot.game.investorPenaltyActive;
   const staff = snapshot.staff.staff;
   const manager = staff.find((s) => s.role === "manager") ?? null;
   const upgrades = snapshot.finance.upgrades;
+
+  // 모든 효과(카드/프로모션/이벤트/투자사 페널티)는 이 헬퍼 하나로만 적용한다.
+  const applyToState = (effects: EffectMap) => {
+    const next = applyEffects(
+      { money, fandom: fandomAxis, trainees, album, investorPenaltyActive },
+      effects,
+    );
+    money = next.money;
+    fandomAxis = next.fandom;
+    trainees = next.trainees;
+    album = next.album;
+    investorPenaltyActive = next.investorPenaltyActive;
+  };
 
   // ── 0. Awards (year-end, evaluated first so results feed into later steps)
   let playerWonAward = false;
@@ -210,56 +226,7 @@ export function processWeek(
 
   // ── 1. Apply player decisions
   for (const d of decisions.resolvedDecisions) {
-    for (const [key, value] of Object.entries(d.effects)) {
-      if (key === "money") money += value;
-      if (key === "public")
-        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
-      if (key === "fandomLoyalty")
-        fandomAxis.fandomLoyalty = clamp(
-          fandomAxis.fandomLoyalty + value,
-          0,
-          100,
-        );
-      if (key === "fandomDisappointment")
-        fandomAxis.fandomDisappointment = clamp(
-          fandomAxis.fandomDisappointment + value,
-          0,
-          100,
-        );
-      if (key === "global")
-        fandomAxis.global = Math.max(0, fandomAxis.global + value);
-      if (key === "industry")
-        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
-      if (key === "chemistry") {
-        trainees = trainees.map((t) => ({
-          ...t,
-          chemistry: Object.fromEntries(
-            Object.entries(t.chemistry).map(([k, v]) => [
-              k,
-              clamp(v + value, -100, 100),
-            ]),
-          ),
-        }));
-      }
-      if (key === "condition") {
-        trainees = trainees.map((t) => ({
-          ...t,
-          condition: clamp(t.condition + value, 0, 100),
-        }));
-      }
-      if (key === "stress") {
-        trainees = trainees.map((t) => ({
-          ...t,
-          stress: clamp(t.stress + value, 0, 100),
-        }));
-      }
-      if (key === "satisfaction") {
-        trainees = trainees.map((t) => ({
-          ...t,
-          satisfaction: clamp(t.satisfaction + value, 0, 100),
-        }));
-      }
-    }
+    applyToState(d.effects);
   }
 
   // ── 2. Promotions (before training so activity flags are set)
@@ -296,28 +263,7 @@ export function processWeek(
       );
     }
 
-    for (const [key, value] of Object.entries(result.effects)) {
-      if (key === "public")
-        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
-      if (key === "fandom")
-        fandomAxis.fandom = Math.max(0, fandomAxis.fandom + value);
-      if (key === "fandomLoyalty")
-        fandomAxis.fandomLoyalty = clamp(
-          fandomAxis.fandomLoyalty + value,
-          0,
-          100,
-        );
-      if (key === "fandomDisappointment")
-        fandomAxis.fandomDisappointment = clamp(
-          fandomAxis.fandomDisappointment + value,
-          0,
-          100,
-        );
-      if (key === "global")
-        fandomAxis.global = Math.max(0, fandomAxis.global + value);
-      if (key === "industry")
-        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
-    }
+    applyToState(result.effects);
   }
 
   const excessiveCommercialPenalty = checkExcessiveCommercial(
@@ -434,21 +380,10 @@ export function processWeek(
   const rolledEvents = rollRandomEvents(eventCtx, seed + 2);
   for (const re of rolledEvents) {
     report.events.push(re.gameEvent);
-    for (const [key, value] of Object.entries(re.template.effects)) {
-      if (key === "public")
-        fandomAxis.public = clamp(fandomAxis.public + value, 0, 100);
-      if (key === "fandom")
-        fandomAxis.fandom = Math.max(0, fandomAxis.fandom + value);
-      if (key === "global")
-        fandomAxis.global = Math.max(0, fandomAxis.global + value);
-      if (key === "industry")
-        fandomAxis.industry = clamp(fandomAxis.industry + value, 0, 100);
-      if (key === "fandomDisappointment")
-        fandomAxis.fandomDisappointment = clamp(
-          fandomAxis.fandomDisappointment + value,
-          0,
-          100,
-        );
+    // 선택지가 있는 이벤트는 즉시 효과를 적용하지 않는다 — 선택 해결 시
+    // weekRunner.applyEventChoice가 선택지 효과를 적용한다 (이중 적용 방지).
+    if (!re.gameEvent.choices || re.gameEvent.choices.length === 0) {
+      applyToState(re.template.effects);
     }
   }
 
@@ -563,7 +498,6 @@ export function processWeek(
   const investor = INVESTOR_COMPANIES.find(
     (c) => c.type === snapshot.game.investorType,
   );
-  let investorPenaltyActive = snapshot.game.investorPenaltyActive;
   if (investor) {
     const investorMetrics = buildInvestorMetrics(
       snapshot,
@@ -583,44 +517,7 @@ export function processWeek(
       const penalties = applyInvestorPenalty(investor);
       for (const penalty of penalties) {
         report.warnings.push(`투자사 페널티: ${penalty.description}`);
-        if (penalty.effects.money) money += penalty.effects.money;
-        if (penalty.effects.public)
-          fandomAxis.public = clamp(
-            fandomAxis.public + penalty.effects.public,
-            0,
-            100,
-          );
-        if (penalty.effects.global)
-          fandomAxis.global = Math.max(
-            0,
-            fandomAxis.global + (penalty.effects.global ?? 0),
-          );
-        if (penalty.effects.industry)
-          fandomAxis.industry = clamp(
-            fandomAxis.industry + penalty.effects.industry,
-            0,
-            100,
-          );
-        if (penalty.effects.satisfaction) {
-          trainees = trainees.map((t) => ({
-            ...t,
-            satisfaction: clamp(
-              t.satisfaction + (penalty.effects.satisfaction ?? 0),
-              0,
-              100,
-            ),
-          }));
-        }
-        if (penalty.effects.stress) {
-          trainees = trainees.map((t) => ({
-            ...t,
-            stress: clamp(
-              t.stress + (penalty.effects.stress ?? 0),
-              0,
-              100,
-            ),
-          }));
-        }
+        applyToState(penalty.effects);
       }
     }
   }

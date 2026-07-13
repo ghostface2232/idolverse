@@ -1,6 +1,7 @@
 import { RANDOM_EVENT_POOL } from "@/data/events";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
+  EffectMap,
   EventChoice,
   GameEvent,
   GamePhase,
@@ -139,7 +140,7 @@ function mapEventType(tone: string): "training" | "member" | "scandal" | "market
 export function resolveEvent(
   event: GameEvent,
   choiceIndex: number,
-): { effects: Record<string, number>; resolved: GameEvent } {
+): { effects: EffectMap; resolved: GameEvent } {
   const choice = event.choices?.[choiceIndex];
   const effects = choice?.effects ?? {};
 

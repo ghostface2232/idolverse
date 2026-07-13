@@ -2,6 +2,8 @@ import { FANDOM_DISAPPOINTMENT_COMMERCIAL } from "@/data/balance";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
+  EffectKey,
+  EffectMap,
   GamePhase,
   PromotionActivity,
   PromotionActivityId,
@@ -34,7 +36,7 @@ export interface PromotionResult {
   activityName: string;
   success: boolean;
   successRate: number;
-  effects: Record<string, number>;
+  effects: EffectMap;
   income: number;
   cost: number;
   memberActivityChanges: { traineeId: string; activity: "entertainment" }[];
@@ -145,8 +147,11 @@ export function executePromotion(
   const success = successRate >= 0.8;
 
   const effectMult = success ? Math.min(successRate, 1.5) : successRate * 0.4;
-  const scaledEffects: Record<string, number> = {};
-  for (const [key, value] of Object.entries(activity.effects)) {
+  const scaledEffects: EffectMap = {};
+  for (const [key, value] of Object.entries(activity.effects) as [
+    EffectKey,
+    number,
+  ][]) {
     scaledEffects[key] = Math.round(value * effectMult);
   }
 
