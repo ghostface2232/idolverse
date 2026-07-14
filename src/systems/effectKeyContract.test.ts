@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { EFFECT_KEY_SET, normalizeEffectMap } from "@/systems/applyEffects";
+import {
+  applyEffects,
+  EFFECT_KEY_SET,
+  normalizeEffectMap,
+} from "@/systems/applyEffects";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import { applyInvestorPenalty } from "@/systems/economySystem";
-import { WEEKLY_DECISION_POOL } from "@/data/decisionCards";
 import { RANDOM_EVENT_POOL } from "@/data/events";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { INTERLUDE_ACTIVITIES } from "@/data/interlude";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import { eventVanillaStore } from "@/stores/eventStore";
 import type { EffectMap } from "@/types/game";
+import { makeTrainee } from "@/test/gameStateFixture";
 
 /**
  * 효과 키 계약 테스트: 게임 데이터의 모든 effects 키가 applyEffects의
@@ -25,12 +29,6 @@ interface EffectSource {
 
 function collectAllEffectSources(): EffectSource[] {
   const sources: EffectSource[] = [];
-
-  for (const card of WEEKLY_DECISION_POOL) {
-    for (const option of card.options) {
-      sources.push({ label: `결정 카드 ${card.id}/${option.id}`, effects: option.effects });
-    }
-  }
 
   for (const template of RANDOM_EVENT_POOL) {
     sources.push({ label: `이벤트 ${template.id} (base)`, effects: template.effects });
@@ -51,12 +49,39 @@ function collectAllEffectSources(): EffectSource[] {
   // 모든 위기 플래그를 켠 컨텍스트로 생성해 커버한다.
   const crisisCtxBase = {
     phase: "debut" as const,
-    hasPendingScandal: true,
-    hasInjuredMember: true,
+    members: [
+      {
+        id: "member-a",
+        name: "멤버 A",
+        injuryWeeks: 3,
+        condition: 20,
+        stress: 95,
+        satisfaction: 10,
+      },
+      {
+        id: "member-b",
+        name: "멤버 B",
+        injuryWeeks: 0,
+        condition: 80,
+        stress: 20,
+        satisfaction: 70,
+      },
+    ],
+    conflicts: [
+      {
+        memberAId: "member-a",
+        memberAName: "멤버 A",
+        memberBId: "member-b",
+        memberBName: "멤버 B",
+        chemistry: -80,
+      },
+    ],
     investorPressure: true,
-    hasCurrentAlbum: false,
-    weeksSinceLastAlbum: 4,
-    lowSatisfactionMember: true,
+    money: -1,
+    weeklyFixedTotal: 100,
+    fandom: 50,
+    fandomLoyalty: 20,
+    fandomDisappointment: 80,
   };
   for (const complianceCount of [0, 99]) {
     const cards = generateWeeklyDecisionCards(10, "spring", {
@@ -140,5 +165,62 @@ describe("효과 키 계약", () => {
     expect(normalizeEffectMap({ definitely_not_a_key: 10, money: 5 })).toEqual({
       money: 5,
     });
+  });
+});
+
+describe("결정 효과 대상 범위", () => {
+  const fandom = {
+    public: 10,
+    fandom: 10,
+    fandomLoyalty: 50,
+    fandomDisappointment: 0,
+    global: 0,
+    industry: 10,
+  };
+
+  it("멤버 지정 효과는 대상 멤버에게만 적용한다", () => {
+    const target = makeTrainee("target", { condition: 40, injuryWeeks: 3 });
+    const teammate = makeTrainee("teammate", {
+      condition: 80,
+      injuryWeeks: 0,
+    });
+
+    const result = applyEffects(
+      {
+        money: 0,
+        fandom,
+        trainees: [target, teammate],
+        album: null,
+        investorPressureWeeks: 0,
+      },
+      { condition: 15, injuryWeeks: -2, public: -2 },
+      { traineeIds: [target.id] },
+    );
+
+    expect(result.trainees[0]).toMatchObject({ condition: 55, injuryWeeks: 1 });
+    expect(result.trainees[1]).toMatchObject({ condition: 80, injuryWeeks: 0 });
+    expect(result.fandom.public).toBe(8);
+  });
+
+  it("두 멤버 대상 chemistry 효과는 해당 관계에만 대칭 적용한다", () => {
+    const a = makeTrainee("a", { chemistry: { b: -60, c: 5 } });
+    const b = makeTrainee("b", { chemistry: { a: -60, c: 10 } });
+    const c = makeTrainee("c", { chemistry: { a: 5, b: 10 } });
+
+    const result = applyEffects(
+      {
+        money: 0,
+        fandom,
+        trainees: [a, b, c],
+        album: null,
+        investorPressureWeeks: 0,
+      },
+      { chemistry: 15 },
+      { traineeIds: [a.id, b.id] },
+    );
+
+    expect(result.trainees[0].chemistry).toEqual({ b: -45, c: 5 });
+    expect(result.trainees[1].chemistry).toEqual({ a: -45, c: 10 });
+    expect(result.trainees[2].chemistry).toEqual({ a: 5, b: 10 });
   });
 });

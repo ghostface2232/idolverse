@@ -1,8 +1,8 @@
 import { advanceWeekState } from "@/systems/advanceWeek";
 import { applyEffects } from "@/systems/applyEffects";
 import {
+  buildDecisionCardContext,
   generateWeeklyDecisionCards,
-  type DecisionCardContext,
 } from "@/systems/generateWeeklyDecisionCards";
 import {
   processTrainingWeek,
@@ -54,9 +54,9 @@ import {
   type AwardShowResult,
 } from "@/systems/awardsSystem";
 import {
-  SATISFACTION_WARNING_THRESHOLD,
   GAME_BALANCE,
   INVESTOR_PENALTY_GRACE_WEEKS,
+  INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
 } from "@/data/balance";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import {
@@ -110,6 +110,8 @@ export interface PlayerDecisions {
     cardId: string;
     optionId: string;
     effects: EffectMap;
+    targetTraineeIds?: string[];
+    activityOverride?: Trainee["currentActivity"];
   }[];
   promotionOrders?: PromotionOrder[];
 }
@@ -192,11 +194,13 @@ export function processWeek(
     effects: EffectMap,
     source?: WeekDeltaSource,
     day: WeekDelta["day"] = 1,
+    targetTraineeIds?: readonly string[],
   ) => {
     const before = source ? captureWeekDeltaState(getDeltaState()) : null;
     const next = applyEffects(
       { money, fandom: fandomAxis, trainees, album, investorPressureWeeks },
       effects,
+      targetTraineeIds ? { traineeIds: targetTraineeIds } : undefined,
     );
     money = next.money;
     fandomAxis = next.fandom;
@@ -276,12 +280,43 @@ export function processWeek(
 
   // ── 1. Apply player decisions
   let investorComplianceCount = snapshot.game.investorComplianceCount ?? 0;
+  const investorConditionProgress = {
+    ...(snapshot.game.investorConditionProgress ?? {}),
+  };
+  const decisionActivityOverrides = new Map<
+    string,
+    Trainee["currentActivity"]
+  >();
   for (const d of decisions.resolvedDecisions) {
+    const beforeDecision = captureWeekDeltaState(getDeltaState());
     if (d.cardId === "emergency-investor" && d.optionId === "comply") {
       investorComplianceCount += 1;
     }
-    applyToState(
-      d.effects,
+    if (d.cardId === "emergency-investor" && d.optionId === "negotiate") {
+      for (const [conditionId, progress] of Object.entries(
+        investorConditionProgress,
+      )) {
+        if (progress.penaltyApplied) continue;
+        investorConditionProgress[conditionId] = {
+          ...progress,
+          firstFailedWeek:
+            progress.firstFailedWeek + INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
+        };
+      }
+    }
+    if (d.activityOverride) {
+      const targets = d.targetTraineeIds
+        ? new Set(d.targetTraineeIds)
+        : new Set(trainees.map((trainee) => trainee.id));
+      trainees = trainees.map((trainee) => {
+        if (!targets.has(trainee.id)) return trainee;
+        decisionActivityOverrides.set(trainee.id, d.activityOverride ?? null);
+        return { ...trainee, currentActivity: d.activityOverride ?? null };
+      });
+    }
+    applyToState(d.effects, undefined, 1, d.targetTraineeIds);
+    recordTransition(
+      beforeDecision,
       { kind: "decision", id: `${d.cardId}:${d.optionId}`, label: d.cardId },
       1,
     );
@@ -369,6 +404,11 @@ export function processWeek(
     beforeTraining,
     { kind: "training", id: "weekly-training", label: "주간 훈련" },
     3,
+  );
+  trainees = trainees.map((trainee) =>
+    decisionActivityOverrides.get(trainee.id) === trainee.currentActivity
+      ? { ...trainee, currentActivity: "training" }
+      : trainee,
   );
   report.injuries = trainingResult.injuries;
   if (trainingResult.injuries.length > 0) {
@@ -624,9 +664,6 @@ export function processWeek(
   const investor = INVESTOR_COMPANIES.find(
     (c) => c.type === snapshot.game.investorType,
   );
-  const investorConditionProgress = {
-    ...(snapshot.game.investorConditionProgress ?? {}),
-  };
   if (investor) {
     const cumulativeWeek =
       (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear +
@@ -736,31 +773,25 @@ export function processWeek(
   }
 
   // ── 14. Generate next week's decision cards
-  const hasPendingScandal = rolledEvents.some(
-    (e) =>
-      e.template.type === "negative" &&
-      e.gameEvent.choices &&
-      e.gameEvent.choices.length > 0,
-  );
-  const cardCtx: DecisionCardContext = {
+  const decisionTrainees = trainees.map((trainee) => ({
+    ...trainee,
+    satisfaction: getEffectiveSatisfaction(
+      trainee.satisfaction,
+      upgrades.dormLevel,
+      upgrades.livingExpenseLevel,
+    ),
+  }));
+  const cardCtx = buildDecisionCardContext({
     phase: advancedGame.currentPhase,
-    hasPendingScandal,
-    hasInjuredMember: trainees.some((t) => t.injuryWeeks > 0),
+    trainees: decisionTrainees,
     investorPressure: investorPenaltyActive,
     investorComplianceCount,
-    hasCurrentAlbum: album !== null,
-    weeksSinceLastAlbum: lastReleasedAlbum?.releaseWeek
-      ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
-      : null,
-    lowSatisfactionMember: trainees.some(
-      (t) =>
-        getEffectiveSatisfaction(
-          t.satisfaction,
-          upgrades.dormLevel,
-          upgrades.livingExpenseLevel,
-        ) <= SATISFACTION_WARNING_THRESHOLD,
-    ),
-  };
+    money,
+    weeklyFixedTotal: snapshot.finance.weeklyFixedTotal,
+    fandom: fandomAxis.fandom,
+    fandomLoyalty: fandomAxis.fandomLoyalty,
+    fandomDisappointment: fandomAxis.fandomDisappointment,
+  });
   const nextDecisions = generateWeeklyDecisionCards(
     advancedGame.currentWeek,
     advancedGame.currentSeason,

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { BadgeIcon } from "@/components/common/BadgeIcon";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
@@ -52,10 +52,6 @@ interface GameDashboardProps {
 
 export function GameDashboard({ userId }: GameDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
-  const [resolvedDecisions, setResolvedDecisions] = useState<
-    PlayerDecisions["resolvedDecisions"]
-  >([]);
-  const [decisionsComplete, setDecisionsComplete] = useState(false);
   const [activeWeekReport, setActiveWeekReport] =
     useState<WeekReportData | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -79,6 +75,26 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const displayedWeekReport =
     activeWeekReport ??
     (weeklyFlow.state === "report_ready" ? weeklyFlow.report : null);
+  const resolvedDecisions = useMemo<PlayerDecisions["resolvedDecisions"]>(
+    () =>
+      weeklyDecisions.flatMap((card) => {
+        const optionId = weeklyFlow.selectedDecisionIds[card.id];
+        const option = card.options.find((candidate) => candidate.id === optionId);
+        return option
+          ? [
+              {
+                cardId: card.id,
+                optionId: option.id,
+                effects: option.effects,
+                targetTraineeIds: option.targetTraineeIds,
+                activityOverride: option.activityOverride,
+              },
+            ]
+          : [];
+      }),
+    [weeklyDecisions, weeklyFlow.selectedDecisionIds],
+  );
+  const decisionsComplete = resolvedDecisions.length === weeklyDecisions.length;
 
   const remainingDecisions = Math.max(
     0,
@@ -86,17 +102,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   );
   const totalAlerts = notifications.length + news.length;
   const goToDashboard = useCallback(() => setActiveTab("dashboard"), []);
-
-  const handleDecisionChange = useCallback(
-    (
-      nextResolvedDecisions: PlayerDecisions["resolvedDecisions"],
-      isComplete: boolean,
-    ) => {
-      setResolvedDecisions(nextResolvedDecisions);
-      setDecisionsComplete(isComplete);
-    },
-    [],
-  );
 
   const triggerAutoSave = useCallback(() => {
     if (!userId) return;
@@ -130,8 +135,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         promotionOrders: [],
       });
 
-      setResolvedDecisions([]);
-      setDecisionsComplete(false);
       setSheetOpen(false);
       EventBus.emit(PhaserEvents.reactAdvanceWeek);
       triggerAutoSave();
@@ -220,8 +223,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             <div className="z-20 flex shrink-0 items-center gap-2 border-t border-slate-700/60 bg-slate-900 px-3 py-2">
               <button
                 type="button"
-                className="flex min-h-11 flex-1 items-center justify-between rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs text-slate-200 transition-[background-color,scale] duration-150 hover:bg-slate-700 active:scale-[0.96]"
+                className="flex min-h-11 flex-1 items-center justify-between rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs text-slate-200 transition-[background-color,opacity,scale] duration-150 hover:bg-slate-700 active:scale-[0.96] disabled:cursor-default disabled:opacity-60 disabled:hover:bg-slate-800 disabled:active:scale-100"
                 onClick={() => setSheetOpen(true)}
+                disabled={weeklyDecisions.length === 0}
                 aria-label="결정 카드 열기"
               >
                 <span>
@@ -296,10 +300,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       >
         <div className="space-y-4">
           <WeeklySummary />
-          <DecisionCardDeck
-            key={`${currentYear}-W${currentWeek}`}
-            onSelectionChange={handleDecisionChange}
-          />
+          <DecisionCardDeck key={`${currentYear}-W${currentWeek}`} />
         </div>
       </BottomSheet>
 

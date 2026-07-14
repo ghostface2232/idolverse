@@ -173,6 +173,7 @@ export type EffectKey =
   | "condition"
   | "stress"
   | "satisfaction"
+  | "injuryWeeks"
   | "chemistry"
   // 트레이니 능력치 (전원 적용)
   | TraineeStatKey
@@ -240,6 +241,26 @@ export interface WeeklyDecisionOption {
   description: string;
   tradeoff: string;
   effects: EffectMap;
+  /** 멤버 관련 효과를 적용할 대상. 없으면 기존처럼 팀 전체에 적용한다. */
+  targetTraineeIds?: string[];
+  /** 선택 때문에 이번 주 훈련 대신 수행할 활동. 다음 주에는 자동 해제한다. */
+  activityOverride?: TraineeActivity;
+}
+
+export type WeeklyDecisionTriggerKind =
+  | "injury"
+  | "conflict"
+  | "investor"
+  | "finance"
+  | "fandom"
+  | "morale"
+  | "overwork";
+
+export interface WeeklyDecisionTrigger {
+  kind: WeeklyDecisionTriggerKind;
+  severity: "notice" | "warning" | "critical";
+  entityIds: string[];
+  description: string;
 }
 
 export interface WeeklyDecision {
@@ -249,6 +270,8 @@ export interface WeeklyDecision {
   summary: string;
   options: WeeklyDecisionOption[];
   seasons?: Season[];
+  /** 이 카드가 이번 주에 등장한 실제 게임 상태의 원인. */
+  trigger?: WeeklyDecisionTrigger;
 }
 
 export interface Trainee {

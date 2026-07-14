@@ -356,6 +356,8 @@ function normalizeDecisions(
       optionId: option.id,
       // 효과는 UI payload를 신뢰하지 않고 현재 카드 정의에서 다시 읽는다.
       effects: option.effects,
+      targetTraineeIds: option.targetTraineeIds,
+      activityOverride: option.activityOverride,
     };
   });
 

@@ -9,7 +9,7 @@ export const GAME_BALANCE = {
   baseHeight: 640, // A 9:16-ish portrait frame matches the intended one-hand play pattern.
   weeksPerYear: 52, // One in-game year maps to a familiar K-Pop scheduling cycle.
   weeksPerSeason: 13, // Four equal seasons simplify trend rotation and event pacing.
-  weeklyDecisionCount: 3, // Three key cards preserves the "few meaningful choices" design goal.
+  weeklyDecisionMaxCount: 4, // 상황이 실제로 발생한 경우에만 최대 네 건까지 플레이어에게 올린다.
   maxStatValue: 100, // All visible character-facing stats stay on the same 0-100 scale.
 } as const;
 
@@ -60,8 +60,17 @@ export const FANDOM_DISAPPOINTMENT_CONCEPT_BREAK = 10; // Hard pivots should hur
 export const FANDOM_DISAPPOINTMENT_COMMERCIAL = 5; // Overt monetization should annoy fans, but less than scandals or betrayal.
 export const FANDOM_LEAVE_THRESHOLD = 80; // Churn should begin only after multiple ignored warning signs.
 
+export const DECISION_TRIGGER_THRESHOLDS = {
+  highStress: 70,
+  fandomDisappointment: 50,
+  lowFandomLoyalty: 30,
+  minFandomForLoyaltyIssue: 10,
+  financialRunwayWeeks: 8,
+} as const;
+
 export const INVESTOR_PENALTY_GRACE_WEEKS = 4; // A failed condition warns first so the player can react before being punished.
 export const INVESTOR_COMPLY_SUPPORT_LIMIT = 3; // The investor bails the player out only a few times; unlimited cash would invert the incentive to meet conditions.
+export const INVESTOR_NEGOTIATION_EXTENSION_WEEKS = 2; // 재협상은 기존 미달 조건의 페널티 유예를 실제로 두 주 연장한다.
 
 export const COMPETITOR_SCALING_FACTOR = 0.8; // Rivals should trail the player slightly so smart planning can overcome them.
 export const EVENT_COMPETITOR_SPAWN_CHANCE = 0.15; // Seasonal event rivals should be memorable spikes, not routine noise.

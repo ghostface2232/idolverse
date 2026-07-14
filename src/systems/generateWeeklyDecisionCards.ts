@@ -1,285 +1,494 @@
-import { WEEKLY_DECISION_POOL } from "@/data/decisionCards";
-import { GAME_BALANCE, INVESTOR_COMPLY_SUPPORT_LIMIT } from "@/data/balance";
-import { pickUniqueItems } from "@/lib/seededRandom";
+import {
+  CHEMISTRY_CONFLICT_THRESHOLD,
+  DECISION_TRIGGER_THRESHOLDS,
+  GAME_BALANCE,
+  INVESTOR_COMPLY_SUPPORT_LIMIT,
+  SATISFACTION_WARNING_THRESHOLD,
+} from "@/data/balance";
 import type {
   GamePhase,
   Season,
+  Trainee,
   WeeklyDecision,
-  WeeklyDecisionOption,
+  WeeklyDecisionTrigger,
 } from "@/types/game";
+
+export interface DecisionMemberContext {
+  id: string;
+  name: string;
+  injuryWeeks: number;
+  condition: number;
+  stress: number;
+  satisfaction: number;
+}
+
+export interface DecisionConflictContext {
+  memberAId: string;
+  memberAName: string;
+  memberBId: string;
+  memberBName: string;
+  chemistry: number;
+}
 
 export interface DecisionCardContext {
   phase: GamePhase;
-  hasPendingScandal: boolean;
-  hasInjuredMember: boolean;
+  members: DecisionMemberContext[];
+  conflicts: DecisionConflictContext[];
   investorPressure: boolean;
   investorComplianceCount: number;
-  hasCurrentAlbum: boolean;
-  weeksSinceLastAlbum: number | null;
-  lowSatisfactionMember: boolean;
+  money: number;
+  weeklyFixedTotal: number;
+  fandom: number;
+  fandomLoyalty: number;
+  fandomDisappointment: number;
 }
 
-const PHASE_CATEGORY_PRIORITY: Record<GamePhase, string[]> = {
-  prologue: [],
-  founding: [],
-  training: ["훈련", "재정", "스케줄"],
-  debut: ["스케줄", "훈련", "재정", "콘셉트"],
-  growth: ["콘셉트", "스케줄", "재정", "훈련"],
-  peak: ["콘셉트", "재정", "스케줄"],
-};
+export interface DecisionContextState {
+  phase: GamePhase;
+  trainees: readonly Trainee[];
+  investorPressure: boolean;
+  investorComplianceCount: number;
+  money: number;
+  weeklyFixedTotal: number;
+  fandom: number;
+  fandomLoyalty: number;
+  fandomDisappointment: number;
+}
 
-const EMERGENCY_CARDS: WeeklyDecision[] = [
-  {
-    id: "emergency-scandal",
-    category: "위기",
-    title: "스캔들 긴급 대응",
-    summary: "터진 스캔들에 대한 즉각적인 대응이 필요하다.",
-    options: [
-      {
-        id: "fast-response",
-        label: "즉시 해명 자료 배포",
-        description: "법무·홍보팀을 총동원하여 빠르게 진화한다.",
-        tradeoff: "비용이 크지만 피해를 최소화한다.",
-        effects: { money: -30000000, fandomDisappointment: -5, public: 1 },
-      },
-      {
-        id: "wait-observe",
-        label: "상황 관망",
-        description: "여론 추이를 보며 대응 타이밍을 잡는다.",
-        tradeoff: "비용은 없지만 팬 불안이 길어질 수 있다.",
-        effects: { fandomDisappointment: 5, public: -3 },
-      },
-    ],
-  },
-  {
-    id: "emergency-injury",
-    category: "위기",
-    title: "멤버 부상 대처",
-    summary: "부상 멤버의 일정을 어떻게 조정할지 결정해야 한다.",
+interface PrioritizedCard {
+  priority: number;
+  card: WeeklyDecision;
+}
+
+/** 현재 게임 상태를 결정 생성기가 소비하는 최소 projection으로 변환한다. */
+export function buildDecisionCardContext(
+  state: DecisionContextState,
+): DecisionCardContext {
+  const conflicts: DecisionConflictContext[] = [];
+  for (let i = 0; i < state.trainees.length; i++) {
+    for (let j = i + 1; j < state.trainees.length; j++) {
+      const memberA = state.trainees[i];
+      const memberB = state.trainees[j];
+      const chemistry = Math.min(
+        memberA.chemistry[memberB.id] ?? 0,
+        memberB.chemistry[memberA.id] ?? 0,
+      );
+      if (chemistry <= CHEMISTRY_CONFLICT_THRESHOLD) {
+        conflicts.push({
+          memberAId: memberA.id,
+          memberAName: memberA.name,
+          memberBId: memberB.id,
+          memberBName: memberB.name,
+          chemistry,
+        });
+      }
+    }
+  }
+
+  return {
+    phase: state.phase,
+    members: state.trainees.map((trainee) => ({
+      id: trainee.id,
+      name: trainee.name,
+      injuryWeeks: trainee.injuryWeeks,
+      condition: trainee.condition,
+      stress: trainee.stress,
+      satisfaction: trainee.satisfaction,
+    })),
+    conflicts: conflicts.sort((a, b) => a.chemistry - b.chemistry),
+    investorPressure: state.investorPressure,
+    investorComplianceCount: state.investorComplianceCount,
+    money: state.money,
+    weeklyFixedTotal: state.weeklyFixedTotal,
+    fandom: state.fandom,
+    fandomLoyalty: state.fandomLoyalty,
+    fandomDisappointment: state.fandomDisappointment,
+  };
+}
+
+/**
+ * 정상 상태를 채우기 위한 랜덤 카드를 만들지 않는다.
+ * 실제 시스템 상태가 플레이어 판단을 요구할 때만 최대 네 건을 반환한다.
+ */
+export function generateWeeklyDecisionCards(
+  _week: number,
+  _season: Season,
+  ctx?: DecisionCardContext,
+): WeeklyDecision[] {
+  if (!ctx || ctx.phase === "prologue" || ctx.phase === "founding") return [];
+
+  const candidates: PrioritizedCard[] = [];
+  const injured = [...ctx.members]
+    .filter((member) => member.injuryWeeks > 0)
+    .sort((a, b) => b.injuryWeeks - a.injuryWeeks || a.condition - b.condition)[0];
+  if (injured) {
+    candidates.push({ priority: 100 + injured.injuryWeeks, card: buildInjuryCard(injured) });
+  }
+
+  if (ctx.investorPressure) {
+    candidates.push({
+      priority: 96,
+      card: buildInvestorPressureCard(ctx.investorComplianceCount),
+    });
+  }
+
+  const lowestSatisfaction = [...ctx.members].sort(
+    (a, b) => a.satisfaction - b.satisfaction,
+  )[0];
+  if (
+    lowestSatisfaction &&
+    lowestSatisfaction.satisfaction <= SATISFACTION_WARNING_THRESHOLD
+  ) {
+    candidates.push({
+      priority: 92 + (SATISFACTION_WARNING_THRESHOLD - lowestSatisfaction.satisfaction),
+      card: buildMoraleCard(lowestSatisfaction),
+    });
+  }
+
+  const runwayWeeks =
+    ctx.weeklyFixedTotal > 0 ? ctx.money / ctx.weeklyFixedTotal : Number.POSITIVE_INFINITY;
+  if (
+    ctx.money < 0 ||
+    runwayWeeks <= DECISION_TRIGGER_THRESHOLDS.financialRunwayWeeks
+  ) {
+    candidates.push({
+      priority: ctx.money < 0 ? 95 : 84,
+      card: buildFinancialCrisisCard(ctx.money, runwayWeeks),
+    });
+  }
+
+  const conflict = ctx.conflicts[0];
+  if (conflict) {
+    candidates.push({
+      priority: 82 + Math.min(10, Math.abs(conflict.chemistry) / 10),
+      card: buildConflictCard(conflict),
+    });
+  }
+
+  if (
+    ctx.fandomDisappointment >= DECISION_TRIGGER_THRESHOLDS.fandomDisappointment ||
+    (ctx.fandom >= DECISION_TRIGGER_THRESHOLDS.minFandomForLoyaltyIssue &&
+      ctx.fandomLoyalty <= DECISION_TRIGGER_THRESHOLDS.lowFandomLoyalty)
+  ) {
+    candidates.push({
+      priority: 78,
+      card: buildFandomCrisisCard(ctx.fandomLoyalty, ctx.fandomDisappointment),
+    });
+  }
+
+  const overworked = [...ctx.members]
+    .filter(
+      (member) =>
+        member.stress >= DECISION_TRIGGER_THRESHOLDS.highStress &&
+        member.id !== injured?.id,
+    )
+    .sort((a, b) => b.stress - a.stress)[0];
+  if (overworked) {
+    candidates.push({ priority: 72 + overworked.stress / 10, card: buildOverworkCard(overworked) });
+  }
+
+  return candidates
+    .sort((a, b) => b.priority - a.priority || a.card.id.localeCompare(b.card.id))
+    .slice(0, GAME_BALANCE.weeklyDecisionMaxCount)
+    .map(({ card }) => card);
+}
+
+function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
+  const targetTraineeIds = [member.id];
+  return {
+    id: `injury:${member.id}`,
+    category: "부상",
+    title: `${member.name} 부상 일정 조정`,
+    summary: `${member.name}의 부상이 ${member.injuryWeeks}주 남았다. 이번 주 활동 범위를 결정해야 한다.`,
+    trigger: createTrigger(
+      "injury",
+      member.injuryWeeks >= 3 ? "critical" : "warning",
+      targetTraineeIds,
+      `${member.name} 부상 ${member.injuryWeeks}주`,
+    ),
     options: [
       {
         id: "full-rest",
         label: "완전 휴식",
-        description: "해당 멤버를 모든 일정에서 제외한다.",
-        tradeoff: "회복은 빠르지만 팀 활동에 공백이 생긴다.",
-        effects: { condition: 15, satisfaction: 5, public: -2 },
+        description: "모든 일정을 취소하고 회복에 집중한다.",
+        tradeoff: "회복은 빠르지만 팀의 대중 노출이 줄어든다.",
+        effects: { injuryWeeks: -2, condition: 15, satisfaction: 5, public: -2 },
+        targetTraineeIds,
+        activityOverride: "vacation",
       },
       {
         id: "partial-activity",
-        label: "경량 참여",
-        description: "부담을 줄이되 최소한의 활동은 유지한다.",
-        tradeoff: "공백은 줄지만 악화 위험이 남아 있다.",
-        effects: { condition: 5, stress: 3, public: -1 },
+        label: "필수 일정만 참여",
+        description: "부담이 적은 일정만 제한적으로 소화한다.",
+        tradeoff: "공백은 줄지만 회복이 느리고 스트레스가 남는다.",
+        effects: { injuryWeeks: -1, condition: 5, stress: 3, public: -1 },
+        targetTraineeIds,
+        activityOverride: "rest",
       },
     ],
-  },
-  {
+  };
+}
+
+function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
+  const targetTraineeIds = [conflict.memberAId, conflict.memberBId];
+  return {
+    id: `conflict:${conflict.memberAId}:${conflict.memberBId}`,
+    category: "불화",
+    title: `${conflict.memberAName}·${conflict.memberBName} 갈등 중재`,
+    summary: `두 멤버의 케미가 ${conflict.chemistry}까지 떨어졌다. 팀 효율이 더 악화되기 전에 개입해야 한다.`,
+    trigger: createTrigger(
+      "conflict",
+      conflict.chemistry <= -75 ? "critical" : "warning",
+      targetTraineeIds,
+      `멤버 케미 ${conflict.chemistry}`,
+    ),
+    options: [
+      {
+        id: "mediate",
+        label: "전문 중재 진행",
+        description: "외부 코치와 함께 갈등의 원인을 조정한다.",
+        tradeoff: "비용이 들지만 관계를 가장 크게 회복한다.",
+        effects: { money: -12000000, chemistry: 15, satisfaction: 3 },
+        targetTraineeIds,
+      },
+      {
+        id: "separate-schedules",
+        label: "일정 임시 분리",
+        description: "두 멤버의 동선을 나눠 충돌을 줄인다.",
+        tradeoff: "긴장은 완화되지만 팀 활동의 화제성이 줄어든다.",
+        effects: { chemistry: 6, condition: 3, public: -2 },
+        targetTraineeIds,
+        activityOverride: "individual",
+      },
+      {
+        id: "ignore",
+        label: "자율 해결에 맡기기",
+        description: "운영 일정을 그대로 유지한다.",
+        tradeoff: "비용은 없지만 갈등과 불만이 더 깊어질 수 있다.",
+        effects: { chemistry: -8, satisfaction: -4 },
+        targetTraineeIds,
+      },
+    ],
+  };
+}
+
+function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
+  const supportAvailable = complianceCount < INVESTOR_COMPLY_SUPPORT_LIMIT;
+  return {
     id: "emergency-investor",
-    category: "위기",
-    title: "투자사 조건 압박",
-    summary: "투자사가 실적 미달을 이유로 개입하려 한다.",
+    category: "투자사",
+    title: "투자사 경영 개입",
+    summary: "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구한다.",
+    trigger: createTrigger("investor", "critical", [], "투자사 압박 활성"),
     options: [
       {
         id: "comply",
         label: "요구 수용",
-        description: "투자사 요구에 따라 상업 활동을 늘린다.",
-        tradeoff: "투자사 관계는 회복되지만 팬 실망과 피로가 누적된다.",
-        effects: { money: 20000000, fandomDisappointment: 5, stress: 5, satisfaction: -4 },
+        description: "상업 활동을 늘리고 투자사 지표를 우선한다.",
+        tradeoff: supportAvailable
+          ? "단기 지원금을 받지만 팬 실망과 멤버 피로가 누적된다."
+          : "추가 지원금 없이 팬 실망과 멤버 피로만 누적된다.",
+        effects: supportAvailable
+          ? { money: 20000000, fandomDisappointment: 5, stress: 5, satisfaction: -4 }
+          : { fandomDisappointment: 5, stress: 5, satisfaction: -4 },
+        activityOverride: "entertainment",
       },
       {
         id: "negotiate",
-        label: "협상 시도",
-        description: "기한 연장이나 조건 완화를 설득한다.",
-        tradeoff: "성공 시 여유가 생기지만 실패 시 관계가 악화된다.",
-        effects: { industry: -2, satisfaction: 2 },
+        label: "조건 재협상",
+        description: "기한 연장과 평가 기준 완화를 요청한다.",
+        tradeoff: "유예 기간이 2주 늘어나지만 자문 비용과 업계 마찰이 생긴다.",
+        effects: { money: -10000000, industry: -2, satisfaction: 2 },
       },
       {
         id: "defy",
         label: "자체 방침 고수",
-        description: "음악적 방향성을 우선하고 투자사와 마찰을 감수한다.",
-        tradeoff: "팀 만족도는 오르지만 투자 지원이 줄어들 수 있다.",
+        description: "지원 축소를 감수하고 팀의 방향성을 지킨다.",
+        tradeoff: "멤버와 팬은 안도하지만 현금과 업계 관계가 악화된다.",
         effects: { satisfaction: 5, fandomLoyalty: 3, money: -15000000, industry: -3 },
       },
     ],
-  },
-  {
-    id: "emergency-morale",
-    category: "위기",
-    title: "멤버 사기 저하",
-    summary: "한 멤버의 만족도가 위험 수준으로 떨어져 관리가 시급하다.",
-    options: [
-      {
-        id: "private-meeting",
-        label: "개별 면담",
-        description: "시간을 들여 불만을 듣고 해결책을 모색한다.",
-        tradeoff: "만족도가 회복되지만 팀 훈련 시간이 줄어든다.",
-        effects: { satisfaction: 8, chemistry: 2, vocal: -1, dance: -1 },
-      },
-      {
-        id: "reward",
-        label: "특별 보상 지급",
-        description: "보너스와 휴식을 제공한다.",
-        tradeoff: "즉각 효과가 있지만 비용이 든다.",
-        effects: { satisfaction: 6, money: -10000000, condition: 5 },
-      },
-    ],
-  },
-];
-
-const INTERLUDE_CARDS: WeeklyDecision[] = [
-  {
-    id: "interlude-activity",
-    category: "인터루드",
-    title: "앨범 사이 활동 선택",
-    summary: "다음 컴백까지 팀의 에너지를 어디에 쓸지 결정한다.",
-    options: [
-      {
-        id: "content-production",
-        label: "자체 콘텐츠 제작",
-        description: "유튜브·비하인드 콘텐츠로 팬덤을 유지한다.",
-        tradeoff: "해외 팬덤과 충성도는 오르지만 대중 인지도는 정체된다.",
-        effects: { global: 3, fandomLoyalty: 2, public: -1 },
-      },
-      {
-        id: "individual-schedules",
-        label: "개인 스케줄 배분",
-        description: "멤버별 연기·모델·예능 활동을 추진한다.",
-        tradeoff: "개별 인지도와 수입은 오르지만 팀 결속이 느슨해진다.",
-        effects: { public: 3, money: 15000000, chemistry: -3 },
-      },
-      {
-        id: "team-vacation",
-        label: "단체 휴가",
-        description: "전원 휴식으로 컨디션을 끌어올린다.",
-        tradeoff: "컨디션은 크게 회복되지만 팬 노출이 줄어든다.",
-        effects: { condition: 20, stress: -15, satisfaction: 8, public: -3 },
-      },
-    ],
-  },
-  {
-    id: "interlude-next-album",
-    category: "인터루드",
-    title: "다음 앨범 준비 시기",
-    summary: "다음 컴백 준비를 언제 시작할지 결정한다.",
-    options: [
-      {
-        id: "start-now",
-        label: "즉시 시작",
-        description: "컴백 공백을 최소화하고 빠르게 돌아간다.",
-        tradeoff: "시장 존재감은 유지하지만 팀 피로가 누적된다.",
-        effects: { public: 2, stress: 5, albumSong: 3 },
-      },
-      {
-        id: "wait-recover",
-        label: "2-3주 후 착수",
-        description: "충분히 쉬고 나서 다음 앨범에 집중한다.",
-        tradeoff: "컨디션은 좋지만 시장에서 잊힐 수 있다.",
-        effects: { condition: 10, stress: -8, public: -2 },
-      },
-    ],
-  },
-];
-
-/**
- * "요구 수용"의 추가 지원금은 횟수 제한이 있다. 상한을 넘기면 투자사가
- * 더 이상 돈을 얹어주지 않으므로, 조건을 일부러 실패해 지원금을 무한히
- * 뽑아내는 전략이 성립하지 않는다.
- */
-function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
-  const base = EMERGENCY_CARDS[2];
-  if (complianceCount < INVESTOR_COMPLY_SUPPORT_LIMIT) {
-    return base;
-  }
-
-  return {
-    ...base,
-    options: base.options.map((option) =>
-      option.id === "comply"
-        ? {
-            ...option,
-            tradeoff:
-              "추가 지원금은 이미 소진되어 팬 실망과 피로만 누적된다.",
-            effects: { fandomDisappointment: 5, stress: 5, satisfaction: -4 },
-          }
-        : option,
-    ),
   };
 }
 
-export function generateWeeklyDecisionCards(
-  week: number,
-  season: Season,
-  ctx?: DecisionCardContext,
-): WeeklyDecision[] {
-  if (!ctx) {
-    const seasonalPool = WEEKLY_DECISION_POOL.filter(
-      (card) => !card.seasons || card.seasons.includes(season),
-    );
-    return pickUniqueItems(
-      seasonalPool,
-      GAME_BALANCE.weeklyDecisionCount,
-      week * 101 + season.length,
-    );
-  }
+function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDecision {
+  const runwayLabel = Number.isFinite(runwayWeeks)
+    ? `${Math.max(0, runwayWeeks).toFixed(1)}주`
+    : "충분";
+  return {
+    id: "financial-crisis",
+    category: "경영",
+    title: "운영 자금 긴급 조정",
+    summary: `현재 자금 ${Math.round(money).toLocaleString("ko-KR")}원, 고정비 기준 런웨이 ${runwayLabel}다.`,
+    trigger: createTrigger(
+      "finance",
+      money < 0 ? "critical" : "warning",
+      [],
+      `현금 런웨이 ${runwayLabel}`,
+    ),
+    options: [
+      {
+        id: "bridge-financing",
+        label: "브리지 자금 요청",
+        description: "투자사에 단기 운영 자금을 요청한다.",
+        tradeoff: "현금은 확보하지만 투자사 압박과 업계 불신이 커진다.",
+        effects: { money: 50000000, investorPressure: 4, industry: -3 },
+      },
+      {
+        id: "emergency-commercials",
+        label: "긴급 상업 일정 편성",
+        description: "단기 광고와 행사를 집중 수주한다.",
+        tradeoff: "수입은 생기지만 팬 실망과 멤버 피로가 늘어난다.",
+        effects: { money: 25000000, fandomDisappointment: 5, stress: 6 },
+        activityOverride: "entertainment",
+      },
+      {
+        id: "austerity",
+        label: "운영비 긴축",
+        description: "일부 지원과 복지 예산을 현금화한다.",
+        tradeoff: "소액을 확보하지만 멤버 만족도와 평판이 하락한다.",
+        effects: { money: 10000000, satisfaction: -5, industry: -1 },
+      },
+    ],
+  };
+}
 
-  const cards: WeeklyDecision[] = [];
+function buildFandomCrisisCard(
+  fandomLoyalty: number,
+  fandomDisappointment: number,
+): WeeklyDecision {
+  return {
+    id: "fandom-crisis",
+    category: "팬덤",
+    title: "팬덤 신뢰 회복",
+    summary: `팬덤 충성도 ${fandomLoyalty}, 실망도 ${fandomDisappointment}. 이탈이 커지기 전에 대응해야 한다.`,
+    trigger: createTrigger(
+      "fandom",
+      fandomDisappointment >= 70 ? "critical" : "warning",
+      [],
+      `충성도 ${fandomLoyalty} · 실망도 ${fandomDisappointment}`,
+    ),
+    options: [
+      {
+        id: "apology",
+        label: "공식 소통과 보상",
+        description: "입장문과 팬 보상 프로그램을 즉시 진행한다.",
+        tradeoff: "비용이 들지만 실망도를 가장 직접적으로 낮춘다.",
+        effects: { money: -15000000, fandomDisappointment: -12, fandomLoyalty: 4 },
+      },
+      {
+        id: "fan-event",
+        label: "팬 소통 행사",
+        description: "멤버 전원이 참여하는 소규모 행사를 연다.",
+        tradeoff: "팬덤은 회복되지만 비용과 컨디션을 소모한다.",
+        effects: { money: -25000000, fandom: 5, fandomLoyalty: 8, condition: -4 },
+        activityOverride: "entertainment",
+      },
+      {
+        id: "wait",
+        label: "활동으로 만회",
+        description: "별도 대응 없이 다음 결과물에 집중한다.",
+        tradeoff: "돈은 지키지만 당장의 팬 실망이 더 커진다.",
+        effects: { fandomDisappointment: 7, public: -2 },
+      },
+    ],
+  };
+}
 
-  if (ctx.hasPendingScandal) {
-    cards.push(EMERGENCY_CARDS[0]);
-  }
-  if (ctx.hasInjuredMember) {
-    cards.push(EMERGENCY_CARDS[1]);
-  }
-  if (ctx.investorPressure) {
-    cards.push(buildInvestorPressureCard(ctx.investorComplianceCount));
-  }
-  if (ctx.lowSatisfactionMember) {
-    cards.push(EMERGENCY_CARDS[3]);
-  }
+function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
+  const targetTraineeIds = [member.id];
+  return {
+    id: `morale:${member.id}`,
+    category: "멤버",
+    title: `${member.name} 이탈 위험`,
+    summary: `${member.name}의 만족도가 ${member.satisfaction}까지 떨어졌다. 불만을 방치하면 이탈로 이어질 수 있다.`,
+    trigger: createTrigger(
+      "morale",
+      member.satisfaction <= 15 ? "critical" : "warning",
+      targetTraineeIds,
+      `${member.name} 만족도 ${member.satisfaction}`,
+    ),
+    options: [
+      {
+        id: "private-meeting",
+        label: "개별 면담과 일정 조정",
+        description: "불만의 원인을 듣고 이번 주 부담을 낮춘다.",
+        tradeoff: "팀 일정 일부를 포기하지만 만족도와 스트레스가 회복된다.",
+        effects: { satisfaction: 10, stress: -6, chemistry: 3, public: -1 },
+        targetTraineeIds,
+        activityOverride: "rest",
+      },
+      {
+        id: "reward",
+        label: "보너스와 특별 휴식",
+        description: "즉시 체감할 수 있는 보상과 휴식을 제공한다.",
+        tradeoff: "효과는 빠르지만 운영 자금이 줄어든다.",
+        effects: { satisfaction: 8, condition: 6, money: -10000000 },
+        targetTraineeIds,
+        activityOverride: "vacation",
+      },
+      {
+        id: "pressure",
+        label: "프로 의식 강조",
+        description: "계약과 팀 책임을 근거로 일정 준수를 요구한다.",
+        tradeoff: "일정은 지키지만 이탈 위험과 스트레스가 커진다.",
+        effects: { satisfaction: -6, stress: 8, public: 2 },
+        targetTraineeIds,
+      },
+    ],
+  };
+}
 
-  const isInterlude =
-    !ctx.hasCurrentAlbum &&
-    ctx.weeksSinceLastAlbum !== null &&
-    ctx.weeksSinceLastAlbum > 0 &&
-    ctx.phase !== "training";
+function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
+  const targetTraineeIds = [member.id];
+  return {
+    id: `overwork:${member.id}`,
+    category: "과로",
+    title: `${member.name} 과로 경고`,
+    summary: `${member.name}의 스트레스가 ${member.stress}다. 부상이나 만족도 하락 전에 일정을 조정해야 한다.`,
+    trigger: createTrigger(
+      "overwork",
+      member.stress >= 90 ? "critical" : "warning",
+      targetTraineeIds,
+      `${member.name} 스트레스 ${member.stress}`,
+    ),
+    options: [
+      {
+        id: "cancel-schedule",
+        label: "이번 주 일정 취소",
+        description: "개인 일정을 모두 비우고 회복시킨다.",
+        tradeoff: "회복 효과는 크지만 대중 노출을 포기한다.",
+        effects: { stress: -18, condition: 10, satisfaction: 4, public: -2 },
+        targetTraineeIds,
+        activityOverride: "vacation",
+      },
+      {
+        id: "medical-support",
+        label: "의료·컨디셔닝 지원",
+        description: "전문 인력을 투입해 일정을 유지하며 회복을 돕는다.",
+        tradeoff: "비용이 들지만 활동 공백을 줄인다.",
+        effects: { money: -8000000, stress: -10, condition: 5 },
+        targetTraineeIds,
+        activityOverride: "rest",
+      },
+      {
+        id: "push-through",
+        label: "핵심 일정 강행",
+        description: "현재 관심이 식기 전에 일정을 소화한다.",
+        tradeoff: "인지도는 오르지만 부상 위험과 불만이 커진다.",
+        effects: { public: 3, stress: 8, condition: -6, satisfaction: -5 },
+        targetTraineeIds,
+        activityOverride: "individual",
+      },
+    ],
+  };
+}
 
-  if (isInterlude) {
-    const interludeCards = pickUniqueItems(
-      INTERLUDE_CARDS,
-      Math.min(INTERLUDE_CARDS.length, 2),
-      week * 71,
-    );
-    cards.push(...interludeCards);
-  }
-
-  const remaining = (isInterlude ? 4 : GAME_BALANCE.weeklyDecisionCount) - cards.length;
-
-  if (remaining > 0) {
-    const priorities = PHASE_CATEGORY_PRIORITY[ctx.phase] ?? [];
-
-    const seasonalPool = WEEKLY_DECISION_POOL.filter(
-      (card) => !card.seasons || card.seasons.includes(season),
-    );
-
-    const usedIds = new Set(cards.map((c) => c.id));
-    const available = seasonalPool.filter((c) => !usedIds.has(c.id));
-
-    const sorted = [...available].sort((a, b) => {
-      const aPriority = priorities.indexOf(a.category);
-      const bPriority = priorities.indexOf(b.category);
-      const aScore = aPriority === -1 ? priorities.length : aPriority;
-      const bScore = bPriority === -1 ? priorities.length : bPriority;
-      return aScore - bScore;
-    });
-
-    const picked = pickUniqueItems(
-      sorted.slice(0, Math.max(remaining * 2, sorted.length)),
-      remaining,
-      week * 101 + season.length + ctx.phase.length,
-    );
-
-    cards.push(...picked);
-  }
-
-  return cards.slice(0, isInterlude ? 4 : GAME_BALANCE.weeklyDecisionCount + cards.filter((c) => c.category === "위기").length);
+function createTrigger(
+  kind: WeeklyDecisionTrigger["kind"],
+  severity: WeeklyDecisionTrigger["severity"],
+  entityIds: string[],
+  description: string,
+): WeeklyDecisionTrigger {
+  return { kind, severity, entityIds, description };
 }

@@ -150,4 +150,27 @@ describe("투자사 조건 체크 (P0-3)", () => {
         .investorPressureWeeks,
     ).toBe(0);
   });
+
+  it("투자사 재협상 선택은 기존 조건의 페널티 유예를 실제로 2주 연장한다", () => {
+    const state = makeGameSnapshot({ week: 14, investorType: "vc" });
+    state.game.investorConditionProgress = {
+      "summit-quarterly": { firstFailedWeek: 13, penaltyApplied: false },
+    };
+
+    const result = processWeek(state, {
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [
+        {
+          cardId: "emergency-investor",
+          optionId: "negotiate",
+          effects: { money: -10000000, industry: -2, satisfaction: 2 },
+        },
+      ],
+    });
+
+    expect(
+      result.newState.game.investorConditionProgress["summit-quarterly"]
+        ?.firstFailedWeek,
+    ).toBe(15);
+  });
 });

@@ -10,11 +10,12 @@ export const weeklyFlowSelectors = {
       (decision) => !state.weeklyFlow.selectedDecisionIds[decision.id],
     ).length,
   canResolveWeek: (state: GameStoreState) =>
-    state.weeklyFlow.state === "review_ready" &&
-    state.weeklyDecisions.length > 0 &&
-    state.weeklyDecisions.every(
-      (decision) => state.weeklyFlow.selectedDecisionIds[decision.id],
-    ),
+    (state.weeklyDecisions.length === 0 &&
+      state.weeklyFlow.state === "planning_ready") ||
+    (state.weeklyFlow.state === "review_ready" &&
+      state.weeklyDecisions.every(
+        (decision) => state.weeklyFlow.selectedDecisionIds[decision.id],
+      )),
   activeEventId: (state: GameStoreState) =>
     state.weeklyFlow.eventQueueIds[state.weeklyFlow.activeEventIndex] ?? null,
 };

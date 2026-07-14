@@ -94,6 +94,20 @@ describe("weekly resolution workflow", () => {
 
     expect(captureGameState().gameStore.currentWeek).toBe(5);
   });
+
+  it("결정할 이슈가 없는 0카드 주도 정상적으로 진행한다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.weeklyDecisions = [];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    runWeek({
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [],
+    });
+
+    expect(captureGameState().gameStore.currentWeek).toBe(6);
+    expect(captureGameState().gameStore.weeklyFlow.state).toBe("report_ready");
+  });
 });
 
 describe("persistent event queue", () => {

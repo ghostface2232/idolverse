@@ -18,6 +18,10 @@ export interface EffectTargets {
   investorPressureWeeks: number;
 }
 
+export interface EffectScope {
+  traineeIds?: readonly string[];
+}
+
 /**
  * 키 개명 이전(v0 세이브)의 effects가 pendingEvents/weeklyDecisions에
  * 직렬화된 채 남아 있을 수 있다. 역직렬화는 저장된 JSON을 그대로 캐스트하므로
@@ -53,6 +57,7 @@ export const EFFECT_KEY_SET: ReadonlySet<string> = new Set([
   "condition",
   "stress",
   "satisfaction",
+  "injuryWeeks",
   "chemistry",
   "visual",
   "vocal",
@@ -110,12 +115,16 @@ export function normalizeEffectMap(
 export function applyEffects(
   targets: EffectTargets,
   effects: EffectMap,
+  scope?: EffectScope,
 ): EffectTargets {
   let money = targets.money;
   let investorPressureWeeks = targets.investorPressureWeeks;
   const fandom = { ...targets.fandom };
   let trainees = targets.trainees;
   let album = targets.album;
+  const scopedTraineeIds = scope?.traineeIds
+    ? new Set(scope.traineeIds)
+    : null;
 
   // 세이브에서 복원된 데이터는 타입 계약을 우회하므로 항상 정규화를 거친다.
   const normalized = normalizeEffectMap(effects as Record<string, number>);
@@ -157,10 +166,24 @@ export function applyEffects(
       case "condition":
       case "stress":
       case "satisfaction":
-        trainees = trainees.map((t) => ({
-          ...t,
-          [key]: clamp(t[key] + value, 0, 100),
-        }));
+        trainees = trainees.map((t) =>
+          shouldApplyToTrainee(t.id, scopedTraineeIds)
+            ? {
+                ...t,
+                [key]: clamp(t[key] + value, 0, 100),
+              }
+            : t,
+        );
+        break;
+      case "injuryWeeks":
+        trainees = trainees.map((t) =>
+          shouldApplyToTrainee(t.id, scopedTraineeIds)
+            ? {
+                ...t,
+                injuryWeeks: Math.max(0, Math.round(t.injuryWeeks + value)),
+              }
+            : t,
+        );
         break;
       case "chemistry":
         trainees = trainees.map((t) => ({
@@ -168,7 +191,9 @@ export function applyEffects(
           chemistry: Object.fromEntries(
             Object.entries(t.chemistry).map(([targetId, chemistry]) => [
               targetId,
-              clamp(chemistry + value, -100, 100),
+              shouldApplyToChemistryPair(t.id, targetId, scopedTraineeIds)
+                ? clamp(chemistry + value, -100, 100)
+                : chemistry,
             ]),
           ),
         }));
@@ -179,13 +204,17 @@ export function applyEffects(
       case "charm":
       case "stamina":
       case "mental":
-        trainees = trainees.map((t) => ({
-          ...t,
-          stats: {
-            ...t.stats,
-            [key]: clamp(t.stats[key] + value, 0, 100),
-          },
-        }));
+        trainees = trainees.map((t) =>
+          shouldApplyToTrainee(t.id, scopedTraineeIds)
+            ? {
+                ...t,
+                stats: {
+                  ...t.stats,
+                  [key]: clamp(t.stats[key] + value, 0, 100),
+                },
+              }
+            : t,
+        );
         break;
       case "albumSong":
         album = withAlbumProgress(album, "song", value);
@@ -207,6 +236,25 @@ export function applyEffects(
   }
 
   return { money, fandom, trainees, album, investorPressureWeeks };
+}
+
+function shouldApplyToTrainee(
+  traineeId: string,
+  scopedTraineeIds: ReadonlySet<string> | null,
+): boolean {
+  return scopedTraineeIds === null || scopedTraineeIds.has(traineeId);
+}
+
+function shouldApplyToChemistryPair(
+  sourceId: string,
+  targetId: string,
+  scopedTraineeIds: ReadonlySet<string> | null,
+): boolean {
+  if (scopedTraineeIds === null) return true;
+  if (scopedTraineeIds.size === 1) {
+    return scopedTraineeIds.has(sourceId) || scopedTraineeIds.has(targetId);
+  }
+  return scopedTraineeIds.has(sourceId) && scopedTraineeIds.has(targetId);
 }
 
 function withAlbumProgress(

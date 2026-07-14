@@ -109,4 +109,36 @@ describe("processWeek 골든 스냅샷", () => {
     processWeek(snapshot, NO_DECISIONS);
     expect(snapshot).toEqual(original);
   });
+
+  it("부상 휴식 결정은 대상 멤버만 훈련을 건너뛰고 다음 주 활동을 복구한다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.trainee.trainees[0].injuryWeeks = 2;
+    const beforeTargetVocal = snapshot.trainee.trainees[0].stats.vocal;
+    const beforeTeammateVocal = snapshot.trainee.trainees[1].stats.vocal;
+
+    const result = processWeek(snapshot, {
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [
+        {
+          cardId: "injury:t1",
+          optionId: "full-rest",
+          effects: {
+            injuryWeeks: -2,
+            condition: 15,
+            satisfaction: 5,
+            public: -2,
+          },
+          targetTraineeIds: ["t1"],
+          activityOverride: "vacation",
+        },
+      ],
+    });
+
+    const target = result.newState.trainee.trainees[0];
+    const teammate = result.newState.trainee.trainees[1];
+    expect(target.injuryWeeks).toBe(0);
+    expect(target.stats.vocal).toBe(beforeTargetVocal);
+    expect(target.currentActivity).toBe("training");
+    expect(teammate.stats.vocal).toBeGreaterThan(beforeTeammateVocal);
+  });
 });

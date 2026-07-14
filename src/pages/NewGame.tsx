@@ -15,7 +15,6 @@ import { financeVanillaStore } from "@/stores/financeStore";
 import { gameVanillaStore } from "@/stores/gameStore";
 import { resetAllStores } from "@/stores/resetAllStores";
 import { initializePermanentRivals } from "@/systems/competitorSystem";
-import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import { getSeasonForWeek } from "@/data/balance";
 import type { GroupGender, InvestorCompany, InvestorType } from "@/types/game";
 import { assetUrl } from "@/utils/assets";
@@ -191,7 +190,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         investorConditionProgress: {},
         investorPressureWeeks: 0,
         investorComplianceCount: 0,
-        weeklyDecisions: generateWeeklyDecisionCards(firstWeek, season),
+        weeklyDecisions: [],
         notifications: [
           {
             id: "noti-new-game",

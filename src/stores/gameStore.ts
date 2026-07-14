@@ -2,7 +2,6 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { GAME_BALANCE, getSeasonForWeek } from "@/data/balance";
 import { INVESTOR_CONDITIONS } from "@/data/investors";
-import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import type { GameStore, GameStoreState } from "@/types/game";
 
 export const initialWeeklyFlowState: GameStoreState["weeklyFlow"] = {
@@ -29,13 +28,13 @@ export const initialGameState: GameStoreState = {
   investorPressureWeeks: 0,
   investorComplianceCount: 0,
   awardHistory: [],
-  weeklyDecisions: generateWeeklyDecisionCards(1, getSeasonForWeek(1)),
+  weeklyDecisions: [],
   notifications: [
     {
       id: "noti-welcome",
       type: "info",
       title: "Studio Opened",
-      message: "Founding week is live. Your first strategic choices are ready.",
+      message: "Founding week is live. Decisions will appear when an issue needs you.",
       week: 1,
     },
   ],
@@ -60,7 +59,7 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
         currentWeek: nextWeek,
         currentYear: nextYear,
         currentSeason: nextSeason,
-        weeklyDecisions: generateWeeklyDecisionCards(nextWeek, nextSeason),
+        weeklyDecisions: [],
         notifications: wrapped
           ? [
               ...state.notifications,
