@@ -65,6 +65,8 @@ export function buildContenderFromCompetitor(
       competitor.stats.visual) /
     3;
 
+  // 경쟁자 fandom/global은 수천 단위 스케일이라 /100으로 0~100 지표에 맞춘 뒤
+  // 가중 평균한다. 플레이어 지표(0~100)와 같은 스케일이어야 경쟁이 성립한다.
   return {
     id: competitor.id,
     name: competitor.name,
@@ -74,9 +76,9 @@ export function buildContenderFromCompetitor(
       competitor.public * 0.6 +
       (competitor.currentAlbum?.quality ?? 0) * 0.4,
     albumSalesIndex:
-      (competitor.fandom / 100) * 60 + competitor.industry * 0.4,
+      (competitor.fandom / 100) * 0.6 + competitor.industry * 0.4,
     fanVotes:
-      (competitor.fandom / 100) * 70 + (competitor.global / 100) * 30,
+      (competitor.fandom / 100) * 0.7 + (competitor.global / 100) * 0.3,
     judgesScore: competitor.industry * 0.5 + avgStats * 0.5,
   };
 }

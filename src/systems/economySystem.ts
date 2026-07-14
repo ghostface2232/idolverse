@@ -1,4 +1,5 @@
 import type {
+  AwardRecord,
   EffectMap,
   FinanceStoreState,
   InvestorCompany,
@@ -105,7 +106,7 @@ export interface InvestorMetrics {
   snsFollowers: number;
   spotifyStreams: number;
   musicShowWins: number;
-  highestAwardLevel: string | null;
+  awardHistory: readonly AwardRecord[];
   quarterlyRevenue: number;
   cumulativeRevenue: number;
   visualAverage: number;
@@ -167,9 +168,12 @@ function evaluateCondition(
     case "musicShowWin":
       return metrics.musicShowWins >= 1;
     case "awardLevel":
-      return (
-        metrics.highestAwardLevel !== null &&
-        meetsAwardLevel(metrics.highestAwardLevel, condition.target as string)
+      // 마감(deadlineWeeks) 안에 딴 상만 인정한다. 마감 이후의 수상이
+      // 이미 실패한 마일스톤을 소급 충족시키면 안 된다.
+      return metrics.awardHistory.some(
+        (record) =>
+          record.week <= condition.deadlineWeeks &&
+          meetsAwardLevel(record.category, condition.target as string),
       );
     case "quarterlyRevenue":
       return metrics.quarterlyRevenue > 0;
