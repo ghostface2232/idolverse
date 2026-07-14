@@ -1,46 +1,57 @@
-import type { ButtonHTMLAttributes } from "react";
+import {
+  Button as AriaButton,
+  type ButtonProps as AriaButtonProps,
+} from "react-aria-components";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<AriaButtonProps, "className"> {
   tone?: "primary" | "secondary" | "ghost" | "danger" | "success";
+  className?: string;
+  static?: boolean;
+  disabled?: boolean;
 }
 
 const toneClasses: Record<NonNullable<ButtonProps["tone"]>, string> = {
   primary:
-    "border-brand-pink bg-brand-pink text-white shadow-[0_5px_0_#9d174d,0_14px_30px_rgba(236,72,153,0.28)] hover:bg-pink-400 active:translate-y-1 active:shadow-[0_2px_0_#9d174d,0_8px_18px_rgba(236,72,153,0.2)]",
+    "border-action-primary bg-action-primary text-white shadow-[0_4px_0_#9d174d,0_12px_26px_rgba(236,72,153,0.22)] hover:bg-pink-400",
   secondary:
-    "border-slate-500 bg-slate-800 text-slate-100 shadow-[0_5px_0_#334155] hover:bg-slate-700 active:translate-y-1 active:shadow-[0_2px_0_#334155]",
+    "border-action-secondary/70 bg-action-secondary/12 text-cyan-100 shadow-[var(--shadow-surface)] hover:bg-action-secondary/20",
   ghost:
-    "border-slate-600 bg-slate-950/30 text-slate-200 shadow-[0_5px_0_rgba(71,85,105,0.75)] hover:bg-white/6 active:translate-y-1 active:shadow-[0_2px_0_rgba(71,85,105,0.75)]",
+    "border-transparent bg-white/[0.04] text-text-secondary shadow-[var(--shadow-surface)] hover:bg-white/[0.08]",
   danger:
-    "border-red-400 bg-red-500 text-white shadow-[0_5px_0_#991b1b] hover:bg-red-400 active:translate-y-1 active:shadow-[0_2px_0_#991b1b]",
+    "border-state-danger bg-state-danger text-slate-950 shadow-[0_4px_0_#9f1239] hover:bg-rose-300",
   success:
-    "border-emerald-400 bg-emerald-500 text-slate-950 shadow-[0_5px_0_#047857] hover:bg-emerald-400 active:translate-y-1 active:shadow-[0_2px_0_#047857]",
+    "border-state-success bg-state-success text-slate-950 shadow-[0_4px_0_#047857] hover:bg-emerald-300",
 };
 
 export function Button({
   type = "button",
   tone = "primary",
   className = "",
+  static: isStatic = false,
+  disabled,
+  isDisabled,
   children,
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <AriaButton
       type={type}
-      className={[
-        "inline-flex min-h-11 items-center justify-center rounded-2xl border-2 px-4 py-3 text-sm tracking-wide transition duration-150 ease-out",
-        "[font-family:'DungGeunMo',monospace]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan/80",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        toneClasses[tone],
-        className,
-      ].join(" ")}
+      isDisabled={isDisabled ?? disabled}
+      className={({ isDisabled, isFocusVisible, isPressed }) =>
+        [
+          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold tracking-[-0.01em]",
+          "transition-[scale,background-color,color,box-shadow,opacity] duration-[var(--motion-press)] ease-out",
+          isFocusVisible ? "outline-none ring-2 ring-action-secondary ring-offset-2 ring-offset-surface-shell" : "outline-none",
+          isDisabled ? "cursor-not-allowed opacity-45" : "",
+          !isStatic && isPressed ? "scale-[0.96]" : "scale-100",
+          toneClasses[tone],
+          className,
+        ].join(" ")
+      }
       {...props}
     >
-      <span className="[font-family:'DungGeunMo',monospace]">
-        {children}
-      </span>
-    </button>
+      {children}
+    </AriaButton>
   );
 }
 

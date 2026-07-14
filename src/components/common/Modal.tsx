@@ -1,10 +1,17 @@
 import type { ReactNode } from "react";
+import { X } from "lucide-react";
+import {
+  Dialog,
+  Heading,
+  Modal as AriaModal,
+  ModalOverlay,
+} from "react-aria-components";
 import { Button } from "@/components/common/Button";
 
 interface ModalProps {
   title: string;
   children: ReactNode;
-  onClose: () => void;
+  onClose: () => void | Promise<void>;
   footer?: ReactNode;
   className?: string;
 }
@@ -17,36 +24,54 @@ export function Modal({
   className = "",
 }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/78 px-4 py-6 backdrop-blur-sm animate-modal-fade">
-      <section
-        className={[
-          "animate-modal-pop max-h-[88vh] w-full max-w-md overflow-hidden rounded-[28px] border-2 border-brand-cyan/60 bg-slate-900 shadow-[0_0_0_4px_rgba(15,23,42,0.9),0_24px_80px_rgba(0,0,0,0.55)]",
-          className,
-        ].join(" ")}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
+    <ModalOverlay
+      isOpen
+      onOpenChange={(isOpen) => {
+        if (!isOpen) void onClose();
+      }}
+      isDismissable
+      className={({ isEntering, isExiting }) =>
+        [
+          "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/78 px-4 py-6 backdrop-blur-sm",
+          "transition-[opacity] duration-[var(--motion-state)] ease-out",
+          isEntering ? "opacity-100" : "",
+          isExiting ? "opacity-0 duration-150 ease-in" : "",
+        ].join(" ")
+      }
+    >
+      <AriaModal
+        className={({ isEntering, isExiting }) =>
+          [
+            "max-h-[88dvh] w-full max-w-md overflow-hidden rounded-3xl bg-surface-panel shadow-[var(--shadow-raised)] outline-none",
+            "transition-[transform,opacity] duration-[var(--motion-panel)] ease-out",
+            isEntering ? "translate-y-0 opacity-100" : "",
+            isExiting ? "-translate-y-3 opacity-0 duration-150 ease-in" : "",
+            className,
+          ].join(" ")
+        }
       >
-        <header className="flex items-center justify-between gap-3 border-b-2 border-slate-700 bg-slate-800 px-5 py-4">
-          <h2 id="modal-title" className="text-lg text-slate-50">
-            {title}
-          </h2>
-          <Button
-            tone="ghost"
-            className="min-h-11 min-w-11 px-3"
-            aria-label="닫기"
-            onClick={onClose}
-          >
-            ✕
-          </Button>
-        </header>
-        <div className="max-h-[62vh] overflow-y-auto px-5 py-5">{children}</div>
-        {footer ? (
-          <footer className="border-t-2 border-slate-700 bg-slate-950/60 px-5 py-4">
-            {footer}
-          </footer>
-        ) : null}
-      </section>
-    </div>
+        <Dialog className="outline-none">
+          <header className="flex min-h-16 items-center justify-between gap-3 border-b border-white/8 bg-surface-raised/70 px-5 py-3">
+            <Heading slot="title" className="text-lg font-semibold text-text-primary">
+              {title}
+            </Heading>
+            <Button
+              slot="close"
+              tone="ghost"
+              className="min-w-11 px-0"
+              aria-label="닫기"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </Button>
+          </header>
+          <div className="max-h-[62dvh] overflow-y-auto px-5 py-5">{children}</div>
+          {footer ? (
+            <footer className="border-t border-white/8 bg-surface-shell/60 px-5 py-4">
+              {footer}
+            </footer>
+          ) : null}
+        </Dialog>
+      </AriaModal>
+    </ModalOverlay>
   );
 }
