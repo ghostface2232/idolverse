@@ -169,6 +169,8 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         investorType: selectedInvestor.type,
         investorConditions: selectedInvestor.conditions,
         investorPenaltyActive: false,
+        investorConditionProgress: {},
+        investorComplianceCount: 0,
         weeklyDecisions: generateWeeklyDecisionCards(firstWeek, season),
         notifications: [
           {

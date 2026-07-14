@@ -53,7 +53,11 @@ import {
   getPlayerAwardWins,
   type AwardShowResult,
 } from "@/systems/awardsSystem";
-import { SATISFACTION_WARNING_THRESHOLD, GAME_BALANCE } from "@/data/balance";
+import {
+  SATISFACTION_WARNING_THRESHOLD,
+  GAME_BALANCE,
+  INVESTOR_PENALTY_GRACE_WEEKS,
+} from "@/data/balance";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import type {
   Album,
@@ -225,7 +229,11 @@ export function processWeek(
   }
 
   // ── 1. Apply player decisions
+  let investorComplianceCount = snapshot.game.investorComplianceCount ?? 0;
   for (const d of decisions.resolvedDecisions) {
+    if (d.cardId === "emergency-investor" && d.optionId === "comply") {
+      investorComplianceCount += 1;
+    }
     applyToState(d.effects);
   }
 
@@ -497,7 +505,13 @@ export function processWeek(
   const investor = INVESTOR_COMPANIES.find(
     (c) => c.type === snapshot.game.investorType,
   );
+  const investorConditionProgress = {
+    ...(snapshot.game.investorConditionProgress ?? {}),
+  };
   if (investor) {
+    const cumulativeWeek =
+      (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear +
+      snapshot.game.currentWeek;
     const investorMetrics = buildInvestorMetrics(
       snapshot,
       fandomAxis,
@@ -507,18 +521,55 @@ export function processWeek(
     const investorChecks = checkInvestorConditions(
       investor,
       investorMetrics,
-      snapshot.game.currentWeek,
+      cumulativeWeek,
     );
-    const failedConditions = investorChecks.filter((c) => !c.met);
 
-    if (failedConditions.length > 0) {
-      investorPenaltyActive = true;
+    let anyConditionFailing = false;
+    for (const check of investorChecks) {
+      if (check.met) {
+        // 회복된 조건은 진행 상태를 지운다. 재실패하면 유예부터 다시 시작한다.
+        delete investorConditionProgress[check.conditionId];
+        continue;
+      }
+
+      anyConditionFailing = true;
+      const progress = investorConditionProgress[check.conditionId];
+
+      if (!progress) {
+        investorConditionProgress[check.conditionId] = {
+          firstFailedWeek: cumulativeWeek,
+          penaltyApplied: false,
+        };
+        report.warnings.push(
+          `투자사 조건 미달: ${check.description} — ${INVESTOR_PENALTY_GRACE_WEEKS}주 안에 회복하지 못하면 페널티가 적용됩니다.`,
+        );
+        continue;
+      }
+
+      if (progress.penaltyApplied) continue;
+
+      const failedWeeks = cumulativeWeek - progress.firstFailedWeek;
+      if (failedWeeks < INVESTOR_PENALTY_GRACE_WEEKS) {
+        report.warnings.push(
+          `투자사 조건 미달: ${check.description} (유예 ${INVESTOR_PENALTY_GRACE_WEEKS - failedWeeks}주 남음)`,
+        );
+        continue;
+      }
+
+      // 유예 기간이 끝난 조건은 페널티를 1회만 집행하고 기록한다.
+      investorConditionProgress[check.conditionId] = {
+        ...progress,
+        penaltyApplied: true,
+      };
       const penalties = applyInvestorPenalty(investor);
       for (const penalty of penalties) {
         report.warnings.push(`투자사 페널티: ${penalty.description}`);
         applyToState(penalty.effects);
       }
     }
+
+    // 미달 조건이 하나도 없으면 압박 상태를 해제한다(영구 고착 방지).
+    investorPenaltyActive = anyConditionFailing;
   }
 
   // ── 13. Advance week
@@ -550,6 +601,7 @@ export function processWeek(
     hasPendingScandal,
     hasInjuredMember: trainees.some((t) => t.injuryWeeks > 0),
     investorPressure: investorPenaltyActive,
+    investorComplianceCount,
     hasCurrentAlbum: album !== null,
     weeksSinceLastAlbum: lastReleasedAlbum?.releaseWeek
       ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
@@ -574,6 +626,8 @@ export function processWeek(
     game: {
       ...advancedGame,
       investorPenaltyActive,
+      investorConditionProgress,
+      investorComplianceCount,
       weeklyDecisions: nextDecisions,
       notifications: [
         ...snapshot.game.notifications,

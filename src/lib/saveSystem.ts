@@ -241,16 +241,18 @@ export function captureGameState(): GameStateSnapshot {
 export function hydrateGameState(gameState: GameStateSnapshot) {
   const { gameSpeed: _legacyGameSpeed, ...rest } =
     gameState.gameStore as GameStoreState & { gameSpeed?: unknown };
-  const gameStore: GameStoreState = rest.trainingSchedule
-    ? rest
-    : {
-        ...rest,
-        trainingSchedule: {
-          intensity: "normal",
-          focus: null,
-          restDay: false,
-        },
-      };
+  // 필드가 없는 구버전 세이브는 여기서 기본값으로 보완한다. setState(merge)에
+  // 맡기면 직전에 플레이하던 다른 세이브의 값이 새어 들어올 수 있다.
+  const gameStore: GameStoreState = {
+    ...rest,
+    trainingSchedule: rest.trainingSchedule ?? {
+      intensity: "normal",
+      focus: null,
+      restDay: false,
+    },
+    investorConditionProgress: rest.investorConditionProgress ?? {},
+    investorComplianceCount: rest.investorComplianceCount ?? 0,
+  };
 
   gameVanillaStore.setState(gameStore, false);
   traineeVanillaStore.setState(gameState.traineeStore, false);

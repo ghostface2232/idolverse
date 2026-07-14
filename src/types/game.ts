@@ -198,6 +198,16 @@ export interface InvestorCondition {
   penalty?: string;
 }
 
+/**
+ * 투자사 조건별 미달 진행 상태. 조건이 처음 미달된 누적 주차를 기록해
+ * 유예 기간을 계산하고, 페널티가 이미 1회 집행됐는지 추적한다.
+ * 조건이 다시 충족되면 항목이 제거되어 재실패 시 유예부터 다시 시작한다.
+ */
+export interface InvestorConditionProgress {
+  firstFailedWeek: number;
+  penaltyApplied: boolean;
+}
+
 export interface InvestorEffect<TType extends string = string> {
   type: TType;
   severity?: InvestorEffectSeverity;
@@ -501,6 +511,8 @@ export interface GameStoreState {
   investorType: InvestorType;
   investorConditions: InvestorCondition[];
   investorPenaltyActive: boolean;
+  investorConditionProgress: Record<string, InvestorConditionProgress>;
+  investorComplianceCount: number;
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;
