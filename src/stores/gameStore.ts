@@ -19,6 +19,7 @@ export const initialGameState: GameStoreState = {
   investorConditionProgress: {},
   investorPressureWeeks: 0,
   investorComplianceCount: 0,
+  awardHistory: [],
   weeklyDecisions: generateWeeklyDecisionCards(1, getSeasonForWeek(1)),
   notifications: [
     {

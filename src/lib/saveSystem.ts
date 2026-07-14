@@ -253,6 +253,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorConditionProgress: rest.investorConditionProgress ?? {},
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
+    awardHistory: rest.awardHistory ?? [],
   };
 
   gameVanillaStore.setState(gameStore, false);

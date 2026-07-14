@@ -460,6 +460,14 @@ export interface AwardShow {
   description: string;
 }
 
+/** 플레이어가 수상한 기록. 시상식 주가 지나도 게임 상태에 남는다. */
+export interface AwardRecord {
+  year: number;
+  showId: AwardShowId;
+  showName: string;
+  category: AwardCategory;
+}
+
 export interface CompetitorTemplate {
   id: CompetitorTemplateId;
   name: string;
@@ -515,6 +523,8 @@ export interface GameStoreState {
   /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
   investorPressureWeeks: number;
   investorComplianceCount: number;
+  /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */
+  awardHistory: AwardRecord[];
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;

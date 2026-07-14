@@ -37,6 +37,48 @@ describe("processWeek 골든 스냅샷", () => {
     expect(result).toMatchSnapshot();
   });
 
+  it("시상식 수상은 awardHistory에 영속화된다", () => {
+    // 라이벌이 없는 픽스처에서는 플레이어가 인기상/신인상을 가져간다
+    const result = processWeek(makeGameSnapshot({ week: 50 }), NO_DECISIONS);
+    const wins = result.weekReport.awardResults
+      ?.flatMap((r) => r.winners)
+      .filter((w) => w.isPlayer);
+
+    expect(wins?.length).toBeGreaterThan(0);
+    expect(result.newState.game.awardHistory).toHaveLength(wins?.length ?? 0);
+    expect(
+      result.newState.game.awardHistory.every((r) => r.year === 1),
+    ).toBe(true);
+  });
+
+  it("영속화된 수상 기록으로 시상 주 이후의 투자사 awardLevel 조건이 통과된다", () => {
+    const withAward = makeGameSnapshot({
+      week: 52,
+      investorType: "entertainment",
+    });
+    withAward.game.awardHistory = [
+      { year: 1, showId: "mma", showName: "MMA", category: "bonsang" },
+    ];
+    const passed = processWeek(withAward, NO_DECISIONS);
+    expect(
+      passed.weekReport.warnings.some((w) =>
+        w.includes("연말 시상식 본상 이상"),
+      ),
+    ).toBe(false);
+
+    // 대조군: 기록이 없으면 같은 주에 조건 미달 경고가 발생한다
+    const withoutAward = makeGameSnapshot({
+      week: 52,
+      investorType: "entertainment",
+    });
+    const failed = processWeek(withoutAward, NO_DECISIONS);
+    expect(
+      failed.weekReport.warnings.some((w) =>
+        w.includes("연말 시상식 본상 이상"),
+      ),
+    ).toBe(true);
+  });
+
   it("같은 입력으로 두 번 실행하면 결과가 완전히 동일하다 (결정론)", () => {
     const first = processWeek(makeGameSnapshot({ week: 5 }), NO_DECISIONS);
     const second = processWeek(makeGameSnapshot({ week: 5 }), NO_DECISIONS);

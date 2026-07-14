@@ -79,6 +79,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       investorConditionProgress: {},
       investorPressureWeeks: 0,
       investorComplianceCount: 0,
+      awardHistory: [],
       weeklyDecisions: [],
       notifications: [],
       trainingSchedule: { intensity: "normal", focus: null, restDay: false },

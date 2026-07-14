@@ -62,6 +62,7 @@ import { INVESTOR_COMPANIES } from "@/data/investors";
 import type {
   Album,
   AlbumStoreState,
+  AwardRecord,
   EffectMap,
   BackgroundGroup,
   CalendarStoreState,
@@ -180,6 +181,9 @@ export function processWeek(
   };
 
   // ── 0. Awards (year-end, evaluated first so results feed into later steps)
+  // 수상 기록은 게임 상태에 영속화한다. 시상 주(50주차)가 지나도 투자사
+  // awardLevel 조건(예: 마감 52주)이 기록을 근거로 평가되어야 하기 때문이다.
+  let awardHistory: AwardRecord[] = snapshot.game.awardHistory;
   let playerWonAward = false;
   if (snapshot.game.currentWeek === AWARDS_WEEK) {
     const contenders = [
@@ -223,8 +227,19 @@ export function processWeek(
     playerWonAward = playerWins.length > 0;
 
     for (const win of playerWins) {
+      const show = awardResults.find((r) => r.winners.includes(win));
+      if (!show) continue;
+      awardHistory = [
+        ...awardHistory,
+        {
+          year: snapshot.game.currentYear,
+          showId: show.showId,
+          showName: show.showName,
+          category: win.category,
+        },
+      ];
       report.warnings.push(
-        `🏆 ${awardResults.find((r) => r.winners.includes(win))?.showName} ${categoryLabel(win.category)} 수상!`,
+        `🏆 ${show.showName} ${categoryLabel(win.category)} 수상!`,
       );
     }
   }
@@ -517,7 +532,7 @@ export function processWeek(
       snapshot,
       fandomAxis,
       trainees,
-      report.awardResults,
+      awardHistory,
     );
     const investorChecks = checkInvestorConditions(
       investor,
@@ -638,6 +653,7 @@ export function processWeek(
       investorConditionProgress,
       investorPressureWeeks,
       investorComplianceCount,
+      awardHistory,
       weeklyDecisions: nextDecisions,
       notifications: [
         ...snapshot.game.notifications,
@@ -727,7 +743,7 @@ function buildInvestorMetrics(
   snapshot: GameSnapshot,
   fandomAxis: Fandom4Axis,
   trainees: readonly Trainee[],
-  awardResults: AwardShowResult[] | null,
+  awardHistory: readonly AwardRecord[],
 ): {
   snsFollowers: number;
   spotifyStreams: number;
@@ -755,15 +771,12 @@ function buildInvestorMetrics(
       : 0;
 
   let highestAward: string | null = null;
-  if (awardResults) {
-    const playerWins = getPlayerAwardWins(awardResults, "player");
-    for (const win of playerWins) {
-      if (
-        !highestAward ||
-        awardLevelRank(win.category) > awardLevelRank(highestAward)
-      ) {
-        highestAward = win.category;
-      }
+  for (const record of awardHistory) {
+    if (
+      !highestAward ||
+      awardLevelRank(record.category) > awardLevelRank(highestAward)
+    ) {
+      highestAward = record.category;
     }
   }
 
