@@ -90,7 +90,7 @@ const initialBackgroundGroups: BackgroundGroup[] = [
   },
 ];
 
-const initialCompetitorState: CompetitorStoreState = {
+export const initialCompetitorState: CompetitorStoreState = {
   permanentRivals: initialPermanentRivals,
   eventRivals: [],
   backgroundGroups: initialBackgroundGroups,

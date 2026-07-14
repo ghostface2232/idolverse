@@ -12,14 +12,12 @@ function createInitialNews(season: Season) {
   }));
 }
 
-const initialCalendarState: CalendarStoreState = {
+export const initialCalendarState: CalendarStoreState = {
   currentSeason: "spring",
   seasonConceptBonus: SEASON_MOOD_FIT.spring,
   kpopNews: createInitialNews("spring"),
-  upcomingCompetitorComebacks: [
-    { week: 3, competitorId: "rival-nova", competitorName: "NOVA" },
-    { week: 6, competitorId: "rival-aegis", competitorName: "AEGIS" },
-  ],
+  // 컴백 일정은 주간 시뮬레이션이 실제 라이벌 기준으로 채운다 — 가짜 초기값을 두지 않는다.
+  upcomingCompetitorComebacks: [],
   marketTrend: DEFAULT_MARKET_TRENDS.spring,
 };
 

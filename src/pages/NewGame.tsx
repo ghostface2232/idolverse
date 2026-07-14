@@ -9,11 +9,11 @@ import {
   COMPANY_NAME_CANDIDATES,
   GROUP_NAME_CANDIDATES,
 } from "@/data/names";
+import { competitorVanillaStore } from "@/stores/competitorStore";
 import { financeVanillaStore } from "@/stores/financeStore";
-import { foundingVanillaStore } from "@/stores/foundingStore";
 import { gameVanillaStore } from "@/stores/gameStore";
-import { staffVanillaStore } from "@/stores/staffStore";
-import { traineeVanillaStore } from "@/stores/traineeStore";
+import { resetAllStores } from "@/stores/resetAllStores";
+import { initializePermanentRivals } from "@/systems/competitorSystem";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import { getSeasonForWeek } from "@/data/balance";
 import type { GroupGender, InvestorCompany, InvestorType } from "@/types/game";
@@ -157,6 +157,24 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
     const firstWeek = 1;
     const season = getSeasonForWeek(firstWeek);
 
+    // 이전 판의 상태(팬덤/앨범/라이벌/일정/이벤트 포함)가 새 게임으로 누출되지 않도록
+    // 게임별 설정을 쓰기 전에 모든 스토어를 초기화한다.
+    resetAllStores();
+
+    const { rivals, backgroundGroups } = initializePermanentRivals(
+      0,
+      groupGender,
+      Date.now(),
+    );
+    competitorVanillaStore.setState(
+      {
+        permanentRivals: rivals,
+        eventRivals: [],
+        backgroundGroups,
+      },
+      false,
+    );
+
     gameVanillaStore.setState(
       {
         currentWeek: firstWeek,
@@ -185,35 +203,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
       },
       false,
     );
-    financeVanillaStore.setState(
-      {
-        money: selectedInvestor.fundAmount,
-        fixedCosts: {
-          dormitory: 0,
-          studio: 0,
-          staffSalary: 0,
-          livingExpense: 0,
-          equipment: 0,
-          healthcare: 0,
-          security: 0,
-        },
-        upgrades: {
-          dormLevel: 1,
-          studioLevel: 1,
-          equipmentLevel: 1,
-          livingExpenseLevel: 1,
-          hasHealthcare: false,
-          hasSecurity: false,
-        },
-        weeklyFixedTotal: 0,
-        incomeHistory: [],
-        expenseHistory: [],
-      },
-      false,
-    );
-    staffVanillaStore.setState({ staff: [] }, false);
-    traineeVanillaStore.setState({ trainees: [] }, false);
-    foundingVanillaStore.getState().resetFoundingStore();
+    financeVanillaStore.setState({ money: selectedInvestor.fundAmount }, false);
     onStartGame();
   };
 

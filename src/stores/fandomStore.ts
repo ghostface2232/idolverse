@@ -2,7 +2,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { FandomStore, FandomStoreState } from "@/types/game";
 
-const initialFandomState: FandomStoreState = {
+export const initialFandomState: FandomStoreState = {
   public: 5,
   fandom: 0,
   fandomLoyalty: 50,
