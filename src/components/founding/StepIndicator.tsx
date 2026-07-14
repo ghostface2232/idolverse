@@ -20,7 +20,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
         <div key={step.key} className="flex flex-1 flex-col items-center gap-1">
           <div
             className={[
-              "h-2 w-full rounded-full transition",
+              "h-2 w-full rounded-full transition-colors duration-150",
               index < currentIndex
                 ? "bg-emerald-400"
                 : index === currentIndex
@@ -30,8 +30,12 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
           />
           <span
             className={[
-              "text-[10px] transition",
-              index === currentIndex ? "text-brand-cyan" : "text-slate-500",
+              "text-[11px] transition-colors duration-150",
+              index < currentIndex
+                ? "text-emerald-300"
+                : index === currentIndex
+                  ? "text-brand-cyan"
+                  : "text-slate-500",
             ].join(" ")}
           >
             {step.label}

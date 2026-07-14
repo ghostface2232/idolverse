@@ -1,4 +1,5 @@
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { assetUrl } from "@/utils/assets";
 
 interface Tier {
@@ -40,10 +41,8 @@ export function FacilityTierSelector({
               key={tier.level}
               type="button"
               className={[
-                "rounded-2xl border-2 p-3 text-left transition [word-break:keep-all] [overflow-wrap:break-word]",
-                isSelected
-                  ? "border-brand-cyan bg-cyan-500/10"
-                  : "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/50",
+                "rounded-2xl border-2 p-3 text-left transition duration-150 ease-out active:scale-[0.96] [word-break:keep-all] [overflow-wrap:break-word]",
+                radioTileClasses(isSelected, true),
               ].join(" ")}
               onClick={() => onSelect(tier.level)}
             >
@@ -51,7 +50,7 @@ export function FacilityTierSelector({
                 <div
                   aria-hidden="true"
                   className={[
-                    "mb-2 aspect-square w-full rounded-lg border bg-slate-950/50",
+                    "mb-2 aspect-square w-full rounded border bg-slate-950/50",
                     isSelected ? "border-brand-cyan/70" : "border-slate-700",
                     "facility-option-sprite",
                     `facility-option-sprite-${tier.illustrationSpriteIndex ?? 0}`,
@@ -62,11 +61,13 @@ export function FacilityTierSelector({
                 />
               )}
               <p className="text-sm text-slate-50">{tier.name}</p>
-              <MoneyDisplay amount={cost} size="sm" className="mt-1" />
-              {tier.perPersonCost !== undefined && (
-                <span className="text-[10px] text-slate-500"> /인</span>
-              )}
-              <p className="mt-1 text-[10px] text-slate-400">{tier.effect}</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <MoneyDisplay amount={cost} size="sm" />
+                {tier.perPersonCost !== undefined && (
+                  <span className="text-[11px] text-slate-400">/인</span>
+                )}
+              </div>
+              <p className="mt-1 text-[11px] text-slate-400">{tier.effect}</p>
             </button>
           );
         })}

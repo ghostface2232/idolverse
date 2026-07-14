@@ -1,5 +1,6 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/common/Button";
+import { translateAuthError } from "@/components/auth/authErrors";
 import { getSupabaseClient } from "@/lib/supabase";
 
 interface LoginFormProps {
@@ -29,7 +30,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
         }
       } catch (error) {
         setErrorMessage(
-          error instanceof Error ? error.message : "Unable to sign in.",
+          translateAuthError(error, "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요."),
         );
       }
     });
@@ -42,7 +43,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
           htmlFor="login-email"
           className="text-sm text-slate-200"
         >
-          Email
+          이메일
         </label>
         <input
           id="login-email"
@@ -61,7 +62,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
           htmlFor="login-password"
           className="text-sm text-slate-200"
         >
-          Password
+          비밀번호
         </label>
         <input
           id="login-password"
@@ -70,20 +71,20 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="min-h-11 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/30"
-          placeholder="Your password"
+          placeholder="비밀번호 입력"
           required
         />
       </div>
 
       {errorMessage ? (
-        <p className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+        <p className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200 [word-break:keep-all]">
           {errorMessage}
         </p>
       ) : null}
 
       <div className="space-y-3">
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "Signing In..." : "Sign In"}
+          {isPending ? "로그인 중..." : "로그인"}
         </Button>
         <Button
           type="button"
@@ -92,7 +93,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
           onClick={onSwitchMode}
           disabled={isPending}
         >
-          Create Account
+          계정 만들기
         </Button>
       </div>
     </form>

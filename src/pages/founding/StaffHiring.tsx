@@ -95,9 +95,16 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
   const hiredIds = new Set(staff.map((s) => s.id));
 
   const handleHire = (target: Staff) => {
-    if (staff.some((s) => s.role === target.role)) return;
+    // 같은 역할에 기존 채용자가 있으면 교체한다(다시 선택 플로우). 추가 비용은 없다.
+    const existing = staff.find((s) => s.role === target.role);
+    if (existing) {
+      staffVanillaStore.getState().fireStaff(existing.id);
+    }
+    const totalSalary = [
+      ...staff.filter((s) => s.role !== target.role),
+      target,
+    ].reduce((sum, s) => sum + s.salary, 0);
     staffVanillaStore.getState().hireStaff(target);
-    const totalSalary = [...staff, target].reduce((sum, s) => sum + s.salary, 0);
     financeVanillaStore.getState().updateFixedCosts({ staffSalary: totalSalary });
   };
 
@@ -144,7 +151,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
 
   return (
     <>
-      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-2">
+      <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
         <FoundingTitleBar title={`${STAFF_ROLE_LABELS[role]} 채용`} />
 
         <Card className="space-y-2 py-3 text-xs text-slate-300">
@@ -162,23 +169,36 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
               const active = staffRole === role;
 
               return (
-                <div
-                  key={staffRole}
-                  className={[
-                    "h-1.5 rounded-full transition",
-                    hired
-                      ? "bg-emerald-400"
-                      : active
-                        ? "bg-brand-cyan"
-                        : "bg-slate-700",
-                  ].join(" ")}
-                />
+                <div key={staffRole} className="flex flex-col items-center gap-1">
+                  <div
+                    className={[
+                      "h-1.5 w-full rounded-full transition-colors duration-150",
+                      hired
+                        ? "bg-emerald-400"
+                        : active
+                          ? "bg-brand-cyan"
+                          : "bg-slate-700",
+                    ].join(" ")}
+                  />
+                  <span
+                    className={[
+                      "text-[11px] transition-colors duration-150",
+                      hired
+                        ? "text-emerald-300"
+                        : active
+                          ? "text-brand-cyan"
+                          : "text-slate-500",
+                    ].join(" ")}
+                  >
+                    {STAFF_ROLE_LABELS[staffRole]}
+                  </span>
+                </div>
               );
             })}
           </div>
         </Card>
 
-        <div className="space-y-3">
+        <div key={role} className="animate-step-fade space-y-3">
           {displayCandidates.map((candidate) => (
             <StaffCandidateCard
               key={candidate.id}
@@ -212,12 +232,12 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
 
       {confirmTarget && (
         <Modal
-          title="채용 확인"
+          title={currentRoleHire ? "채용 변경" : "채용 확인"}
           onClose={() => setConfirmTarget(null)}
           footer={
             <div className="grid grid-cols-2 gap-3">
               <Button tone="ghost" onClick={() => setConfirmTarget(null)}>
-                취소
+                돌아가기
               </Button>
               <Button
                 onClick={() => {
@@ -225,18 +245,30 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
                   setConfirmTarget(null);
                 }}
               >
-                채용
+                {currentRoleHire ? "변경" : "채용"}
               </Button>
             </div>
           }
         >
-          <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
-            <span className="text-slate-50">{confirmTarget.name}</span>의 월급{" "}
-            <span className="text-emerald-300">
-              ₩{new Intl.NumberFormat("ko-KR").format(confirmTarget.salary)}
-            </span>
-            이 고정비에 추가됩니다.
-          </p>
+          {currentRoleHire ? (
+            <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
+              <span className="text-slate-50">{currentRoleHire.name}</span> 대신{" "}
+              <span className="text-slate-50">{confirmTarget.name}</span>
+              (월급{" "}
+              <span className="text-emerald-300">
+                ₩{new Intl.NumberFormat("ko-KR").format(confirmTarget.salary)}
+              </span>
+              )을 채용합니다. 변경에 추가 비용은 없습니다.
+            </p>
+          ) : (
+            <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
+              <span className="text-slate-50">{confirmTarget.name}</span>의 월급{" "}
+              <span className="text-emerald-300">
+                ₩{new Intl.NumberFormat("ko-KR").format(confirmTarget.salary)}
+              </span>
+              이 고정비에 추가됩니다.
+            </p>
+          )}
         </Modal>
       )}
 

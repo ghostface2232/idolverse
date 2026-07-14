@@ -1,6 +1,7 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { TraineeCandidateCard } from "@/components/founding/TraineeCandidateCard";
 import {
@@ -91,7 +92,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
 
   return (
     <>
-      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
+      <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
         <FoundingTitleBar title="연습생 모집" />
 
         {!executed ? (
@@ -103,10 +104,8 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                   <button
                     key={m}
                     className={[
-                      "rounded-2xl border-2 p-3 text-center transition [word-break:keep-all]",
-                      method === m
-                        ? "border-brand-cyan bg-cyan-500/10"
-                        : "border-slate-600 bg-slate-800/60",
+                      "rounded-2xl border-2 p-3 text-center transition duration-150 ease-out active:scale-[0.96] [word-break:keep-all]",
+                      radioTileClasses(method === m, true),
                     ].join(" ")}
                     onClick={() => store.setAuditionMethod(m)}
                   >
@@ -122,7 +121,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                       size="sm"
                       className="mt-1"
                     />
-                    <p className="mt-1 text-[10px] text-slate-400">
+                    <p className="mt-1 text-[11px] text-slate-400">
                       {m === "open"
                         ? "능력치 분포 넓음"
                         : "능력치 +8 보장"}
@@ -149,14 +148,14 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                 step={5_000_000}
                 value={extraBudget}
                 onChange={(e) => store.setAuditionExtraBudget(Number(e.target.value))}
-                className="w-full accent-brand-cyan"
+                className="h-10 w-full cursor-pointer accent-brand-cyan"
               />
               <div className="flex justify-between text-xs text-slate-400">
                 <span>{formatKRW(0)}</span>
                 <span>{formatKRW(50_000_000)}</span>
                 <span>{formatKRW(100_000_000)}</span>
               </div>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 예산을 늘릴수록 능력치 상·하한이 점진 상승합니다.
                 {method === "scout" && " 스카우트는 +8 보너스."}
               </p>
@@ -173,15 +172,14 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                     <button
                       key={n}
                       className={[
-                        "flex flex-1 flex-col items-center gap-0.5 rounded-xl border-2 py-2 text-sm transition",
-                        headcount === n
-                          ? "border-brand-cyan bg-cyan-500/10 text-brand-cyan"
-                          : "border-slate-600 bg-slate-800/60 text-slate-400",
+                        "flex flex-1 flex-col items-center gap-0.5 rounded-2xl border-2 py-2 text-sm transition duration-150 ease-out active:scale-[0.96]",
+                        headcount === n ? "text-brand-cyan" : "text-slate-400",
+                        radioTileClasses(headcount === n, true),
                       ].join(" ")}
                       onClick={() => store.setAuditionHeadcount(n)}
                     >
                       <span>{n}명</span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[11px] text-slate-400">
                         {formatKRW(cost)}
                       </span>
                     </button>
@@ -192,7 +190,12 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
 
             <Card className="flex items-center justify-between text-sm">
               <span className="text-slate-300">총 비용</span>
-              <span className="text-brand-cyan">{formatKRW(totalCost)}</span>
+              <span className={money < totalCost ? "text-red-300" : "text-brand-cyan"}>
+                {formatKRW(totalCost)}
+                {money < totalCost && (
+                  <span className="ml-2 text-xs text-red-400">잔액 부족</span>
+                )}
+              </span>
             </Card>
           </>
         ) : (
@@ -201,7 +204,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
               <p>
                 선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 {MIN_SELECT_COUNT}명
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 필수 포지션 4개(리더·메인보컬·메인댄서·센터)는 겸직할 수 없어 최소 {MIN_SELECT_COUNT}명이 필요합니다.
               </p>
             </Card>

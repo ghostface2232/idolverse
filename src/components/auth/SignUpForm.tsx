@@ -1,5 +1,6 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/common/Button";
+import { translateAuthError } from "@/components/auth/authErrors";
 import { getSupabaseClient } from "@/lib/supabase";
 
 interface SignUpFormProps {
@@ -20,7 +21,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
     setSuccessMessage(null);
 
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+      setErrorMessage("비밀번호가 서로 일치하지 않습니다.");
       return;
     }
 
@@ -37,11 +38,11 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
         }
 
         setSuccessMessage(
-          "Sign-up complete. Check your email if confirmation is enabled, then sign in.",
+          "가입이 완료되었습니다. 이메일 인증이 필요한 경우 받은 편지함을 확인한 뒤 로그인해 주세요.",
         );
       } catch (error) {
         setErrorMessage(
-          error instanceof Error ? error.message : "Unable to create account.",
+          translateAuthError(error, "계정 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."),
         );
       }
     });
@@ -54,7 +55,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           htmlFor="signup-email"
           className="text-sm text-slate-200"
         >
-          Email
+          이메일
         </label>
         <input
           id="signup-email"
@@ -73,7 +74,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           htmlFor="signup-password"
           className="text-sm text-slate-200"
         >
-          Password
+          비밀번호
         </label>
         <input
           id="signup-password"
@@ -82,7 +83,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="min-h-11 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/30"
-          placeholder="Minimum 6 characters"
+          placeholder="6자 이상"
           minLength={6}
           required
         />
@@ -93,7 +94,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           htmlFor="signup-password-confirm"
           className="text-sm text-slate-200"
         >
-          Confirm Password
+          비밀번호 확인
         </label>
         <input
           id="signup-password-confirm"
@@ -102,27 +103,27 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
           className="min-h-11 w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/30"
-          placeholder="Repeat password"
+          placeholder="비밀번호 다시 입력"
           minLength={6}
           required
         />
       </div>
 
       {errorMessage ? (
-        <p className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+        <p className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200 [word-break:keep-all]">
           {errorMessage}
         </p>
       ) : null}
 
       {successMessage ? (
-        <p className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+        <p className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 [word-break:keep-all]">
           {successMessage}
         </p>
       ) : null}
 
       <div className="space-y-3">
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "Creating Account..." : "Sign Up"}
+          {isPending ? "계정 만드는 중..." : "가입하기"}
         </Button>
         <Button
           type="button"
@@ -131,7 +132,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
           onClick={onSwitchMode}
           disabled={isPending}
         >
-          Back To Sign In
+          로그인으로 돌아가기
         </Button>
       </div>
     </form>

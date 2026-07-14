@@ -1,3 +1,4 @@
+import { PixelText } from "@/components/common/PixelText";
 import { POSITION_LABELS } from "@/data/founding";
 import type { Position } from "@/types/game";
 
@@ -20,9 +21,9 @@ export function PositionSlot({ position, assignedName, fitness, required, onTap 
     <button
       type="button"
       className={[
-        "flex w-full items-center justify-between rounded-2xl border-2 px-4 py-3 text-left transition",
+        "flex w-full items-center justify-between rounded-2xl border-2 px-4 py-3 text-left transition duration-150 ease-out active:scale-[0.96]",
         assignedName
-          ? "border-brand-cyan/60 bg-cyan-500/8"
+          ? "border-brand-cyan/60 bg-cyan-500/10"
           : "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/40",
       ].join(" ")}
       onClick={onTap}
@@ -30,13 +31,17 @@ export function PositionSlot({ position, assignedName, fitness, required, onTap 
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-50">{POSITION_LABELS[position]}</span>
         {required && !assignedName && (
-          <span className="text-[10px] text-red-400">필수</span>
+          <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] text-red-300">
+            필수
+          </span>
         )}
       </div>
       <div className="flex items-center gap-2">
         {assignedName ? (
           <>
-            <span className="text-sm text-slate-200">{assignedName}</span>
+            <PixelText className="text-base text-slate-50 [text-shadow:none]">
+              {assignedName}
+            </PixelText>
             {fitness !== null && (
               <span className={["text-xs", fitnessColor(fitness)].join(" ")}>
                 {fitness}%
@@ -44,7 +49,7 @@ export function PositionSlot({ position, assignedName, fitness, required, onTap 
             )}
           </>
         ) : (
-          <span className="text-xs text-slate-500">탭하여 배정</span>
+          <span className="text-xs text-slate-400">탭하여 배정</span>
         )}
       </div>
     </button>

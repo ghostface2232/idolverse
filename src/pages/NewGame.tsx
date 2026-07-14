@@ -4,6 +4,7 @@ import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { PixelText } from "@/components/common/PixelText";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import {
   COMPANY_NAME_CANDIDATES,
@@ -195,7 +196,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           {
             id: "noti-new-game",
             type: "success",
-            title: "New Agency Founded",
+            title: "새 기획사 설립",
             message: `${selectedInvestor.name} 투자를 받아 새 프로젝트를 시작했습니다.`,
             week: firstWeek,
           },
@@ -208,19 +209,23 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
   };
 
   return (
-    <main className="pixel-grid-bg h-dvh overflow-hidden bg-slate-950 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 px-4">
+    <main className="pixel-grid-bg h-dvh overflow-hidden bg-slate-950 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col gap-3 px-4">
         <header className="flex items-center justify-between gap-3">
           <Button tone="ghost" onClick={onCancel}>
             처음으로
           </Button>
           <div className="flex gap-2">
-            {(["prologue", "investor", "group"] as Step[]).map((item, index) => (
+            {(["prologue", "investor", "group"] as Step[]).map((item, index, steps) => (
               <span
                 key={item}
                 className={[
-                  "h-3 w-8 rounded-full border border-slate-600",
-                  step === item ? "bg-brand-cyan" : "bg-slate-800",
+                  "h-3 w-8 rounded-full border border-slate-600 transition-colors duration-150",
+                  index < steps.indexOf(step)
+                    ? "bg-emerald-400"
+                    : step === item
+                      ? "bg-brand-cyan"
+                      : "bg-slate-800",
                 ].join(" ")}
                 aria-label={`Step ${index + 1}`}
               />
@@ -229,7 +234,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         </header>
 
         {step === "prologue" ? (
-          <section key="prologue" className="animate-step-fade flex h-full flex-col gap-4 overflow-hidden">
+          <section key="prologue" className="stagger-fade flex h-full min-h-0 flex-col gap-4">
             <div className="rounded-[28px] border-2 border-brand-pink/50 bg-slate-900/84 px-5 py-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.76)]">
               <PixelText as="h1" className="text-3xl text-pink-200">
                 PROLOGUE
@@ -242,7 +247,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
             <Card className="relative min-h-0 flex-1 overflow-hidden border-brand-cyan/40 p-0">
               <img
                 src={PROLOGUE_IMAGE_SRC}
-                alt="K-pop director looking over a neon city from a rooftop studio"
+                alt="옥상 스튜디오에서 네온 도시를 내려다보는 K-POP 디렉터"
                 className="absolute inset-0 h-full w-full object-cover [image-rendering:auto]"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/6 via-transparent to-slate-950/92" />
@@ -255,6 +260,11 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                   <span className={isPrologueComplete ? "" : "typing-caret"}>
                     {displayedText}
                   </span>
+                  {!isPrologueComplete && (
+                    <span className="mt-2 block text-xs leading-5 text-slate-400">
+                      탭하면 전체 문장이 표시됩니다
+                    </span>
+                  )}
                 </button>
 
                 <Button
@@ -270,7 +280,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         ) : null}
 
         {step === "investor" ? (
-          <section key="investor" className="animate-step-fade flex h-full flex-col gap-4">
+          <section key="investor" className="stagger-fade flex h-full flex-col gap-4">
             <div className="min-h-0 flex-1 flex flex-col">
               <div className="pt-2">
                 <PixelText as="h1" className="text-3xl text-slate-50">
@@ -307,8 +317,8 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                         "flex min-w-[300px] cursor-pointer snap-center flex-col items-center rounded-[28px] border-2 p-4 text-center shadow-[0_10px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out [word-break:keep-all] [overflow-wrap:break-word]",
                         style.color,
                         isSelected
-                          ? "border-brand-cyan ring-4 ring-brand-cyan/45"
-                          : "hover:border-brand-cyan/70",
+                          ? "border-brand-cyan ring-2 ring-brand-cyan/40"
+                          : "opacity-60 hover:border-brand-cyan/70 hover:opacity-100",
                       ].join(" ")}
                       onClick={() => focusInvestorCard(investor)}
                       onKeyDown={(event) => {
@@ -321,7 +331,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                       <div className="mb-3 w-1/2 overflow-hidden rounded-xl border-2 border-slate-600/80 bg-slate-950/72 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
                         <img
                           src={style.logoSrc}
-                          alt={`${investor.name} investor logo graphic`}
+                          alt={`${investor.name} 로고`}
                           className="aspect-square w-full object-cover"
                         />
                       </div>
@@ -370,7 +380,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               </div>
             </Card>
 
-            <div className="grid grid-cols-2 gap-3 pb-2">
+            <div className="grid grid-cols-2 gap-3 pb-2 pt-2">
               <Button tone="ghost" onClick={() => setStep("prologue")}>
                 이전
               </Button>
@@ -382,7 +392,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         ) : null}
 
         {step === "group" ? (
-          <section key="group" className="animate-step-fade flex h-full flex-col gap-4 overflow-hidden">
+          <section key="group" className="stagger-fade flex h-full min-h-0 flex-col gap-4">
             <div className="min-h-0 flex-1 space-y-4">
               <div className="pt-2">
                 <PixelText as="h1" className="text-3xl text-slate-50">
@@ -396,11 +406,20 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               <Card className="space-y-4">
                 <label className="block space-y-2">
                   <span className="text-sm text-slate-200">회사명</span>
-                  <input
-                    value={companyName}
-                    onChange={(event) => setCompanyName(event.target.value)}
-                    className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan"
-                  />
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <input
+                      value={companyName}
+                      onChange={(event) => setCompanyName(event.target.value)}
+                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
+                    />
+                    <Button
+                      tone="secondary"
+                      aria-label="회사명 랜덤 생성"
+                      onClick={() => setCompanyName(pickRandom(COMPANY_NAME_CANDIDATES))}
+                    >
+                      랜덤
+                    </Button>
+                  </div>
                 </label>
 
                 <label className="block space-y-2">
@@ -409,14 +428,12 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     <input
                       value={groupName}
                       onChange={(event) => setGroupName(event.target.value)}
-                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan"
+                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
                     />
                     <Button
                       tone="secondary"
-                      onClick={() => {
-                        setCompanyName(pickRandom(COMPANY_NAME_CANDIDATES));
-                        setGroupName(pickRandom(GROUP_NAME_CANDIDATES));
-                      }}
+                      aria-label="그룹명 랜덤 생성"
+                      onClick={() => setGroupName(pickRandom(GROUP_NAME_CANDIDATES))}
                     >
                       랜덤
                     </Button>
@@ -426,20 +443,28 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
 
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: "female" as GroupGender, label: "여자 그룹", icon: "GIRL" },
-                  { value: "male" as GroupGender, label: "남자 그룹", icon: "BOY" },
+                  {
+                    value: "female" as GroupGender,
+                    label: "여자 그룹",
+                    icon: "♀",
+                    iconColor: "text-pink-300",
+                  },
+                  {
+                    value: "male" as GroupGender,
+                    label: "남자 그룹",
+                    icon: "♂",
+                    iconColor: "text-sky-300",
+                  },
                 ].map((option) => (
                   <button
                     key={option.value}
                     className={[
-                      "min-h-36 rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition",
-                      groupGender === option.value
-                        ? "border-brand-pink ring-2 ring-brand-pink/50"
-                        : "border-slate-600 hover:border-brand-cyan",
+                      "min-h-36 rounded-[28px] border-2 p-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out active:scale-[0.96]",
+                      radioTileClasses(groupGender === option.value, true),
                     ].join(" ")}
                     onClick={() => setGroupGender(option.value)}
                   >
-                    <PixelText as="p" className="text-3xl text-slate-100">
+                    <PixelText as="p" className={["text-4xl", option.iconColor].join(" ")}>
                       {option.icon}
                     </PixelText>
                     <p className="mt-4 text-slate-50">{option.label}</p>
@@ -448,7 +473,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               </div>
             </div>
 
-            <div className="mt-auto grid grid-cols-2 gap-3 pb-2 pt-4">
+            <div className="mt-auto grid grid-cols-2 gap-3 pb-2 pt-2">
               <Button tone="ghost" onClick={() => setStep("investor")}>
                 이전
               </Button>

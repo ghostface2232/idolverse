@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
-import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
+import { PixelText } from "@/components/common/PixelText";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
@@ -100,15 +101,15 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
 
   return (
     <>
-      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
+      <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
         <FoundingTitleBar title="포지션 배정" />
 
-        <p className="text-[11px] text-slate-400">
+        <p className="text-xs text-slate-400 [word-break:keep-all]">
           필수 포지션(리더/메인보컬/메인댄서/센터)은 서로 중복 불가. 그 외(비주얼/예능/프로듀싱)는 필수 포지션 멤버와 겸직 가능.
         </p>
 
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">멤버 목록</p>
+          <p className="text-sm text-slate-200">멤버 목록</p>
           <div className="grid grid-cols-2 gap-2">
             {trainees.map((trainee) => {
               const positions = getTraineePositions(trainee.id, assignments);
@@ -118,22 +119,30 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               );
 
               return (
-                <Card key={trainee.id} className="space-y-1 py-2 text-center">
-                  <p className="text-sm text-slate-50">{trainee.name}</p>
+                <div
+                  key={trainee.id}
+                  className="space-y-1 rounded-2xl border-2 border-slate-600/80 bg-slate-800/82 px-3 py-2 text-center"
+                >
+                  <PixelText
+                    as="p"
+                    className="text-base text-slate-50 [text-shadow:none]"
+                  >
+                    {trainee.name}
+                  </PixelText>
                   <p className="text-xs text-slate-400">평균 {avgStat}</p>
-                  <p className="text-[10px] text-brand-cyan">
+                  <p className="text-[11px] text-brand-cyan">
                     {positions.length === 0
                       ? "미배정"
                       : positions.map((p) => POSITION_LABELS[p]).join(" · ")}
                   </p>
-                </Card>
+                </div>
               );
             })}
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">포지션 슬롯</p>
+          <p className="text-sm text-slate-200">포지션 슬롯</p>
           <div className="space-y-2">
             {ALL_POSITIONS.map((pos) => {
               const assigned = assignedMap.get(pos);
@@ -184,17 +193,20 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                   key={trainee.id}
                   type="button"
                   className={[
-                    "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition",
-                    isHere
-                      ? "border-brand-cyan bg-cyan-500/10"
-                      : "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/50",
+                    "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition duration-150 ease-out active:scale-[0.96]",
+                    radioTileClasses(
+                      isHere,
+                      Boolean(assignments[selectingPosition]),
+                    ),
                   ].join(" ")}
                   onClick={() => handleAssign(trainee.id)}
                 >
-                  <div>
-                    <span className="text-sm text-slate-50">{trainee.name}</span>
+                  <div className="flex items-baseline gap-2">
+                    <PixelText className="text-base text-slate-50 [text-shadow:none]">
+                      {trainee.name}
+                    </PixelText>
                     {heldPositions.length > 0 && (
-                      <span className="ml-2 text-xs text-slate-500">
+                      <span className="text-xs text-slate-400">
                         ({heldPositions.map((p) => POSITION_LABELS[p]).join(", ")})
                       </span>
                     )}
@@ -207,7 +219,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
             })}
             <button
               type="button"
-              className="w-full rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-3 text-center text-xs text-slate-400 transition hover:border-red-400/50"
+              className="w-full rounded-xl border border-slate-600 bg-slate-800/60 px-4 py-3 text-center text-xs text-slate-400 transition duration-150 ease-out hover:border-red-400/50 active:scale-[0.96]"
               onClick={() => {
                 foundingVanillaStore
                   .getState()

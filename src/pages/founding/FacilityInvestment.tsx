@@ -1,6 +1,7 @@
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { checkTileClasses } from "@/components/common/selectionTokens";
 import { FacilityTierSelector } from "@/components/founding/FacilityTierSelector";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { FOUNDING_FACILITY_TIERS, FOUNDING_ONETIME_UPGRADES } from "@/data/founding";
@@ -66,7 +67,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
 
   return (
     <>
-      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
+      <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
         <FoundingTitleBar title="시설 투자" />
 
         <FacilityTierSelector
@@ -103,11 +104,14 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
             return (
               <label
                 key={key}
-                className="flex items-start gap-3 rounded-xl border border-slate-600 bg-slate-800/60 p-3"
+                className={[
+                  "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition duration-150",
+                  checkTileClasses(checked),
+                ].join(" ")}
               >
                 <input
                   type="checkbox"
-                  className="mt-1 accent-brand-cyan"
+                  className="mt-1 accent-emerald-400"
                   checked={checked}
                   onChange={(e) =>
                     update(
