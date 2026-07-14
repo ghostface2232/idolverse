@@ -31,7 +31,12 @@ const LEGACY_EFFECT_KEY_ALIASES: Record<string, EffectKey> = {
   fandom_disappointment: "fandomDisappointment",
 };
 
-const EFFECT_KEY_SET: ReadonlySet<string> = new Set([
+/**
+ * applyEffects가 실제로 처리하는 키의 전체 집합.
+ * 데이터 파일의 effects 키가 이 집합에 포함되는지 검증하는
+ * 계약 테스트(effectKeyContract.test.ts)의 기준으로도 쓰인다.
+ */
+export const EFFECT_KEY_SET: ReadonlySet<string> = new Set([
   "money",
   "public",
   "fandom",
