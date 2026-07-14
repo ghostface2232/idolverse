@@ -463,6 +463,8 @@ export interface AwardShow {
 /** 플레이어가 수상한 기록. 시상식 주가 지나도 게임 상태에 남는다. */
 export interface AwardRecord {
   year: number;
+  /** 수상 시점의 누적 주차(연도 랩 무관). 투자사 마감(deadlineWeeks) 비교에 쓴다. */
+  week: number;
   showId: AwardShowId;
   showName: string;
   category: AwardCategory;

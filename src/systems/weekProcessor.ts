@@ -226,6 +226,9 @@ export function processWeek(
     const playerWins = getPlayerAwardWins(awardResults, "player");
     playerWonAward = playerWins.length > 0;
 
+    const awardCumulativeWeek =
+      (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear +
+      snapshot.game.currentWeek;
     for (const win of playerWins) {
       const show = awardResults.find((r) => r.winners.includes(win));
       if (!show) continue;
@@ -233,6 +236,7 @@ export function processWeek(
         ...awardHistory,
         {
           year: snapshot.game.currentYear,
+          week: awardCumulativeWeek,
           showId: show.showId,
           showName: show.showName,
           category: win.category,
@@ -748,7 +752,7 @@ function buildInvestorMetrics(
   snsFollowers: number;
   spotifyStreams: number;
   musicShowWins: number;
-  highestAwardLevel: string | null;
+  awardHistory: readonly AwardRecord[];
   quarterlyRevenue: number;
   cumulativeRevenue: number;
   visualAverage: number;
@@ -770,23 +774,13 @@ function buildInvestorMetrics(
       ? trainees.reduce((s, t) => s + t.stats.visual, 0) / trainees.length
       : 0;
 
-  let highestAward: string | null = null;
-  for (const record of awardHistory) {
-    if (
-      !highestAward ||
-      awardLevelRank(record.category) > awardLevelRank(highestAward)
-    ) {
-      highestAward = record.category;
-    }
-  }
-
   return {
     snsFollowers: Math.round(
       fandomAxis.global * 1000 + fandomAxis.public * 500,
     ),
     spotifyStreams: Math.round(fandomAxis.global * 10000),
     musicShowWins: 0,
-    highestAwardLevel: highestAward,
+    awardHistory,
     quarterlyRevenue,
     cumulativeRevenue,
     visualAverage: visualAvg,
@@ -794,14 +788,4 @@ function buildInvestorMetrics(
     trendFit: fandomAxis.industry,
     styleScore: visualAvg,
   };
-}
-
-function awardLevelRank(level: string): number {
-  const ranks: Record<string, number> = {
-    popularity: 1,
-    rookie: 2,
-    bonsang: 3,
-    daesang: 4,
-  };
-  return ranks[level] ?? 0;
 }

@@ -57,7 +57,7 @@ describe("processWeek 골든 스냅샷", () => {
       investorType: "entertainment",
     });
     withAward.game.awardHistory = [
-      { year: 1, showId: "mma", showName: "MMA", category: "bonsang" },
+      { year: 1, week: 50, showId: "mma", showName: "MMA", category: "bonsang" },
     ];
     const passed = processWeek(withAward, NO_DECISIONS);
     expect(
@@ -74,6 +74,24 @@ describe("processWeek 골든 스냅샷", () => {
     const failed = processWeek(withoutAward, NO_DECISIONS);
     expect(
       failed.weekReport.warnings.some((w) =>
+        w.includes("연말 시상식 본상 이상"),
+      ),
+    ).toBe(true);
+  });
+
+  it("마감(52주) 이후에 딴 상은 실패한 1년차 마일스톤을 소급 충족시키지 않는다", () => {
+    // 2년차 시상식(누적 102주)에서 본상을 땄어도, 마감 52주짜리 조건은 계속 미달이다
+    const lateAward = makeGameSnapshot({
+      week: 52,
+      year: 2,
+      investorType: "entertainment",
+    });
+    lateAward.game.awardHistory = [
+      { year: 2, week: 102, showId: "mma", showName: "MMA", category: "bonsang" },
+    ];
+    const result = processWeek(lateAward, NO_DECISIONS);
+    expect(
+      result.weekReport.warnings.some((w) =>
         w.includes("연말 시상식 본상 이상"),
       ),
     ).toBe(true);
