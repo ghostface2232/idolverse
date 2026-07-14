@@ -1,5 +1,6 @@
 import { getSeasonForWeek } from "@/data/balance";
 import { INVESTOR_COMPANIES } from "@/data/investors";
+import { calculateWeeklyFixedTotal } from "@/stores/financeStore";
 import type { GameSnapshot } from "@/systems/weekProcessor";
 import type { GameStateSnapshot } from "@/lib/saveSystem";
 import type { ConceptMood, InvestorType, Trainee } from "@/types/game";
@@ -125,7 +126,16 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
         hasHealthcare: false,
         hasSecurity: false,
       },
-      weeklyFixedTotal: 4100000,
+      // fixedCosts는 월 비용 — hydrate가 재산출하는 값과 일치하도록 주간 환산치를 넣는다.
+      weeklyFixedTotal: calculateWeeklyFixedTotal({
+        dormitory: 1000000,
+        studio: 1500000,
+        staffSalary: 800000,
+        livingExpense: 500000,
+        equipment: 300000,
+        healthcare: 0,
+        security: 0,
+      }),
       incomeHistory: [],
       expenseHistory: [],
     },

@@ -27,7 +27,7 @@ const initialFixedCosts: FinanceStoreState["fixedCosts"] = {
   security: 0,
 };
 
-const initialFinanceState: FinanceStoreState = {
+export const initialFinanceState: FinanceStoreState = {
   money: 0,
   fixedCosts: initialFixedCosts,
   upgrades: {

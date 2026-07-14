@@ -2,7 +2,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { EventStore, EventStoreState } from "@/types/game";
 
-const initialEventState: EventStoreState = {
+export const initialEventState: EventStoreState = {
   pendingEvents: [
     {
       id: "event-debut-rush",

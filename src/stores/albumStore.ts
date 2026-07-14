@@ -50,7 +50,7 @@ const initialAlbum: Album = {
   quality: 0,
 };
 
-const initialAlbumState: AlbumStoreState = {
+export const initialAlbumState: AlbumStoreState = {
   currentAlbum: initialAlbum,
   releasedAlbums: [],
   conceptHistory: [],

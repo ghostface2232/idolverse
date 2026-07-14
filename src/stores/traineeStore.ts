@@ -7,7 +7,7 @@ import type {
   TraineeStoreState,
 } from "@/types/game";
 
-const initialTraineeState: TraineeStoreState = {
+export const initialTraineeState: TraineeStoreState = {
   trainees: [],
 };
 
@@ -19,7 +19,12 @@ export const traineeVanillaStore = createStore<TraineeStore>()((set) => ({
   ...initialTraineeState,
   addTrainee: (trainee) =>
     set((state) => ({
-      trainees: [...state.trainees, trainee],
+      // 같은 id가 이미 있으면 교체한다 — 창단 플로우에서 "이전" 후 재진행해도 멤버가 복제되지 않는다.
+      trainees: state.trainees.some((existing) => existing.id === trainee.id)
+        ? state.trainees.map((existing) =>
+            existing.id === trainee.id ? trainee : existing,
+          )
+        : [...state.trainees, trainee],
     })),
   removeTrainee: (traineeId) =>
     set((state) => ({

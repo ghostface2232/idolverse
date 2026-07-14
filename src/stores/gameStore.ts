@@ -5,7 +5,7 @@ import { INVESTOR_CONDITIONS } from "@/data/investors";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import type { GameStore, GameStoreState } from "@/types/game";
 
-const initialGameState: GameStoreState = {
+export const initialGameState: GameStoreState = {
   currentWeek: 1,
   currentSeason: getSeasonForWeek(1),
   currentYear: 1,

@@ -2,7 +2,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { StaffStore, StaffStoreState } from "@/types/game";
 
-const initialStaffState: StaffStoreState = {
+export const initialStaffState: StaffStoreState = {
   staff: [],
 };
 

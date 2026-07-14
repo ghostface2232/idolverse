@@ -22,7 +22,8 @@ interface AuditionProps {
 }
 
 const HEADCOUNTS = [5, 7, 9, 12] as const;
-const MIN_SELECT_COUNT = 3;
+// 필수 포지션 4개(리더/메인보컬/메인댄서/센터)는 서로 겸직이 불가하므로 4명 미만이면 창단이 불가능하다.
+const MIN_SELECT_COUNT = 4;
 
 function formatKRW(amount: number): string {
   if (amount >= 100_000_000) {
@@ -76,9 +77,8 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
 
   const handleNext = () => {
     const selected = candidates.filter((c) => selectedIds.includes(c.id));
-    for (const trainee of selected) {
-      traineeVanillaStore.getState().addTrainee(trainee);
-    }
+    // 추가가 아닌 교체: "이전"으로 돌아와 선발을 바꿔도 복제·잔류 멤버가 생기지 않는다.
+    traineeVanillaStore.setState({ trainees: selected }, false);
     const livingLevel = foundingVanillaStore.getState().facilitySelections.livingExpenseLevel;
     const perPerson = [500_000, 1_000_000, 1_500_000, 2_000_000][livingLevel - 1];
     financeVanillaStore.getState().updateFixedCosts({
@@ -194,8 +194,13 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
           </>
         ) : (
           <>
-            <Card className="text-center text-sm text-slate-300">
-              선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 {MIN_SELECT_COUNT}명
+            <Card className="space-y-1 text-center text-sm text-slate-300">
+              <p>
+                선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 {MIN_SELECT_COUNT}명
+              </p>
+              <p className="text-[10px] text-slate-500">
+                필수 포지션 4개(리더·메인보컬·메인댄서·센터)는 겸직할 수 없어 최소 {MIN_SELECT_COUNT}명이 필요합니다.
+              </p>
             </Card>
 
             <div className="space-y-3">
