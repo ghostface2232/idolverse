@@ -91,7 +91,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 pb-2">
         <FoundingTitleBar title="연습생 모집" />
 
         {!executed ? (
@@ -133,8 +133,11 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
             </div>
 
             <Card className="space-y-3">
-              <div className="flex items-baseline justify-between">
-                <p className="text-sm text-slate-200">추가 예산</p>
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-sm text-slate-200">
+                  추가 예산{" "}
+                  <span className="text-brand-cyan">+{formatKRW(extraBudget)}</span>
+                </p>
                 <p className="text-xs text-brand-cyan">
                   {tierLabel} 풀 · 능력치 {statBandLabel}
                 </p>
@@ -150,7 +153,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
               />
               <div className="flex justify-between text-xs text-slate-400">
                 <span>{formatKRW(0)}</span>
-                <span className="text-slate-200">+{formatKRW(extraBudget)}</span>
+                <span>{formatKRW(50_000_000)}</span>
                 <span>{formatKRW(100_000_000)}</span>
               </div>
               <p className="text-[10px] text-slate-500">

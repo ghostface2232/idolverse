@@ -223,6 +223,20 @@ select {
   animation: step-fade 350ms ease-out both;
 }
 
+.animate-label-swap {
+  animation: label-swap 200ms ease-out both;
+}
+
+@keyframes label-swap {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes step-fade {
   from {
     opacity: 0;
