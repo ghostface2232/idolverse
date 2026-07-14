@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import { EventBus, PhaserEvents } from "@/game/EventBus";
+import { presentationBus } from "@/game/EventBus";
+import { loadWorldAssets } from "@/game/assets/loadWorldAssets";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -7,15 +8,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.setBaseURL(import.meta.env.BASE_URL);
-    this.load.setPath("images");
-    // TODO: 본격 스프라이트 도입 시 facilities/ 시트 로드 추가
-    //   this.load.spritesheet("facility-dorm", "facilities/dormitory-spritesheet.png", { frameWidth: 64, frameHeight: 64 })
-    //   this.load.spritesheet("facility-studio", "facilities/studio-spritesheet.png", { frameWidth: 64, frameHeight: 64 })
+    loadWorldAssets(this);
   }
 
   create() {
-    EventBus.emit(PhaserEvents.bootComplete);
+    presentationBus.emit("bootComplete", { sceneKey: this.scene.key });
     this.scene.start("simulation");
   }
 }

@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { FoundingFlow } from "@/pages/FoundingFlow";
-import { GameDashboard } from "@/pages/GameDashboard";
 import { MainMenu } from "@/pages/MainMenu";
 import { NewGame } from "@/pages/NewGame";
 
 type AppScreen = "menu" | "newGame" | "founding" | "game";
+
+const GameDashboard = lazy(() =>
+  import("@/pages/GameDashboard").then((module) => ({
+    default: module.GameDashboard,
+  })),
+);
 
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>("menu");
@@ -32,7 +37,11 @@ export default function App() {
         }
 
         if (screen === "game") {
-          return <GameDashboard userId={user.id} />;
+          return (
+            <Suspense fallback={<GameLoadingScreen />}>
+              <GameDashboard userId={user.id} />
+            </Suspense>
+          );
         }
 
         return (
@@ -44,5 +53,16 @@ export default function App() {
         );
       }}
     </AuthGuard>
+  );
+}
+
+function GameLoadingScreen() {
+  return (
+    <main className="grid h-dvh place-items-center bg-surface-shell px-6 text-center">
+      <div role="status">
+        <p className="text-sm font-semibold text-text-primary">회사를 여는 중</p>
+        <p className="mt-2 text-xs text-text-muted">이번 주 운영 현황을 준비하고 있어요.</p>
+      </div>
+    </main>
   );
 }

@@ -1,8 +1,14 @@
 import Phaser from "phaser";
-import { EventBus, PhaserEvents } from "@/game/EventBus";
-import { financeVanillaStore } from "@/stores/financeStore";
-import { traineeVanillaStore } from "@/stores/traineeStore";
-import type { Trainee, TraineeActivity } from "@/types/game";
+import {
+  SIMULATION_ROOM_LABELS,
+  SIMULATION_WORLD,
+} from "@/data/simulationWorld";
+import { presentationBus } from "@/game/EventBus";
+import {
+  simulationProjectionCoordinator,
+  type SimulationEntityProjection,
+  type SimulationProjection,
+} from "@/game/simulation/SimulationProjectionCoordinator";
 
 type RoomKey = "practice" | "dorm" | "office";
 
@@ -11,23 +17,7 @@ interface RoomLayout {
   bg: number;
   accent: number;
   motif: (graphics: Phaser.GameObjects.Graphics, rect: Phaser.Geom.Rectangle) => void;
-  isUnlocked: (upgrades: ReturnType<typeof financeVanillaStore.getState>["upgrades"]) => boolean;
   rect: Phaser.Geom.Rectangle;
-}
-
-const ACTIVITY_TO_ROOM: Record<NonNullable<TraineeActivity>, RoomKey | "external"> = {
-  training: "practice",
-  individual: "practice",
-  rest: "dorm",
-  vacation: "dorm",
-  entertainment: "external",
-};
-
-function mapActivityToRoom(activity: TraineeActivity): RoomKey | "external" {
-  if (!activity) {
-    return "office";
-  }
-  return ACTIVITY_TO_ROOM[activity];
 }
 
 function hashHairColor(traineeId: string): number {
@@ -43,8 +33,10 @@ export class SimulationScene extends Phaser.Scene {
   private background?: Phaser.GameObjects.Graphics;
   private roomGraphics?: Phaser.GameObjects.Graphics;
   private rooms: RoomLayout[] = [];
+  private roomLabels = new Map<RoomKey, Phaser.GameObjects.Text>();
   private traineeContainers = new Map<string, Phaser.GameObjects.Container>();
   private unsubscribers: Array<() => void> = [];
+  private projection = simulationProjectionCoordinator.getSnapshot();
 
   constructor() {
     super("simulation");
@@ -58,17 +50,17 @@ export class SimulationScene extends Phaser.Scene {
     this.background = this.add.graphics().setDepth(0);
     this.roomGraphics = this.add.graphics().setDepth(1);
 
-    this.layoutRooms(this.scale.width, this.scale.height);
-    this.diffTrainees(traineeVanillaStore.getState().trainees);
+    this.layoutRooms();
+    this.applyProjection(this.projection);
 
     this.unsubscribers.push(
-      financeVanillaStore.subscribe(() => this.drawRooms()),
-      traineeVanillaStore.subscribe((state) => this.diffTrainees(state.trainees)),
+      simulationProjectionCoordinator.subscribe((projection) =>
+        this.applyProjection(projection),
+      ),
+      presentationBus.on("playWeekTimeline", () => this.pulseSimulation()),
     );
 
-    EventBus.on(PhaserEvents.reactAdvanceWeek, this.pulseSimulation, this);
-    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-    EventBus.emit(PhaserEvents.sceneReady, this);
+    presentationBus.emit("sceneReady", { sceneKey: this.scene.key });
   }
 
   shutdown() {
@@ -76,18 +68,21 @@ export class SimulationScene extends Phaser.Scene {
     this.unsubscribers = [];
     this.traineeContainers.forEach((container) => container.destroy());
     this.traineeContainers.clear();
-    EventBus.off(PhaserEvents.reactAdvanceWeek, this.pulseSimulation, this);
-    this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
+    this.roomLabels.forEach((label) => label.destroy());
+    this.roomLabels.clear();
   }
 
-  private layoutRooms(width: number, height: number) {
-    const topPad = 12;
-    const bottomPad = 12;
-    const sidePad = 12;
-    const usableHeight = height - topPad - bottomPad;
-    const roomGap = 10;
-    const roomHeight = Math.floor((usableHeight - roomGap * 2) / 3);
-    const innerWidth = width - sidePad * 2;
+  private layoutRooms() {
+    const topPad = SIMULATION_WORLD.verticalPadding;
+    const bottomPad = SIMULATION_WORLD.verticalPadding;
+    const sidePad = SIMULATION_WORLD.sidePadding;
+    const usableHeight = SIMULATION_WORLD.height - topPad - bottomPad;
+    const roomGap = SIMULATION_WORLD.roomGap;
+    const roomHeight = Math.floor(
+      (usableHeight - roomGap * (SIMULATION_WORLD.roomCount - 1)) /
+        SIMULATION_WORLD.roomCount,
+    );
+    const innerWidth = SIMULATION_WORLD.width - sidePad * 2;
 
     this.rooms = [
       {
@@ -95,7 +90,6 @@ export class SimulationScene extends Phaser.Scene {
         bg: 0x1e1b4b,
         accent: 0x6366f1,
         motif: drawMicMotif,
-        isUnlocked: (u) => u.studioLevel >= 1,
         rect: new Phaser.Geom.Rectangle(
           sidePad,
           topPad,
@@ -108,7 +102,6 @@ export class SimulationScene extends Phaser.Scene {
         bg: 0x1f2937,
         accent: 0xfbbf24,
         motif: drawBedMotif,
-        isUnlocked: (u) => u.dormLevel >= 1,
         rect: new Phaser.Geom.Rectangle(
           sidePad,
           topPad + roomHeight + roomGap,
@@ -121,7 +114,6 @@ export class SimulationScene extends Phaser.Scene {
         bg: 0x0f3a3a,
         accent: 0x06b6d4,
         motif: drawDeskMotif,
-        isUnlocked: () => true,
         rect: new Phaser.Geom.Rectangle(
           sidePad,
           topPad + (roomHeight + roomGap) * 2,
@@ -131,7 +123,7 @@ export class SimulationScene extends Phaser.Scene {
       },
     ];
 
-    this.drawRooms();
+    this.createRoomLabels();
   }
 
   private drawRooms() {
@@ -139,19 +131,22 @@ export class SimulationScene extends Phaser.Scene {
       return;
     }
 
-    const width = this.scale.width;
-    const height = this.scale.height;
     this.background.clear();
     this.background.fillStyle(0x020617, 1);
-    this.background.fillRect(0, 0, width, height);
+    this.background.fillRect(
+      0,
+      0,
+      SIMULATION_WORLD.width,
+      SIMULATION_WORLD.height,
+    );
 
     this.roomGraphics.clear();
 
-    const upgrades = financeVanillaStore.getState().upgrades;
-
     this.rooms.forEach((room) => {
       const { rect } = room;
-      const unlocked = room.isUnlocked(upgrades);
+      const unlocked =
+        this.projection.rooms.find((candidate) => candidate.id === room.key)
+          ?.unlocked ?? false;
 
       this.roomGraphics?.fillStyle(0x000000, 0.32);
       this.roomGraphics?.fillRoundedRect(
@@ -215,15 +210,45 @@ export class SimulationScene extends Phaser.Scene {
     }
   }
 
-  private diffTrainees(trainees: Trainee[]) {
-    const grouped = new Map<RoomKey | "external", Trainee[]>();
+  private createRoomLabels() {
+    this.rooms.forEach((room) => {
+      const existing = this.roomLabels.get(room.key);
+      if (existing) {
+        existing.setPosition(room.rect.x + 12, room.rect.y + 10);
+        return;
+      }
+
+      const label = this.add
+        .text(
+          room.rect.x + 12,
+          room.rect.y + 10,
+          SIMULATION_ROOM_LABELS[room.key],
+          {
+            color: "#f8fafc",
+            fontFamily: '"DungGeunMo", monospace',
+            fontSize: "12px",
+          },
+        )
+        .setDepth(3);
+      this.roomLabels.set(room.key, label);
+    });
+  }
+
+  private applyProjection(projection: SimulationProjection) {
+    this.projection = projection;
+    this.drawRooms();
+    this.diffTrainees(projection.entities);
+  }
+
+  private diffTrainees(trainees: SimulationEntityProjection[]) {
+    const grouped = new Map<RoomKey | "external", SimulationEntityProjection[]>();
     grouped.set("practice", []);
     grouped.set("dorm", []);
     grouped.set("office", []);
     grouped.set("external", []);
 
     trainees.forEach((trainee) => {
-      const target = mapActivityToRoom(trainee.currentActivity);
+      const target = trainee.visible && trainee.roomId ? trainee.roomId : "external";
       grouped.get(target)?.push(trainee);
     });
 
@@ -242,7 +267,7 @@ export class SimulationScene extends Phaser.Scene {
     externalList.forEach((trainee) => seenIds.add(trainee.id));
     externalList.forEach((trainee) => {
       const existing = this.traineeContainers.get(trainee.id);
-      existing?.setVisible(false);
+      existing?.setVisible(false).setActive(false);
     });
 
     this.traineeContainers.forEach((container, id) => {
@@ -255,7 +280,7 @@ export class SimulationScene extends Phaser.Scene {
 
   private placeTraineesInRoom(
     room: RoomLayout,
-    trainees: Trainee[],
+    trainees: SimulationEntityProjection[],
     seenIds: Set<string>,
   ) {
     if (trainees.length === 0) {
@@ -289,7 +314,12 @@ export class SimulationScene extends Phaser.Scene {
         container = this.renderTrainee(trainee, x, y);
         this.traineeContainers.set(trainee.id, container);
       } else {
-        container.setVisible(true);
+        container.setVisible(true).setActive(true);
+        const injuryMark = container.getByName(
+          "injury-mark",
+        ) as Phaser.GameObjects.Graphics | null;
+        injuryMark?.setVisible(trainee.injured);
+        container.setDepth(4 + y / 10_000);
         if (container.x !== x || container.y !== y) {
           this.tweens.killTweensOf(container);
           this.tweens.add({
@@ -311,7 +341,7 @@ export class SimulationScene extends Phaser.Scene {
    * shape stays the same so callers do not change.
    */
   private renderTrainee(
-    trainee: Trainee,
+    trainee: SimulationEntityProjection,
     x: number,
     y: number,
   ): Phaser.GameObjects.Container {
@@ -361,26 +391,30 @@ export class SimulationScene extends Phaser.Scene {
     hair.fillRect(4, -12, 1, 3);
     sprite.add(hair);
 
-    if (trainee.injuryWeeks > 0) {
-      const mark = this.add.graphics();
-      mark.fillStyle(0xef4444, 1);
-      mark.fillRect(5, -17, 3, 3);
-      sprite.add(mark);
-    }
+    const mark = this.add.graphics().setName("injury-mark");
+    mark.fillStyle(0xef4444, 1);
+    mark.fillRect(5, -17, 3, 3);
+    mark.setVisible(trainee.injured);
+    container.add(mark);
 
-    this.tweens.add({
-      targets: sprite,
-      y: -2,
-      duration: 900 + (hairColor % 240),
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.tweens.add({
+        targets: sprite,
+        y: -2,
+        duration: 900 + (hairColor % 240),
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
 
     return container;
   }
 
   private pulseSimulation() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
     this.cameras.main.flash(180, 236, 72, 153, false);
     this.tweens.add({
       targets: this.cameras.main,
@@ -400,10 +434,6 @@ export class SimulationScene extends Phaser.Scene {
     });
   }
 
-  private handleResize(gameSize: Phaser.Structs.Size) {
-    this.layoutRooms(gameSize.width, gameSize.height);
-    this.diffTrainees(traineeVanillaStore.getState().trainees);
-  }
 }
 
 function drawMicMotif(graphics: Phaser.GameObjects.Graphics, rect: Phaser.Geom.Rectangle) {

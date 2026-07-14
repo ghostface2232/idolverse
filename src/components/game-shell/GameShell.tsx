@@ -7,6 +7,7 @@ interface GameShellProps {
   topStatus: ReactNode;
   goalStrip: ReactNode;
   children: ReactNode;
+  world: ReactNode;
   commandPanel?: ReactNode;
   actionDock?: ReactNode;
 }
@@ -17,6 +18,7 @@ export function GameShell({
   topStatus,
   goalStrip,
   children,
+  world,
   commandPanel,
   actionDock,
 }: GameShellProps) {
@@ -34,7 +36,25 @@ export function GameShell({
           ].join(" ")}
         >
           <section className="relative min-h-0 flex-1 overflow-hidden bg-surface-world">
-            {children}
+            <div
+              aria-hidden={activeSection !== "company"}
+              className={[
+                "absolute inset-0 transition-opacity duration-[var(--motion-state)]",
+                activeSection === "company"
+                  ? "z-10 opacity-100"
+                  : "pointer-events-none z-0 opacity-0",
+              ].join(" ")}
+            >
+              {world}
+            </div>
+            <div
+              className={[
+                "relative h-full min-h-0",
+                activeSection === "company" ? "pointer-events-none" : "z-10",
+              ].join(" ")}
+            >
+              {children}
+            </div>
           </section>
           {commandPanel ? (
             <aside className="hidden min-h-0 overflow-y-auto border-l border-white/8 bg-surface-shell p-4 lg:block">

@@ -7,15 +7,15 @@ import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
 import { GameShell } from "@/components/game-shell/GameShell";
+import { GameWorldHost } from "@/components/game-shell/GameWorldHost";
 import { GoalStrip } from "@/components/game-shell/GoalStrip";
 import { MarketOverview } from "@/components/game-shell/MarketOverview";
 import { MemberOverview } from "@/components/game-shell/MemberOverview";
 import { MoreOverview } from "@/components/game-shell/MoreOverview";
 import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
-import { WorldViewport } from "@/components/game-shell/WorldViewport";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
-import { EventBus, PhaserEvents } from "@/game/EventBus";
+import { presentationBus } from "@/game/EventBus";
 import { captureGameState, DEFAULT_AUTO_SAVE_SLOT, saveGame } from "@/lib/saveSystem";
 import {
   acknowledgeWeeklyReportAndSave,
@@ -27,7 +27,7 @@ import { Training } from "@/pages/Training";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useFinanceStore } from "@/stores/financeStore";
-import { useGameStore } from "@/stores/gameStore";
+import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
 import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
 import type { GameEvent, WeeklyDecisionTrigger } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
@@ -138,7 +138,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       });
 
       setSheetOpen(false);
-      EventBus.emit(PhaserEvents.reactAdvanceWeek);
+      presentationBus.emit("playWeekTimeline", {
+        resolutionId: gameVanillaStore.getState().weeklyFlow.resolutionId,
+      });
       triggerAutoSave();
     } finally {
       isAdvancingRef.current = false;
@@ -193,6 +195,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       <GameShell
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        world={<GameWorldHost active={activeSection === "company"} />}
         topStatus={
           <TopStatusBar
             year={currentYear}
@@ -219,7 +222,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
           ) : undefined
         }
       >
-        {activeSection === "company" ? <WorldViewport /> : null}
         {activeSection === "week" ? (
           weekView === "training" ? (
             <Training onBack={() => setWeekView("decisions")} />
