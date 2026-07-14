@@ -144,7 +144,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-2">
         <FoundingTitleBar title={`${STAFF_ROLE_LABELS[role]} 채용`} />
 
         <Card className="space-y-2 py-3 text-xs text-slate-300">

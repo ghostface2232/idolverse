@@ -355,14 +355,19 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               <p className="text-xs uppercase tracking-[0.24em] text-brand-cyan">
                 Selected
               </p>
-              <PixelText as="h2" className="text-xl text-slate-50 [text-shadow:none]">
-                {selectedInvestor.name}
-              </PixelText>
-              {conditionSummary.map((condition) => (
-                <p key={condition} className="text-sm text-slate-300">
-                  {condition}
-                </p>
-              ))}
+              <div
+                key={selectedInvestor.id}
+                className="animate-label-swap min-h-[5.5rem] space-y-2"
+              >
+                <PixelText as="h2" className="text-xl text-slate-50 [text-shadow:none]">
+                  {selectedInvestor.name}
+                </PixelText>
+                {conditionSummary.map((condition) => (
+                  <p key={condition} className="text-sm text-slate-300">
+                    {condition}
+                  </p>
+                ))}
+              </div>
             </Card>
 
             <div className="grid grid-cols-2 gap-3 pb-2">
@@ -408,7 +413,10 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     />
                     <Button
                       tone="secondary"
-                      onClick={() => setGroupName(pickRandom(GROUP_NAME_CANDIDATES))}
+                      onClick={() => {
+                        setCompanyName(pickRandom(COMPANY_NAME_CANDIDATES));
+                        setGroupName(pickRandom(GROUP_NAME_CANDIDATES));
+                      }}
                     >
                       랜덤
                     </Button>
