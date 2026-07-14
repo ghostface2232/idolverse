@@ -131,7 +131,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
               </div>
             </div>
 
-            <Card className="space-y-3">
+            <Card variant="panel" className="space-y-3">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-sm text-slate-200">
                   추가 예산{" "}
@@ -188,7 +188,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
               </div>
             </div>
 
-            <Card className="flex items-center justify-between text-sm">
+            <Card variant="panel" className="flex items-center justify-between text-sm">
               <span className="text-slate-300">총 비용</span>
               <span className={money < totalCost ? "text-red-300" : "text-brand-cyan"}>
                 {formatKRW(totalCost)}
@@ -200,7 +200,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
           </>
         ) : (
           <>
-            <Card className="space-y-1 text-center text-sm text-slate-300">
+            <Card variant="panel" className="space-y-1 text-center text-sm text-slate-300">
               <p>
                 선발: <span className="text-brand-cyan">{selectedIds.length}명</span> / 최소 {MIN_SELECT_COUNT}명
               </p>

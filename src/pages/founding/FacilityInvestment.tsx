@@ -95,7 +95,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
           onSelect={(l) => update({ livingExpenseLevel: l as 1 | 2 | 3 | 4 })}
         />
 
-        <Card className="space-y-3">
+        <Card variant="panel" className="space-y-3">
           <p className="text-sm text-slate-200">선택적 업그레이드 (일시 비용)</p>
           {(["healthcare", "security"] as const).map((key) => {
             const item = FOUNDING_ONETIME_UPGRADES[key];
@@ -135,7 +135,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
           })}
         </Card>
 
-        <Card className="space-y-2 text-center">
+        <Card variant="panel" className="space-y-2 text-center">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">월 고정비 (5인 기준)</span>
             <MoneyDisplay amount={monthlyTotal} size="sm" />

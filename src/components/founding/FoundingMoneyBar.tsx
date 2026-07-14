@@ -6,7 +6,7 @@ export function FoundingMoneyBar() {
   const weeklyFixedTotal = useFinanceStore((s) => s.weeklyFixedTotal);
 
   return (
-    <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-600/60 bg-slate-800/60 px-3 py-2">
+    <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-600/60 bg-slate-800 px-3 py-2">
       <div className="flex items-center gap-2">
         <span className="text-xs text-slate-400">잔액</span>
         <MoneyDisplay amount={money} size="sm" />

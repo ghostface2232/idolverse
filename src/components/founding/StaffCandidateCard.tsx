@@ -38,7 +38,7 @@ export function StaffCandidateCard({
         <div
           aria-hidden="true"
           className={[
-            "h-20 w-20 shrink-0 rounded-xl border-2 bg-slate-950/45",
+            "h-20 w-20 shrink-0 rounded-xl border-2 bg-slate-950",
             hasProfileImage
               ? [
                   "border-slate-500",

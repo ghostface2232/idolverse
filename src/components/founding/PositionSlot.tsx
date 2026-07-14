@@ -23,15 +23,19 @@ export function PositionSlot({ position, assignedName, fitness, required, onTap 
       className={[
         "flex w-full items-center justify-between rounded-2xl border-2 px-4 py-3 text-left transition duration-150 ease-out active:scale-[0.96]",
         assignedName
-          ? "border-brand-cyan/60 bg-cyan-500/10"
-          : "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/40",
+          ? required
+            ? "border-brand-pink/55 bg-slate-800"
+            : "border-brand-cyan/55 bg-slate-800"
+          : required
+            ? "border-brand-pink/20 bg-slate-800 hover:border-brand-pink/45"
+            : "border-brand-cyan/20 bg-slate-800 hover:border-brand-cyan/45",
       ].join(" ")}
       onClick={onTap}
     >
       <div className="flex items-center gap-2">
         <span className="text-sm text-slate-50">{POSITION_LABELS[position]}</span>
         {required && !assignedName && (
-          <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] text-red-300">
+          <span className="rounded-full bg-pink-500/15 px-2 py-0.5 text-[11px] text-pink-300">
             필수
           </span>
         )}

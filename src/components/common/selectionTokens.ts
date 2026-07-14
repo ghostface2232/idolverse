@@ -8,10 +8,10 @@ export function radioTileClasses(
   groupHasSelection: boolean,
 ): string {
   if (selected) {
-    return "border-brand-cyan bg-cyan-500/10 ring-2 ring-brand-cyan/40";
+    return "border-brand-cyan bg-slate-800 ring-2 ring-brand-cyan/40";
   }
   return [
-    "border-slate-600 bg-slate-800/60 hover:border-brand-cyan/50",
+    "border-slate-600 bg-slate-800 hover:border-brand-cyan/50",
     groupHasSelection ? "opacity-60 hover:opacity-100" : "",
   ]
     .filter(Boolean)
@@ -20,6 +20,6 @@ export function radioTileClasses(
 
 export function checkTileClasses(selected: boolean): string {
   return selected
-    ? "border-emerald-400 bg-emerald-500/10 ring-2 ring-emerald-400/40"
-    : "border-slate-600 bg-slate-800/60 hover:border-emerald-400/50";
+    ? "border-emerald-400 bg-slate-800 ring-2 ring-emerald-400/40"
+    : "border-slate-600 bg-slate-800 hover:border-emerald-400/50";
 }

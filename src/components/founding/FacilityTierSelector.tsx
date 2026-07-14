@@ -50,7 +50,7 @@ export function FacilityTierSelector({
                 <div
                   aria-hidden="true"
                   className={[
-                    "mb-2 aspect-square w-full rounded border bg-slate-950/50",
+                    "mb-2 aspect-square w-full rounded border bg-slate-950",
                     isSelected ? "border-brand-cyan/70" : "border-slate-700",
                     "facility-option-sprite",
                     `facility-option-sprite-${tier.illustrationSpriteIndex ?? 0}`,

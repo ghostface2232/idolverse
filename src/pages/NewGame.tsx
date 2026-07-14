@@ -40,23 +40,23 @@ const investorStyles: Record<
   }
 > = {
   it: {
-    color: "border-blue-300/60 bg-blue-500/14",
+    color: "border-blue-300/60",
     logoSrc: assetUrl("/investors/nextbeat.png"),
   },
   entertainment: {
-    color: "border-violet-300/60 bg-violet-500/14",
+    color: "border-violet-300/60",
     logoSrc: assetUrl("/investors/crownmusic-ent.png"),
   },
   vc: {
-    color: "border-emerald-300/60 bg-emerald-500/14",
+    color: "border-emerald-300/60",
     logoSrc: assetUrl("/investors/summit-capital.png"),
   },
   cosmetic: {
-    color: "border-pink-300/60 bg-pink-500/14",
+    color: "border-pink-300/60",
     logoSrc: assetUrl("/investors/lumiere-beauty.png"),
   },
   fashion: {
-    color: "border-amber-300/60 bg-amber-500/14",
+    color: "border-amber-300/60",
     logoSrc: assetUrl("/investors/maison-group.png"),
   },
 };
@@ -235,7 +235,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
 
         {step === "prologue" ? (
           <section key="prologue" className="stagger-fade flex h-full min-h-0 flex-col gap-4">
-            <div className="rounded-[28px] border-2 border-brand-pink/50 bg-slate-900/84 px-5 py-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.76)]">
+            <div className="rounded-[28px] border-2 border-brand-pink/50 bg-slate-900 px-5 py-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.76)]">
               <PixelText as="h1" className="text-3xl text-pink-200">
                 PROLOGUE
               </PixelText>
@@ -314,7 +314,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                       role="button"
                       tabIndex={0}
                       className={[
-                        "flex min-w-[300px] cursor-pointer snap-center flex-col items-center rounded-[28px] border-2 p-4 text-center shadow-[0_10px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out [word-break:keep-all] [overflow-wrap:break-word]",
+                        "flex min-w-[300px] cursor-pointer snap-center flex-col items-center rounded-[28px] border-2 bg-slate-800 p-4 text-center shadow-[0_10px_0_rgba(15,23,42,0.7)] transition duration-150 ease-out [word-break:keep-all] [overflow-wrap:break-word]",
                         style.color,
                         isSelected
                           ? "border-brand-cyan ring-2 ring-brand-cyan/40"
@@ -328,7 +328,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                         }
                       }}
                     >
-                      <div className="mb-3 w-1/2 overflow-hidden rounded-xl border-2 border-slate-600/80 bg-slate-950/72 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
+                      <div className="mb-3 w-1/2 overflow-hidden rounded-xl border-2 border-slate-600/80 bg-slate-950 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
                         <img
                           src={style.logoSrc}
                           alt={`${investor.name} 로고`}
@@ -410,7 +410,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     <input
                       value={companyName}
                       onChange={(event) => setCompanyName(event.target.value)}
-                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
+                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
                     />
                     <Button
                       tone="secondary"
@@ -428,7 +428,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     <input
                       value={groupName}
                       onChange={(event) => setGroupName(event.target.value)}
-                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950/70 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
+                      className="min-h-11 w-full rounded-2xl border-2 border-slate-600 bg-slate-950 px-4 text-slate-100 outline-none transition focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/30"
                     />
                     <Button
                       tone="secondary"
@@ -526,7 +526,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                 ))}
               </ul>
             </div>
-            <p className="rounded-2xl border border-slate-600 bg-slate-950/60 p-4 text-slate-300">
+            <p className="rounded-2xl border border-slate-600 bg-slate-950 p-4 text-slate-300">
               {detailInvestor.personality} 플레이스타일은 {describePlaystyle(detailInvestor)}에 맞춰집니다.
             </p>
           </div>

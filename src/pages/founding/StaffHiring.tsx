@@ -154,7 +154,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
       <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
         <FoundingTitleBar title={`${STAFF_ROLE_LABELS[role]} 채용`} />
 
-        <Card className="space-y-2 py-3 text-xs text-slate-300">
+        <Card variant="panel" className="space-y-2 py-3 text-xs text-slate-300">
           <div className="flex items-center justify-between gap-3">
             <span className="text-slate-400">
               스태프 {roleIndex + 1}/{STAFF_ROLE_ORDER.length}
