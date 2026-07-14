@@ -121,15 +121,27 @@ export interface InvestorCheckResult {
   penalty?: string;
 }
 
+/**
+ * 음악방송 1위와 광고 계약은 실측 시스템이 아직 없어(지표가 항상 0)
+ * 평가하면 구조적으로 영구 실패한다. 실측이 연결될 때까지 평가에서 제외한다.
+ */
+const UNMEASURED_METRICS: ReadonlySet<string> = new Set([
+  "musicShowWin",
+  "adContract",
+]);
+
 export function checkInvestorConditions(
   investor: InvestorCompany,
   metrics: InvestorMetrics,
-  currentWeek: number,
+  cumulativeWeek: number,
 ): InvestorCheckResult[] {
   const results: InvestorCheckResult[] = [];
 
   for (const condition of investor.conditions) {
-    if (currentWeek < condition.deadlineWeeks) continue;
+    if (UNMEASURED_METRICS.has(condition.metric)) continue;
+    // deadlineWeeks는 게임 시작 기준 누적 주차다. 연도가 바뀌며 currentWeek가
+    // 1로 랩되어도 마감이 다시 미래가 되지 않도록 누적 주차로 비교한다.
+    if (cumulativeWeek < condition.deadlineWeeks) continue;
 
     const met = evaluateCondition(condition, metrics);
     results.push({

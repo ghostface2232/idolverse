@@ -89,7 +89,7 @@ function applySnapshotEffects(
       },
       trainees: snapshot.trainee.trainees,
       album: snapshot.album.currentAlbum,
-      investorPenaltyActive: snapshot.game.investorPenaltyActive,
+      investorPressureWeeks: snapshot.game.investorPressureWeeks ?? 0,
     },
     effects,
   );
@@ -98,7 +98,11 @@ function applySnapshotEffects(
     ...snapshot,
     game: {
       ...snapshot.game,
-      investorPenaltyActive: result.investorPenaltyActive,
+      investorPressureWeeks: result.investorPressureWeeks,
+      // 이벤트발 압박이 걸리면 즉시 압박 상태로 표시한다. 해제는
+      // weekProcessor가 조건 미달 여부·남은 압박 주 수로 매주 재계산한다.
+      investorPenaltyActive:
+        snapshot.game.investorPenaltyActive || result.investorPressureWeeks > 0,
     },
     trainee: {
       ...snapshot.trainee,

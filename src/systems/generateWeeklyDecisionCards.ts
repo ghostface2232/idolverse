@@ -1,5 +1,5 @@
 import { WEEKLY_DECISION_POOL } from "@/data/decisionCards";
-import { GAME_BALANCE } from "@/data/balance";
+import { GAME_BALANCE, INVESTOR_COMPLY_SUPPORT_LIMIT } from "@/data/balance";
 import { pickUniqueItems } from "@/lib/seededRandom";
 import type {
   GamePhase,
@@ -13,6 +13,7 @@ export interface DecisionCardContext {
   hasPendingScandal: boolean;
   hasInjuredMember: boolean;
   investorPressure: boolean;
+  investorComplianceCount: number;
   hasCurrentAlbum: boolean;
   weeksSinceLastAlbum: number | null;
   lowSatisfactionMember: boolean;
@@ -179,6 +180,32 @@ const INTERLUDE_CARDS: WeeklyDecision[] = [
   },
 ];
 
+/**
+ * "요구 수용"의 추가 지원금은 횟수 제한이 있다. 상한을 넘기면 투자사가
+ * 더 이상 돈을 얹어주지 않으므로, 조건을 일부러 실패해 지원금을 무한히
+ * 뽑아내는 전략이 성립하지 않는다.
+ */
+function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
+  const base = EMERGENCY_CARDS[2];
+  if (complianceCount < INVESTOR_COMPLY_SUPPORT_LIMIT) {
+    return base;
+  }
+
+  return {
+    ...base,
+    options: base.options.map((option) =>
+      option.id === "comply"
+        ? {
+            ...option,
+            tradeoff:
+              "추가 지원금은 이미 소진되어 팬 실망과 피로만 누적된다.",
+            effects: { fandomDisappointment: 5, stress: 5, satisfaction: -4 },
+          }
+        : option,
+    ),
+  };
+}
+
 export function generateWeeklyDecisionCards(
   week: number,
   season: Season,
@@ -204,7 +231,7 @@ export function generateWeeklyDecisionCards(
     cards.push(EMERGENCY_CARDS[1]);
   }
   if (ctx.investorPressure) {
-    cards.push(EMERGENCY_CARDS[2]);
+    cards.push(buildInvestorPressureCard(ctx.investorComplianceCount));
   }
   if (ctx.lowSatisfactionMember) {
     cards.push(EMERGENCY_CARDS[3]);

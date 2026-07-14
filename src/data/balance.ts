@@ -58,6 +58,9 @@ export const FANDOM_DISAPPOINTMENT_CONCEPT_BREAK = 10; // Hard pivots should hur
 export const FANDOM_DISAPPOINTMENT_COMMERCIAL = 5; // Overt monetization should annoy fans, but less than scandals or betrayal.
 export const FANDOM_LEAVE_THRESHOLD = 80; // Churn should begin only after multiple ignored warning signs.
 
+export const INVESTOR_PENALTY_GRACE_WEEKS = 4; // A failed condition warns first so the player can react before being punished.
+export const INVESTOR_COMPLY_SUPPORT_LIMIT = 3; // The investor bails the player out only a few times; unlimited cash would invert the incentive to meet conditions.
+
 export const COMPETITOR_SCALING_FACTOR = 0.8; // Rivals should trail the player slightly so smart planning can overcome them.
 export const EVENT_COMPETITOR_SPAWN_CHANCE = 0.15; // Seasonal event rivals should be memorable spikes, not routine noise.
 

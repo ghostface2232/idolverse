@@ -167,7 +167,7 @@ export type EffectKey =
   | "fandomDisappointment"
   | "global"
   | "industry"
-  // 게임 상태 플래그 (value > 0 → true)
+  // 투자사 압박 (value = 압박 지속 주 수, 0 이하 = 즉시 해제)
   | "investorPressure"
   // 전체 트레이니 공통
   | "condition"
@@ -196,6 +196,16 @@ export interface InvestorCondition {
   deadlineWeeks: number;
   description: string;
   penalty?: string;
+}
+
+/**
+ * 투자사 조건별 미달 진행 상태. 조건이 처음 미달된 누적 주차를 기록해
+ * 유예 기간을 계산하고, 페널티가 이미 1회 집행됐는지 추적한다.
+ * 조건이 다시 충족되면 항목이 제거되어 재실패 시 유예부터 다시 시작한다.
+ */
+export interface InvestorConditionProgress {
+  firstFailedWeek: number;
+  penaltyApplied: boolean;
 }
 
 export interface InvestorEffect<TType extends string = string> {
@@ -501,6 +511,10 @@ export interface GameStoreState {
   investorType: InvestorType;
   investorConditions: InvestorCondition[];
   investorPenaltyActive: boolean;
+  investorConditionProgress: Record<string, InvestorConditionProgress>;
+  /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
+  investorPressureWeeks: number;
+  investorComplianceCount: number;
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;

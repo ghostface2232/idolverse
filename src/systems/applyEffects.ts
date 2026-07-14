@@ -10,7 +10,12 @@ export interface EffectTargets {
   fandom: Fandom4Axis;
   trainees: Trainee[];
   album: Album | null;
-  investorPenaltyActive: boolean;
+  /**
+   * 이벤트/카드발 투자사 압박의 남은 주 수. investorPressure 효과는
+   * 이 카운터만 올리고(값 = 지속 주 수), 조건 미달발 압박과는 독립이다.
+   * 카운터는 weekProcessor가 매주 감소시키므로 압박이 영구 고착되지 않는다.
+   */
+  investorPressureWeeks: number;
 }
 
 /**
@@ -31,7 +36,12 @@ const LEGACY_EFFECT_KEY_ALIASES: Record<string, EffectKey> = {
   fandom_disappointment: "fandomDisappointment",
 };
 
-const EFFECT_KEY_SET: ReadonlySet<string> = new Set([
+/**
+ * applyEffects가 실제로 처리하는 키의 전체 집합.
+ * 데이터 파일의 effects 키가 이 집합에 포함되는지 검증하는
+ * 계약 테스트(effectKeyContract.test.ts)의 기준으로도 쓰인다.
+ */
+export const EFFECT_KEY_SET: ReadonlySet<string> = new Set([
   "money",
   "public",
   "fandom",
@@ -102,7 +112,7 @@ export function applyEffects(
   effects: EffectMap,
 ): EffectTargets {
   let money = targets.money;
-  let investorPenaltyActive = targets.investorPenaltyActive;
+  let investorPressureWeeks = targets.investorPressureWeeks;
   const fandom = { ...targets.fandom };
   let trainees = targets.trainees;
   let album = targets.album;
@@ -141,7 +151,8 @@ export function applyEffects(
         fandom.industry = clamp(fandom.industry + value, 0, 100);
         break;
       case "investorPressure":
-        investorPenaltyActive = value > 0;
+        investorPressureWeeks =
+          value > 0 ? Math.max(investorPressureWeeks, Math.round(value)) : 0;
         break;
       case "condition":
       case "stress":
@@ -195,7 +206,7 @@ export function applyEffects(
     }
   }
 
-  return { money, fandom, trainees, album, investorPenaltyActive };
+  return { money, fandom, trainees, album, investorPressureWeeks };
 }
 
 function withAlbumProgress(
