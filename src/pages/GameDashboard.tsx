@@ -8,6 +8,7 @@ import { PixelText } from "@/components/common/PixelText";
 import { TabPanel } from "@/components/common/TabPanel";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
+import { SimulationOverlay } from "@/components/dashboard/SimulationOverlay";
 import { WeeklySummary } from "@/components/dashboard/WeeklySummary";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
@@ -140,10 +141,10 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   };
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-slate-950 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
-      <header className="flex items-center justify-between gap-2 border-b border-slate-700/60 bg-slate-900/80 px-4 py-2">
+    <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-slate-950 shadow-[0_0_60px_rgba(2,6,23,0.8)] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+      <header className="flex items-center justify-between gap-2 border-b border-slate-700/60 bg-slate-900 px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-300">
+          <span className="text-xs tabular-nums text-slate-300">
             Y{currentYear} W{currentWeek}
           </span>
           <BadgeIcon
@@ -156,7 +157,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
           <MoneyDisplay amount={money} size="sm" />
           <button
             type="button"
-            className="relative inline-flex min-h-9 min-w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/70 text-sm text-slate-100 transition hover:bg-slate-700"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-sm text-slate-100 transition-[background-color,scale] duration-150 hover:bg-slate-700 active:scale-[0.96]"
             aria-label="알림 열기"
             onClick={() => setNotificationsOpen(true)}
           >
@@ -172,13 +173,16 @@ export function GameDashboard({ userId }: GameDashboardProps) {
 
       <section className="relative flex-1 overflow-hidden">
         {activeTab === "dashboard" && (
-          <>
-            <PhaserGame className="absolute inset-0" />
+          <div className="absolute inset-0 flex flex-col">
+            <div className="relative min-h-0 flex-1 overflow-hidden bg-slate-950">
+              <PhaserGame className="absolute inset-0" />
+              <SimulationOverlay />
+            </div>
 
-            <div className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-2 border-t border-slate-700/60 bg-slate-900/85 px-3 py-2 backdrop-blur">
+            <div className="z-20 flex shrink-0 items-center gap-2 border-t border-slate-700/60 bg-slate-900 px-3 py-2">
               <button
                 type="button"
-                className="flex flex-1 items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-slate-700"
+                className="flex min-h-11 flex-1 items-center justify-between rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs text-slate-200 transition-[background-color,scale] duration-150 hover:bg-slate-700 active:scale-[0.96]"
                 onClick={() => setSheetOpen(true)}
                 aria-label="결정 카드 열기"
               >
@@ -203,7 +207,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
                 다음 주 진행
               </Button>
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === "training" && <Training onBack={goToDashboard} />}
@@ -227,7 +231,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         )}
       </section>
 
-      <nav className="border-t border-slate-700/60 bg-slate-900/90 pb-[env(safe-area-inset-bottom)]">
+      <nav className="border-t border-slate-700/60 bg-slate-900 pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto grid max-w-md grid-cols-5">
           {TABS.map((tab) => (
             <button
