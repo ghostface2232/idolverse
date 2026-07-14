@@ -6,7 +6,7 @@ import { calendarVanillaStore } from "@/stores/calendarStore";
 import { competitorVanillaStore } from "@/stores/competitorStore";
 import { eventVanillaStore } from "@/stores/eventStore";
 import { fandomVanillaStore } from "@/stores/fandomStore";
-import { financeVanillaStore } from "@/stores/financeStore";
+import { calculateWeeklyFixedTotal, financeVanillaStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
 import { staffVanillaStore } from "@/stores/staffStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
@@ -261,7 +261,14 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   albumVanillaStore.setState(gameState.albumStore, false);
   fandomVanillaStore.setState(gameState.fandomStore, false);
   competitorVanillaStore.setState(gameState.competitorStore, false);
-  financeVanillaStore.setState(gameState.financeStore, false);
+  // Older saves stored weeklyFixedTotal as the raw monthly sum — always rederive it from fixedCosts.
+  financeVanillaStore.setState(
+    {
+      ...gameState.financeStore,
+      weeklyFixedTotal: calculateWeeklyFixedTotal(gameState.financeStore.fixedCosts),
+    },
+    false,
+  );
   calendarVanillaStore.setState(gameState.calendarStore, false);
   eventVanillaStore.setState(gameState.eventStore, false);
 }
