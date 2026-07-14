@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Card } from "@/components/common/Card";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
@@ -16,12 +16,11 @@ export function DecisionCardDeck({ onSelectionChange }: DecisionCardDeckProps) {
     (state) => state.kpopNews[0]?.headline ?? "The market is quiet for now.",
   );
   const cards = useGameStore((state) => state.weeklyDecisions);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
-    {},
+  const selectedOptions = useGameStore(
+    (state) => state.weeklyFlow.selectedDecisionIds,
   );
-  const cardSignature = useMemo(
-    () => cards.map((card) => card.id).join(":"),
-    [cards],
+  const selectWeeklyDecision = useGameStore(
+    (state) => state.selectWeeklyDecision,
   );
   const resolvedDecisions = useMemo(
     () =>
@@ -42,10 +41,6 @@ export function DecisionCardDeck({ onSelectionChange }: DecisionCardDeckProps) {
     [cards, selectedOptions],
   );
   const isComplete = cards.length > 0 && resolvedDecisions.length === cards.length;
-
-  useEffect(() => {
-    setSelectedOptions({});
-  }, [cardSignature]);
 
   useEffect(() => {
     onSelectionChange?.(resolvedDecisions, isComplete);
@@ -93,12 +88,7 @@ export function DecisionCardDeck({ onSelectionChange }: DecisionCardDeckProps) {
                       ? "border-brand-pink bg-brand-pink/18 text-slate-50"
                       : "border-white/8 bg-slate-900/80 text-slate-200 hover:border-brand-cyan/50",
                   ].join(" ")}
-                  onClick={() =>
-                    setSelectedOptions((current) => ({
-                      ...current,
-                      [card.id]: option.id,
-                    }))
-                  }
+                  onClick={() => selectWeeklyDecision(card.id, option.id)}
                 >
                   <span className="block text-sm text-slate-100">
                     {option.label}

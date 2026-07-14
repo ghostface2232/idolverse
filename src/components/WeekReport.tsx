@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
-import type { WeekReport as WeekReportData } from "@/systems/weekProcessor";
+import type { WeeklyReportSnapshot } from "@/types/game";
 
 interface WeekReportProps {
-  report: WeekReportData;
+  report: WeeklyReportSnapshot;
   onClose: () => void;
 }
 

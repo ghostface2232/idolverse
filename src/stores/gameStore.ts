@@ -5,6 +5,15 @@ import { INVESTOR_CONDITIONS } from "@/data/investors";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import type { GameStore, GameStoreState } from "@/types/game";
 
+export const initialWeeklyFlowState: GameStoreState["weeklyFlow"] = {
+  state: "planning_ready",
+  selectedDecisionIds: {},
+  eventQueueIds: [],
+  activeEventIndex: 0,
+  resolutionId: null,
+  report: null,
+};
+
 export const initialGameState: GameStoreState = {
   currentWeek: 1,
   currentSeason: getSeasonForWeek(1),
@@ -35,6 +44,7 @@ export const initialGameState: GameStoreState = {
     focus: null,
     restDay: false,
   },
+  weeklyFlow: initialWeeklyFlowState,
 };
 
 export const gameVanillaStore = createStore<GameStore>()((set) => ({
@@ -88,6 +98,70 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
         ...schedule,
       },
     })),
+  selectWeeklyDecision: (cardId, optionId) =>
+    set((state) => {
+      if (
+        state.weeklyFlow.state === "resolving" ||
+        state.weeklyFlow.state === "report_ready" ||
+        state.weeklyFlow.state === "event_focus"
+      ) {
+        return state;
+      }
+
+      const card = state.weeklyDecisions.find((candidate) => candidate.id === cardId);
+      if (!card?.options.some((option) => option.id === optionId)) {
+        return state;
+      }
+
+      const selectedDecisionIds = {
+        ...state.weeklyFlow.selectedDecisionIds,
+        [cardId]: optionId,
+      };
+      const complete =
+        state.weeklyDecisions.length > 0 &&
+        state.weeklyDecisions.every((decision) => selectedDecisionIds[decision.id]);
+
+      return {
+        weeklyFlow: {
+          ...state.weeklyFlow,
+          state: complete ? "review_ready" : "planning_active",
+          selectedDecisionIds,
+          eventQueueIds: [],
+          activeEventIndex: 0,
+          report: null,
+        },
+      };
+    }),
+  acknowledgeWeeklyReport: () =>
+    set((state) => {
+      if (state.weeklyFlow.state !== "report_ready") return state;
+
+      const hasEvents = state.weeklyFlow.eventQueueIds.length > 0;
+      return {
+        weeklyFlow: {
+          ...state.weeklyFlow,
+          state: hasEvents ? "event_focus" : "planning_ready",
+          selectedDecisionIds: {},
+          activeEventIndex: 0,
+        },
+      };
+    }),
+  advanceWeeklyEvent: () =>
+    set((state) => {
+      if (state.weeklyFlow.state !== "event_focus") return state;
+
+      const nextIndex = state.weeklyFlow.activeEventIndex + 1;
+      const complete = nextIndex >= state.weeklyFlow.eventQueueIds.length;
+      return {
+        weeklyFlow: {
+          ...state.weeklyFlow,
+          state: complete ? "planning_ready" : "event_focus",
+          selectedDecisionIds: {},
+          eventQueueIds: complete ? [] : state.weeklyFlow.eventQueueIds,
+          activeEventIndex: complete ? 0 : nextIndex,
+        },
+      };
+    }),
 }));
 
 export const useGameStore = <T>(selector: (state: GameStore) => T) =>

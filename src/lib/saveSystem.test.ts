@@ -41,6 +41,7 @@ describe("saveSystem 왕복", () => {
       investorConditionProgress: _progress,
       investorPressureWeeks: _pressure,
       investorComplianceCount: _count,
+      weeklyFlow: _weeklyFlow,
       ...legacyGameStore
     } = modern.gameStore;
     const legacy = {
@@ -63,6 +64,14 @@ describe("saveSystem 왕복", () => {
     expect(capturedGame.investorConditionProgress).toEqual({});
     expect(capturedGame.investorPressureWeeks).toBe(0);
     expect(capturedGame.investorComplianceCount).toBe(0);
+    expect(capturedGame.weeklyFlow).toEqual({
+      state: "planning_ready",
+      selectedDecisionIds: {},
+      eventQueueIds: [],
+      activeEventIndex: 0,
+      resolutionId: null,
+      report: null,
+    });
   });
 
   it("직전 세션의 투자사 상태가 다른 세이브 로드로 새어 들어오지 않는다", () => {

@@ -83,6 +83,14 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       weeklyDecisions: [],
       notifications: [],
       trainingSchedule: { intensity: "normal", focus: null, restDay: false },
+      weeklyFlow: {
+        state: "planning_ready",
+        selectedDecisionIds: {},
+        eventQueueIds: [],
+        activeEventIndex: 0,
+        resolutionId: null,
+        report: null,
+      },
     },
     trainee: { trainees: [t1, t2] },
     staff: {

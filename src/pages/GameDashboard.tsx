@@ -14,12 +14,18 @@ import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { EventBus, PhaserEvents } from "@/game/EventBus";
 import { PhaserGame } from "@/game/PhaserGame";
-import { autoSave, captureGameState, DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
-import { applyEventChoice, runWeek } from "@/lib/weekRunner";
+import { captureGameState, DEFAULT_AUTO_SAVE_SLOT, saveGame } from "@/lib/saveSystem";
+import {
+  acknowledgeWeeklyReportAndSave,
+  advanceWeeklyEventAndSave,
+  applyEventChoiceAndSave,
+  runWeek,
+} from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useFinanceStore } from "@/stores/financeStore";
+import { useEventStore } from "@/stores/eventStore";
 import type { GameEvent } from "@/types/game";
 import type { PlayerDecisions, WeekReport as WeekReportData } from "@/systems/weekProcessor";
 
@@ -52,7 +58,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [decisionsComplete, setDecisionsComplete] = useState(false);
   const [activeWeekReport, setActiveWeekReport] =
     useState<WeekReportData | null>(null);
-  const [eventQueue, setEventQueue] = useState<GameEvent[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const isAdvancingRef = useRef(false);
@@ -63,9 +68,17 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const weeklyDecisions = useGameStore((s) => s.weeklyDecisions);
   const notifications = useGameStore((s) => s.notifications);
   const trainingSchedule = useGameStore((s) => s.trainingSchedule);
+  const weeklyFlow = useGameStore((s) => s.weeklyFlow);
   const money = useFinanceStore((s) => s.money);
   const news = useCalendarStore((s) => s.kpopNews);
-  const activeEvent = eventQueue[0] ?? null;
+  const pendingEvents = useEventStore((s) => s.pendingEvents);
+  const activeEventId =
+    weeklyFlow.eventQueueIds[weeklyFlow.activeEventIndex] ?? null;
+  const activeEvent =
+    pendingEvents.find((event) => event.id === activeEventId) ?? null;
+  const displayedWeekReport =
+    activeWeekReport ??
+    (weeklyFlow.state === "report_ready" ? weeklyFlow.report : null);
 
   const remainingDecisions = Math.max(
     0,
@@ -88,7 +101,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const triggerAutoSave = useCallback(() => {
     if (!userId) return;
 
-    void autoSave(userId, DEFAULT_AUTO_SAVE_SLOT, captureGameState()).catch(
+    void saveGame(userId, DEFAULT_AUTO_SAVE_SLOT, captureGameState()).catch(
       (error: unknown) => {
         console.error("Auto-save failed.", error);
       },
@@ -124,7 +137,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       triggerAutoSave();
 
       setActiveWeekReport(report);
-      setEventQueue(report.events);
     } finally {
       isAdvancingRef.current = false;
     }
@@ -136,8 +148,34 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     weeklyDecisions,
   ]);
 
-  const handleResolveEvent = (event: GameEvent, choiceIndex: number | null) => {
-    applyEventChoice(event, choiceIndex ?? -1);
+  const handleResolveEvent = async (
+    event: GameEvent,
+    choiceIndex: number | null,
+  ) => {
+    await applyEventChoiceAndSave(
+      event,
+      choiceIndex ?? -1,
+      userId,
+      DEFAULT_AUTO_SAVE_SLOT,
+    );
+  };
+
+  const handleCloseWeekReport = () => {
+    void acknowledgeWeeklyReportAndSave(
+      userId,
+      DEFAULT_AUTO_SAVE_SLOT,
+    )
+      .then(() => setActiveWeekReport(null))
+      .catch((error: unknown) => {
+        console.error("Weekly report save failed.", error);
+      });
+  };
+
+  const handleCloseEvent = async () => {
+    await advanceWeeklyEventAndSave(
+      userId,
+      DEFAULT_AUTO_SAVE_SLOT,
+    );
   };
 
   return (
@@ -272,18 +310,18 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         notifications={notifications}
       />
 
-      {activeWeekReport ? (
+      {displayedWeekReport ? (
         <WeekReport
-          report={activeWeekReport}
-          onClose={() => setActiveWeekReport(null)}
+          report={displayedWeekReport}
+          onClose={handleCloseWeekReport}
         />
       ) : null}
 
-      {!activeWeekReport && activeEvent ? (
+      {!displayedWeekReport && weeklyFlow.state === "event_focus" && activeEvent ? (
         <EventModal
           event={activeEvent}
           onResolve={(choiceIndex) => handleResolveEvent(activeEvent, choiceIndex)}
-          onClose={() => setEventQueue((current) => current.slice(1))}
+          onClose={handleCloseEvent}
         />
       ) : null}
     </main>

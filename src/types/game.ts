@@ -510,6 +510,77 @@ export interface TrainingScheduleState {
   restDay: boolean;
 }
 
+export type WeeklyFlowState =
+  | "planning_ready"
+  | "planning_active"
+  | "review_ready"
+  | "resolving"
+  | "report_ready"
+  | "event_focus";
+
+export type WeekDeltaSeverity = "info" | "notice" | "warning" | "critical";
+export type WeekDeltaValue = number | string | boolean | null;
+
+export interface WeekDeltaSource {
+  kind:
+    | "decision"
+    | "promotion"
+    | "training"
+    | "chemistry"
+    | "satisfaction"
+    | "album"
+    | "event"
+    | "finance"
+    | "fandom"
+    | "investor"
+    | "calendar"
+    | "system";
+  id: string;
+  label: string;
+}
+
+export interface WeekDeltaTarget {
+  kind: "game" | "trainee" | "album" | "fandom" | "finance";
+  id: string | null;
+  field: string;
+  label: string;
+}
+
+/** 한 주의 결과를 원인과 대상까지 추적할 수 있는 구조화 변화 단위. */
+export interface WeekDelta {
+  id: string;
+  source: WeekDeltaSource;
+  target: WeekDeltaTarget;
+  before: WeekDeltaValue;
+  after: WeekDeltaValue;
+  day: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  severity: WeekDeltaSeverity;
+}
+
+/** 저장 가능한 주간 리포트의 공통 부분. Phase 2 결과 UI는 이 계약만 소비한다. */
+export interface WeeklyReportSnapshot {
+  week: number;
+  season: Season;
+  statChanges: string[];
+  deltas: WeekDelta[];
+  events: GameEvent[];
+  news: KPopNews[];
+  finance: { income: Record<string, number>; expenses: Record<string, number> };
+  warnings: string[];
+  injuries: { traineeId: string; traineeName: string }[];
+  conflicts: { a: string; b: string; resolved: boolean }[];
+  competitorComebacks: string[];
+}
+
+export interface WeeklyFlowSnapshot {
+  state: WeeklyFlowState;
+  selectedDecisionIds: Record<string, string>;
+  eventQueueIds: string[];
+  activeEventIndex: number;
+  resolutionId: string | null;
+  report: WeeklyReportSnapshot | null;
+}
+
 export interface GameStoreState {
   currentWeek: number;
   currentSeason: Season;
@@ -530,6 +601,7 @@ export interface GameStoreState {
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;
+  weeklyFlow: WeeklyFlowSnapshot;
 }
 
 export interface GameStoreActions {
@@ -537,6 +609,9 @@ export interface GameStoreActions {
   addNotification: (notification: Omit<Notification, "id"> & { id?: string }) => void;
   clearNotifications: () => void;
   setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;
+  selectWeeklyDecision: (cardId: string, optionId: string) => void;
+  acknowledgeWeeklyReport: () => void;
+  advanceWeeklyEvent: () => void;
 }
 
 export type GameStore = GameStoreState & GameStoreActions;

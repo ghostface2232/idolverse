@@ -59,6 +59,11 @@ import {
   INVESTOR_PENALTY_GRACE_WEEKS,
 } from "@/data/balance";
 import { INVESTOR_COMPANIES } from "@/data/investors";
+import {
+  captureWeekDeltaState,
+  diffWeekDeltaState,
+  type WeekDeltaState,
+} from "@/systems/weekDelta";
 import type {
   Album,
   AlbumStoreState,
@@ -82,6 +87,9 @@ import type {
   Trainee,
   TraineeStoreState,
   WeeklyDecision,
+  WeeklyReportSnapshot,
+  WeekDelta,
+  WeekDeltaSource,
 } from "@/types/game";
 
 export interface GameSnapshot {
@@ -106,17 +114,7 @@ export interface PlayerDecisions {
   promotionOrders?: PromotionOrder[];
 }
 
-export interface WeekReport {
-  week: number;
-  season: Season;
-  statChanges: string[];
-  events: GameEvent[];
-  news: KPopNews[];
-  finance: { income: Record<string, number>; expenses: Record<string, number> };
-  warnings: string[];
-  injuries: { traineeId: string; traineeName: string }[];
-  conflicts: { a: string; b: string; resolved: boolean }[];
-  competitorComebacks: string[];
+export interface WeekReport extends WeeklyReportSnapshot {
   promotionResults: PromotionResult[];
   awardResults: AwardShowResult[] | null;
 }
@@ -137,6 +135,7 @@ export function processWeek(
     week: snapshot.game.currentWeek,
     season: snapshot.game.currentSeason,
     statChanges: [],
+    deltas: [],
     events: [],
     news: [],
     finance: { income: {}, expenses: {} },
@@ -167,8 +166,34 @@ export function processWeek(
   const manager = staff.find((s) => s.role === "manager") ?? null;
   const upgrades = snapshot.finance.upgrades;
 
+  const getDeltaState = (): WeekDeltaState => ({
+    money,
+    fandom: fandomAxis,
+    trainees,
+    album,
+    investorPressureWeeks,
+  });
+  const recordTransition = (
+    before: WeekDeltaState,
+    source: WeekDeltaSource,
+    day: WeekDelta["day"],
+  ) => {
+    const next = diffWeekDeltaState(before, captureWeekDeltaState(getDeltaState()), {
+      source,
+      day,
+      idPrefix: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}`,
+      startIndex: report.deltas.length,
+    });
+    report.deltas.push(...next);
+  };
+
   // 모든 효과(카드/프로모션/이벤트/투자사 페널티)는 이 헬퍼 하나로만 적용한다.
-  const applyToState = (effects: EffectMap) => {
+  const applyToState = (
+    effects: EffectMap,
+    source?: WeekDeltaSource,
+    day: WeekDelta["day"] = 1,
+  ) => {
+    const before = source ? captureWeekDeltaState(getDeltaState()) : null;
     const next = applyEffects(
       { money, fandom: fandomAxis, trainees, album, investorPressureWeeks },
       effects,
@@ -178,6 +203,7 @@ export function processWeek(
     trainees = next.trainees;
     album = next.album;
     investorPressureWeeks = next.investorPressureWeeks;
+    if (before && source) recordTransition(before, source, day);
   };
 
   // ── 0. Awards (year-end, evaluated first so results feed into later steps)
@@ -254,7 +280,11 @@ export function processWeek(
     if (d.cardId === "emergency-investor" && d.optionId === "comply") {
       investorComplianceCount += 1;
     }
-    applyToState(d.effects);
+    applyToState(
+      d.effects,
+      { kind: "decision", id: `${d.cardId}:${d.optionId}`, label: d.cardId },
+      1,
+    );
   }
 
   // ── 2. Promotions (before training so activity flags are set)
@@ -269,6 +299,7 @@ export function processWeek(
   };
 
   for (let i = 0; i < promotionOrders.length; i++) {
+    const beforePromotion = captureWeekDeltaState(getDeltaState());
     const result = executePromotion(
       promotionOrders[i],
       trainees,
@@ -292,6 +323,15 @@ export function processWeek(
     }
 
     applyToState(result.effects);
+    recordTransition(
+      beforePromotion,
+      {
+        kind: "promotion",
+        id: promotionOrders[i].activityId,
+        label: promotionOrders[i].activityId,
+      },
+      2,
+    );
   }
 
   const excessiveCommercialPenalty = checkExcessiveCommercial(
@@ -299,16 +339,23 @@ export function processWeek(
     promotionOrders,
   );
   if (excessiveCommercialPenalty > 0) {
+    const beforePenalty = captureWeekDeltaState(getDeltaState());
     fandomAxis.fandomDisappointment = clamp(
       fandomAxis.fandomDisappointment + excessiveCommercialPenalty,
       0,
       100,
     );
     report.warnings.push("과도한 상업 활동으로 팬 실망도 상승");
+    recordTransition(
+      beforePenalty,
+      { kind: "promotion", id: "excessive-commercial", label: "과도한 상업 활동" },
+      2,
+    );
   }
 
   // ── 3. Training
   const albumConcept = album?.concept.mood ?? null;
+  const beforeTraining = captureWeekDeltaState(getDeltaState());
   const trainingResult = processTrainingWeek(
     trainees,
     decisions.trainingSchedule,
@@ -318,6 +365,11 @@ export function processWeek(
     { dormLevel: upgrades.dormLevel, studioLevel: upgrades.studioLevel },
   );
   trainees = trainingResult.trainees;
+  recordTransition(
+    beforeTraining,
+    { kind: "training", id: "weekly-training", label: "주간 훈련" },
+    3,
+  );
   report.injuries = trainingResult.injuries;
   if (trainingResult.injuries.length > 0) {
     report.warnings.push(
@@ -326,12 +378,18 @@ export function processWeek(
   }
 
   // ── 4. Chemistry
+  const beforeChemistry = captureWeekDeltaState(getDeltaState());
   const chemResult = updateChemistry(trainees, false, seed + 1);
   trainees = trainees.map((t) => {
     const update = chemResult.updates.find((u) => u.traineeId === t.id);
     return update ? { ...t, chemistry: update.chemistry } : t;
   });
   report.conflicts = chemResult.conflicts;
+  recordTransition(
+    beforeChemistry,
+    { kind: "chemistry", id: "weekly-chemistry", label: "팀 케미" },
+    4,
+  );
 
   // ── 5. Satisfaction
   const lastReleasedAlbum =
@@ -352,11 +410,17 @@ export function processWeek(
     musicShowWin: false,
     goodFanReaction: fandomAxis.fandomLoyalty > 60,
   };
+  const beforeSatisfaction = captureWeekDeltaState(getDeltaState());
   const satResult = updateSatisfaction(trainees, satCtx);
   trainees = trainees.map((t) => {
     const delta = satResult.deltas.find((d) => d.traineeId === t.id);
     return delta ? { ...t, satisfaction: delta.after } : t;
   });
+  recordTransition(
+    beforeSatisfaction,
+    { kind: "satisfaction", id: "weekly-satisfaction", label: "멤버 만족도" },
+    5,
+  );
   for (const risk of satResult.leaveRisks) {
     report.warnings.push(
       risk.level === "leaving"
@@ -367,7 +431,13 @@ export function processWeek(
 
   // ── 6. Album progress
   if (album) {
+    const beforeAlbum = captureWeekDeltaState(getDeltaState());
     album = progressAlbum(album, staff, trainees);
+    recordTransition(
+      beforeAlbum,
+      { kind: "album", id: album.id, label: album.title },
+      5,
+    );
   }
 
   // ── 7. Competitor simulation
@@ -411,7 +481,11 @@ export function processWeek(
     // base effects는 이벤트 자체의 영향(예: 루머로 인한 피해)이고,
     // 선택지 effects는 대응에 따른 보정이다. base는 발생 시점에 1회 적용하고
     // 선택지 effects는 해결 시점에 weekRunner.applyEventChoice가 적용한다.
-    applyToState(re.template.effects);
+    applyToState(
+      re.template.effects,
+      { kind: "event", id: re.gameEvent.id, label: re.gameEvent.title },
+      5,
+    );
   }
 
   const vacationScandal = rollVacationScandal(
@@ -420,12 +494,22 @@ export function processWeek(
     seed + 3,
   );
   if (vacationScandal) {
+    const beforeScandal = captureWeekDeltaState(getDeltaState());
     report.warnings.push(`${vacationScandal.traineeName} 연애 스캔들 발생`);
     fandomAxis.fandomDisappointment = Math.min(
       100,
       fandomAxis.fandomDisappointment + 12,
     );
     fandomAxis.public = Math.min(100, fandomAxis.public + 4);
+    recordTransition(
+      beforeScandal,
+      {
+        kind: "event",
+        id: `vacation-scandal:${vacationScandal.traineeId}`,
+        label: "연애 스캔들",
+      },
+      5,
+    );
   }
 
   // ── 9. Calendar / news
@@ -459,8 +543,17 @@ export function processWeek(
     promotionIncome: promotionTotalIncome,
     promotionCost: promotionTotalCost,
   };
-  const financeResult = processWeeklyFinances(snapshot.finance, revenueCtx);
+  const beforeFinance = captureWeekDeltaState(getDeltaState());
+  const financeResult = processWeeklyFinances(
+    { ...snapshot.finance, money },
+    revenueCtx,
+  );
   money = financeResult.money;
+  recordTransition(
+    beforeFinance,
+    { kind: "finance", id: "weekly-finance", label: "주간 결산" },
+    6,
+  );
   report.finance.income = financeResult.income;
   report.finance.expenses = financeResult.expenses;
   report.warnings.push(...financeResult.warnings);
@@ -511,8 +604,14 @@ export function processWeek(
     awardWin: playerWonAward,
     qualityDecline: false,
   };
+  const beforeFandom = captureWeekDeltaState(getDeltaState());
   const fandomResult = updateFandom(fandomAxis, fandomCtx);
   fandomAxis = fandomResult.axis;
+  recordTransition(
+    beforeFandom,
+    { kind: "fandom", id: "weekly-fandom", label: "주간 팬덤 변화" },
+    6,
+  );
 
   if (fandomResult.crisis) {
     const crisis = checkFandomCrisis(fandomAxis);
@@ -590,7 +689,11 @@ export function processWeek(
       const penalties = applyInvestorPenalty(investor);
       for (const penalty of penalties) {
         report.warnings.push(`투자사 페널티: ${penalty.description}`);
-        applyToState(penalty.effects);
+        applyToState(
+          penalty.effects,
+          { kind: "investor", id: investor.id, label: penalty.description },
+          7,
+        );
       }
     }
 
@@ -598,10 +701,25 @@ export function processWeek(
     // 이벤트/카드발 압박(investorPressureWeeks)은 남은 주 수만큼 별도로 유지한다.
     investorPenaltyActive = anyConditionFailing || investorPressureWeeks > 0;
   }
+  const beforePressureDecay = captureWeekDeltaState(getDeltaState());
   investorPressureWeeks = Math.max(0, investorPressureWeeks - 1);
+  recordTransition(
+    beforePressureDecay,
+    { kind: "investor", id: "pressure-decay", label: "투자사 압박 경과" },
+    7,
+  );
 
   // ── 13. Advance week
   const advancedGame = advanceWeekState(snapshot.game);
+  report.deltas.push({
+    id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+    source: { kind: "calendar", id: "advance-week", label: "주간 진행" },
+    target: { kind: "game", id: null, field: "currentWeek", label: "현재 주차" },
+    before: snapshot.game.currentWeek,
+    after: advancedGame.currentWeek,
+    day: 7,
+    severity: "info",
+  });
 
   // ── 13.5 Season trend update
   let updatedCalendar = { ...snapshot.calendar };
@@ -721,6 +839,20 @@ export function processWeek(
       ],
     },
   };
+
+  report.statChanges = report.deltas
+    .filter(
+      (delta) =>
+        delta.target.kind === "trainee" &&
+        (delta.target.field.startsWith("stats.") ||
+          delta.target.field === "condition" ||
+          delta.target.field === "stress" ||
+          delta.target.field === "satisfaction"),
+    )
+    .map(
+      (delta) =>
+        `${delta.target.label}: ${String(delta.before)} → ${String(delta.after)} (${delta.source.label})`,
+    );
 
   return { newState, weekReport: report };
 }

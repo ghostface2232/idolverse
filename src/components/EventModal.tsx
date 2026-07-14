@@ -5,8 +5,8 @@ import type { GameEvent, RandomEventTone, EffectMap } from "@/types/game";
 
 interface EventModalProps {
   event: GameEvent;
-  onResolve: (choiceIndex: number | null) => void;
-  onClose: () => void;
+  onResolve: (choiceIndex: number | null) => void | Promise<void>;
+  onClose: () => void | Promise<void>;
 }
 
 const TONE_CLASSES: Record<RandomEventTone, string> = {
@@ -26,27 +26,50 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
     null,
   );
   const [resolved, setResolved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const tone = event.tone ?? inferTone(event.type);
   const choices = event.choices ?? [];
   const selectedChoice =
     selectedChoiceIndex === null ? null : choices[selectedChoiceIndex] ?? null;
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    if (saving) return;
+
     if (choices.length === 0 && !resolved) {
-      onResolve(null);
-      onClose();
+      setSaving(true);
+      try {
+        await onResolve(null);
+        await onClose();
+      } catch (error) {
+        console.error("Event resolution save failed.", error);
+        setSaving(false);
+      }
       return;
     }
 
     if (resolved) {
-      onClose();
+      setSaving(true);
+      try {
+        await onClose();
+      } catch (error) {
+        console.error("Event queue save failed.", error);
+        setSaving(false);
+      }
     }
   };
 
-  const handleSelect = (choiceIndex: number) => {
-    setSelectedChoiceIndex(choiceIndex);
-    setResolved(true);
-    onResolve(choiceIndex);
+  const handleSelect = async (choiceIndex: number) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onResolve(choiceIndex);
+      setSelectedChoiceIndex(choiceIndex);
+      setResolved(true);
+    } catch (error) {
+      console.error("Event resolution save failed.", error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -55,8 +78,8 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
       onClose={handleClose}
       footer={
         resolved || choices.length === 0 ? (
-          <Button className="w-full" onClick={handleClose}>
-            확인
+          <Button className="w-full" disabled={saving} onClick={handleClose}>
+            {saving ? "저장 중…" : "확인"}
           </Button>
         ) : null
       }
@@ -81,6 +104,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
             {choices.map((choice, index) => (
               <button
                 key={choice.label}
+                disabled={saving}
                 className="min-h-11 w-full rounded-2xl border border-white/8 bg-slate-950/70 px-4 py-3 text-left transition hover:border-brand-cyan/60"
                 onClick={() => handleSelect(index)}
               >

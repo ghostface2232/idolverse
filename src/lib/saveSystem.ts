@@ -7,7 +7,11 @@ import { competitorVanillaStore } from "@/stores/competitorStore";
 import { eventVanillaStore } from "@/stores/eventStore";
 import { fandomVanillaStore } from "@/stores/fandomStore";
 import { calculateWeeklyFixedTotal, financeVanillaStore } from "@/stores/financeStore";
-import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
+import {
+  gameVanillaStore,
+  initialWeeklyFlowState,
+  useGameStore,
+} from "@/stores/gameStore";
 import { staffVanillaStore } from "@/stores/staffStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
 import type {
@@ -115,6 +119,9 @@ function extractGameStoreState(): GameStoreState {
     addNotification: _addNotification,
     clearNotifications: _clearNotifications,
     setTrainingSchedule: _setTrainingSchedule,
+    selectWeeklyDecision: _selectWeeklyDecision,
+    acknowledgeWeeklyReport: _acknowledgeWeeklyReport,
+    advanceWeeklyEvent: _advanceWeeklyEvent,
     ...state
   } = gameVanillaStore.getState();
 
@@ -254,6 +261,14 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     awardHistory: rest.awardHistory ?? [],
+    weeklyFlow: {
+      ...structuredClone(initialWeeklyFlowState),
+      ...(rest.weeklyFlow ?? {}),
+      selectedDecisionIds: rest.weeklyFlow?.selectedDecisionIds ?? {},
+      eventQueueIds: rest.weeklyFlow?.eventQueueIds ?? [],
+      activeEventIndex: rest.weeklyFlow?.activeEventIndex ?? 0,
+      report: rest.weeklyFlow?.report ?? null,
+    },
   };
 
   gameVanillaStore.setState(gameStore, false);
