@@ -161,6 +161,7 @@ export function processWeek(
   };
   let money = snapshot.finance.money;
   let investorPenaltyActive = snapshot.game.investorPenaltyActive;
+  let investorPressureWeeks = snapshot.game.investorPressureWeeks ?? 0;
   const staff = snapshot.staff.staff;
   const manager = staff.find((s) => s.role === "manager") ?? null;
   const upgrades = snapshot.finance.upgrades;
@@ -168,14 +169,14 @@ export function processWeek(
   // 모든 효과(카드/프로모션/이벤트/투자사 페널티)는 이 헬퍼 하나로만 적용한다.
   const applyToState = (effects: EffectMap) => {
     const next = applyEffects(
-      { money, fandom: fandomAxis, trainees, album, investorPenaltyActive },
+      { money, fandom: fandomAxis, trainees, album, investorPressureWeeks },
       effects,
     );
     money = next.money;
     fandomAxis = next.fandom;
     trainees = next.trainees;
     album = next.album;
-    investorPenaltyActive = next.investorPenaltyActive;
+    investorPressureWeeks = next.investorPressureWeeks;
   };
 
   // ── 0. Awards (year-end, evaluated first so results feed into later steps)
@@ -525,6 +526,7 @@ export function processWeek(
     );
 
     let anyConditionFailing = false;
+    let penaltyDueThisWeek = false;
     for (const check of investorChecks) {
       if (check.met) {
         // 회복된 조건은 진행 상태를 지운다. 재실패하면 유예부터 다시 시작한다.
@@ -556,11 +558,16 @@ export function processWeek(
         continue;
       }
 
-      // 유예 기간이 끝난 조건은 페널티를 1회만 집행하고 기록한다.
       investorConditionProgress[check.conditionId] = {
         ...progress,
         penaltyApplied: true,
       };
+      penaltyDueThisWeek = true;
+    }
+
+    // 페널티는 투자사 단위 패키지이므로, 같은 주에 여러 조건의 유예가
+    // 끝나도(예: 넥스트비트의 26주 마감 2건 동시 미달) 1회만 집행한다.
+    if (penaltyDueThisWeek) {
       const penalties = applyInvestorPenalty(investor);
       for (const penalty of penalties) {
         report.warnings.push(`투자사 페널티: ${penalty.description}`);
@@ -568,9 +575,11 @@ export function processWeek(
       }
     }
 
-    // 미달 조건이 하나도 없으면 압박 상태를 해제한다(영구 고착 방지).
-    investorPenaltyActive = anyConditionFailing;
+    // 조건발 압박은 미달 여부로 매주 재계산해 영구 고착을 막고,
+    // 이벤트/카드발 압박(investorPressureWeeks)은 남은 주 수만큼 별도로 유지한다.
+    investorPenaltyActive = anyConditionFailing || investorPressureWeeks > 0;
   }
+  investorPressureWeeks = Math.max(0, investorPressureWeeks - 1);
 
   // ── 13. Advance week
   const advancedGame = advanceWeekState(snapshot.game);
@@ -627,6 +636,7 @@ export function processWeek(
       ...advancedGame,
       investorPenaltyActive,
       investorConditionProgress,
+      investorPressureWeeks,
       investorComplianceCount,
       weeklyDecisions: nextDecisions,
       notifications: [

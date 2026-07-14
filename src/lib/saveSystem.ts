@@ -251,6 +251,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
       restDay: false,
     },
     investorConditionProgress: rest.investorConditionProgress ?? {},
+    investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
   };
 

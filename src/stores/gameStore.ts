@@ -17,6 +17,7 @@ const initialGameState: GameStoreState = {
   investorConditions: INVESTOR_CONDITIONS.entertainment,
   investorPenaltyActive: false,
   investorConditionProgress: {},
+  investorPressureWeeks: 0,
   investorComplianceCount: 0,
   weeklyDecisions: generateWeeklyDecisionCards(1, getSeasonForWeek(1)),
   notifications: [

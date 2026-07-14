@@ -76,6 +76,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       investorConditions: investor.conditions,
       investorPenaltyActive: false,
       investorConditionProgress: {},
+      investorPressureWeeks: 0,
       investorComplianceCount: 0,
       weeklyDecisions: [],
       notifications: [],

@@ -39,6 +39,7 @@ describe("saveSystem 왕복", () => {
     const {
       trainingSchedule: _trainingSchedule,
       investorConditionProgress: _progress,
+      investorPressureWeeks: _pressure,
       investorComplianceCount: _count,
       ...legacyGameStore
     } = modern.gameStore;
@@ -60,6 +61,7 @@ describe("saveSystem 왕복", () => {
       restDay: false,
     });
     expect(capturedGame.investorConditionProgress).toEqual({});
+    expect(capturedGame.investorPressureWeeks).toBe(0);
     expect(capturedGame.investorComplianceCount).toBe(0);
   });
 

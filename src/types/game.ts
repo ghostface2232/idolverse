@@ -167,7 +167,7 @@ export type EffectKey =
   | "fandomDisappointment"
   | "global"
   | "industry"
-  // 게임 상태 플래그 (value > 0 → true)
+  // 투자사 압박 (value = 압박 지속 주 수, 0 이하 = 즉시 해제)
   | "investorPressure"
   // 전체 트레이니 공통
   | "condition"
@@ -512,6 +512,8 @@ export interface GameStoreState {
   investorConditions: InvestorCondition[];
   investorPenaltyActive: boolean;
   investorConditionProgress: Record<string, InvestorConditionProgress>;
+  /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
+  investorPressureWeeks: number;
   investorComplianceCount: number;
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
