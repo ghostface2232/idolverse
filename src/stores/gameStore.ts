@@ -14,6 +14,7 @@ export const initialWeeklyFlowState: GameStoreState["weeklyFlow"] = {
 };
 
 export const initialGameState: GameStoreState = {
+  saveRevision: 0,
   currentWeek: 1,
   currentSeason: getSeasonForWeek(1),
   currentYear: 1,

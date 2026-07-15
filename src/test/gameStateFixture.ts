@@ -66,6 +66,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
 
   return {
     game: {
+      saveRevision: 0,
       currentWeek: week,
       currentSeason: getSeasonForWeek(week),
       currentYear: year,

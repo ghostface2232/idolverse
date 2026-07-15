@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { GAME_BALANCE } from "@/data/balance";
 import { getSupabaseClient } from "@/lib/supabase";
+import { SaveCoordinator } from "@/lib/saveCoordinator";
 import { albumVanillaStore } from "@/stores/albumStore";
 import { calendarVanillaStore } from "@/stores/calendarStore";
 import { competitorVanillaStore } from "@/stores/competitorStore";
@@ -30,6 +31,8 @@ import type {
 export const MAX_SAVE_SLOTS = 3;
 export const AUTO_SAVE_INTERVAL_WEEKS = 5;
 export const DEFAULT_AUTO_SAVE_SLOT = 1;
+
+const saveCoordinator = new SaveCoordinator();
 
 export interface GameStateSnapshot {
   gameStore: GameStoreState;
@@ -61,6 +64,7 @@ interface SaveRow {
   played_weeks: number;
   current_phase: GamePhase;
   group_name: string;
+  save_revision: number;
   updated_at: string;
 }
 
@@ -252,6 +256,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   // 맡기면 직전에 플레이하던 다른 세이브의 값이 새어 들어올 수 있다.
   const gameStore: GameStoreState = {
     ...rest,
+    saveRevision: rest.saveRevision ?? 0,
     trainingSchedule: rest.trainingSchedule ?? {
       intensity: "normal",
       focus: null,
@@ -295,45 +300,57 @@ export async function saveGame(
   gameState: GameStateSnapshot,
 ) {
   assertValidSlotNumber(slotNumber);
+  const key = saveQueueKey(userId, slotNumber);
+  const baseRevision = gameState.gameStore.saveRevision ?? 0;
+  const coordinated = await saveCoordinator.enqueue(
+    key,
+    baseRevision,
+    async (saveRevision) => {
+      const supabase = getSupabaseClient();
+      const serializableState = serializeGameState(gameState);
+      serializableState.gameStore.saveRevision = saveRevision;
+      const {
+        currentWeek,
+        currentYear,
+        currentPhase,
+        groupName,
+      } = serializableState.gameStore;
+      const playedWeeks =
+        (currentYear - 1) * GAME_BALANCE.weeksPerYear + currentWeek;
+      const saveName = `${groupName} - Y${currentYear} W${currentWeek}`;
 
-  const supabase = getSupabaseClient();
-  const serializableState = serializeGameState(gameState);
-  const {
-    currentWeek,
-    currentYear,
-    currentPhase,
-    groupName,
-  } = serializableState.gameStore;
-  const playedWeeks =
-    (currentYear - 1) * GAME_BALANCE.weeksPerYear + currentWeek;
-  const saveName = `${groupName} - Y${currentYear} W${currentWeek}`;
+      const { data, error } = await supabase
+        .from("saves")
+        .upsert(
+          {
+            user_id: userId,
+            slot_number: slotNumber,
+            save_data: serializableState,
+            save_name: saveName,
+            played_weeks: playedWeeks,
+            current_phase: currentPhase,
+            group_name: groupName,
+            save_revision: saveRevision,
+          },
+          {
+            onConflict: "user_id,slot_number",
+          },
+        )
+        .select(
+          "slot_number, save_name, played_weeks, current_phase, group_name, save_revision, updated_at",
+        )
+        .single();
 
-  const { data, error } = await supabase
-    .from("saves")
-    .upsert(
-      {
-        user_id: userId,
-        slot_number: slotNumber,
-        save_data: serializableState,
-        save_name: saveName,
-        played_weeks: playedWeeks,
-        current_phase: currentPhase,
-        group_name: groupName,
-      },
-      {
-        onConflict: "user_id,slot_number",
-      },
-    )
-    .select(
-      "slot_number, save_name, played_weeks, current_phase, group_name, updated_at",
-    )
-    .single();
+      if (error) throw error;
 
-  if (error) {
-    throw error;
-  }
+      return { row: data, gameState: serializableState };
+    },
+  );
 
-  return data;
+  return {
+    ...coordinated.value,
+    saveRevision: coordinated.revision,
+  };
 }
 
 export async function loadGame(userId: string, slotNumber: number) {
@@ -342,10 +359,10 @@ export async function loadGame(userId: string, slotNumber: number) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("saves")
-    .select("save_data")
+    .select("save_data, save_revision")
     .eq("user_id", userId)
     .eq("slot_number", slotNumber)
-    .maybeSingle<Pick<SaveRow, "save_data">>();
+    .maybeSingle<Pick<SaveRow, "save_data" | "save_revision">>();
 
   if (error) {
     throw error;
@@ -355,7 +372,22 @@ export async function loadGame(userId: string, slotNumber: number) {
     return null;
   }
 
-  const gameState = deserializeGameState(data.save_data);
+  const deserialized = deserializeGameState(data.save_data);
+  const loadedRevision = Math.max(
+    normalizeSaveRevision(deserialized.gameStore.saveRevision),
+    normalizeSaveRevision(data.save_revision),
+  );
+  const gameState: GameStateSnapshot = {
+    ...deserialized,
+    gameStore: {
+      ...deserialized.gameStore,
+      saveRevision: loadedRevision,
+    },
+  };
+  saveCoordinator.noteLoadedRevision(
+    saveQueueKey(userId, slotNumber),
+    loadedRevision,
+  );
   hydrateGameState(gameState);
 
   return gameState;
@@ -366,7 +398,7 @@ export async function listSaves(userId: string): Promise<SaveSlotSummary[]> {
   const { data, error } = await supabase
     .from("saves")
     .select(
-      "slot_number, save_data, save_name, played_weeks, current_phase, group_name, updated_at",
+      "slot_number, save_data, save_name, played_weeks, current_phase, group_name, save_revision, updated_at",
     )
     .eq("user_id", userId)
     .order("slot_number", { ascending: true })
@@ -409,6 +441,8 @@ export async function deleteSave(userId: string, slotNumber: number) {
   if (error) {
     throw error;
   }
+
+  saveCoordinator.forget(saveQueueKey(userId, slotNumber));
 }
 
 export async function autoSave(
@@ -442,4 +476,14 @@ export function useAutoSave(
       console.error("Auto-save failed.", error);
     });
   }, [currentWeek, slotNumber, userId]);
+}
+
+function saveQueueKey(userId: string, slotNumber: number) {
+  return `${userId}:${slotNumber}`;
+}
+
+function normalizeSaveRevision(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : 0;
 }

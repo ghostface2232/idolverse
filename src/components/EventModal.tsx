@@ -22,37 +22,41 @@ const TONE_LABELS: Record<RandomEventTone, string> = {
 };
 
 export function EventModal({ event, onResolve, onClose }: EventModalProps) {
-  const [selectedChoiceIndex, setSelectedChoiceIndex] = useState<number | null>(
-    null,
-  );
-  const [resolved, setResolved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const tone = event.tone ?? inferTone(event.type);
   const choices = event.choices ?? [];
   const selectedChoice =
-    selectedChoiceIndex === null ? null : choices[selectedChoiceIndex] ?? null;
+    event.resolvedChoiceIndex == null
+      ? null
+      : choices[event.resolvedChoiceIndex] ?? null;
 
   const handleClose = async () => {
     if (saving) return;
 
-    if (choices.length === 0 && !resolved) {
+    setErrorMessage(null);
+    if (choices.length === 0 && !event.resolved) {
       setSaving(true);
       try {
         await onResolve(null);
         await onClose();
       } catch (error) {
         console.error("Event resolution save failed.", error);
+        setErrorMessage("이벤트 저장에 실패했습니다. 다시 시도해 주세요.");
+      } finally {
         setSaving(false);
       }
       return;
     }
 
-    if (resolved) {
+    if (event.resolved) {
       setSaving(true);
       try {
         await onClose();
       } catch (error) {
         console.error("Event queue save failed.", error);
+        setErrorMessage("다음 이벤트로 이동하지 못했습니다. 다시 시도해 주세요.");
+      } finally {
         setSaving(false);
       }
     }
@@ -60,13 +64,13 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
 
   const handleSelect = async (choiceIndex: number) => {
     if (saving) return;
+    setErrorMessage(null);
     setSaving(true);
     try {
       await onResolve(choiceIndex);
-      setSelectedChoiceIndex(choiceIndex);
-      setResolved(true);
     } catch (error) {
       console.error("Event resolution save failed.", error);
+      setErrorMessage("선택 결과를 저장하지 못했습니다. 다시 선택해 주세요.");
     } finally {
       setSaving(false);
     }
@@ -76,9 +80,10 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
     <Modal
       title="이벤트"
       onClose={handleClose}
+      isCloseDisabled={saving}
       footer={
-        resolved || choices.length === 0 ? (
-          <Button className="w-full" disabled={saving} onClick={handleClose}>
+        event.resolved || choices.length === 0 ? (
+          <Button className="w-full" disabled={saving} onPress={handleClose}>
             {saving ? "저장 중…" : "확인"}
           </Button>
         ) : null
@@ -99,7 +104,16 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
           <p className="text-sm leading-6 text-slate-300">{event.description}</p>
         </div>
 
-        {choices.length > 0 && !resolved ? (
+        {errorMessage ? (
+          <p
+            role="alert"
+            className="rounded-xl bg-state-danger/12 px-3 py-2 text-sm text-rose-200"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+
+        {choices.length > 0 && !event.resolved ? (
           <div className="space-y-3">
             {choices.map((choice, index) => (
               <button
@@ -122,13 +136,19 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
           </div>
         ) : null}
 
-        {resolved && selectedChoice ? (
+        {event.resolved && selectedChoice ? (
           <div className="rounded-2xl bg-slate-950/60 p-4">
             <p className="text-sm text-slate-100">{selectedChoice.label}</p>
             <p className="mt-2 text-xs text-slate-400">
               {selectedChoice.tradeoff}
             </p>
             <EffectList effects={selectedChoice.effects} />
+          </div>
+        ) : null}
+
+        {event.resolved && !selectedChoice ? (
+          <div className="rounded-2xl bg-slate-950/60 p-4">
+            <p className="text-sm text-slate-100">이벤트 처리가 완료되었습니다.</p>
           </div>
         ) : null}
       </div>

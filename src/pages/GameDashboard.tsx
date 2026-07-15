@@ -16,12 +16,12 @@ import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
-import { captureGameState, DEFAULT_AUTO_SAVE_SLOT, saveGame } from "@/lib/saveSystem";
+import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
 import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
   applyEventChoiceAndSave,
-  runWeek,
+  runWeekAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
 import { useCalendarStore } from "@/stores/calendarStore";
@@ -55,6 +55,8 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
+  const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
   const currentWeek = useGameStore((state) => state.currentWeek);
@@ -77,7 +79,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const activeEvent =
     pendingEvents.find((event) => event.id === activeEventId) ?? null;
   const displayedWeekReport =
-    weeklyFlow.state === "report_ready" ? weeklyFlow.report : null;
+    weeklyFlow.state === "report_ready" && !isAdvancing
+      ? weeklyFlow.report
+      : null;
   const totalAlerts = notifications.length + news.length;
   const primaryCondition = investorConditions[0];
   const primaryRisk = useMemo(
@@ -110,38 +114,35 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     [weeklyDecisions, weeklyFlow.selectedDecisionIds],
   );
 
-  const triggerAutoSave = useCallback(() => {
-    if (!userId) return;
-
-    void saveGame(userId, DEFAULT_AUTO_SAVE_SLOT, captureGameState()).catch(
-      (error: unknown) => {
-        console.error("Auto-save failed.", error);
-      },
-    );
-  }, [userId]);
-
-  const handleAdvanceWeek = useCallback(() => {
+  const handleAdvanceWeek = useCallback(async () => {
     if (!canResolveWeek || isAdvancingRef.current) return;
 
     isAdvancingRef.current = true;
     setIsAdvancing(true);
+    setWorkflowError(null);
 
     try {
-      runWeek({
-        trainingSchedule: {
-          intensity: trainingSchedule.intensity,
-          focus: trainingSchedule.focus ?? undefined,
-          restDay: trainingSchedule.restDay,
+      await runWeekAndSave(
+        {
+          trainingSchedule: {
+            intensity: trainingSchedule.intensity,
+            focus: trainingSchedule.focus ?? undefined,
+            restDay: trainingSchedule.restDay,
+          },
+          resolvedDecisions,
+          promotionOrders: [],
         },
-        resolvedDecisions,
-        promotionOrders: [],
-      });
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
 
       setSheetOpen(false);
       presentationBus.emit("playWeekTimeline", {
         resolutionId: gameVanillaStore.getState().weeklyFlow.resolutionId,
       });
-      triggerAutoSave();
+    } catch (error) {
+      console.error("Weekly resolution save failed.", error);
+      setWorkflowError("주간 진행을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       isAdvancingRef.current = false;
       setIsAdvancing(false);
@@ -150,7 +151,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     canResolveWeek,
     resolvedDecisions,
     trainingSchedule,
-    triggerAutoSave,
+    userId,
   ]);
 
   const handleResolveEvent = async (
@@ -165,12 +166,18 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     );
   };
 
-  const handleCloseWeekReport = () => {
-    void acknowledgeWeeklyReportAndSave(userId, DEFAULT_AUTO_SAVE_SLOT).catch(
-      (error: unknown) => {
-        console.error("Weekly report save failed.", error);
-      },
-    );
+  const handleCloseWeekReport = async () => {
+    if (isWorkflowSaving) return;
+    setIsWorkflowSaving(true);
+    setWorkflowError(null);
+    try {
+      await acknowledgeWeeklyReportAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+    } catch (error) {
+      console.error("Weekly report save failed.", error);
+      setWorkflowError("리포트 확인 상태를 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsWorkflowSaving(false);
+    }
   };
 
   const handleCloseEvent = async () => {
@@ -183,11 +190,21 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     ? `W-${Math.max(0, primaryCondition.deadlineWeeks - elapsedWeeks)}`
     : "상시";
   const plan = (
-    <DecisionCardDeck
-      key={`${currentYear}-W${currentWeek}`}
-      onConfirm={handleAdvanceWeek}
-      isRunning={isAdvancing}
-    />
+    <div className="space-y-3">
+      {workflowError ? (
+        <p
+          role="alert"
+          className="rounded-xl bg-state-danger/12 px-3 py-2 text-sm text-rose-200"
+        >
+          {workflowError}
+        </p>
+      ) : null}
+      <DecisionCardDeck
+        key={`${currentYear}-W${currentWeek}`}
+        onConfirm={handleAdvanceWeek}
+        isRunning={isAdvancing}
+      />
+    </div>
   );
 
   return (
@@ -264,11 +281,17 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       />
 
       {displayedWeekReport ? (
-        <WeekReport report={displayedWeekReport} onClose={handleCloseWeekReport} />
+        <WeekReport
+          report={displayedWeekReport}
+          isSaving={isWorkflowSaving}
+          errorMessage={workflowError}
+          onClose={handleCloseWeekReport}
+        />
       ) : null}
 
       {weeklyFlow.state === "event_focus" && activeEvent ? (
         <EventModal
+          key={activeEvent.id}
           event={activeEvent}
           onResolve={(choiceIndex) => handleResolveEvent(activeEvent, choiceIndex)}
           onClose={handleCloseEvent}

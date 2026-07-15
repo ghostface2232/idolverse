@@ -5,6 +5,7 @@ import {
   DEFAULT_AUTO_SAVE_SLOT,
   hydrateGameState,
   saveGame,
+  type GameStateSnapshot,
 } from "@/lib/saveSystem";
 import {
   captureWeekDeltaState,
@@ -51,6 +52,32 @@ export function applyGameSnapshot(snapshot: GameSnapshot) {
 }
 
 export function runWeek(decisions: PlayerDecisions) {
+  const resolution = resolveWeek(decisions);
+  applyGameSnapshot(resolution.finalSnapshot);
+  return resolution.report;
+}
+
+export async function runWeekAndSave(
+  decisions: PlayerDecisions,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const resolution = resolveWeek(decisions);
+  try {
+    const saved = await saveGame(
+      userId,
+      slotNumber,
+      toPersistedSnapshot(resolution.finalSnapshot),
+    );
+    hydrateGameState(saved.gameState);
+    return resolution.report;
+  } catch (error) {
+    applyGameSnapshot(resolution.originalSnapshot);
+    throw error;
+  }
+}
+
+function resolveWeek(decisions: PlayerDecisions) {
   const snapshot = buildGameSnapshot();
   const resolutionId = createWeeklyResolutionId(
     snapshot.game.currentYear,
@@ -103,13 +130,28 @@ export function runWeek(decisions: PlayerDecisions) {
     report: result.weekReport,
   };
 
-  applyGameSnapshot(result.newState);
-
-  return result.weekReport;
+  return {
+    originalSnapshot: snapshot,
+    finalSnapshot: result.newState,
+    report: result.weekReport,
+  };
 }
 
 export function applyEventChoice(event: GameEvent, choiceIndex: number) {
-  const snapshot = buildGameSnapshot();
+  const resolution = resolveEventChoice(
+    buildGameSnapshot(),
+    event,
+    choiceIndex,
+  );
+  applyGameSnapshot(resolution.nextSnapshot);
+  return resolution.result;
+}
+
+function resolveEventChoice(
+  snapshot: GameSnapshot,
+  event: GameEvent,
+  choiceIndex: number,
+) {
   const currentEventId =
     snapshot.game.weeklyFlow.eventQueueIds[
       snapshot.game.weeklyFlow.activeEventIndex
@@ -129,8 +171,8 @@ export function applyEventChoice(event: GameEvent, choiceIndex: number) {
     );
   }
 
-  const choice = event.choices?.[choiceIndex] ?? null;
-  if ((event.choices?.length ?? 0) > 0 && !choice) {
+  const choice = pendingEvent.choices?.[choiceIndex] ?? null;
+  if ((pendingEvent.choices?.length ?? 0) > 0 && !choice) {
     throw new RangeError(`Invalid choice index ${choiceIndex} for event ${event.id}.`);
   }
 
@@ -154,7 +196,7 @@ export function applyEventChoice(event: GameEvent, choiceIndex: number) {
       }
     : null;
 
-  applyGameSnapshot({
+  const committedSnapshot: GameSnapshot = {
     ...nextSnapshot,
     game: {
       ...nextSnapshot.game,
@@ -170,16 +212,20 @@ export function applyEventChoice(event: GameEvent, choiceIndex: number) {
           ? {
               ...pendingEvent,
               resolved: true,
+              resolvedChoiceIndex: choice ? choiceIndex : null,
             }
           : pendingEvent,
       ),
     },
-  });
+  };
 
   return {
-    effects,
-    choice,
-    deltas: eventDeltas,
+    nextSnapshot: committedSnapshot,
+    result: {
+      effects,
+      choice,
+      deltas: eventDeltas,
+    },
   };
 }
 
@@ -189,9 +235,18 @@ export async function applyEventChoiceAndSave(
   userId: string,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
-  const result = applyEventChoice(event, choiceIndex);
-  await saveGame(userId, slotNumber, captureGameState());
-  return result;
+  const resolution = resolveEventChoice(
+    buildGameSnapshot(),
+    event,
+    choiceIndex,
+  );
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(resolution.nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+  return resolution.result;
 }
 
 export async function advanceWeeklyEventAndSave(
@@ -212,7 +267,7 @@ export async function advanceWeeklyEventAndSave(
 
   const nextIndex = flow.activeEventIndex + 1;
   const complete = nextIndex >= flow.eventQueueIds.length;
-  applyGameSnapshot({
+  const nextSnapshot: GameSnapshot = {
     ...snapshot,
     game: {
       ...snapshot.game,
@@ -224,8 +279,13 @@ export async function advanceWeeklyEventAndSave(
         activeEventIndex: complete ? 0 : nextIndex,
       },
     },
-  });
-  await saveGame(userId, slotNumber, captureGameState());
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
 }
 
 export async function acknowledgeWeeklyReportAndSave(
@@ -239,7 +299,7 @@ export async function acknowledgeWeeklyReportAndSave(
   }
 
   const hasEvents = flow.eventQueueIds.length > 0;
-  applyGameSnapshot({
+  const nextSnapshot: GameSnapshot = {
     ...snapshot,
     game: {
       ...snapshot.game,
@@ -250,8 +310,13 @@ export async function acknowledgeWeeklyReportAndSave(
         activeEventIndex: 0,
       },
     },
-  });
-  await saveGame(userId, slotNumber, captureGameState());
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
 }
 
 export function createWeeklyResolutionId(year: number, week: number) {
@@ -374,5 +439,19 @@ function toWeekDeltaState(snapshot: GameSnapshot): WeekDeltaState {
     trainees: snapshot.trainee.trainees,
     album: snapshot.album.currentAlbum,
     investorPressureWeeks: snapshot.game.investorPressureWeeks,
+  };
+}
+
+function toPersistedSnapshot(snapshot: GameSnapshot): GameStateSnapshot {
+  return {
+    gameStore: snapshot.game,
+    traineeStore: snapshot.trainee,
+    staffStore: snapshot.staff,
+    albumStore: snapshot.album,
+    fandomStore: snapshot.fandom,
+    competitorStore: snapshot.competitor,
+    financeStore: snapshot.finance,
+    calendarStore: snapshot.calendar,
+    eventStore: snapshot.event,
   };
 }

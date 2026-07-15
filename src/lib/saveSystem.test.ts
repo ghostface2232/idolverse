@@ -37,6 +37,7 @@ describe("saveSystem 왕복", () => {
     const modern = toGameStateSnapshot(makeGameSnapshot({ week: 7 }));
     // 구버전 세이브 재현: 제거된 gameSpeed가 남아 있고 신규 필드가 없다
     const {
+      saveRevision: _saveRevision,
       trainingSchedule: _trainingSchedule,
       investorConditionProgress: _progress,
       investorPressureWeeks: _pressure,
@@ -56,6 +57,7 @@ describe("saveSystem 왕복", () => {
     };
 
     expect(capturedGame.gameSpeed).toBeUndefined();
+    expect(capturedGame.saveRevision).toBe(0);
     expect(capturedGame.trainingSchedule).toEqual({
       intensity: "normal",
       focus: null,

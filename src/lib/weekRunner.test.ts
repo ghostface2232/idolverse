@@ -147,6 +147,7 @@ describe("persistent event queue", () => {
 
     expect(afterChoice.financeStore.money).toBe(1_000_000_100);
     expect(afterChoice.eventStore.pendingEvents[0].resolved).toBe(true);
+    expect(afterChoice.eventStore.pendingEvents[0].resolvedChoiceIndex).toBe(0);
     expect(afterChoice.gameStore.weeklyFlow.report?.deltas).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: "event", id: event.id }),
@@ -161,5 +162,8 @@ describe("persistent event queue", () => {
 
     hydrateGameState(afterChoice);
     expect(captureGameState()).toEqual(afterChoice);
+    expect(captureGameState().eventStore.pendingEvents[0]).toEqual(
+      expect.objectContaining({ resolved: true, resolvedChoiceIndex: 0 }),
+    );
   });
 });

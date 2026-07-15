@@ -417,6 +417,8 @@ export interface GameEvent {
   description: string;
   choices?: EventChoice[];
   resolved: boolean;
+  /** 해결된 선택지 index. 선택지가 없는 이벤트는 null, 구버전은 undefined. */
+  resolvedChoiceIndex?: number | null;
 }
 
 export interface InterludeActivity {
@@ -605,6 +607,8 @@ export interface WeeklyFlowSnapshot {
 }
 
 export interface GameStoreState {
+  /** 서버가 stale save를 거부하기 위한 단조 증가 persistence revision. */
+  saveRevision: number;
   currentWeek: number;
   currentSeason: Season;
   currentYear: number;

@@ -5,10 +5,17 @@ import type { WeeklyReportSnapshot } from "@/types/game";
 
 interface WeekReportProps {
   report: WeeklyReportSnapshot;
-  onClose: () => void;
+  isSaving?: boolean;
+  errorMessage?: string | null;
+  onClose: () => void | Promise<void>;
 }
 
-export function WeekReport({ report, onClose }: WeekReportProps) {
+export function WeekReport({
+  report,
+  isSaving = false,
+  errorMessage,
+  onClose,
+}: WeekReportProps) {
   const incomeTotal = sumValues(report.finance.income);
   const expenseTotal = sumValues(report.finance.expenses);
 
@@ -16,13 +23,23 @@ export function WeekReport({ report, onClose }: WeekReportProps) {
     <Modal
       title={`W${report.week} 주간 리포트`}
       onClose={onClose}
+      isCloseDisabled={isSaving}
       footer={
-        <Button className="w-full" onClick={onClose}>
-          확인
+        <Button className="w-full" isDisabled={isSaving} onPress={onClose}>
+          {isSaving ? "저장 중…" : "확인"}
         </Button>
       }
     >
       <div className="space-y-5 text-sm text-slate-300">
+        {errorMessage ? (
+          <p
+            role="alert"
+            className="rounded-xl bg-state-danger/12 px-3 py-2 text-rose-200"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+
         <ReportSection title="능력치 변동" empty="변동 없음">
           {report.statChanges.map((change) => (
             <li key={change}>{change}</li>

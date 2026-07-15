@@ -146,7 +146,11 @@ export function resolveEvent(
 
   return {
     effects,
-    resolved: { ...event, resolved: true },
+    resolved: {
+      ...event,
+      resolved: true,
+      resolvedChoiceIndex: choice ? choiceIndex : null,
+    },
   };
 }
 

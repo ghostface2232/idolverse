@@ -14,6 +14,7 @@ interface ModalProps {
   onClose: () => void | Promise<void>;
   footer?: ReactNode;
   className?: string;
+  isCloseDisabled?: boolean;
 }
 
 export function Modal({
@@ -22,6 +23,7 @@ export function Modal({
   onClose,
   footer,
   className = "",
+  isCloseDisabled = false,
 }: ModalProps) {
   return (
     <ModalOverlay
@@ -29,7 +31,7 @@ export function Modal({
       onOpenChange={(isOpen) => {
         if (!isOpen) void onClose();
       }}
-      isDismissable
+      isDismissable={!isCloseDisabled}
       className={({ isEntering, isExiting }) =>
         [
           "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/78 px-4 py-6 backdrop-blur-sm",
@@ -60,6 +62,7 @@ export function Modal({
               tone="ghost"
               className="min-w-11 px-0"
               aria-label="닫기"
+              isDisabled={isCloseDisabled}
             >
               <X className="size-5" aria-hidden="true" />
             </Button>

@@ -42,6 +42,7 @@ export const eventVanillaStore = createStore<EventStore>()((set) => ({
           ? {
               ...event,
               resolved: true,
+              resolvedChoiceIndex: null,
             }
           : event,
       ),
