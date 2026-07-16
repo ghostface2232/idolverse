@@ -228,12 +228,21 @@ function toLaneItem(progress: MilestoneProgress): GoalLaneItem {
  * 목표 자체는 매번 여기서 다시 계산해야 상태 이중화가 없다.
  */
 export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
-  const pendingCount = input.weeklyDecisions.length;
+  const crisisCount = input.weeklyDecisions.filter(
+    (decision) => decision.lane === "crisis",
+  ).length;
+  const opportunityCount = input.weeklyDecisions.filter(
+    (decision) => decision.lane === "opportunity",
+  ).length;
   const weekly: GoalLaneItem = {
     id: "weekly-plan",
     title:
-      pendingCount > 0
-        ? `이번 주 결정 ${pendingCount}건이 당신을 기다립니다`
+      crisisCount > 0 && opportunityCount > 0
+        ? `필수 결정 ${crisisCount}건 · 이번 주 기회 ${opportunityCount}건`
+        : crisisCount > 0
+          ? `필수 결정 ${crisisCount}건이 당신을 기다립니다`
+          : opportunityCount > 0
+            ? `이번 주에만 잡을 수 있는 기회 ${opportunityCount}건`
         : "훈련과 활동 계획을 살피고 한 주를 보내세요",
   };
 

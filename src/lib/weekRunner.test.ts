@@ -28,6 +28,7 @@ describe("weekly resolution workflow", () => {
     snapshot.game.weeklyDecisions = [
       {
         id: "weekly-focus",
+        lane: "crisis",
         category: "training",
         title: "주간 방향",
         summary: "테스트 결정",
@@ -107,6 +108,40 @@ describe("weekly resolution workflow", () => {
 
     expect(captureGameState().gameStore.currentWeek).toBe(6);
     expect(captureGameState().gameStore.weeklyFlow.state).toBe("report_ready");
+  });
+
+  it("선택하지 않은 기회 카드는 효과 없이 만료시키고 주간을 진행한다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.weeklyDecisions = [
+      {
+        id: "opportunity:test:w5",
+        lane: "opportunity",
+        category: "기회",
+        title: "테스트 제안",
+        summary: "선택하지 않아도 된다.",
+        expiresAtWeek: 5,
+        options: [
+          {
+            id: "accept",
+            label: "수락",
+            description: "인지도를 얻는다.",
+            tradeoff: "훈련을 포기한다.",
+            effects: { public: 20 },
+          },
+        ],
+      },
+    ];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    runWeek({
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [],
+    });
+
+    const committed = captureGameState();
+    expect(committed.gameStore.currentWeek).toBe(6);
+    // 기회 효과(+20)는 적용되지 않고 기본 주간 자연 감소(-2)만 남는다.
+    expect(committed.fandomStore.public).toBe(8);
   });
 });
 

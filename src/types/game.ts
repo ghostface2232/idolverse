@@ -371,7 +371,8 @@ export type WeeklyDecisionTriggerKind =
   | "finance"
   | "fandom"
   | "morale"
-  | "overwork";
+  | "overwork"
+  | "opportunity";
 
 export interface WeeklyDecisionTrigger {
   kind: WeeklyDecisionTriggerKind;
@@ -382,11 +383,15 @@ export interface WeeklyDecisionTrigger {
 
 export interface WeeklyDecision {
   id: string;
+  /** 위기는 해결이 필수고, 기회는 선택하지 않으면 주간 종료와 함께 소멸한다. */
+  lane: "crisis" | "opportunity";
   category: string;
   title: string;
   summary: string;
   options: WeeklyDecisionOption[];
   seasons?: Season[];
+  /** 누적 주차 기준 만료 시점. 현재는 기회 카드에만 사용한다. */
+  expiresAtWeek?: number;
   /** 이 카드가 이번 주에 등장한 실제 게임 상태의 원인. */
   trigger?: WeeklyDecisionTrigger;
 }
@@ -752,6 +757,8 @@ export interface GameStoreState {
   /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
   investorPressureWeeks: number;
   investorComplianceCount: number;
+  /** 마지막 기회 카드가 제시된 누적 주차. 수락 여부와 무관하게 빈도를 제어한다. */
+  lastOpportunityWeek: number | null;
   /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */
   awardHistory: AwardRecord[];
   /** 달성한 이정표 기록. 해금 판정과 GoalStrip 표시의 근거가 된다. */

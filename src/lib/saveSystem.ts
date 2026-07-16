@@ -267,6 +267,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorConditionProgress: rest.investorConditionProgress ?? {},
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
+    lastOpportunityWeek: rest.lastOpportunityWeek ?? null,
     awardHistory: rest.awardHistory ?? [],
     milestonesAchieved: rest.milestonesAchieved ?? [],
     activeProjects:
@@ -284,6 +285,10 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
             ),
           ]
         : []),
+    weeklyDecisions: (rest.weeklyDecisions ?? []).map((decision) => ({
+      ...decision,
+      lane: decision.lane ?? "crisis",
+    })),
     weeklyFlow: {
       ...structuredClone(initialWeeklyFlowState),
       ...(rest.weeklyFlow ?? {}),

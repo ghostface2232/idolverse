@@ -3,8 +3,11 @@ import {
   DECISION_TRIGGER_THRESHOLDS,
   GAME_BALANCE,
   INVESTOR_COMPLY_SUPPORT_LIMIT,
+  OPPORTUNITY_PACING,
   SATISFACTION_WARNING_THRESHOLD,
 } from "@/data/balance";
+import { OPPORTUNITY_DEFINITIONS } from "@/data/opportunities";
+import { createSeededRandom } from "@/lib/seededRandom";
 import type {
   GamePhase,
   Season,
@@ -41,6 +44,9 @@ export interface DecisionCardContext {
   fandom: number;
   fandomLoyalty: number;
   fandomDisappointment: number;
+  lastOpportunityWeek: number | null;
+  competitorComebacks: string[];
+  projectDeadlineWeeks: number | null;
 }
 
 export interface DecisionContextState {
@@ -53,6 +59,9 @@ export interface DecisionContextState {
   fandom: number;
   fandomLoyalty: number;
   fandomDisappointment: number;
+  lastOpportunityWeek?: number | null;
+  competitorComebacks?: readonly string[];
+  projectDeadlineWeeks?: number | null;
 }
 
 interface PrioritizedCard {
@@ -103,6 +112,9 @@ export function buildDecisionCardContext(
     fandom: state.fandom,
     fandomLoyalty: state.fandomLoyalty,
     fandomDisappointment: state.fandomDisappointment,
+    lastOpportunityWeek: state.lastOpportunityWeek ?? null,
+    competitorComebacks: [...(state.competitorComebacks ?? [])],
+    projectDeadlineWeeks: state.projectDeadlineWeeks ?? null,
   };
 }
 
@@ -111,8 +123,8 @@ export function buildDecisionCardContext(
  * 실제 시스템 상태가 플레이어 판단을 요구할 때만 최대 네 건을 반환한다.
  */
 export function generateWeeklyDecisionCards(
-  _week: number,
-  _season: Season,
+  cumulativeWeek: number,
+  season: Season,
   ctx?: DecisionCardContext,
 ): WeeklyDecision[] {
   if (!ctx || ctx.phase === "prologue" || ctx.phase === "founding") return [];
@@ -187,16 +199,116 @@ export function generateWeeklyDecisionCards(
     candidates.push({ priority: 72 + overworked.stress / 10, card: buildOverworkCard(overworked) });
   }
 
-  return candidates
+  const crisisCards = candidates
     .sort((a, b) => b.priority - a.priority || a.card.id.localeCompare(b.card.id))
     .slice(0, GAME_BALANCE.weeklyDecisionMaxCount)
     .map(({ card }) => card);
+
+  const opportunity = buildOpportunityCard(
+    cumulativeWeek,
+    season,
+    ctx,
+    crisisCards,
+  );
+
+  return opportunity
+    ? [...crisisCards, opportunity].slice(0, GAME_BALANCE.weeklyDecisionMaxCount)
+    : crisisCards;
+}
+
+function buildOpportunityCard(
+  cumulativeWeek: number,
+  season: Season,
+  ctx: DecisionCardContext,
+  crisisCards: readonly WeeklyDecision[],
+): WeeklyDecision | null {
+  if (
+    crisisCards.length > OPPORTUNITY_PACING.maxConcurrentCrises ||
+    crisisCards.some((card) => card.trigger?.severity === "critical")
+  ) {
+    return null;
+  }
+
+  const lastOpportunityWeek = ctx.lastOpportunityWeek ?? 0;
+  const cadenceRandom = createSeededRandom(lastOpportunityWeek * 431 + 97);
+  const requiredGap =
+    OPPORTUNITY_PACING.minGapWeeks +
+    Math.floor(
+      cadenceRandom() *
+        (OPPORTUNITY_PACING.maxGapWeeks - OPPORTUNITY_PACING.minGapWeeks + 1),
+    );
+  if (cumulativeWeek - lastOpportunityWeek < requiredGap) return null;
+
+  const phasePool = OPPORTUNITY_DEFINITIONS.filter(
+    (definition) =>
+      definition.phases.includes(ctx.phase) && !definition.requiresRivalComeback,
+  );
+  const rivalDefinition =
+    ctx.competitorComebacks.length > 0
+      ? OPPORTUNITY_DEFINITIONS.find(
+          (definition) =>
+            definition.requiresRivalComeback && definition.phases.includes(ctx.phase),
+        )
+      : undefined;
+  const random = createSeededRandom(
+    cumulativeWeek * 419 + season.charCodeAt(0) * 17,
+  );
+  const definition =
+    rivalDefinition ?? phasePool[Math.floor(random() * phasePool.length)];
+  if (!definition) return null;
+
+  const rivalNames = ctx.competitorComebacks.join("·") || "라이벌";
+  const interpolate = (value: string) => value.replaceAll("{{rival}}", rivalNames);
+  const averageStress =
+    ctx.members.length > 0
+      ? Math.round(
+          ctx.members.reduce((sum, member) => sum + member.stress, 0) /
+            ctx.members.length,
+        )
+      : 0;
+  const contextWarnings: string[] = [];
+  if (averageStress >= OPPORTUNITY_PACING.fatigueWarningStress) {
+    contextWarnings.push(`현재 팀 평균 스트레스 ${averageStress}`);
+  }
+  if (
+    ctx.projectDeadlineWeeks !== null &&
+    ctx.projectDeadlineWeeks <= OPPORTUNITY_PACING.deadlineWarningWeeks
+  ) {
+    contextWarnings.push(`핵심 프로젝트 마감 D-${ctx.projectDeadlineWeeks}`);
+  }
+  const warning =
+    contextWarnings.length > 0
+      ? ` ${contextWarnings.join(" · ")}라 수락의 기회비용이 크다.`
+      : "";
+
+  return {
+    id: `opportunity:${definition.id}:w${cumulativeWeek}`,
+    lane: "opportunity",
+    category: definition.category,
+    title: interpolate(definition.title),
+    summary: `${interpolate(definition.summary)}${warning}`,
+    expiresAtWeek: cumulativeWeek,
+    trigger: createTrigger(
+      "opportunity",
+      "notice",
+      [],
+      interpolate(definition.triggerDescription),
+    ),
+    options: definition.options.map((option) => ({
+      ...option,
+      effects: { ...option.effects },
+      ...(option.targetTraineeIds
+        ? { targetTraineeIds: [...option.targetTraineeIds] }
+        : {}),
+    })),
+  };
 }
 
 function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
   const targetTraineeIds = [member.id];
   return {
     id: `injury:${member.id}`,
+    lane: "crisis",
     category: "부상",
     title: `${member.name} 부상 일정 조정`,
     summary: `${member.name}의 부상이 ${member.injuryWeeks}주 남았다. 이번 주 활동 범위를 결정해야 한다.`,
@@ -233,6 +345,7 @@ function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
   const targetTraineeIds = [conflict.memberAId, conflict.memberBId];
   return {
     id: `conflict:${conflict.memberAId}:${conflict.memberBId}`,
+    lane: "crisis",
     category: "불화",
     title: `${conflict.memberAName}·${conflict.memberBName} 갈등 중재`,
     summary: `두 멤버의 케미가 ${conflict.chemistry}까지 떨어졌다. 팀 효율이 더 악화되기 전에 개입해야 한다.`,
@@ -276,6 +389,7 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
   const supportAvailable = complianceCount < INVESTOR_COMPLY_SUPPORT_LIMIT;
   return {
     id: "emergency-investor",
+    lane: "crisis",
     category: "투자사",
     title: "투자사 경영 개입",
     summary: "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구한다.",
@@ -317,6 +431,7 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
     : "충분";
   return {
     id: "financial-crisis",
+    lane: "crisis",
     category: "경영",
     title: "운영 자금 긴급 조정",
     summary: `현재 자금 ${Math.round(money).toLocaleString("ko-KR")}원, 고정비 기준 런웨이 ${runwayLabel}다.`,
@@ -359,6 +474,7 @@ function buildFandomCrisisCard(
 ): WeeklyDecision {
   return {
     id: "fandom-crisis",
+    lane: "crisis",
     category: "팬덤",
     title: "팬덤 신뢰 회복",
     summary: `팬덤 충성도 ${fandomLoyalty}, 실망도 ${fandomDisappointment}. 이탈이 커지기 전에 대응해야 한다.`,
@@ -399,6 +515,7 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
   const targetTraineeIds = [member.id];
   return {
     id: `morale:${member.id}`,
+    lane: "crisis",
     category: "멤버",
     title: `${member.name} 이탈 위험`,
     summary: `${member.name}의 만족도가 ${member.satisfaction}까지 떨어졌다. 불만을 방치하면 이탈로 이어질 수 있다.`,
@@ -443,6 +560,7 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
   const targetTraineeIds = [member.id];
   return {
     id: `overwork:${member.id}`,
+    lane: "crisis",
     category: "과로",
     title: `${member.name} 과로 경고`,
     summary: `${member.name}의 스트레스가 ${member.stress}다. 부상이나 만족도 하락 전에 일정을 조정해야 한다.`,

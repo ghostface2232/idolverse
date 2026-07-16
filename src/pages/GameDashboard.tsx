@@ -115,6 +115,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const primaryRisk = useMemo(
     () =>
       weeklyDecisions
+        .filter((decision) => decision.lane === "crisis")
         .map((decision) => decision.trigger)
         .filter((trigger): trigger is WeeklyDecisionTrigger => Boolean(trigger))
         .sort((left, right) => RISK_PRIORITY[right.severity] - RISK_PRIORITY[left.severity])[0] ??
@@ -345,6 +346,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             <ActionDock
               totalDecisions={weeklyDecisions.length}
               remainingDecisions={remainingDecisions}
+              canResolveWeek={canResolveWeek}
               flowState={weeklyFlow.state}
               riskLabel={primaryRisk?.description}
               onOpenPlan={() => setSheetOpen(true)}

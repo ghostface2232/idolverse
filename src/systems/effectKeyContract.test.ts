@@ -10,6 +10,7 @@ import { DEBUT_PROJECT_EVENT_POOL, RANDOM_EVENT_POOL } from "@/data/events";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { INTERLUDE_ACTIVITIES } from "@/data/interlude";
 import { INVESTOR_COMPANIES } from "@/data/investors";
+import { OPPORTUNITY_DEFINITIONS } from "@/data/opportunities";
 import { eventVanillaStore } from "@/stores/eventStore";
 import type { EffectMap } from "@/types/game";
 import { makeTrainee } from "@/test/gameStateFixture";
@@ -43,6 +44,15 @@ function collectAllEffectSources(): EffectSource[] {
 
   for (const interlude of INTERLUDE_ACTIVITIES) {
     sources.push({ label: `인터루드 ${interlude.id}`, effects: interlude.effects });
+  }
+
+  for (const opportunity of OPPORTUNITY_DEFINITIONS) {
+    for (const option of opportunity.options) {
+      sources.push({
+        label: `기회 ${opportunity.id}/${option.id}`,
+        effects: option.effects,
+      });
+    }
   }
 
   // generateWeeklyDecisionCards 내부의 위기/인터루드 카드(모듈 비공개)는
@@ -82,6 +92,9 @@ function collectAllEffectSources(): EffectSource[] {
     fandom: 50,
     fandomLoyalty: 20,
     fandomDisappointment: 80,
+    lastOpportunityWeek: null,
+    competitorComebacks: [],
+    projectDeadlineWeeks: null,
   };
   for (const complianceCount of [0, 99]) {
     const cards = generateWeeklyDecisionCards(10, "spring", {

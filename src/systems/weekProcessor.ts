@@ -1068,11 +1068,35 @@ export function processWeek(
     fandom: fandomAxis.fandom,
     fandomLoyalty: fandomAxis.fandomLoyalty,
     fandomDisappointment: fandomAxis.fandomDisappointment,
+    lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
+    competitorComebacks: compResult.comebacks,
+    projectDeadlineWeeks: (() => {
+      const debutProject = activeProjects.find(
+        (project) => project.kind === "debut" && project.status !== "completed",
+      );
+      if (!debutProject) return null;
+      const nextCumulativeWeek = toCumulativeWeek(
+        advancedGame.currentYear,
+        advancedGame.currentWeek,
+      );
+      const relativeWeek = Math.max(
+        1,
+        nextCumulativeWeek - debutProject.startedAtWeek + 1,
+      );
+      return Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - relativeWeek);
+    })(),
   });
-  const nextDecisions = generateWeeklyDecisionCards(
+  const nextCumulativeWeek = toCumulativeWeek(
+    advancedGame.currentYear,
     advancedGame.currentWeek,
+  );
+  const nextDecisions = generateWeeklyDecisionCards(
+    nextCumulativeWeek,
     advancedGame.currentSeason,
     cardCtx,
+  );
+  const opportunityOffered = nextDecisions.some(
+    (decision) => decision.lane === "opportunity",
   );
 
   // ── Assemble new state
@@ -1083,6 +1107,9 @@ export function processWeek(
       investorConditionProgress,
       investorPressureWeeks,
       investorComplianceCount,
+      lastOpportunityWeek: opportunityOffered
+        ? nextCumulativeWeek
+        : snapshot.game.lastOpportunityWeek,
       awardHistory,
       milestonesAchieved,
       activeProjects,

@@ -465,17 +465,36 @@ function normalizeDecisions(
     decisions.resolvedDecisions.map((decision) => [decision.cardId, decision]),
   );
 
-  if (
-    submitted.size !== decisions.resolvedDecisions.length ||
-    submitted.size !== snapshot.game.weeklyDecisions.length
-  ) {
+  if (submitted.size !== decisions.resolvedDecisions.length) {
     throw new WeeklyResolutionConflictError(
-      "Every current weekly decision must have exactly one selected option.",
+      "A weekly decision can only be submitted once.",
     );
   }
 
-  const resolvedDecisions = snapshot.game.weeklyDecisions.map((card) => {
+  const currentCards = new Map(
+    snapshot.game.weeklyDecisions.map((card) => [card.id, card]),
+  );
+  for (const submittedDecision of submitted.values()) {
+    if (!currentCards.has(submittedDecision.cardId)) {
+      throw new WeeklyResolutionConflictError(
+        `Decision ${submittedDecision.cardId} does not match the current week.`,
+      );
+    }
+  }
+
+  const unresolvedCrisis = snapshot.game.weeklyDecisions.find(
+    (card) => card.lane === "crisis" && !submitted.has(card.id),
+  );
+  if (unresolvedCrisis) {
+    throw new WeeklyResolutionConflictError(
+      `Crisis decision ${unresolvedCrisis.id} requires a selected option.`,
+    );
+  }
+
+  const resolvedDecisions = snapshot.game.weeklyDecisions.flatMap((card) => {
     const submittedDecision = submitted.get(card.id);
+    if (!submittedDecision && card.lane === "opportunity") return [];
+
     const option = card.options.find(
       (candidate) => candidate.id === submittedDecision?.optionId,
     );
@@ -485,14 +504,16 @@ function normalizeDecisions(
       );
     }
 
-    return {
-      cardId: card.id,
-      optionId: option.id,
-      // 효과는 UI payload를 신뢰하지 않고 현재 카드 정의에서 다시 읽는다.
-      effects: option.effects,
-      targetTraineeIds: option.targetTraineeIds,
-      activityOverride: option.activityOverride,
-    };
+    return [
+      {
+        cardId: card.id,
+        optionId: option.id,
+        // 효과는 UI payload를 신뢰하지 않고 현재 카드 정의에서 다시 읽는다.
+        effects: option.effects,
+        targetTraineeIds: option.targetTraineeIds,
+        activityOverride: option.activityOverride,
+      },
+    ];
   });
 
   return {

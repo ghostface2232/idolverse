@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Pencil, Play } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Pencil,
+  Play,
+  ShieldAlert,
+  Sparkles,
+} from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
 import { useCalendarStore } from "@/stores/calendarStore";
@@ -19,6 +28,16 @@ const TRIGGER_CLASSES: Record<WeeklyDecisionTrigger["severity"], string> = {
   critical: "bg-state-danger/10 text-rose-100",
 };
 
+const LANE_LABELS = {
+  crisis: "필수 대응",
+  opportunity: "선택 기회",
+} as const;
+
+const LANE_CLASSES = {
+  crisis: "bg-state-danger/10 text-rose-100",
+  opportunity: "bg-action-secondary/12 text-cyan-100",
+} as const;
+
 interface DecisionCardDeckProps {
   onConfirm: () => void;
   isRunning?: boolean;
@@ -37,8 +56,10 @@ export function DecisionCardDeck({
   const selectWeeklyDecision = useGameStore((state) => state.selectWeeklyDecision);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const showReview =
-    cards.length === 0 || (flow.state === "review_ready" && editingIndex === null);
+    cards.length === 0 ||
+    ((reviewing || flow.state === "review_ready") && editingIndex === null);
   const safeIndex = Math.min(activeIndex, Math.max(cards.length - 1, 0));
   const activeCard = cards[safeIndex];
 
@@ -49,9 +70,19 @@ export function DecisionCardDeck({
 
     if (editingIndex !== null || safeIndex >= cards.length - 1) {
       setEditingIndex(null);
+      setReviewing(true);
       return;
     }
 
+    setActiveIndex(safeIndex + 1);
+  };
+
+  const handleSkipOpportunity = () => {
+    if (!activeCard || activeCard.lane !== "opportunity") return;
+    if (safeIndex >= cards.length - 1) {
+      setReviewing(true);
+      return;
+    }
     setActiveIndex(safeIndex + 1);
   };
 
@@ -65,7 +96,7 @@ export function DecisionCardDeck({
           <h2 id="weekly-review-title" className="mt-1 text-xl font-semibold text-text-primary">
             이번 주 계획 검토
           </h2>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="mt-1 text-pretty text-sm text-text-muted">
             실행하면 선택과 매니저 AI 배정이 함께 처리됩니다.
           </p>
         </header>
@@ -73,7 +104,7 @@ export function DecisionCardDeck({
         {cards.length === 0 ? (
           <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
             <p className="text-sm font-semibold text-cyan-100">핵심 결정 없음</p>
-            <p className="mt-2 text-sm leading-6 text-text-muted">
+            <p className="mt-2 text-pretty text-sm leading-6 text-text-muted">
               이번 주는 긴급한 직접 결정이 없습니다. 훈련과 운영 일정은 매니저 AI가 현재 방침에 따라 배정합니다.
             </p>
           </article>
@@ -87,19 +118,45 @@ export function DecisionCardDeck({
               return (
                 <li
                   key={card.id}
-                  className="rounded-2xl bg-surface-raised/70 p-3 shadow-[var(--shadow-surface)]"
+                  className={`rounded-2xl p-3 shadow-[var(--shadow-surface)] ${
+                    card.lane === "opportunity"
+                      ? "bg-action-secondary/[0.07]"
+                      : "bg-surface-raised/70"
+                  }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-state-success/12 text-state-success">
-                      <Check className="size-4" aria-hidden="true" />
+                    <span
+                      className={`grid size-7 shrink-0 place-items-center rounded-lg ${
+                        option
+                          ? "bg-state-success/12 text-state-success"
+                          : "bg-action-secondary/12 text-action-secondary"
+                      }`}
+                    >
+                      {option ? (
+                        <Check className="size-4" aria-hidden="true" />
+                      ) : (
+                        <Clock3 className="size-4" aria-hidden="true" />
+                      )}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-text-muted">{card.title}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="text-xs text-text-muted">{card.title}</p>
+                        <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${LANE_CLASSES[card.lane]}`}>
+                          {LANE_LABELS[card.lane]}
+                        </span>
+                      </div>
                       <p className="mt-1 text-sm font-semibold text-text-primary">
-                        {option?.label ?? "선택 필요"}
+                        {option?.label ??
+                          (card.lane === "opportunity"
+                            ? "수락하지 않음"
+                            : "선택 필요")}
                       </p>
                       {option ? (
-                        <p className="mt-1 text-xs leading-5 text-text-muted">{option.tradeoff}</p>
+                        <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">{option.tradeoff}</p>
+                      ) : card.lane === "opportunity" ? (
+                        <p className="mt-1 text-pretty text-xs leading-5 text-cyan-100/70">
+                          아무 효과 없이 이번 주 종료 시 소멸합니다.
+                        </p>
                       ) : null}
                     </div>
                     <Button
@@ -109,6 +166,7 @@ export function DecisionCardDeck({
                       onPress={() => {
                         setActiveIndex(index);
                         setEditingIndex(index);
+                        setReviewing(false);
                       }}
                     >
                       <Pencil className="size-4" aria-hidden="true" />
@@ -122,7 +180,7 @@ export function DecisionCardDeck({
 
         <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
           <p className="text-xs font-semibold text-action-secondary">매니저 AI 자동 운영</p>
-          <p className="mt-1 text-xs leading-5 text-text-muted">
+          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
             선택하지 않은 세부 훈련, 휴식, 내부 업무는 팀 컨디션과 현재 투자자 KPI를 기준으로 자동 처리됩니다.
           </p>
         </article>
@@ -164,38 +222,58 @@ export function DecisionCardDeck({
             />
           ))}
         </div>
-        <p className="mt-3 text-xs leading-5 text-text-muted">{headline}</p>
+        <p className="mt-3 text-pretty text-xs leading-5 text-text-muted">{headline}</p>
       </header>
 
-      <article className="rounded-3xl bg-surface-raised p-4 shadow-[var(--shadow-raised)]">
+      <article
+        className={`rounded-3xl p-4 shadow-[var(--shadow-raised)] ${
+          activeCard.lane === "opportunity"
+            ? "bg-gradient-to-br from-cyan-950/90 to-surface-raised"
+            : "bg-surface-raised"
+        }`}
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
-              {activeCard.category}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
+                {activeCard.category}
+              </p>
+              <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold ${LANE_CLASSES[activeCard.lane]}`}>
+                {activeCard.lane === "opportunity" ? (
+                  <Sparkles className="size-3" aria-hidden="true" />
+                ) : (
+                  <ShieldAlert className="size-3" aria-hidden="true" />
+                )}
+                {LANE_LABELS[activeCard.lane]}
+              </span>
+            </div>
             <h2
               id={`decision-${activeCard.id}`}
-              className="mt-1 text-lg font-semibold text-text-primary"
+              className="mt-1 text-balance text-lg font-semibold text-text-primary"
             >
               {activeCard.title}
             </h2>
           </div>
           {activeCard.trigger ? (
             <span
-              className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold ${TRIGGER_CLASSES[activeCard.trigger.severity]}`}
+              className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}
             >
-              {TRIGGER_LABELS[activeCard.trigger.severity]}
+              {activeCard.lane === "opportunity"
+                ? "이번 주 한정"
+                : TRIGGER_LABELS[activeCard.trigger.severity]}
             </span>
           ) : null}
         </div>
 
         {activeCard.trigger ? (
-          <p className={`mt-3 rounded-xl px-3 py-2 text-xs leading-5 ${TRIGGER_CLASSES[activeCard.trigger.severity]}`}>
-            <span className="font-semibold">발생 원인 · </span>
+          <p className={`mt-3 rounded-xl px-3 py-2 text-pretty text-xs leading-5 ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}>
+            <span className="font-semibold">
+              {activeCard.lane === "opportunity" ? "제안 배경 · " : "발생 원인 · "}
+            </span>
             {activeCard.trigger.description}
           </p>
         ) : null}
-        <p className="mt-3 text-sm leading-6 text-text-secondary">{activeCard.summary}</p>
+        <p className="mt-3 text-pretty text-sm leading-6 text-text-secondary">{activeCard.summary}</p>
 
         <RadioGroup
           aria-label={`${activeCard.title} 선택지`}
@@ -231,7 +309,7 @@ export function DecisionCardDeck({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-text-muted">{option.tradeoff}</span>
+                    <span className="mt-1 block text-pretty text-xs leading-5 text-text-muted">{option.tradeoff}</span>
                   </span>
                 </div>
               )}
@@ -239,6 +317,17 @@ export function DecisionCardDeck({
           ))}
         </RadioGroup>
       </article>
+
+      {activeCard.lane === "opportunity" ? (
+        <Button
+          tone="ghost"
+          className="w-full gap-2 text-cyan-100"
+          onPress={handleSkipOpportunity}
+        >
+          <Clock3 className="size-4" aria-hidden="true" />
+          수락하지 않고 넘기기
+        </Button>
+      ) : null}
 
       <div className="flex items-center justify-between gap-2">
         <Button

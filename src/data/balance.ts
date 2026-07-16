@@ -98,6 +98,15 @@ export const DECISION_TRIGGER_THRESHOLDS = {
   financialRunwayWeeks: 8,
 } as const;
 
+/** 기회 카드는 평온한 주에 리듬을 만들되 위기 판단을 가리지 않아야 한다. */
+export const OPPORTUNITY_PACING = {
+  minGapWeeks: 2,
+  maxGapWeeks: 3,
+  maxConcurrentCrises: 1,
+  deadlineWarningWeeks: 2,
+  fatigueWarningStress: 50,
+} as const;
+
 export const INVESTOR_PENALTY_GRACE_WEEKS = 4; // A failed condition warns first so the player can react before being punished.
 export const INVESTOR_COMPLY_SUPPORT_LIMIT = 3; // The investor bails the player out only a few times; unlimited cash would invert the incentive to meet conditions.
 export const INVESTOR_NEGOTIATION_EXTENSION_WEEKS = 2; // 재협상은 기존 미달 조건의 페널티 유예를 실제로 두 주 연장한다.

@@ -37,6 +37,9 @@ function healthyContext(
     fandom: 0,
     fandomLoyalty: 50,
     fandomDisappointment: 0,
+    lastOpportunityWeek: null,
+    competitorComebacks: [],
+    projectDeadlineWeeks: null,
     ...overrides,
   };
 }
@@ -64,8 +67,8 @@ describe("상황 기반 주간 결정 생성", () => {
 
     const cards = generateWeeklyDecisionCards(4, "spring", context);
 
-    expect(cards).toHaveLength(1);
-    expect(cards[0]).toMatchObject({
+    const injuryCard = cards.find((card) => card.lane === "crisis");
+    expect(injuryCard).toMatchObject({
       id: "injury:injured",
       trigger: {
         kind: "injury",
@@ -73,7 +76,7 @@ describe("상황 기반 주간 결정 생성", () => {
       },
     });
     expect(
-      cards[0].options.every(
+      injuryCard?.options.every(
         (option) => option.targetTraineeIds?.join() === "injured",
       ),
     ).toBe(true);
@@ -153,5 +156,111 @@ describe("상황 기반 주간 결정 생성", () => {
     expect(cards.map((card) => card.trigger?.kind)).toEqual(
       expect.arrayContaining(["injury", "morale", "investor", "finance"]),
     );
+  });
+
+  it("건강한 주에는 누적 주차 기준 2~3주 간격으로 선택 기회를 제시한다", () => {
+    let lastOpportunityWeek: number | null = null;
+    const offeredWeeks: number[] = [];
+
+    for (let week = 1; week <= 14; week++) {
+      const cards = generateWeeklyDecisionCards(
+        week,
+        "spring",
+        healthyContext({ lastOpportunityWeek }),
+      );
+      const opportunity = cards.find((card) => card.lane === "opportunity");
+      if (!opportunity) continue;
+      offeredWeeks.push(week);
+      lastOpportunityWeek = week;
+      expect(opportunity.expiresAtWeek).toBe(week);
+      expect(opportunity.trigger?.kind).toBe("opportunity");
+    }
+
+    expect(offeredWeeks.length).toBeGreaterThanOrEqual(4);
+    expect(
+      offeredWeeks.slice(1).every((week, index) => {
+        const gap = week - offeredWeeks[index];
+        return gap >= 2 && gap <= 3;
+      }),
+    ).toBe(true);
+  });
+
+  it("데뷔 준비기와 성장기에 서로 다른 phase 기회 풀을 사용한다", () => {
+    const trainingCard = generateWeeklyDecisionCards(
+      20,
+      "summer",
+      healthyContext({ phase: "training", lastOpportunityWeek: 17 }),
+    ).find((card) => card.lane === "opportunity");
+    const growthCard = generateWeeklyDecisionCards(
+      20,
+      "summer",
+      healthyContext({ phase: "growth", lastOpportunityWeek: 17 }),
+    ).find((card) => card.lane === "opportunity");
+
+    expect(trainingCard?.id).toMatch(/variety-offer|viral-cover/);
+    expect(growthCard?.id).toMatch(
+      /variety-offer|advertising-offer|collaboration-offer|viral-cover/,
+    );
+    expect(growthCard?.id).not.toBe(trainingCard?.id);
+  });
+
+  it("라이벌 컴백을 감지하면 성장기 대응 카드와 세 가지 전략을 우선한다", () => {
+    const card = generateWeeklyDecisionCards(
+      30,
+      "fall",
+      healthyContext({
+        phase: "growth",
+        lastOpportunityWeek: 27,
+        competitorComebacks: ["NEON-X"],
+      }),
+    ).find((candidate) => candidate.lane === "opportunity");
+
+    expect(card?.id).toContain("rival-comeback-overlap");
+    expect(card?.title).toContain("NEON-X");
+    expect(card?.options.map((option) => option.id)).toEqual([
+      "face-head-on",
+      "delay-schedule",
+      "differentiate-concept",
+    ]);
+  });
+
+  it("긴급 위기가 있으면 기회를 억제한다", () => {
+    const critical = healthyContext({
+      lastOpportunityWeek: 1,
+      members: [
+        {
+          id: "injured",
+          name: "부상 멤버",
+          injuryWeeks: 3,
+          condition: 20,
+          stress: 30,
+          satisfaction: 60,
+        },
+      ],
+    });
+
+    expect(
+      generateWeeklyDecisionCards(10, "spring", critical).some(
+        (card) => card.lane === "opportunity",
+      ),
+    ).toBe(false);
+  });
+
+  it("피로 누적과 프로젝트 마감 직전에는 거절 근거를 카드에 표시한다", () => {
+    const card = generateWeeklyDecisionCards(
+      12,
+      "spring",
+      healthyContext({
+        lastOpportunityWeek: 9,
+        projectDeadlineWeeks: 1,
+        members: healthyContext().members.map((member) => ({
+          ...member,
+          stress: 60,
+        })),
+      }),
+    ).find((candidate) => candidate.lane === "opportunity");
+
+    expect(card?.summary).toContain("평균 스트레스 60");
+    expect(card?.summary).toContain("마감 D-1");
   });
 });

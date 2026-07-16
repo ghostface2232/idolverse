@@ -5,6 +5,7 @@ import type { WeeklyFlowState } from "@/types/game";
 interface ActionDockProps {
   totalDecisions: number;
   remainingDecisions: number;
+  canResolveWeek: boolean;
   flowState: WeeklyFlowState;
   riskLabel?: string;
   onOpenPlan: () => void;
@@ -13,12 +14,13 @@ interface ActionDockProps {
 export function ActionDock({
   totalDecisions,
   remainingDecisions,
+  canResolveWeek,
   flowState,
   riskLabel,
   onOpenPlan,
 }: ActionDockProps) {
   const completed = Math.max(0, totalDecisions - remainingDecisions);
-  const isReviewReady = flowState === "review_ready" || totalDecisions === 0;
+  const isReviewReady = canResolveWeek;
   const isLocked = flowState === "resolving" || flowState === "event_focus";
 
   return (
@@ -35,7 +37,11 @@ export function ActionDock({
           </p>
         </div>
         <span className="shrink-0 rounded-lg bg-white/[0.05] px-2 py-1 text-[10px] font-medium text-text-secondary">
-          {isReviewReady ? "검토 가능" : `${remainingDecisions}건 남음`}
+          {isReviewReady
+            ? remainingDecisions > 0
+              ? `기회 ${remainingDecisions}건 선택`
+              : "검토 가능"
+            : `${remainingDecisions}건 남음`}
         </span>
       </div>
       <Button
