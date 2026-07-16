@@ -69,6 +69,7 @@ describe("saveSystem 왕복", () => {
     expect(capturedGame.weeklyFlow).toEqual({
       state: "planning_ready",
       selectedDecisionIds: {},
+      selectedTargetTraineeIds: {},
       eventQueueIds: [],
       activeEventIndex: 0,
       resolutionId: null,

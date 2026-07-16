@@ -360,6 +360,12 @@ export interface WeeklyDecisionOption {
   effects: EffectMap;
   /** 멤버 관련 효과를 적용할 대상. 없으면 기존처럼 팀 전체에 적용한다. */
   targetTraineeIds?: string[];
+  /** 수락 시 플레이어가 직접 고르는 동적 참여 인원 규칙. */
+  targetSelection?: {
+    label: string;
+    min: number;
+    max: number;
+  };
   /** 선택 때문에 이번 주 훈련 대신 수행할 활동. 다음 주에는 자동 해제한다. */
   activityOverride?: TraineeActivity;
 }
@@ -734,6 +740,7 @@ export interface WeeklyReportSnapshot {
 export interface WeeklyFlowSnapshot {
   state: WeeklyFlowState;
   selectedDecisionIds: Record<string, string>;
+  selectedTargetTraineeIds: Record<string, string[]>;
   eventQueueIds: string[];
   activeEventIndex: number;
   resolutionId: string | null;
@@ -777,6 +784,7 @@ export interface GameStoreActions {
   clearNotifications: () => void;
   setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;
   selectWeeklyDecision: (cardId: string, optionId: string) => void;
+  setWeeklyDecisionTargets: (cardId: string, traineeIds: string[]) => void;
   clearWeeklyDecision: (cardId: string) => void;
   acknowledgeWeeklyReport: () => void;
   advanceWeeklyEvent: () => void;

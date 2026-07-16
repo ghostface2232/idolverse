@@ -152,6 +152,7 @@ function prepareEventFocus() {
   snapshot.game.weeklyFlow = {
     state: "event_focus",
     selectedDecisionIds: {},
+    selectedTargetTraineeIds: {},
     eventQueueIds: [event.id],
     activeEventIndex: 0,
     resolutionId: "weekly-resolution:y1:w5",
@@ -183,6 +184,7 @@ function prepareChartRevealFocus(resolved = false) {
   snapshot.game.weeklyFlow = {
     state: "event_focus",
     selectedDecisionIds: {},
+    selectedTargetTraineeIds: {},
     eventQueueIds: [event.id],
     activeEventIndex: 0,
     resolutionId: "weekly-resolution:y1:w5",

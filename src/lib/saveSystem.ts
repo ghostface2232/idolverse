@@ -126,6 +126,7 @@ function extractGameStoreState(): GameStoreState {
     clearNotifications: _clearNotifications,
     setTrainingSchedule: _setTrainingSchedule,
     selectWeeklyDecision: _selectWeeklyDecision,
+    setWeeklyDecisionTargets: _setWeeklyDecisionTargets,
     clearWeeklyDecision: _clearWeeklyDecision,
     acknowledgeWeeklyReport: _acknowledgeWeeklyReport,
     advanceWeeklyEvent: _advanceWeeklyEvent,
@@ -294,6 +295,8 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
       ...structuredClone(initialWeeklyFlowState),
       ...(rest.weeklyFlow ?? {}),
       selectedDecisionIds: rest.weeklyFlow?.selectedDecisionIds ?? {},
+      selectedTargetTraineeIds:
+        rest.weeklyFlow?.selectedTargetTraineeIds ?? {},
       eventQueueIds: rest.weeklyFlow?.eventQueueIds ?? [],
       activeEventIndex: rest.weeklyFlow?.activeEventIndex ?? 0,
       report: rest.weeklyFlow?.report ?? null,

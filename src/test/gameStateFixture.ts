@@ -90,6 +90,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       weeklyFlow: {
         state: "planning_ready",
         selectedDecisionIds: {},
+        selectedTargetTraineeIds: {},
         eventQueueIds: [],
         activeEventIndex: 0,
         resolutionId: null,

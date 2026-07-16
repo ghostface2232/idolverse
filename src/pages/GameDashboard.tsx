@@ -35,7 +35,10 @@ import { useFandomStore } from "@/stores/fandomStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
-import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
+import {
+  isWeeklyDecisionComplete,
+  weeklyFlowSelectors,
+} from "@/stores/weeklyFlowSelectors";
 import {
   buildGoalLanes,
   buildMilestoneMetrics,
@@ -129,19 +132,21 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         const optionId = weeklyFlow.selectedDecisionIds[card.id];
         const option = card.options.find((candidate) => candidate.id === optionId);
 
-        return option
+        return option && isWeeklyDecisionComplete(card, weeklyFlow)
           ? [
               {
                 cardId: card.id,
                 optionId: option.id,
                 effects: option.effects,
-                targetTraineeIds: option.targetTraineeIds,
+                targetTraineeIds: option.targetSelection
+                  ? weeklyFlow.selectedTargetTraineeIds[card.id]
+                  : option.targetTraineeIds,
                 activityOverride: option.activityOverride,
               },
             ]
           : [];
       }),
-    [weeklyDecisions, weeklyFlow.selectedDecisionIds],
+    [weeklyDecisions, weeklyFlow],
   );
 
   const handleAdvanceWeek = useCallback(async () => {

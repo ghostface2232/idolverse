@@ -92,6 +92,11 @@ function resolveWeek(decisions: PlayerDecisions) {
       decision.optionId,
     ]),
   );
+  const selectedTargetTraineeIds = Object.fromEntries(
+    normalizedDecisions.resolvedDecisions
+      .filter((decision) => decision.targetTraineeIds)
+      .map((decision) => [decision.cardId, decision.targetTraineeIds ?? []]),
+  );
   const resolvingSnapshot: GameSnapshot = {
     ...snapshot,
     game: {
@@ -99,6 +104,7 @@ function resolveWeek(decisions: PlayerDecisions) {
       weeklyFlow: {
         state: "resolving",
         selectedDecisionIds,
+        selectedTargetTraineeIds,
         eventQueueIds: [],
         activeEventIndex: 0,
         resolutionId,
@@ -125,6 +131,7 @@ function resolveWeek(decisions: PlayerDecisions) {
   result.newState.game.weeklyFlow = {
     state: "report_ready",
     selectedDecisionIds,
+    selectedTargetTraineeIds,
     eventQueueIds,
     activeEventIndex: 0,
     resolutionId,
@@ -319,6 +326,7 @@ function advanceWeeklyEventSnapshot(snapshot: GameSnapshot): GameSnapshot {
         ...flow,
         state: complete ? "planning_ready" : "event_focus",
         selectedDecisionIds: {},
+        selectedTargetTraineeIds: {},
         eventQueueIds: complete ? [] : flow.eventQueueIds,
         activeEventIndex: complete ? 0 : nextIndex,
       },
@@ -345,6 +353,7 @@ export async function acknowledgeWeeklyReportAndSave(
         ...flow,
         state: hasEvents ? "event_focus" : "planning_ready",
         selectedDecisionIds: {},
+        selectedTargetTraineeIds: {},
         activeEventIndex: 0,
       },
     },
@@ -541,13 +550,38 @@ function normalizeDecisions(
       );
     }
 
+    let targetTraineeIds = option.targetTraineeIds;
+    if (option.targetSelection) {
+      const submittedTargets = submittedDecision.targetTraineeIds ?? [];
+      const uniqueTargets = new Set(submittedTargets);
+      const currentTraineeIds = new Set(
+        snapshot.trainee.trainees.map((trainee) => trainee.id),
+      );
+      const validCount =
+        submittedTargets.length >= option.targetSelection.min &&
+        submittedTargets.length <= option.targetSelection.max;
+      const validMembers = submittedTargets.every((id) =>
+        currentTraineeIds.has(id),
+      );
+      if (
+        uniqueTargets.size !== submittedTargets.length ||
+        !validCount ||
+        !validMembers
+      ) {
+        throw new WeeklyResolutionConflictError(
+          `Decision ${card.id} has invalid trainee targets.`,
+        );
+      }
+      targetTraineeIds = [...submittedTargets];
+    }
+
     return [
       {
         cardId: card.id,
         optionId: option.id,
         // 효과는 UI payload를 신뢰하지 않고 현재 카드 정의에서 다시 읽는다.
         effects: option.effects,
-        targetTraineeIds: option.targetTraineeIds,
+        targetTraineeIds,
         activityOverride: option.activityOverride,
       },
     ];

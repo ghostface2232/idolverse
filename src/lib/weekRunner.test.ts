@@ -128,6 +128,7 @@ describe("weekly resolution workflow", () => {
             description: "인지도를 얻는다.",
             tradeoff: "훈련을 포기한다.",
             effects: { public: 20 },
+            targetSelection: { label: "참여 멤버", min: 1, max: 1 },
           },
         ],
       },
@@ -137,16 +138,29 @@ describe("weekly resolution workflow", () => {
     gameVanillaStore
       .getState()
       .selectWeeklyDecision("opportunity:test:w5", "accept");
+    gameVanillaStore
+      .getState()
+      .setWeeklyDecisionTargets("opportunity:test:w5", ["t1"]);
     expect(
       gameVanillaStore.getState().weeklyFlow.selectedDecisionIds[
         "opportunity:test:w5"
       ],
     ).toBe("accept");
+    expect(
+      gameVanillaStore.getState().weeklyFlow.selectedTargetTraineeIds[
+        "opportunity:test:w5"
+      ],
+    ).toEqual(["t1"]);
     gameVanillaStore
       .getState()
       .clearWeeklyDecision("opportunity:test:w5");
     expect(
       gameVanillaStore.getState().weeklyFlow.selectedDecisionIds[
+        "opportunity:test:w5"
+      ],
+    ).toBeUndefined();
+    expect(
+      gameVanillaStore.getState().weeklyFlow.selectedTargetTraineeIds[
         "opportunity:test:w5"
       ],
     ).toBeUndefined();
@@ -160,6 +174,103 @@ describe("weekly resolution workflow", () => {
     expect(committed.gameStore.currentWeek).toBe(6);
     // 기회 효과(+20)는 적용되지 않고 기본 주간 자연 감소(-2)만 남는다.
     expect(committed.fandomStore.public).toBe(8);
+  });
+
+  it("부분 참여 기회 효과를 선택한 멤버에게만 적용한다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.weeklyDecisions = [
+      {
+        id: "opportunity:unit:w5",
+        lane: "opportunity",
+        category: "기회",
+        title: "유닛 제안",
+        summary: "한 명만 참여한다.",
+        options: [
+          {
+            id: "accept",
+            label: "수락",
+            description: "선택한 멤버만 일정을 소화한다.",
+            tradeoff: "개인 스트레스가 오른다.",
+            effects: { stress: 10 },
+            activityOverride: "individual",
+            targetSelection: { label: "참여 멤버", min: 1, max: 1 },
+          },
+        ],
+      },
+    ];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    const report = runWeek({
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [
+        {
+          cardId: "opportunity:unit:w5",
+          optionId: "accept",
+          effects: {},
+          targetTraineeIds: ["t1"],
+        },
+      ],
+    });
+
+    const decisionStressTargets = report.deltas
+      .filter(
+        (delta) =>
+          delta.source.kind === "decision" &&
+          delta.source.id === "opportunity:unit:w5:accept" &&
+          delta.target.kind === "trainee" &&
+          delta.target.field === "stress",
+      )
+      .map((delta) => delta.target.id);
+    expect(decisionStressTargets).toEqual(["t1"]);
+    expect(
+      captureGameState().gameStore.weeklyFlow.selectedTargetTraineeIds[
+        "opportunity:unit:w5"
+      ],
+    ).toEqual(["t1"]);
+  });
+
+  it.each([
+    ["인원 부족", []],
+    ["인원 초과", ["t1", "t2"]],
+    ["중복 멤버", ["t1", "t1"]],
+    ["존재하지 않는 멤버", ["missing"]],
+  ])("동적 대상이 유효하지 않으면 거부한다: %s", (_label, targetTraineeIds) => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.weeklyDecisions = [
+      {
+        id: "opportunity:target-validation:w5",
+        lane: "opportunity",
+        category: "기회",
+        title: "대상 검증",
+        summary: "한 명을 선택해야 한다.",
+        options: [
+          {
+            id: "accept",
+            label: "수락",
+            description: "대상 검증용 선택지",
+            tradeoff: "테스트",
+            effects: { stress: 5 },
+            targetSelection: { label: "참여 멤버", min: 1, max: 1 },
+          },
+        ],
+      },
+    ];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    expect(() =>
+      runWeek({
+        trainingSchedule: { intensity: "normal", restDay: false },
+        resolvedDecisions: [
+          {
+            cardId: "opportunity:target-validation:w5",
+            optionId: "accept",
+            effects: {},
+            targetTraineeIds,
+          },
+        ],
+      }),
+    ).toThrow(WeeklyResolutionConflictError);
+    expect(captureGameState().gameStore.currentWeek).toBe(5);
   });
 });
 
@@ -186,6 +297,7 @@ describe("persistent event queue", () => {
     snapshot.game.weeklyFlow = {
       state: "event_focus",
       selectedDecisionIds: {},
+      selectedTargetTraineeIds: {},
       eventQueueIds: [event.id],
       activeEventIndex: 0,
       resolutionId: "weekly-resolution:y1:w5",

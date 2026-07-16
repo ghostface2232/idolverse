@@ -300,6 +300,9 @@ function buildOpportunityCard(
       ...(option.targetTraineeIds
         ? { targetTraineeIds: [...option.targetTraineeIds] }
         : {}),
+      ...(option.targetSelection
+        ? { targetSelection: { ...option.targetSelection } }
+        : {}),
     })),
   };
 }
