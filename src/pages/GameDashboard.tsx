@@ -23,6 +23,7 @@ import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
   applyEventChoiceAndSave,
+  completeChartRevealAndSave,
   completePositionReviewAndSave,
   runWeekAndSave,
 } from "@/lib/weekRunner";
@@ -214,17 +215,13 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   };
 
   const handleCompleteChartReveal = async (eventId: string) => {
-    const event = pendingEvents.find((candidate) => candidate.id === eventId);
-    if (!event) return;
     setWorkflowError(null);
     try {
-      await applyEventChoiceAndSave(
-        event,
-        -1,
+      await completeChartRevealAndSave(
+        eventId,
         userId,
         DEFAULT_AUTO_SAVE_SLOT,
       );
-      await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
     } catch (error) {
       console.error("Chart reveal save failed.", error);
       setWorkflowError("차트 결과를 저장하지 못했습니다. 다시 확인해 주세요.");

@@ -777,6 +777,7 @@ export interface GameStoreActions {
   clearNotifications: () => void;
   setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;
   selectWeeklyDecision: (cardId: string, optionId: string) => void;
+  clearWeeklyDecision: (cardId: string) => void;
   acknowledgeWeeklyReport: () => void;
   advanceWeeklyEvent: () => void;
 }

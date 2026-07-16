@@ -254,7 +254,50 @@ export async function advanceWeeklyEventAndSave(
   userId: string,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
+  const nextSnapshot = advanceWeeklyEventSnapshot(buildGameSnapshot());
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+/** 차트 공개 해결과 이벤트 큐 이동을 한 번의 저장으로 원자적으로 확정한다. */
+export async function completeChartRevealAndSave(
+  eventId: string,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
   const snapshot = buildGameSnapshot();
+  const flow = snapshot.game.weeklyFlow;
+  const activeEventId = flow.eventQueueIds[flow.activeEventIndex];
+  const activeEvent = snapshot.event.pendingEvents.find(
+    (event) => event.id === eventId,
+  );
+  if (
+    flow.state !== "event_focus" ||
+    activeEventId !== eventId ||
+    activeEvent?.presentation?.kind !== "chart-reveal"
+  ) {
+    throw new WeeklyResolutionConflictError(
+      `Chart reveal ${eventId} is not the active event.`,
+    );
+  }
+
+  const resolvedSnapshot = activeEvent.resolved
+    ? snapshot
+    : resolveEventChoice(snapshot, activeEvent, -1).nextSnapshot;
+  const nextSnapshot = advanceWeeklyEventSnapshot(resolvedSnapshot);
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+function advanceWeeklyEventSnapshot(snapshot: GameSnapshot): GameSnapshot {
   const flow = snapshot.game.weeklyFlow;
   const activeEventId = flow.eventQueueIds[flow.activeEventIndex];
   const activeEvent = snapshot.event.pendingEvents.find(
@@ -268,7 +311,7 @@ export async function advanceWeeklyEventAndSave(
 
   const nextIndex = flow.activeEventIndex + 1;
   const complete = nextIndex >= flow.eventQueueIds.length;
-  const nextSnapshot: GameSnapshot = {
+  return {
     ...snapshot,
     game: {
       ...snapshot.game,
@@ -281,12 +324,6 @@ export async function advanceWeeklyEventAndSave(
       },
     },
   };
-  const saved = await saveGame(
-    userId,
-    slotNumber,
-    toPersistedSnapshot(nextSnapshot),
-  );
-  hydrateGameState(saved.gameState);
 }
 
 export async function acknowledgeWeeklyReportAndSave(

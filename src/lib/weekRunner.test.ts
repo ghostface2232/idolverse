@@ -5,6 +5,7 @@ import {
   runWeek,
   WeeklyResolutionConflictError,
 } from "@/lib/weekRunner";
+import { gameVanillaStore } from "@/stores/gameStore";
 import { makeGameSnapshot, toGameStateSnapshot } from "@/test/gameStateFixture";
 import type { GameEvent, WeeklyReportSnapshot } from "@/types/game";
 
@@ -132,6 +133,23 @@ describe("weekly resolution workflow", () => {
       },
     ];
     hydrateGameState(toGameStateSnapshot(snapshot));
+
+    gameVanillaStore
+      .getState()
+      .selectWeeklyDecision("opportunity:test:w5", "accept");
+    expect(
+      gameVanillaStore.getState().weeklyFlow.selectedDecisionIds[
+        "opportunity:test:w5"
+      ],
+    ).toBe("accept");
+    gameVanillaStore
+      .getState()
+      .clearWeeklyDecision("opportunity:test:w5");
+    expect(
+      gameVanillaStore.getState().weeklyFlow.selectedDecisionIds[
+        "opportunity:test:w5"
+      ],
+    ).toBeUndefined();
 
     runWeek({
       trainingSchedule: { intensity: "normal", restDay: false },

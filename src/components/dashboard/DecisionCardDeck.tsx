@@ -54,6 +54,7 @@ export function DecisionCardDeck({
   const flow = useGameStore(weeklyFlowSelectors.flow);
   const canResolveWeek = useGameStore(weeklyFlowSelectors.canResolveWeek);
   const selectWeeklyDecision = useGameStore((state) => state.selectWeeklyDecision);
+  const clearWeeklyDecision = useGameStore((state) => state.clearWeeklyDecision);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [reviewing, setReviewing] = useState(false);
@@ -79,7 +80,9 @@ export function DecisionCardDeck({
 
   const handleSkipOpportunity = () => {
     if (!activeCard || activeCard.lane !== "opportunity") return;
+    clearWeeklyDecision(activeCard.id);
     if (safeIndex >= cards.length - 1) {
+      setEditingIndex(null);
       setReviewing(true);
       return;
     }

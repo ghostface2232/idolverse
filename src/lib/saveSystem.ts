@@ -126,6 +126,7 @@ function extractGameStoreState(): GameStoreState {
     clearNotifications: _clearNotifications,
     setTrainingSchedule: _setTrainingSchedule,
     selectWeeklyDecision: _selectWeeklyDecision,
+    clearWeeklyDecision: _clearWeeklyDecision,
     acknowledgeWeeklyReport: _acknowledgeWeeklyReport,
     advanceWeeklyEvent: _advanceWeeklyEvent,
     ...state

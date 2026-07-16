@@ -22,6 +22,7 @@ export const weeklyFlowSelectors = {
 
 export interface WeeklyFlowCommands {
   selectDecision: GameStore["selectWeeklyDecision"];
+  clearDecision: GameStore["clearWeeklyDecision"];
   acknowledgeReport: GameStore["acknowledgeWeeklyReport"];
   advanceEvent: GameStore["advanceWeeklyEvent"];
 }
@@ -29,6 +30,7 @@ export interface WeeklyFlowCommands {
 export function selectWeeklyFlowCommands(state: GameStore): WeeklyFlowCommands {
   return {
     selectDecision: state.selectWeeklyDecision,
+    clearDecision: state.clearWeeklyDecision,
     acknowledgeReport: state.acknowledgeWeeklyReport,
     advanceEvent: state.advanceWeeklyEvent,
   };

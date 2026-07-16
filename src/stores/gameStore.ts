@@ -137,6 +137,30 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
         },
       };
     }),
+  clearWeeklyDecision: (cardId) =>
+    set((state) => {
+      if (
+        state.weeklyFlow.state === "resolving" ||
+        state.weeklyFlow.state === "report_ready" ||
+        state.weeklyFlow.state === "event_focus" ||
+        !state.weeklyFlow.selectedDecisionIds[cardId]
+      ) {
+        return state;
+      }
+
+      const selectedDecisionIds = {
+        ...state.weeklyFlow.selectedDecisionIds,
+      };
+      delete selectedDecisionIds[cardId];
+
+      return {
+        weeklyFlow: {
+          ...state.weeklyFlow,
+          state: "planning_active",
+          selectedDecisionIds,
+        },
+      };
+    }),
   acknowledgeWeeklyReport: () =>
     set((state) => {
       if (state.weeklyFlow.state !== "report_ready") return state;
