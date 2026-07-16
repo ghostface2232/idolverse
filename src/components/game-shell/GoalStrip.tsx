@@ -109,6 +109,7 @@ export function GoalStrip({ lanes, risk }: GoalStripProps) {
           title={lanes.project.title}
           progressLabel={lanes.project.progressLabel}
           progressRatio={lanes.project.progressRatio}
+          deadlineLabel={lanes.project.deadlineLabel}
           unlocks={lanes.project.unlocks}
         />
       ) : null}

@@ -333,6 +333,24 @@ select {
   animation: label-swap 200ms ease-out both;
 }
 
+.chart-rank-sweep {
+  animation: chart-rank-sweep 420ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes chart-rank-sweep {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 @keyframes label-swap {
   from {
     opacity: 0.35;

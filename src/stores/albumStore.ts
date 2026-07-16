@@ -1,6 +1,5 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-import { EQUIPMENT_ALBUM_MULT } from "@/data/balance";
 import type { Album, AlbumStore, AlbumStoreState } from "@/types/game";
 
 const initialAlbum: Album = {
@@ -60,27 +59,6 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
 }
 
-function calculateAlbumQuality(album: Album, equipmentLevel: 1 | 2 | 3 | 4) {
-  const progressAverage =
-    (album.progress.song +
-      album.progress.visual +
-      album.progress.choreography +
-      album.progress.marketing) /
-    4;
-  const titleTrackQuality = album.titleTrack?.quality ?? 0;
-  const fitAverage =
-    (album.memberConceptFit + album.seasonFit + album.fandomExpectationFit) / 3;
-  const collaboratorBonus =
-    (album.externalCollaborators.composer ? 4 : 0) +
-    (album.externalCollaborators.choreographer ? 3 : 0);
-
-  const base =
-    Math.round(progressAverage * 0.45 + titleTrackQuality * 0.35 + fitAverage * 0.2) +
-    collaboratorBonus;
-
-  return clamp(Math.round(base * EQUIPMENT_ALBUM_MULT[equipmentLevel]), 0, 100);
-}
-
 export const albumVanillaStore = createStore<AlbumStore>()((set) => ({
   ...initialAlbumState,
   startAlbum: (album) =>
@@ -119,24 +97,11 @@ export const albumVanillaStore = createStore<AlbumStore>()((set) => ({
           }
         : null,
     })),
-  releaseAlbum: (releaseWeek, equipmentLevel) =>
+  releaseAlbum: (releasedAlbum) =>
     set((state) => {
       if (!state.currentAlbum) {
         return state;
       }
-
-      const quality = calculateAlbumQuality(state.currentAlbum, equipmentLevel);
-      const releasedAlbum: Album = {
-        ...state.currentAlbum,
-        quality,
-        releaseWeek,
-        performance: {
-          chartPeak: Math.max(1, 101 - quality),
-          firstWeekSales: quality * 4200,
-          totalStreams: quality * 135000,
-          fanGrowth: Math.round(quality * 0.7),
-        },
-      };
 
       return {
         currentAlbum: null,

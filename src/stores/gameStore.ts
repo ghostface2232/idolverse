@@ -2,6 +2,8 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { GAME_BALANCE, getSeasonForWeek } from "@/data/balance";
 import { INVESTOR_CONDITIONS } from "@/data/investors";
+import { DEBUT_PROJECT } from "@/data/debutProject";
+import { createProjectInstance } from "@/systems/projectSystem";
 import type { GameStore, GameStoreState } from "@/types/game";
 
 export const initialWeeklyFlowState: GameStoreState["weeklyFlow"] = {
@@ -30,6 +32,7 @@ export const initialGameState: GameStoreState = {
   investorComplianceCount: 0,
   awardHistory: [],
   milestonesAchieved: [],
+  activeProjects: [createProjectInstance(DEBUT_PROJECT, 1)],
   weeklyDecisions: [],
   notifications: [
     {

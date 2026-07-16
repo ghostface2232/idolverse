@@ -168,7 +168,68 @@ export type MilestoneMetricKey =
   | "money"
   | "digitalIndex"
   | "albumSalesIndex"
+  | "debutReadiness"
   | "releasedAlbums";
+
+export type ProjectKind = "debut" | "comeback" | "campaign";
+export type ProjectStatus = "active" | "blocked" | "completed";
+export type ProjectDecisionStatus = "locked" | "available" | "completed";
+
+export type ProjectMetricKey =
+  | "elapsedWeeks"
+  | "readiness"
+  | "averageVocal"
+  | "showcasePassed"
+  | "titleTrackSelected";
+
+export interface ProjectStageRequirement {
+  metric: ProjectMetricKey;
+  target: number;
+  label: string;
+}
+
+export interface ProjectStageDefinition {
+  id: string;
+  title: string;
+  summary: string;
+  /** 프로젝트 시작 주를 1주차로 한 진입 창. */
+  weekWindow: readonly [number, number];
+  entryRequirements?: ProjectStageRequirement[];
+  eventIds?: string[];
+  unlocks?: string;
+}
+
+export interface ProjectDefinition {
+  id: string;
+  kind: ProjectKind;
+  title: string;
+  stages: ProjectStageDefinition[];
+  allowsOverlap: boolean;
+}
+
+export interface ProjectEvaluationResult {
+  id: string;
+  week: number;
+  score: number;
+  passed: boolean;
+  summary: string;
+}
+
+/** 저장 가능한 범용 프로젝트 인스턴스. 정의/계산 함수는 저장하지 않는다. */
+export interface ProjectInstance {
+  id: string;
+  definitionId: string;
+  kind: ProjectKind;
+  title: string;
+  startedAtWeek: number;
+  currentStageId: string;
+  status: ProjectStatus;
+  completedStageIds: string[];
+  spawnedEventIds: string[];
+  decisionStatuses: Record<string, ProjectDecisionStatus>;
+  evaluations: Record<string, ProjectEvaluationResult>;
+  completedAtWeek?: number;
+}
 
 export type MilestoneCategory =
   | "debut"
@@ -377,6 +438,7 @@ export interface TitleTrack {
 
 export interface AlbumPerformance {
   chartPeak: number;
+  chartPower?: number;
   firstWeekSales: number;
   totalStreams: number;
   fanGrowth: number;
@@ -475,6 +537,15 @@ export interface GameEvent {
   resolved: boolean;
   /** 해결된 선택지 index. 선택지가 없는 이벤트는 null, 구버전은 undefined. */
   resolvedChoiceIndex?: number | null;
+  presentation?:
+    | {
+        kind: "chart-reveal";
+        chartName: string;
+        rank: number;
+        albumTitle: string;
+        trackTitle: string;
+        chartPower: number;
+      };
 }
 
 export interface InterludeActivity {
@@ -616,13 +687,14 @@ export interface WeekDeltaSource {
     | "investor"
     | "calendar"
     | "milestone"
+    | "project"
     | "system";
   id: string;
   label: string;
 }
 
 export interface WeekDeltaTarget {
-  kind: "game" | "trainee" | "album" | "fandom" | "finance";
+  kind: "game" | "project" | "trainee" | "album" | "fandom" | "finance";
   id: string | null;
   field: string;
   label: string;
@@ -684,6 +756,8 @@ export interface GameStoreState {
   awardHistory: AwardRecord[];
   /** 달성한 이정표 기록. 해금 판정과 GoalStrip 표시의 근거가 된다. */
   milestonesAchieved: AchievedMilestone[];
+  /** 범용 단계형 프로젝트. M4에서 컴백 인스턴스가 같은 배열에 중첩된다. */
+  activeProjects: ProjectInstance[];
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;
@@ -751,7 +825,8 @@ export interface AlbumStoreActions {
   ) => void;
   updateProgress: (progress: Partial<Album["progress"]>) => void;
   selectTitleTrack: (trackId: string) => void;
-  releaseAlbum: (releaseWeek: number | undefined, equipmentLevel: 1 | 2 | 3 | 4) => void;
+  /** 품질·성과 계산은 albumSystem/evaluationSystem에서 끝낸 뒤 결과만 커밋한다. */
+  releaseAlbum: (releasedAlbum: Album) => void;
   addToHistory: (mood: ConceptMood) => void;
 }
 

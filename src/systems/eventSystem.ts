@@ -27,6 +27,21 @@ export interface RolledEvent {
   gameEvent: GameEvent;
 }
 
+export function instantiateEvent(
+  template: RandomEventTemplate,
+  id: string,
+): GameEvent {
+  return {
+    id,
+    type: mapEventType(template.type),
+    tone: template.type,
+    title: template.title,
+    description: template.description,
+    choices: template.choices,
+    resolved: false,
+  };
+}
+
 export function rollRandomEvents(
   ctx: EventContext,
   seed: number,
@@ -46,15 +61,10 @@ export function rollRandomEvents(
     if (random() < probability) {
       results.push({
         template,
-        gameEvent: {
-          id: `event-${template.id}-w${ctx.currentWeek}`,
-          type: mapEventType(template.type),
-          tone: template.type,
-          title: template.title,
-          description: template.description,
-          choices: template.choices,
-          resolved: false,
-        },
+        gameEvent: instantiateEvent(
+          template,
+          `event-${template.id}-w${ctx.currentWeek}`,
+        ),
       });
     }
   }

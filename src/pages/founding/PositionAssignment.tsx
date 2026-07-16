@@ -6,7 +6,6 @@ import { radioTileClasses } from "@/components/common/selectionTokens";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
-  calculatePositionFitness,
   isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
@@ -14,6 +13,8 @@ import {
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import { traineeVanillaStore, useTraineeStore } from "@/stores/traineeStore";
 import { gameVanillaStore } from "@/stores/gameStore";
+import { DEBUT_PROJECT } from "@/data/debutProject";
+import { createProjectInstance } from "@/systems/projectSystem";
 import type { Position, Trainee } from "@/types/game";
 
 const ALL_POSITIONS: Position[] = [
@@ -87,26 +88,26 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
       }
     }
 
-    gameVanillaStore.setState({ currentPhase: "training" }, false);
+    gameVanillaStore.setState(
+      {
+        currentPhase: "training",
+        activeProjects: [createProjectInstance(DEBUT_PROJECT, 1)],
+      },
+      false,
+    );
     gameVanillaStore.getState().addNotification({
       type: "success",
       title: "그룹 창단 완료",
-      message: "모든 포지션이 배정되었습니다. 트레이닝을 시작합니다.",
+      message: "포지션이 가배정되었습니다. 평가전 뒤 한 번 재조정할 수 있습니다.",
       week: 1,
     });
     onComplete();
   };
 
-  function fitnessColor(f: number): string {
-    if (f >= 70) return "text-emerald-300";
-    if (f >= 40) return "text-amber-300";
-    return "text-red-300";
-  }
-
   return (
     <>
       <div className="stagger-fade -mx-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3 pt-1">
-        <FoundingTitleBar title="포지션 배정" />
+        <FoundingTitleBar title="포지션 가배정" />
 
         <div className="space-y-2">
           <p className="text-sm text-slate-200">멤버 목록</p>
@@ -193,9 +194,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {REQUIRED_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitness = assigned
-                    ? calculatePositionFitness(assigned.stats, position)
-                    : null;
+                  const fitness = null;
 
                   return (
                     <PositionSlot
@@ -239,9 +238,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {OPTIONAL_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitness = assigned
-                    ? calculatePositionFitness(assigned.stats, position)
-                    : null;
+                  const fitness = null;
 
                   return (
                     <PositionSlot
@@ -265,7 +262,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
           이전
         </Button>
         <Button tone="success" disabled={!allRequiredFilled} onClick={handleComplete}>
-          창단 완료
+          가배정 완료
         </Button>
       </div>
 
@@ -276,10 +273,6 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
         >
           <div className="space-y-2">
             {trainees.map((trainee) => {
-              const fitness = calculatePositionFitness(
-                trainee.stats,
-                selectingPosition,
-              );
               const heldPositions = getTraineePositions(trainee.id, assignments);
               const isHere = heldPositions.includes(selectingPosition);
 
@@ -306,9 +299,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       </span>
                     )}
                   </div>
-                  <span className={["text-sm", fitnessColor(fitness)].join(" ")}>
-                    {fitness}%
-                  </span>
+                  <span className="text-xs text-slate-400">평가전에서 공개</span>
                 </button>
               );
             })}

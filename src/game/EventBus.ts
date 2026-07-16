@@ -14,6 +14,14 @@ export interface PresentationEvents {
     entityId: string;
     reaction: "success" | "warning" | "conflict";
   };
+  chartReveal: {
+    eventId: string;
+    chartName: string;
+    rank: number;
+    albumTitle: string;
+    trackTitle: string;
+    chartPower: number;
+  };
 }
 
 type PresentationEventHandler<TPayload> = (payload: TPayload) => void;

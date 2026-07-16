@@ -15,6 +15,8 @@ import {
 } from "@/stores/gameStore";
 import { staffVanillaStore } from "@/stores/staffStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
+import { DEBUT_PROJECT } from "@/data/debutProject";
+import { createProjectInstance } from "@/systems/projectSystem";
 import type {
   AlbumStoreState,
   CalendarStoreState,
@@ -267,6 +269,21 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     awardHistory: rest.awardHistory ?? [],
     milestonesAchieved: rest.milestonesAchieved ?? [],
+    activeProjects:
+      rest.activeProjects ??
+      (rest.currentPhase === "training"
+        ? [
+            createProjectInstance(
+              DEBUT_PROJECT,
+              Math.max(
+                1,
+                (rest.currentYear - 1) * GAME_BALANCE.weeksPerYear +
+                  rest.currentWeek -
+                  1,
+              ),
+            ),
+          ]
+        : []),
     weeklyFlow: {
       ...structuredClone(initialWeeklyFlowState),
       ...(rest.weeklyFlow ?? {}),

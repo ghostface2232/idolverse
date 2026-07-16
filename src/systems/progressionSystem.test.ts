@@ -51,10 +51,10 @@ describe("progressionSystem", () => {
 
   it("복수 요건 이정표는 병목 요건을 진행률로 보고한다", () => {
     const definition = MILESTONES_BY_ID.get("debut-showcase-ready")!;
-    const metrics = makeMetrics({ averageVocal: 50, teamChemistry: 5 });
+    const metrics = makeMetrics({ averageVocal: 50, debutReadiness: 20 });
     const progress = getMilestoneProgress(definition, metrics);
-    // 케미 5/20(25%)이 보컬 50/55(91%)보다 덜 채워진 병목이다
-    expect(progress.bottleneck.metric).toBe("teamChemistry");
+    // 준비도 20/80(25%)이 보컬 50/55(91%)보다 덜 채워진 병목이다
+    expect(progress.bottleneck.metric).toBe("debutReadiness");
     expect(progress.ratio).toBeCloseTo(0.25);
   });
 

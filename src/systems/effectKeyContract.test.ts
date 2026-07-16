@@ -6,7 +6,7 @@ import {
 } from "@/systems/applyEffects";
 import { generateWeeklyDecisionCards } from "@/systems/generateWeeklyDecisionCards";
 import { applyInvestorPenalty } from "@/systems/economySystem";
-import { RANDOM_EVENT_POOL } from "@/data/events";
+import { DEBUT_PROJECT_EVENT_POOL, RANDOM_EVENT_POOL } from "@/data/events";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { INTERLUDE_ACTIVITIES } from "@/data/interlude";
 import { INVESTOR_COMPANIES } from "@/data/investors";
@@ -30,7 +30,7 @@ interface EffectSource {
 function collectAllEffectSources(): EffectSource[] {
   const sources: EffectSource[] = [];
 
-  for (const template of RANDOM_EVENT_POOL) {
+  for (const template of [...RANDOM_EVENT_POOL, ...DEBUT_PROJECT_EVENT_POOL]) {
     sources.push({ label: `이벤트 ${template.id} (base)`, effects: template.effects });
     for (const [i, choice] of (template.choices ?? []).entries()) {
       sources.push({ label: `이벤트 ${template.id}/choice[${i}]`, effects: choice.effects });

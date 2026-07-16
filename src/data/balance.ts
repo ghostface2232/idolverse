@@ -20,6 +20,14 @@ export const WEEKS_PER_MONTH = GAME_BALANCE.weeksPerYear / 12; // Fixed costs ar
 // 만료 전 재계약 협상이 후반 멤버 운영 컨텐츠의 축이 된다.
 export const CONTRACT_TERM_WEEKS = GAME_BALANCE.weeksPerYear * 3;
 
+/** 데뷔 프로젝트의 공개 게이트. UI·쇼케이스 판정·테스트가 같은 값을 쓴다. */
+export const DEBUT_REQUIREMENTS = {
+  readiness: 80,
+  averageVocal: 55,
+  minimumWeeks: 14,
+  projectWeeks: 20,
+} as const;
+
 export const TRAINING_BASE_GROWTH = 0.8; // A single week should matter, but not outscale album-level decisions.
 
 // 휴식일은 스트레스 완화 대가로 그 주 성장을 깎는다. 무비용이면 항상 켜는

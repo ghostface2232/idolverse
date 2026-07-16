@@ -15,6 +15,8 @@ import {
   type WeekContext as SatisfactionContext,
 } from "@/systems/satisfactionSystem";
 import { progressAlbum } from "@/systems/albumSystem";
+import { processDebutProjectWeek } from "@/systems/debutSystem";
+import { weeklyChartDecay } from "@/systems/evaluationSystem";
 import {
   simulateCompetitorWeek,
   spawnEventCompetitor,
@@ -61,12 +63,14 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  DEBUT_REQUIREMENTS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
   VARIETY_OUTCOME,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
 import { INVESTOR_COMPANIES } from "@/data/investors";
+import { DEBUT_PROJECT } from "@/data/debutProject";
 import {
   captureWeekDeltaState,
   diffWeekDeltaState,
@@ -161,6 +165,15 @@ export function processWeek(
   let album = snapshot.album.currentAlbum
     ? { ...snapshot.album.currentAlbum }
     : null;
+  let releasedAlbums = [...snapshot.album.releasedAlbums];
+  let conceptHistory = [...snapshot.album.conceptHistory];
+  let chartPositions = { ...snapshot.fandom.chartPositions };
+  const cumulativeWeek = toCumulativeWeek(
+    snapshot.game.currentYear,
+    snapshot.game.currentWeek,
+  );
+  let activeProjects = [...(snapshot.game.activeProjects ?? [])];
+  let albumReleasedThisWeek = false;
   let fandomAxis: Fandom4Axis = {
     public: snapshot.fandom.public,
     fandom: snapshot.fandom.fandom,
@@ -511,6 +524,159 @@ export function processWeek(
     .map((e) => ({ ...e, duration: e.duration - 1 }))
     .filter((e) => e.duration > 0);
 
+  // ── 7.5 Stage project / pacing director / debut release
+  const debutProjectIndex = activeProjects.findIndex(
+    (project) =>
+      project.definitionId === DEBUT_PROJECT.id && project.status !== "completed",
+  );
+  if (debutProjectIndex >= 0 && snapshot.game.currentPhase === "training") {
+    const debutResult = processDebutProjectWeek({
+      project: activeProjects[debutProjectIndex],
+      cumulativeWeek,
+      season: snapshot.game.currentSeason,
+      album,
+      trainees,
+      staff,
+      fandom: { ...snapshot.fandom, ...fandomAxis, chartPositions },
+      competitors: compResult.competitors,
+      eventRivals,
+      backgroundGroups: compResult.backgroundGroups,
+      calendar: snapshot.calendar,
+      equipmentLevel: upgrades.equipmentLevel,
+      conceptHistory,
+    });
+    const previousStageId = activeProjects[debutProjectIndex].currentStageId;
+    activeProjects[debutProjectIndex] = debutResult.project;
+    album = debutResult.album;
+
+    for (const stageId of debutResult.enteredStageIds) {
+      const stage = DEBUT_PROJECT.stages.find((candidate) => candidate.id === stageId);
+      if (!stage) continue;
+      report.warnings.push(`프로젝트 진입: ${stage.title}`);
+      report.deltas.push({
+        id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+        source: { kind: "project", id: DEBUT_PROJECT.id, label: stage.title },
+        target: {
+          kind: "project",
+          id: debutResult.project.id,
+          field: "currentStageId",
+          label: "데뷔 단계",
+        },
+        before: previousStageId,
+        after: stageId,
+        day: 5,
+        severity: "notice",
+      });
+    }
+
+    if (
+      debutResult.directedBeatKinds.includes("rival") &&
+      eventRivals.length === 0
+    ) {
+      const guaranteedRival = spawnEventCompetitor(
+        snapshot.game.currentSeason,
+        fandomAxis.public,
+        snapshot.game.groupGender,
+        snapshot.game.currentWeek,
+        true,
+      );
+      if (guaranteedRival) {
+        eventRivals.push(guaranteedRival);
+        report.warnings.push(`데뷔 경쟁 팀 등장: ${guaranteedRival.name}`);
+      }
+    }
+
+    for (const projectEvent of debutResult.events) {
+      report.events.push(projectEvent.event);
+      applyToState(
+        projectEvent.effects,
+        {
+          kind: "project",
+          id: projectEvent.event.id,
+          label: projectEvent.event.title,
+        },
+        5,
+        projectEvent.targetTraineeIds,
+      );
+    }
+
+    if (debutResult.showcaseEvaluated) {
+      const showcase = debutResult.project.evaluations.showcase;
+      report.warnings.push(
+        showcase.passed
+          ? `쇼케이스 통과: 종합 ${showcase.score}점 — 데뷔 승인`
+          : `쇼케이스 보완: 종합 ${showcase.score}점 — 준비도 ${Math.floor(debutResult.readiness.readiness)}/${DEBUT_REQUIREMENTS.readiness}, 평균 보컬 ${Math.floor(debutResult.readiness.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
+      );
+    }
+
+    if (debutResult.releasedAlbum && debutResult.releaseResult) {
+      const released = debutResult.releasedAlbum;
+      const release = debutResult.releaseResult;
+      releasedAlbums = [...releasedAlbums, released];
+      conceptHistory = [...conceptHistory, released.concept.mood];
+      albumReleasedThisWeek = true;
+      chartPositions = {
+        melon: release.chartRank,
+        spotify: Math.min(100, release.chartRank + 2),
+        youtube: Math.min(100, release.chartRank + 4),
+        albumSales: Math.min(100, Math.max(1, release.chartRank + 1)),
+      };
+      applyToState(
+        {
+          fandom: release.fandomDelta,
+          public: release.publicDelta,
+          global: release.globalDelta,
+          industry: release.industryDelta,
+          fandomDisappointment: release.fandomDisappointmentDelta,
+        },
+        { kind: "album", id: released.id, label: `${released.title} 발매` },
+        6,
+      );
+      report.warnings.push(
+        `데뷔 앨범 발매: ${released.title} — 멜론 ${release.chartRank}위 진입`,
+      );
+      report.deltas.push({
+        id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+        source: { kind: "album", id: released.id, label: "데뷔 앨범 발매" },
+        target: {
+          kind: "album",
+          id: released.id,
+          field: "performance.chartPeak",
+          label: "차트 진입 순위",
+        },
+        before: null,
+        after: release.chartRank,
+        day: 6,
+        severity: "notice",
+      });
+    }
+  }
+
+  // 발매 다음 주부터 세 차트가 서로 다른 속도로 자연 하락한다.
+  const latestReleasedAlbum = releasedAlbums[releasedAlbums.length - 1];
+  const weeksAfterLatestRelease =
+    latestReleasedAlbum?.releaseWeek == null
+      ? null
+      : cumulativeWeek - latestReleasedAlbum.releaseWeek;
+  if (
+    !albumReleasedThisWeek &&
+    weeksAfterLatestRelease !== null &&
+    weeksAfterLatestRelease > 0
+  ) {
+    const decay = weeklyChartDecay(weeksAfterLatestRelease, seed + 91);
+    const decayRank = (rank: number, delta: number) => {
+      if (rank <= 0) return 0;
+      const next = rank - delta;
+      return next > 100 ? 0 : Math.max(1, next);
+    };
+    chartPositions = {
+      ...chartPositions,
+      melon: decayRank(chartPositions.melon, decay.melonDelta),
+      spotify: decayRank(chartPositions.spotify, decay.spotifyDelta),
+      youtube: decayRank(chartPositions.youtube, decay.youtubeDelta),
+    };
+  }
+
   // ── 8. Random events
   const eventCtx: EventContext = {
     currentWeek: snapshot.game.currentWeek,
@@ -571,12 +737,12 @@ export function processWeek(
 
   // ── 10. Finance (using economySystem)
   const weeksAfterRelease =
-    lastReleasedAlbum?.releaseWeek != null
-      ? snapshot.game.currentWeek - lastReleasedAlbum.releaseWeek
+    latestReleasedAlbum?.releaseWeek != null
+      ? cumulativeWeek - latestReleasedAlbum.releaseWeek
       : null;
   const chartRank =
-    snapshot.fandom.chartPositions.melon > 0
-      ? snapshot.fandom.chartPositions.melon
+    chartPositions.melon > 0
+      ? chartPositions.melon
       : null;
 
   const revenueCtx: RevenueContext = {
@@ -587,7 +753,7 @@ export function processWeek(
       weeksAfterRelease !== null && weeksAfterRelease >= 0
         ? weeksAfterRelease
         : null,
-    hasReleasedAlbum: snapshot.album.releasedAlbums.length > 0,
+    hasReleasedAlbum: releasedAlbums.length > 0,
     promotionIncome: promotionTotalIncome,
     promotionCost: promotionTotalCost,
   };
@@ -662,7 +828,7 @@ export function processWeek(
       album !== null ||
       trainees.some((t) => t.currentActivity === "entertainment") ||
       promotionOrders.length > 0,
-    albumReleaseThisWeek: false,
+    albumReleaseThisWeek: albumReleasedThisWeek,
     concertThisWeek,
     fanServiceThisWeek,
     scandalThisWeek:
@@ -801,7 +967,7 @@ export function processWeek(
     fandom: fandomAxis,
     money,
     currentAlbum: album,
-    releasedAlbums: snapshot.album.releasedAlbums,
+    releasedAlbums,
   });
   const achievedIds = new Set(
     snapshot.game.milestonesAchieved.map((m) => m.id),
@@ -840,6 +1006,18 @@ export function processWeek(
     });
   }
 
+  if (albumReleasedThisWeek && advancedGame.currentPhase === "training") {
+    report.deltas.push({
+      id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+      source: { kind: "project", id: DEBUT_PROJECT.id, label: "데뷔 프로젝트 완료" },
+      target: { kind: "game", id: null, field: "currentPhase", label: "성장 단계" },
+      before: "training",
+      after: "debut",
+      day: 7,
+      severity: "notice",
+    });
+    advancedGame = { ...advancedGame, currentPhase: "debut" };
+  }
   const nextPhase = evaluatePhaseGate(
     advancedGame.currentPhase,
     progressionMetrics,
@@ -907,6 +1085,7 @@ export function processWeek(
       investorComplianceCount,
       awardHistory,
       milestonesAchieved,
+      activeProjects,
       weeklyDecisions: nextDecisions,
       notifications: [
         ...snapshot.game.notifications,
@@ -924,6 +1103,8 @@ export function processWeek(
     album: {
       ...snapshot.album,
       currentAlbum: album,
+      releasedAlbums,
+      conceptHistory,
     },
     fandom: {
       ...snapshot.fandom,
@@ -933,6 +1114,7 @@ export function processWeek(
       fandomDisappointment: fandomAxis.fandomDisappointment,
       global: fandomAxis.global,
       industry: fandomAxis.industry,
+      chartPositions,
     },
     competitor: {
       ...snapshot.competitor,

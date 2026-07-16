@@ -12,7 +12,8 @@ import {
   diffWeekDeltaState,
   type WeekDeltaState,
 } from "@/systems/weekDelta";
-import type { EffectMap, GameEvent } from "@/types/game";
+import type { EffectMap, GameEvent, Position } from "@/types/game";
+import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 
 export class WeeklyResolutionConflictError extends Error {
   constructor(message: string) {
@@ -310,6 +311,74 @@ export async function acknowledgeWeeklyReportAndSave(
         activeEventIndex: 0,
       },
     },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+export async function completePositionReviewAndSave(
+  projectId: string,
+  assignments: Partial<Record<Position, string | null>>,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  const project = snapshot.game.activeProjects.find(
+    (candidate) => candidate.id === projectId,
+  );
+  if (project?.decisionStatuses.positionReview !== "available") {
+    throw new WeeklyResolutionConflictError("Position review is not available.");
+  }
+
+  const missingRequired = REQUIRED_POSITIONS.find(
+    (position) => !assignments[position],
+  );
+  const requiredTraineeIds = REQUIRED_POSITIONS.map(
+    (position) => assignments[position],
+  );
+  if (
+    missingRequired ||
+    new Set(requiredTraineeIds).size !== requiredTraineeIds.length
+  ) {
+    throw new WeeklyResolutionConflictError(
+      "Every required position must have a different trainee.",
+    );
+  }
+
+  const allPositions = Object.keys(assignments) as Position[];
+  const trainees = snapshot.trainee.trainees.map((trainee) => {
+    const held = allPositions.filter(
+      (position) => assignments[position] === trainee.id,
+    );
+    const required = held.find(isRequiredPosition) ?? null;
+    const optional = held.find((position) => !isRequiredPosition(position)) ?? null;
+    return {
+      ...trainee,
+      position: required ?? optional,
+      subPosition: required && optional ? optional : null,
+    };
+  });
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: snapshot.game.activeProjects.map((candidate) =>
+        candidate.id === projectId
+          ? {
+              ...candidate,
+              decisionStatuses: {
+                ...candidate.decisionStatuses,
+                positionReview: "completed",
+              },
+            }
+          : candidate,
+      ),
+    },
+    trainee: { trainees },
   };
   const saved = await saveGame(
     userId,

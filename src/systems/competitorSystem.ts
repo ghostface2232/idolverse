@@ -197,10 +197,11 @@ export function spawnEventCompetitor(
   playerLevel: number,
   playerGender: GroupGender,
   week: number,
+  force = false,
 ): EventCompetitor | null {
   const random = createSeededRandom(week * 211 + playerLevel);
 
-  if (random() >= EVENT_COMPETITOR_SPAWN_CHANCE) return null;
+  if (!force && random() >= EVENT_COMPETITOR_SPAWN_CHANCE) return null;
 
   const pool = EVENT_COMPETITOR_ARCHETYPES;
   const template = pool[Math.floor(random() * pool.length)];

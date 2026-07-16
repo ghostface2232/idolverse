@@ -1,5 +1,10 @@
-import { CONTRACT_TERM_WEEKS, GAME_BALANCE } from "@/data/balance";
+import {
+  CONTRACT_TERM_WEEKS,
+  DEBUT_REQUIREMENTS,
+  GAME_BALANCE,
+} from "@/data/balance";
 import { MILESTONE_DEFINITIONS, PHASE_GATES } from "@/data/milestones";
+import { PROJECT_DEFINITIONS_BY_ID } from "@/data/debutProject";
 import type {
   Album,
   AchievedMilestone,
@@ -8,6 +13,7 @@ import type {
   MilestoneDefinition,
   MilestoneMetricKey,
   MilestoneRequirement,
+  ProjectInstance,
   Trainee,
   WeeklyDecision,
 } from "@/types/game";
@@ -76,6 +82,15 @@ export function buildMilestoneMetrics(
     money: input.money,
     digitalIndex: input.fandom.public * 0.6 + albumQuality * 0.4,
     albumSalesIndex: input.fandom.fandom * 0.6 + input.fandom.industry * 0.4,
+    debutReadiness: input.currentAlbum
+      ? (input.currentAlbum.progress.song +
+          input.currentAlbum.progress.visual +
+          input.currentAlbum.progress.choreography +
+          input.currentAlbum.progress.marketing) /
+        4
+      : input.releasedAlbums.length > 0
+        ? 100
+        : 0,
     releasedAlbums: input.releasedAlbums.length,
   };
 }
@@ -171,6 +186,7 @@ export interface GoalLanesInput {
   achievedIds: ReadonlySet<string>;
   weeklyDecisions: readonly WeeklyDecision[];
   investorConditions: readonly InvestorCondition[];
+  activeProjects?: readonly ProjectInstance[];
 }
 
 const PHASE_PROJECT_CATEGORIES: Record<
@@ -229,7 +245,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
     .filter((definition) => projectCategories.includes(definition.category))
     .map((definition) => getMilestoneProgress(definition, input.metrics));
   // 가장 진행률이 높은(가장 가까운) 이정표가 현재 프로젝트 목표다.
-  const project =
+  let project =
     projectCandidates.length > 0
       ? toLaneItem(
           projectCandidates.reduce((best, candidate) =>
@@ -237,6 +253,41 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
           ),
         )
       : null;
+
+  const activeProject = input.activeProjects?.find(
+    (candidate) => candidate.status !== "completed",
+  );
+  const activeDefinition = activeProject
+    ? PROJECT_DEFINITIONS_BY_ID.get(activeProject.definitionId)
+    : null;
+  if (activeProject && activeDefinition) {
+    const stageIndex = Math.max(
+      0,
+      activeDefinition.stages.findIndex(
+        (stage) => stage.id === activeProject.currentStageId,
+      ),
+    );
+    const stage = activeDefinition.stages[stageIndex];
+    const readinessRatio = Math.min(
+      1,
+      input.metrics.debutReadiness / DEBUT_REQUIREMENTS.readiness,
+    );
+    const vocalRatio = Math.min(
+      1,
+      input.metrics.averageVocal / DEBUT_REQUIREMENTS.averageVocal,
+    );
+    const cumulativeWeek =
+      (input.currentYear - 1) * GAME_BALANCE.weeksPerYear + input.currentWeek;
+    const elapsed = cumulativeWeek - activeProject.startedAtWeek + 1;
+    project = {
+      id: activeProject.id,
+      title: `${stageIndex + 1}/${activeDefinition.stages.length} · ${stage.title}`,
+      progressLabel: `준비 ${Math.floor(input.metrics.debutReadiness)}/${DEBUT_REQUIREMENTS.readiness} · 보컬 ${Math.floor(input.metrics.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
+      progressRatio: Math.min(readinessRatio, vocalRatio),
+      deadlineLabel: `데뷔 W-${Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - elapsed)}`,
+      unlocks: stage.unlocks,
+    };
+  }
 
   const elapsedWeeks =
     (input.currentYear - 1) * GAME_BALANCE.weeksPerYear +

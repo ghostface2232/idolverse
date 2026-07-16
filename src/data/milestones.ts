@@ -1,5 +1,6 @@
 import {
   AWARD_ELIGIBILITY_THRESHOLDS,
+  DEBUT_REQUIREMENTS,
   GLOBAL_EXPANSION_REQUIREMENTS,
 } from "@/data/balance";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
@@ -33,8 +34,16 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
     title: "데뷔 쇼케이스 준비 완료",
     category: "debut",
     requirements: [
-      { metric: "averageVocal", target: 55, label: "평균 보컬" },
-      { metric: "teamChemistry", target: 20, label: "팀 케미" },
+      {
+        metric: "debutReadiness",
+        target: DEBUT_REQUIREMENTS.readiness,
+        label: "데뷔 준비도",
+      },
+      {
+        metric: "averageVocal",
+        target: DEBUT_REQUIREMENTS.averageVocal,
+        label: "평균 보컬",
+      },
     ],
     unlocks: "데뷔 쇼케이스",
   },

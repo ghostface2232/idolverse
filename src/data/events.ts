@@ -1,5 +1,103 @@
 import type { RandomEventTemplate } from "@/types/game";
 
+/** 프로젝트가 결정론적으로 스폰하는 사건. 확률 풀과 분리해 RNG 순서를 보존한다. */
+export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
+  {
+    id: "debut-personal-strength",
+    type: "positive",
+    title: "연습실에 남은 한 사람",
+    description: "늦은 밤까지 남은 멤버가 약했던 파트를 자기 방식으로 풀어내며 숨은 강점을 증명했다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { mental: 3, satisfaction: 3 },
+  },
+  {
+    id: "debut-position-evaluation",
+    type: "neutral",
+    title: "첫 포지션 평가전",
+    description: "가배정했던 역할의 실제 적합도가 공개됐다. 이번 프로젝트에서 단 한 번 포지션을 다시 조정할 수 있다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: {},
+  },
+  {
+    id: "debut-song-candidates",
+    type: "positive",
+    title: "데뷔곡 후보 도착",
+    description: "프로듀서가 서로 다른 승부수를 가진 데뷔곡 후보를 테이블 위에 올렸다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { albumSong: 3 },
+  },
+  {
+    id: "debut-concept-test",
+    type: "neutral",
+    title: "비공개 콘셉트 테스트",
+    description: "두 가지 스타일의 테스트 촬영에서 멤버 핏과 현장 반응이 엇갈렸다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { albumVisual: 4, industry: 1 },
+  },
+  {
+    id: "debut-unit-chemistry",
+    type: "positive",
+    title: "유닛 연습의 발견",
+    description: "예상 밖의 멤버 조합이 서로의 빈틈을 채우며 무대의 중심 장면을 만들었다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { chemistry: 5 },
+  },
+  {
+    id: "debut-rival-arrival",
+    type: "neutral",
+    title: "같은 계절의 라이벌",
+    description: "비슷한 데뷔 시기를 노리는 경쟁 팀의 첫 티저가 공개됐다. 시장의 시선이 둘로 갈리기 시작한다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { industry: 1 },
+  },
+  {
+    id: "debut-title-decision",
+    type: "positive",
+    title: "타이틀곡 확정",
+    description: "수차례의 월말 평가 끝에 팀의 첫인상을 책임질 타이틀곡이 결정됐다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { albumSong: 5, satisfaction: 2 },
+  },
+  {
+    id: "debut-public-evaluation",
+    type: "neutral",
+    title: "첫 공개 평가",
+    description: "소수의 업계 관계자와 팬 패널 앞에서 처음으로 완곡 무대를 공개했다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { industry: 3, public: 2 },
+  },
+  {
+    id: "debut-showcase-rehearsal",
+    type: "neutral",
+    title: "쇼케이스 최종 리허설",
+    description: "조명과 카메라가 켜진 무대에서 데뷔 자격을 증명할 마지막 점검이 시작됐다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { albumChoreography: 4 },
+  },
+  {
+    id: "debut-promotion-launch",
+    type: "positive",
+    title: "데뷔 티저 공개",
+    description: "팀의 이름과 첫 콘셉트가 세상에 공개되며 카운트다운이 시작됐다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { public: 3, albumMarketing: 5 },
+  },
+];
+
+export const PROJECT_EVENT_TEMPLATES_BY_ID = new Map(
+  DEBUT_PROJECT_EVENT_POOL.map((template) => [template.id, template]),
+);
+
 export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "viral-performance-cut",

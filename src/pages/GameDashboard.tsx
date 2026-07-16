@@ -1,8 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dumbbell } from "lucide-react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
+import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
+import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
@@ -21,6 +23,7 @@ import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
   applyEventChoiceAndSave,
+  completePositionReviewAndSave,
   runWeekAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
@@ -63,6 +66,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
+  const [isPositionReviewSaving, setIsPositionReviewSaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
@@ -75,6 +79,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const trainingSchedule = useGameStore((state) => state.trainingSchedule);
   const investorConditions = useGameStore((state) => state.investorConditions);
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
+  const activeProjects = useGameStore((state) => state.activeProjects);
   const trainees = useTraineeStore((state) => state.trainees);
   const fandomPublic = useFandomStore((state) => state.public);
   const fandomCore = useFandomStore((state) => state.fandom);
@@ -95,6 +100,13 @@ export function GameDashboard({ userId }: GameDashboardProps) {
 
   const activeEvent =
     pendingEvents.find((event) => event.id === activeEventId) ?? null;
+  const chartReveal =
+    activeEvent?.presentation?.kind === "chart-reveal"
+      ? activeEvent.presentation
+      : null;
+  const positionReviewProject = activeProjects.find(
+    (project) => project.decisionStatuses.positionReview === "available",
+  );
   const displayedWeekReport =
     weeklyFlow.state === "report_ready" && !isAdvancing
       ? weeklyFlow.report
@@ -200,6 +212,56 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
   };
 
+  const handleCompleteChartReveal = async (eventId: string) => {
+    const event = pendingEvents.find((candidate) => candidate.id === eventId);
+    if (!event) return;
+    setWorkflowError(null);
+    try {
+      await applyEventChoiceAndSave(
+        event,
+        -1,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
+      await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+    } catch (error) {
+      console.error("Chart reveal save failed.", error);
+      setWorkflowError("차트 결과를 저장하지 못했습니다. 다시 확인해 주세요.");
+      throw error;
+    }
+  };
+
+  const handleCompletePositionReview = async (
+    assignments: Parameters<typeof completePositionReviewAndSave>[1],
+  ) => {
+    if (!positionReviewProject || isPositionReviewSaving) return;
+    setIsPositionReviewSaving(true);
+    setWorkflowError(null);
+    try {
+      await completePositionReviewAndSave(
+        positionReviewProject.id,
+        assignments,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
+    } catch (error) {
+      console.error("Position review save failed.", error);
+      setWorkflowError("포지션 재조정을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsPositionReviewSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (weeklyFlow.state !== "event_focus" || !activeEvent || !chartReveal) {
+      return;
+    }
+    presentationBus.emit("chartReveal", {
+      eventId: activeEvent.id,
+      ...chartReveal,
+    });
+  }, [activeEvent, chartReveal, weeklyFlow.state]);
+
   const goalLanes = useMemo(() => {
     const metrics = buildMilestoneMetrics({
       trainees,
@@ -222,6 +284,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       achievedIds: new Set(milestonesAchieved.map((m) => m.id)),
       weeklyDecisions,
       investorConditions,
+      activeProjects,
     });
   }, [
     trainees,
@@ -239,6 +302,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     milestonesAchieved,
     weeklyDecisions,
     investorConditions,
+    activeProjects,
   ]);
   const plan = (
     <div className="space-y-3">
@@ -338,12 +402,22 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         />
       ) : null}
 
-      {weeklyFlow.state === "event_focus" && activeEvent ? (
+      {weeklyFlow.state === "event_focus" && activeEvent && !chartReveal ? (
         <EventModal
           key={activeEvent.id}
           event={activeEvent}
           onResolve={(choiceIndex) => handleResolveEvent(activeEvent, choiceIndex)}
           onClose={handleCloseEvent}
+        />
+      ) : null}
+
+      <ChartRevealOverlay onComplete={handleCompleteChartReveal} />
+
+      {weeklyFlow.state === "planning_ready" && positionReviewProject ? (
+        <PositionReviewModal
+          trainees={trainees}
+          isSaving={isPositionReviewSaving}
+          onConfirm={handleCompletePositionReview}
         />
       ) : null}
     </>
