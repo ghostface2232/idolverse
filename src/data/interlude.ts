@@ -116,6 +116,9 @@ export const INTERLUDE_ACTIVITIES: InterludeTemplate[] = [
       stress: -25,
       public: -3,
     },
-    risks: ["연애 스캔들 확률 +10%", "대중 인지도 주당 -3"],
+    risks: [
+      "휴가 중에는 사생활이 카메라에 잡힐 수 있다",
+      "쉬는 동안 대중의 관심은 조금씩 식는다",
+    ],
   },
 ];

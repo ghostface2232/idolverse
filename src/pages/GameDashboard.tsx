@@ -24,11 +24,18 @@ import {
   runWeekAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
+import { useAlbumStore } from "@/stores/albumStore";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useEventStore } from "@/stores/eventStore";
+import { useFandomStore } from "@/stores/fandomStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
+import { useTraineeStore } from "@/stores/traineeStore";
 import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
+import {
+  buildGoalLanes,
+  buildMilestoneMetrics,
+} from "@/systems/progressionSystem";
 import type { GameEvent, WeeklyDecisionTrigger } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
 
@@ -62,10 +69,20 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const currentWeek = useGameStore((state) => state.currentWeek);
   const currentYear = useGameStore((state) => state.currentYear);
   const currentSeason = useGameStore((state) => state.currentSeason);
+  const currentPhase = useGameStore((state) => state.currentPhase);
   const weeklyDecisions = useGameStore((state) => state.weeklyDecisions);
   const notifications = useGameStore((state) => state.notifications);
   const trainingSchedule = useGameStore((state) => state.trainingSchedule);
   const investorConditions = useGameStore((state) => state.investorConditions);
+  const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
+  const trainees = useTraineeStore((state) => state.trainees);
+  const fandomPublic = useFandomStore((state) => state.public);
+  const fandomCore = useFandomStore((state) => state.fandom);
+  const fandomLoyalty = useFandomStore((state) => state.fandomLoyalty);
+  const fandomGlobal = useFandomStore((state) => state.global);
+  const fandomIndustry = useFandomStore((state) => state.industry);
+  const currentAlbum = useAlbumStore((state) => state.currentAlbum);
+  const releasedAlbums = useAlbumStore((state) => state.releasedAlbums);
   const weeklyFlow = useGameStore(weeklyFlowSelectors.flow);
   const remainingDecisions = useGameStore(
     weeklyFlowSelectors.remainingDecisionCount,
@@ -83,7 +100,6 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       ? weeklyFlow.report
       : null;
   const totalAlerts = notifications.length + news.length;
-  const primaryCondition = investorConditions[0];
   const primaryRisk = useMemo(
     () =>
       weeklyDecisions
@@ -184,11 +200,46 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
   };
 
-  const goal = primaryCondition?.description ?? "이번 주 팀 운영 안정화";
-  const elapsedWeeks = (currentYear - 1) * 52 + currentWeek - 1;
-  const deadlineLabel = primaryCondition
-    ? `W-${Math.max(0, primaryCondition.deadlineWeeks - elapsedWeeks)}`
-    : "상시";
+  const goalLanes = useMemo(() => {
+    const metrics = buildMilestoneMetrics({
+      trainees,
+      fandom: {
+        public: fandomPublic,
+        fandom: fandomCore,
+        fandomLoyalty,
+        global: fandomGlobal,
+        industry: fandomIndustry,
+      },
+      money,
+      currentAlbum,
+      releasedAlbums,
+    });
+    return buildGoalLanes({
+      phase: currentPhase,
+      currentWeek,
+      currentYear,
+      metrics,
+      achievedIds: new Set(milestonesAchieved.map((m) => m.id)),
+      weeklyDecisions,
+      investorConditions,
+    });
+  }, [
+    trainees,
+    fandomPublic,
+    fandomCore,
+    fandomLoyalty,
+    fandomGlobal,
+    fandomIndustry,
+    money,
+    currentAlbum,
+    releasedAlbums,
+    currentPhase,
+    currentWeek,
+    currentYear,
+    milestonesAchieved,
+    weeklyDecisions,
+    investorConditions,
+  ]);
   const plan = (
     <div className="space-y-3">
       {workflowError ? (
@@ -223,9 +274,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
         }
-        goalStrip={
-          <GoalStrip goal={goal} deadlineLabel={deadlineLabel} risk={primaryRisk} />
-        }
+        goalStrip={<GoalStrip lanes={goalLanes} risk={primaryRisk} />}
         commandPanel={activeSection === "company" ? plan : undefined}
         actionDock={
           activeSection === "company" ? (

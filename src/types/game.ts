@@ -153,6 +153,62 @@ export type TraineeStatKey =
   | "mental";
 
 /**
+ * 이정표 판정에 쓰는 지표의 단일 계약. progressionSystem이 게임 상태에서
+ * 이 키들의 현재 값을 산출하고, data/milestones.ts의 정의가 목표치를 든다.
+ */
+export type MilestoneMetricKey =
+  | "averageVocal"
+  | "averageDance"
+  | "teamChemistry"
+  | "public"
+  | "fandom"
+  | "fandomLoyalty"
+  | "global"
+  | "industry"
+  | "money"
+  | "digitalIndex"
+  | "albumSalesIndex"
+  | "releasedAlbums";
+
+export type MilestoneCategory =
+  | "debut"
+  | "promotion"
+  | "release"
+  | "award"
+  | "global";
+
+export interface MilestoneRequirement {
+  metric: MilestoneMetricKey;
+  target: number;
+  label: string;
+}
+
+export interface MilestoneDefinition {
+  id: string;
+  title: string;
+  category: MilestoneCategory;
+  requirements: MilestoneRequirement[];
+  /** 달성 시 열리는 행동. 보상은 수치가 아니라 새 플레이가 열린다는 사실이어야 한다. */
+  unlocks: string;
+}
+
+/** 이정표 달성 기록. awardHistory처럼 게임 상태에 영속화된다. */
+export interface AchievedMilestone {
+  id: string;
+  year: number;
+  /** 달성 시점의 누적 주차(연도 랩 무관). */
+  week: number;
+}
+
+/** phase 전이를 데이터로 표현하는 게이트. 전이 판정은 progressionSystem 한 곳에서만 한다. */
+export interface PhaseGate {
+  from: GamePhase;
+  to: GamePhase;
+  requirements: MilestoneRequirement[];
+  description: string;
+}
+
+/**
  * 게임 내 모든 효과(결정 카드/이벤트/프로모션/투자사 페널티)가 사용할 수 있는
  * 키의 단일 계약. 여기 없는 키는 컴파일 에러가 되므로 조용히 소실될 수 없다.
  * 적용 규칙은 src/systems/applyEffects.ts 한 곳에서만 구현한다.
@@ -559,6 +615,7 @@ export interface WeekDeltaSource {
     | "fandom"
     | "investor"
     | "calendar"
+    | "milestone"
     | "system";
   id: string;
   label: string;
@@ -625,6 +682,8 @@ export interface GameStoreState {
   investorComplianceCount: number;
   /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */
   awardHistory: AwardRecord[];
+  /** 달성한 이정표 기록. 해금 판정과 GoalStrip 표시의 근거가 된다. */
+  milestonesAchieved: AchievedMilestone[];
   weeklyDecisions: WeeklyDecision[];
   notifications: Notification[];
   trainingSchedule: TrainingScheduleState;

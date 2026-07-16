@@ -266,6 +266,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     awardHistory: rest.awardHistory ?? [],
+    milestonesAchieved: rest.milestonesAchieved ?? [],
     weeklyFlow: {
       ...structuredClone(initialWeeklyFlowState),
       ...(rest.weeklyFlow ?? {}),

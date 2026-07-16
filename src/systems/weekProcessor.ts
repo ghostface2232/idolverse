@@ -54,10 +54,18 @@ import {
   type AwardShowResult,
 } from "@/systems/awardsSystem";
 import {
+  buildMilestoneMetrics,
+  evaluateMilestones,
+  evaluatePhaseGate,
+  toCumulativeWeek,
+} from "@/systems/progressionSystem";
+import {
   GAME_BALANCE,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
+  VARIETY_OUTCOME,
 } from "@/data/balance";
+import { createSeededRandom } from "@/lib/seededRandom";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import {
   captureWeekDeltaState,
@@ -599,6 +607,35 @@ export function processWeek(
   report.warnings.push(...financeResult.warnings);
 
   // ── 11. Fandom 4-axis
+  // 예능 출연의 대중성 보상은 확정이 아니라 분산이 있어야 한다.
+  // 바이럴이면 추가 보상, 무반응이면 이번 주 대중성 상승이 사라진다.
+  const hadEntertainmentMember = trainees.some(
+    (t) => t.currentActivity === "entertainment",
+  );
+  let varietyOutcome: "viral" | "normal" | "dud" | null = null;
+  if (hadEntertainmentMember) {
+    const roll = createSeededRandom(seed + 8)();
+    varietyOutcome =
+      roll < VARIETY_OUTCOME.viralChance
+        ? "viral"
+        : roll < VARIETY_OUTCOME.viralChance + VARIETY_OUTCOME.dudChance
+          ? "dud"
+          : "normal";
+    if (varietyOutcome === "viral") {
+      report.warnings.push("예능 출연이 화제가 되어 대중의 반응이 뜨겁습니다.");
+      applyToState(
+        {
+          public: VARIETY_OUTCOME.viralPublicBonus,
+          global: VARIETY_OUTCOME.viralGlobalBonus,
+        },
+        { kind: "event", id: "variety-viral", label: "예능 바이럴" },
+        5,
+      );
+    } else if (varietyOutcome === "dud") {
+      report.warnings.push("예능 출연이 별다른 반응을 얻지 못했습니다.");
+    }
+  }
+
   const concertThisWeek = promotionOrders.some(
     (o) =>
       o.activityId === "smallConcert" ||
@@ -614,9 +651,7 @@ export function processWeek(
   );
 
   const fandomCtx: WeeklyFandomContext = {
-    hadVarietyAppearance: trainees.some(
-      (t) => t.currentActivity === "entertainment",
-    ),
+    hadVarietyAppearance: varietyOutcome === "viral" || varietyOutcome === "normal",
     hadViralEvent: rolledEvents.some(
       (e) =>
         e.template.id === "viral-performance-cut" ||
@@ -698,7 +733,7 @@ export function processWeek(
           penaltyApplied: false,
         };
         report.warnings.push(
-          `투자사 조건 미달: ${check.description} — ${INVESTOR_PENALTY_GRACE_WEEKS}주 안에 회복하지 못하면 페널티가 적용됩니다.`,
+          `투자사 조건 미달: ${check.description} — ${INVESTOR_PENALTY_GRACE_WEEKS}주 안에 회복하지 못하면 투자사가 조치에 나섭니다.`,
         );
         continue;
       }
@@ -725,7 +760,7 @@ export function processWeek(
     if (penaltyDueThisWeek) {
       const penalties = applyInvestorPenalty(investor);
       for (const penalty of penalties) {
-        report.warnings.push(`투자사 페널티: ${penalty.description}`);
+        report.warnings.push(`투자사 조치: ${penalty.description}`);
         applyToState(
           penalty.effects,
           { kind: "investor", id: investor.id, label: penalty.description },
@@ -747,7 +782,7 @@ export function processWeek(
   );
 
   // ── 13. Advance week
-  const advancedGame = advanceWeekState(snapshot.game);
+  let advancedGame = advanceWeekState(snapshot.game);
   report.deltas.push({
     id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
     source: { kind: "calendar", id: "advance-week", label: "주간 진행" },
@@ -757,6 +792,70 @@ export function processWeek(
     day: 7,
     severity: "info",
   });
+
+  // ── 13.2 Progression: milestones & phase gates
+  // 이번 주 결과가 모두 반영된 값으로 이정표를 판정하고, phase 전이는
+  // 다음 주 카드 생성(14)이 전이된 phase를 읽도록 카드 생성보다 먼저 한다.
+  const progressionMetrics = buildMilestoneMetrics({
+    trainees,
+    fandom: fandomAxis,
+    money,
+    currentAlbum: album,
+    releasedAlbums: snapshot.album.releasedAlbums,
+  });
+  const achievedIds = new Set(
+    snapshot.game.milestonesAchieved.map((m) => m.id),
+  );
+  const newlyAchieved = evaluateMilestones(progressionMetrics, achievedIds);
+  let milestonesAchieved = snapshot.game.milestonesAchieved;
+  const cumulativeWeekForMilestone = toCumulativeWeek(
+    snapshot.game.currentYear,
+    snapshot.game.currentWeek,
+  );
+  for (const definition of newlyAchieved) {
+    milestonesAchieved = [
+      ...milestonesAchieved,
+      {
+        id: definition.id,
+        year: snapshot.game.currentYear,
+        week: cumulativeWeekForMilestone,
+      },
+    ];
+    report.warnings.push(
+      `🎯 이정표 달성: ${definition.title} — 이제 '${definition.unlocks}'의 길이 열렸습니다`,
+    );
+    report.deltas.push({
+      id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+      source: { kind: "milestone", id: definition.id, label: definition.title },
+      target: {
+        kind: "game",
+        id: null,
+        field: "milestonesAchieved",
+        label: definition.unlocks,
+      },
+      before: false,
+      after: true,
+      day: 7,
+      severity: "notice",
+    });
+  }
+
+  const nextPhase = evaluatePhaseGate(
+    advancedGame.currentPhase,
+    progressionMetrics,
+  );
+  if (nextPhase) {
+    report.deltas.push({
+      id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+      source: { kind: "milestone", id: "phase-gate", label: "성장 단계 전환" },
+      target: { kind: "game", id: null, field: "currentPhase", label: "성장 단계" },
+      before: advancedGame.currentPhase,
+      after: nextPhase,
+      day: 7,
+      severity: "notice",
+    });
+    advancedGame = { ...advancedGame, currentPhase: nextPhase };
+  }
 
   // ── 13.5 Season trend update
   let updatedCalendar = { ...snapshot.calendar };
@@ -807,6 +906,7 @@ export function processWeek(
       investorPressureWeeks,
       investorComplianceCount,
       awardHistory,
+      milestonesAchieved,
       weeklyDecisions: nextDecisions,
       notifications: [
         ...snapshot.game.notifications,

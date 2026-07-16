@@ -4,10 +4,16 @@ import { TabPanel } from "@/components/common/TabPanel";
 import { TraineeDetail } from "@/components/TraineeDetail";
 import { CHEMISTRY_CONFLICT_THRESHOLD } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
+import { useAlbumStore } from "@/stores/albumStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
+import { useStaffStore } from "@/stores/staffStore";
 import { traineeVanillaStore, useTraineeStore } from "@/stores/traineeStore";
 import { getEffectiveSatisfaction } from "@/systems/satisfactionSystem";
+import {
+  previewTraineeWeek,
+  type TraineeWeekPreview,
+} from "@/systems/trainingSystem";
 import type {
   Trainee,
   TraineeActivity,
@@ -38,9 +44,9 @@ const INTENSITY_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-  { key: "normal", label: "보통", description: "안정적 성장 · 스트레스 소폭 ↑" },
-  { key: "hard", label: "강화", description: "성장 1.5× · 스트레스 ↑ · 부상 위험 소폭" },
-  { key: "extreme", label: "극한", description: "성장 2× · 스트레스 급증 · 부상 위험 ↑" },
+  { key: "normal", label: "보통", description: "무리 없는 페이스로 꾸준히 나아갑니다" },
+  { key: "hard", label: "강화", description: "빠르게 실력을 끌어올리지만 피로가 눈에 띄게 쌓입니다" },
+  { key: "extreme", label: "극한", description: "한계까지 몰아붙입니다. 성과는 크지만 몸과 마음이 버텨줘야 합니다" },
 ];
 
 const FOCUS_OPTIONS: {
@@ -64,9 +70,13 @@ const ACTIVITY_OPTIONS: {
   {
     key: "entertainment",
     label: "예능",
-    warning: "이번 주 훈련 불가. 대중 인지도 상승 기회",
+    warning: "이번 주는 연습 대신 방송에 나갑니다. 얼굴을 알릴 기회지만, 대중의 반응은 뚜껑을 열어봐야 압니다",
   },
-  { key: "individual", label: "개인 레슨" },
+  {
+    key: "individual",
+    label: "개인 레슨",
+    warning: "개인 역량을 키우지만, 대신 팀 결속과 멤버 간 케미가 정체됩니다",
+  },
   { key: "rest", label: "휴식" },
 ];
 
@@ -101,6 +111,45 @@ function statusIcon(label: "mood" | "stress" | "condition", value: number) {
   if (value >= 70) return { icon: "♥", tone: "text-emerald-300", title: `${label} 좋음` };
   if (value >= 40) return { icon: "~", tone: "text-amber-300", title: `${label} 보통` };
   return { icon: "X", tone: "text-red-300", title: `${label} 나쁨` };
+}
+
+function injuryRiskLabel(probability: number): string | null {
+  // 확률 수치를 그대로 노출하지 않고 트레이너의 어조로 옮긴다.
+  if (probability <= 0) return null;
+  if (probability < 0.04) return null;
+  if (probability < 0.08) return "몸에 무리가 갈 수 있음";
+  return "부상이 걱정되는 상태";
+}
+
+function formatPreview(preview: TraineeWeekPreview): string {
+  const parts: string[] = [];
+  const growthEntries = Object.entries(preview.statGrowth).filter(
+    ([, value]) => (value ?? 0) > 0,
+  );
+  const totalGrowth = growthEntries.reduce((sum, [, v]) => sum + (v ?? 0), 0);
+  if (preview.mode === "individual" && growthEntries.length === 1) {
+    const [stat, value] = growthEntries[0];
+    parts.push(`${STAT_LABELS[stat as TraineeStatKey]} +${(value ?? 0).toFixed(1)}`);
+  } else if (totalGrowth > 0) {
+    parts.push(`성장 +${totalGrowth.toFixed(1)}`);
+  } else if (preview.mode === "rest") {
+    parts.push("재충전");
+  } else {
+    parts.push("연습 없음");
+  }
+  const stress = Math.round(preview.stressDelta);
+  if (stress !== 0) {
+    parts.push(`스트레스 ${stress > 0 ? "+" : ""}${stress}`);
+  }
+  const condition = Math.round(preview.conditionDelta);
+  if (condition !== 0) {
+    parts.push(`컨디션 ${condition > 0 ? "+" : ""}${condition}`);
+  }
+  const risk = injuryRiskLabel(preview.injuryProbability);
+  if (risk) {
+    parts.push(risk);
+  }
+  return parts.join(" · ");
 }
 
 function bestAndWorstChemistry(trainee: Trainee, others: readonly Trainee[]) {
@@ -164,7 +213,12 @@ export function Training({ onBack }: TrainingProps) {
   const trainees = useTraineeStore((s) => s.trainees);
   const trainingSchedule = useGameStore((s) => s.trainingSchedule);
   const upgrades = useFinanceStore((s) => s.upgrades);
+  const staff = useStaffStore((s) => s.staff);
+  const currentAlbum = useAlbumStore((s) => s.currentAlbum);
   const [openTraineeId, setOpenTraineeId] = useState<string | null>(null);
+
+  const manager = staff.find((member) => member.role === "manager") ?? null;
+  const albumConcept = currentAlbum?.concept.mood ?? null;
 
   const setIntensity = (intensity: TrainingIntensity) => {
     gameVanillaStore.getState().setTrainingSchedule({ intensity });
@@ -234,7 +288,7 @@ export function Training({ onBack }: TrainingProps) {
           </div>
           {trainingSchedule.focus !== null && (
             <p className="mt-2 text-[11px] text-slate-400">
-              {STAT_LABELS[trainingSchedule.focus]} 훈련 가중치 ↑
+              이번 주 연습은 {STAT_LABELS[trainingSchedule.focus]} 위주로 진행합니다
             </p>
           )}
         </div>
@@ -243,7 +297,7 @@ export function Training({ onBack }: TrainingProps) {
           <div>
             <p className="text-sm text-slate-100">휴식일</p>
             <p className="text-[11px] text-slate-400">
-              ON 시 이번 주 하루 휴식 — 스트레스 ↓, 성장 소폭 ↓
+              일주일에 하루는 완전히 쉬어갑니다. 숨을 돌리는 대신 연습 진도는 조금 늦어집니다
             </p>
           </div>
           <button
@@ -282,6 +336,23 @@ export function Training({ onBack }: TrainingProps) {
                 null
               >;
             const { best, conflict } = bestAndWorstChemistry(trainee, trainees);
+            const preview = previewTraineeWeek(
+              trainee,
+              {
+                intensity: trainingSchedule.intensity,
+                focus: trainingSchedule.focus ?? undefined,
+                restDay: trainingSchedule.restDay,
+              },
+              manager,
+              albumConcept,
+              {
+                dormLevel: upgrades.dormLevel,
+                studioLevel: upgrades.studioLevel,
+              },
+            );
+            const activityWarning = ACTIVITY_OPTIONS.find(
+              (opt) => opt.key === activity,
+            )?.warning;
             const moodIcon = statusIcon("mood", trainee.mood);
             const stressIcon = statusIcon("stress", trainee.stress);
             const conditionIcon = statusIcon("condition", trainee.condition);
@@ -392,10 +463,11 @@ export function Training({ onBack }: TrainingProps) {
                       );
                     })}
                   </div>
-                  {!injured && activity === "entertainment" && (
-                    <p className="text-[10px] text-pink-200">
-                      ⚠ 이번 주 훈련 불가. 대중 인지도 상승 기회
-                    </p>
+                  <p className="text-[10px] text-slate-400">
+                    이번 주 예상: {formatPreview(preview)}
+                  </p>
+                  {!injured && activityWarning && (
+                    <p className="text-[10px] text-pink-200">⚠ {activityWarning}</p>
                   )}
                 </div>
               </Card>

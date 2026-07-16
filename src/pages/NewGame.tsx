@@ -510,7 +510,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               </ul>
             </div>
             <div>
-              <p className="text-red-300">미달성 페널티</p>
+              <p className="text-red-300">약속을 지키지 못하면</p>
               <ul className="mt-2 space-y-2 text-red-200">
                 {detailInvestor.penaltyEffects.map((effect) => (
                   <li key={effect.type}>{effect.description}</li>

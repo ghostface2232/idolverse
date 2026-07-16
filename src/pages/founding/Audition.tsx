@@ -123,8 +123,8 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                     />
                     <p className="mt-1 text-[11px] text-slate-400">
                       {m === "open"
-                        ? "능력치 분포 넓음"
-                        : "능력치 +8 보장"}
+                        ? "누가 올지 모르는 열린 무대 — 원석을 만날 수도"
+                        : "검증된 유망주를 직접 데려온다"}
                     </p>
                   </button>
                 ))}
@@ -138,7 +138,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                   <span className="text-brand-cyan">+{formatKRW(extraBudget)}</span>
                 </p>
                 <p className="text-xs text-brand-cyan">
-                  {tierLabel} 풀 · 능력치 {statBandLabel}
+                  {tierLabel} 풀 · 지원자 수준 {statBandLabel}
                 </p>
               </div>
               <input
@@ -156,8 +156,8 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                 <span>{formatKRW(100_000_000)}</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                예산을 늘릴수록 능력치 상·하한이 점진 상승합니다.
-                {method === "scout" && " 스카우트는 +8 보너스."}
+                예산을 들일수록 더 준비된 지원자들이 찾아옵니다.
+                {method === "scout" && " 스카우트는 그중에서도 검증된 인재를 데려옵니다."}
               </p>
             </Card>
 

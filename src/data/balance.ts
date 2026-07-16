@@ -15,7 +15,29 @@ export const GAME_BALANCE = {
 
 export const WEEKS_PER_MONTH = GAME_BALANCE.weeksPerYear / 12; // Fixed costs are priced monthly but charged weekly at this ratio.
 
+// 전속계약 기간. 실제 K-POP 관습은 7년이지만 게임 페이싱에는 너무 길어
+// 3년(156주)을 기본으로 한다. 계약 만료가 캠페인의 시계가 되고,
+// 만료 전 재계약 협상이 후반 멤버 운영 컨텐츠의 축이 된다.
+export const CONTRACT_TERM_WEEKS = GAME_BALANCE.weeksPerYear * 3;
+
 export const TRAINING_BASE_GROWTH = 0.8; // A single week should matter, but not outscale album-level decisions.
+
+// 휴식일은 스트레스 완화 대가로 그 주 성장을 깎는다. 무비용이면 항상 켜는
+// 것이 지배 선택이 되므로, "언제 쉬게 할 것인가"가 실제 결정이 되게 한다.
+export const REST_DAY_GROWTH_MULT = 0.85;
+
+// 개인 레슨은 한 스탯(포커스, 미지정 시 최고 스탯)에 집중 성장을 준다.
+// 대가는 그 주 팀 합동 훈련 제외(케미 성장 기회 상실)와 스트레스다.
+export const INDIVIDUAL_LESSON_GROWTH = 2.2;
+
+// 예능 출연의 대중성 보상은 확정이 아니라 분산이 있어야 반복 최적해가 되지
+// 않는다. 바이럴이면 추가 보상, 무반응이면 이번 주 대중성 상승이 사라진다.
+export const VARIETY_OUTCOME = {
+  viralChance: 0.2,
+  dudChance: 0.25,
+  viralPublicBonus: 6,
+  viralGlobalBonus: 3,
+} as const;
 
 export const TRAINING_INTENSITY_MULTIPLIER: Record<TrainingIntensity, number> = {
   normal: 1.0, // Baseline growth keeps weekly planning flexible.

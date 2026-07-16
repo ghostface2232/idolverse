@@ -1,9 +1,11 @@
 import {
   DORM_CONDITION_MULT,
   GAME_BALANCE,
+  INDIVIDUAL_LESSON_GROWTH,
   INJURY_PROBABILITY_BASE,
   INJURY_STAMINA_FACTOR,
   INJURY_STRESS_FACTOR,
+  REST_DAY_GROWTH_MULT,
   STRESS_DECREASE_RATE,
   STRESS_INCREASE_RATE,
   STUDIO_TRAINING_MULT,
@@ -87,6 +89,18 @@ function findWeakestStat(trainee: Trainee): TraineeStatKey {
   return weakest;
 }
 
+function findStrongestStat(trainee: Trainee): TraineeStatKey {
+  let strongest: TraineeStatKey = "vocal";
+  let max = -Infinity;
+  for (const stat of TRAINABLE_STATS) {
+    if (trainee.stats[stat] > max) {
+      max = trainee.stats[stat];
+      strongest = stat;
+    }
+  }
+  return strongest;
+}
+
 function computeManagerFocusAllocation(
   trainee: Trainee,
   managerAbility: number,
@@ -115,23 +129,152 @@ function computeManagerFocusAllocation(
   return weights as Record<TraineeStatKey, number>;
 }
 
-function rollInjury(
-  trainee: Trainee,
-  seed: number,
-): boolean {
-  const prob = Math.max(
+export function computeInjuryProbability(
+  stamina: number,
+  stress: number,
+): number {
+  return Math.max(
     0,
     INJURY_PROBABILITY_BASE +
-      (100 - trainee.stats.stamina) * INJURY_STAMINA_FACTOR +
-      trainee.stress * INJURY_STRESS_FACTOR,
+      (100 - stamina) * INJURY_STAMINA_FACTOR +
+      stress * INJURY_STRESS_FACTOR,
   );
-  const random = createSeededRandom(seed);
-  return random() < prob;
 }
 
 export interface FacilityLevels {
   dormLevel: 1 | 2 | 3 | 4;
   studioLevel: 1 | 2 | 3 | 4;
+}
+
+export type TraineeWeekMode =
+  | "injured"
+  | "entertainment"
+  | "individual"
+  | "rest"
+  | "training";
+
+/**
+ * 한 멤버의 이번 주 결정론적 결과. processTrainingWeek가 실제 적용에 쓰고,
+ * 훈련 UI가 사전 프리뷰에 그대로 쓴다 — 표시값과 실제 결과가 같은 함수에서
+ * 나오므로 어긋날 수 없다. (부상은 확률만 알려주고 롤은 process에서만 한다.)
+ */
+export interface TraineeWeekPreview {
+  mode: TraineeWeekMode;
+  statGrowth: Partial<Record<TraineeStatKey, number>>;
+  stressDelta: number;
+  conditionDelta: number;
+  /** 이번 주 부상 확률(0..1). 훈련 활동에만 적용된다. */
+  injuryProbability: number;
+}
+
+export function previewTraineeWeek(
+  trainee: Trainee,
+  schedule: TrainingSchedule,
+  manager: Staff | null,
+  albumConcept: ConceptMood | null,
+  facilityLevels: FacilityLevels,
+): TraineeWeekPreview {
+  const dormConditionMult = DORM_CONDITION_MULT[facilityLevels.dormLevel];
+  const studioTrainingMult = STUDIO_TRAINING_MULT[facilityLevels.studioLevel];
+
+  if (trainee.injuryWeeks > 0) {
+    return {
+      mode: "injured",
+      statGrowth: {},
+      stressDelta: STRESS_DECREASE_RATE.rest * 0.3,
+      conditionDelta: 0,
+      injuryProbability: 0,
+    };
+  }
+
+  if (trainee.currentActivity === "entertainment") {
+    return {
+      mode: "entertainment",
+      statGrowth: {},
+      stressDelta: 2,
+      conditionDelta: 0,
+      injuryProbability: 0,
+    };
+  }
+
+  if (trainee.currentActivity === "individual") {
+    // 개인 레슨: 포커스 스탯(미지정 시 최고 스탯)에 집중 성장.
+    // 팀 합동 훈련에서 빠지므로 케미 성장 기회를 잃는 것이 대가다.
+    const lessonStat = schedule.focus ?? findStrongestStat(trainee);
+    const growth =
+      INDIVIDUAL_LESSON_GROWTH * trainee.potential * studioTrainingMult;
+    return {
+      mode: "individual",
+      statGrowth: { [lessonStat]: growth },
+      stressDelta: 2,
+      conditionDelta: 0,
+      injuryProbability: 0,
+    };
+  }
+
+  if (
+    trainee.currentActivity === "rest" ||
+    trainee.currentActivity === "vacation"
+  ) {
+    const rate =
+      trainee.currentActivity === "vacation"
+        ? STRESS_DECREASE_RATE.vacation
+        : STRESS_DECREASE_RATE.rest;
+    return {
+      mode: "rest",
+      statGrowth: {},
+      stressDelta: rate,
+      conditionDelta: 10 * dormConditionMult,
+      injuryProbability: 0,
+    };
+  }
+
+  const intensityMult = TRAINING_INTENSITY_MULTIPLIER[schedule.intensity];
+  const staminaMult = trainee.stats.stamina / 50;
+  // potential is already a growth multiplier on the 0.8–1.7 scale (see recruitSystem/potentialToStars).
+  const potentialMult = trainee.potential;
+  // 휴식일은 스트레스 완화의 대가로 성장을 깎는다. 무비용이면 항상 켜는 것이 지배 선택이 된다.
+  const restDayMult = schedule.restDay ? REST_DAY_GROWTH_MULT : 1;
+  const managerEff = getManagerEfficiency(manager);
+  const managerAbility = manager?.ability ?? 25;
+  const allocation = computeManagerFocusAllocation(
+    trainee,
+    managerAbility,
+    schedule.focus,
+  );
+
+  const statGrowth: Partial<Record<TraineeStatKey, number>> = {};
+  for (const stat of TRAINABLE_STATS) {
+    const conceptBonus = computeConceptBonus(trainee, albumConcept, stat);
+    statGrowth[stat] =
+      TRAINING_BASE_GROWTH *
+      intensityMult *
+      (managerEff / 1.0) *
+      staminaMult *
+      potentialMult *
+      conceptBonus *
+      allocation[stat] *
+      studioTrainingMult *
+      restDayMult;
+  }
+
+  let stressDelta = STRESS_INCREASE_RATE[schedule.intensity];
+  if (schedule.restDay) {
+    stressDelta = Math.max(0, stressDelta + STRESS_DECREASE_RATE.rest * 0.4);
+  }
+  const mentalResist = trainee.stats.mental / 200;
+  stressDelta *= 1 - mentalResist;
+
+  return {
+    mode: "training",
+    statGrowth,
+    stressDelta,
+    conditionDelta: -stressDelta * 0.3,
+    injuryProbability: computeInjuryProbability(
+      trainee.stats.stamina,
+      clamp01(trainee.stress + stressDelta),
+    ),
+  };
 }
 
 export function processTrainingWeek(
@@ -142,81 +285,39 @@ export function processTrainingWeek(
   weekSeed: number,
   facilityLevels: FacilityLevels,
 ): TrainingResult {
-  const managerEff = getManagerEfficiency(manager);
-  const managerAbility = manager?.ability ?? 25;
-  const dormConditionMult = DORM_CONDITION_MULT[facilityLevels.dormLevel];
-  const studioTrainingMult = STUDIO_TRAINING_MULT[facilityLevels.studioLevel];
   const injuries: TrainingResult["injuries"] = [];
 
   const updated = trainees.map((trainee, idx) => {
-    let t = { ...trainee, stats: { ...trainee.stats } };
-
-    if (t.injuryWeeks > 0) {
-      t.injuryWeeks = t.injuryWeeks - 1;
-      t.stress = clamp01(t.stress + STRESS_DECREASE_RATE.rest * 0.3);
-      return t;
-    }
-
-    if (
-      t.currentActivity === "entertainment" ||
-      t.currentActivity === "individual"
-    ) {
-      t.stress = clamp01(t.stress + 2);
-      return t;
-    }
-
-    if (
-      t.currentActivity === "rest" ||
-      t.currentActivity === "vacation"
-    ) {
-      const rate =
-        t.currentActivity === "vacation"
-          ? STRESS_DECREASE_RATE.vacation
-          : STRESS_DECREASE_RATE.rest;
-      t.stress = clamp01(t.stress + rate);
-      t.condition = clamp01(t.condition + 10 * dormConditionMult);
-      return t;
-    }
-
-    const intensityMult = TRAINING_INTENSITY_MULTIPLIER[schedule.intensity];
-    const staminaMult = t.stats.stamina / 50;
-    // potential is already a growth multiplier on the 0.8–1.7 scale (see recruitSystem/potentialToStars).
-    const potentialMult = t.potential;
-    const allocation = computeManagerFocusAllocation(
-      t,
-      managerAbility,
-      schedule.focus,
+    const preview = previewTraineeWeek(
+      trainee,
+      schedule,
+      manager,
+      albumConcept,
+      facilityLevels,
     );
+    const t = { ...trainee, stats: { ...trainee.stats } };
 
-    for (const stat of TRAINABLE_STATS) {
-      const conceptBonus = computeConceptBonus(t, albumConcept, stat);
-      const growth =
-        TRAINING_BASE_GROWTH *
-        intensityMult *
-        (managerEff / 1.0) *
-        staminaMult *
-        potentialMult *
-        conceptBonus *
-        allocation[stat] *
-        studioTrainingMult;
-      t.stats[stat] = clampStat(t.stats[stat] + growth);
+    for (const [stat, growth] of Object.entries(preview.statGrowth)) {
+      const key = stat as TraineeStatKey;
+      t.stats[key] = clampStat(t.stats[key] + growth);
+    }
+    t.stress = clamp01(t.stress + preview.stressDelta);
+    t.condition = clamp01(t.condition + preview.conditionDelta);
+
+    if (preview.mode === "injured") {
+      t.injuryWeeks = t.injuryWeeks - 1;
+      return t;
     }
 
-    let stressIncrease = STRESS_INCREASE_RATE[schedule.intensity];
-    if (schedule.restDay) {
-      stressIncrease = Math.max(0, stressIncrease + STRESS_DECREASE_RATE.rest * 0.4);
-    }
-    const mentalResist = t.stats.mental / 200;
-    stressIncrease *= 1 - mentalResist;
-    t.stress = clamp01(t.stress + stressIncrease);
-    t.condition = clamp01(t.condition - stressIncrease * 0.3);
-
-    const injurySeed = weekSeed * 1000 + idx * 7 + 31;
-    if (rollInjury(t, injurySeed)) {
-      const random = createSeededRandom(injurySeed + 99);
-      t.injuryWeeks = 1 + Math.floor(random() * 3);
-      t.condition = clamp01(t.condition - 15);
-      injuries.push({ traineeId: t.id, traineeName: t.name });
+    if (preview.mode === "training") {
+      const injurySeed = weekSeed * 1000 + idx * 7 + 31;
+      const random = createSeededRandom(injurySeed);
+      if (random() < preview.injuryProbability) {
+        const injuryRandom = createSeededRandom(injurySeed + 99);
+        t.injuryWeeks = 1 + Math.floor(injuryRandom() * 3);
+        t.condition = clamp01(t.condition - 15);
+        injuries.push({ traineeId: t.id, traineeName: t.name });
+      }
     }
 
     return t;

@@ -29,6 +29,7 @@ export const initialGameState: GameStoreState = {
   investorPressureWeeks: 0,
   investorComplianceCount: 0,
   awardHistory: [],
+  milestonesAchieved: [],
   weeklyDecisions: [],
   notifications: [
     {

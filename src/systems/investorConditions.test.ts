@@ -11,7 +11,7 @@ const NO_DECISIONS: PlayerDecisions = {
 };
 
 function countPenaltyWarnings(warnings: string[]): number {
-  return warnings.filter((w) => w.includes("투자사 페널티")).length;
+  return warnings.filter((w) => w.includes("투자사 조치")).length;
 }
 
 describe("투자사 조건 체크 (P0-3)", () => {
