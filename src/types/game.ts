@@ -171,7 +171,8 @@ export type MilestoneMetricKey =
   | "debutReadiness"
   | "releasedAlbums"
   | "awardsWon"
-  | "comebacksSettled";
+  | "comebacksSettled"
+  | "musicShowCandidacies";
 
 export type ProjectKind = "debut" | "comeback" | "campaign";
 export type ProjectStatus = "active" | "blocked" | "completed";
@@ -515,6 +516,11 @@ export interface CompetitorGroup {
     quality: number;
     releaseWeek: number;
   };
+  /**
+   * 올해 최고 앨범 품질. 시상식 지표가 currentAlbum 스냅샷(4주 후 소멸)에
+   * 의존하면 시상 주마다 붕괴하므로 연간 기록을 별도로 든다.
+   */
+  seasonBestQuality?: number;
   activeWeeks: number;
   debutYear: number;
   strengths: string[];
@@ -752,8 +758,8 @@ export interface ComebackSettlementReport {
   firstWeekSales: number;
   totalStreams: number;
   fanGrowth: number;
-  /** 음악방송 대결 결과. 아직 열리지 않았으면 null. */
-  musicShowWon: boolean | null;
+  /** 활동기 음악방송 1위 횟수. 후보권에 들지 못했으면 null. */
+  musicShowWins: number | null;
   /** 정산 시점의 투자사 조건 대비 현황 요약. */
   investorNotes: string[];
   /** 다음 사이클을 여는 질문(컨셉 히스토리 기반). */
@@ -790,6 +796,11 @@ export interface WeeklyFlowSnapshot {
 export interface GameStoreState {
   /** 서버가 stale save를 거부하기 위한 단조 증가 persistence revision. */
   saveRevision: number;
+  /**
+   * 회차별 세계 시드. 주차 기반 RNG(경쟁 시뮬·이벤트 라이벌 스폰)에 섞여
+   * 회차마다 세계가 다르게 진화한다. 0이면 구버전 세이브와 동일하게 동작한다.
+   */
+  campaignSeed: number;
   currentWeek: number;
   currentSeason: Season;
   currentYear: number;

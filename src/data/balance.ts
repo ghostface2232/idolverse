@@ -113,7 +113,30 @@ export const DEBUT_SHOWCASE_GRADES: readonly {
 export const COMEBACK_REQUIREMENTS = {
   readiness: 65, // 권장 준비도. GoalLanes·기획 UI 표기 기준.
   releaseWeek: 12, // 발매 스테이지가 열리는 상대 주차. D-day 카운트의 기준.
-  projectWeeks: 14, // 컨셉 조사부터 정산·회고까지의 표준 사이클 길이.
+  activityWeeks: 3, // 발매 후 활동기 — 음악방송·프로모션이 열리는 컴백의 정점.
+  projectWeeks: 16, // 컨셉 조사부터 활동기·정산까지의 표준 사이클 길이.
+} as const;
+
+// 음악방송 1위 후보는 아무나 서지 못한다. 후보권 밖의 신인은 조용한 무대
+// 리포트만 받고, "첫 후보 진입" 자체가 이정표가 된다 — 지는 대결 연출의
+// 반복(1~2년차 승률 0~5%)을 긴장으로 바꾸는 장치다.
+export const MUSIC_SHOW_CANDIDACY = {
+  maxChartRank: 15, // 이 순위 안(멜론 기준)이어야 1위 후보에 선다.
+} as const;
+
+/**
+ * 앨범 성적은 실력의 선형 함수가 아니다. 같은 완성도라도 트렌드 적중,
+ * 계절 적합(여름 청량·파워풀, 겨울 몽환·세련 등 — SEASON_MOOD_FIT),
+ * 발매 주 운에 따라 차트 파워가 ±25%p 이상 흔들린다 — 성장은 기대값을
+ * 올릴 뿐 결과를 보장하지 않는다.
+ */
+export const RELEASE_MARKET_SWING = {
+  hotMoodMult: 1.12, // 시장 강세 무드 적중.
+  coldMoodMult: 0.88, // 약세 무드 정면 충돌.
+  hotGenreMult: 1.08,
+  coldGenreMult: 0.92,
+  seasonFitScale: 0.01, // SEASON_MOOD_FIT(-5~12)을 파워 배율(±12%)로 환산.
+  luckSpread: 0.1, // 발매 주 운: ×0.9~1.1. 모든 발매에 적용된다.
 } as const;
 
 /**

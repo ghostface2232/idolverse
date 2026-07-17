@@ -1,6 +1,7 @@
 import {
   COMEBACK_BUDGET_TIERS,
   COMEBACK_BUDGET_TIERS_BY_ID,
+  MUSIC_SHOW_CANDIDACY,
   MUSIC_SHOW_OUTCOME,
   MUSIC_SHOW_SCORE,
   BACKGROUND_CHART_POWER_SCALE,
@@ -379,8 +380,8 @@ function buildSettlement(
     firstWeekSales: released?.performance?.firstWeekSales ?? 0,
     totalStreams: released?.performance?.totalStreams ?? 0,
     fanGrowth: released?.performance?.fanGrowth ?? 0,
-    musicShowWon: project.evaluations.musicShow
-      ? project.evaluations.musicShow.passed
+    musicShowWins: project.evaluations.musicShow
+      ? project.evaluations.musicShow.score
       : null,
     nextHook,
   };
@@ -496,63 +497,101 @@ export function processComebackProjectWeek(
     });
   }
 
-  // 음악방송 1위 대결: 발매 다음 스테이지에서 한 번 열린다.
+  // 활동기 음악방송: 후보권(차트 상위) 안이면 매주 1위 대결이 열린다.
+  // 후보권 밖의 신인은 조용한 무대 리포트만 받는다 — "첫 후보 진입"이
+  // 이정표(musicShowCandidacies)가 되는 이유다.
   let musicShowEvaluated = false;
-  if (
-    !project.evaluations.musicShow &&
-    project.releasedAlbumId &&
-    stageIndexOf(project.currentStageId) >= stageIndexOf("music-show")
-  ) {
+  if (project.releasedAlbumId && project.currentStageId === "activity") {
+    const melonRank = input.fandom.chartPositions.melon;
+    const qualified =
+      melonRank > 0 && melonRank <= MUSIC_SHOW_CANDIDACY.maxChartRank;
     const released = input.releasedAlbums.find(
       (candidate) => candidate.id === project.releasedAlbumId,
     );
-    const battle = evaluateMusicShow({
-      playerPower: released?.performance?.chartPower ?? 0,
-      playerFanVote:
-        input.fandom.fandom * 0.6 + input.fandom.fandomLoyalty * 0.4,
-      competitors: input.competitors,
-      eventRivals: input.eventRivals,
-      backgroundGroups: input.backgroundGroups,
-      seed: input.cumulativeWeek * 577 + project.startedAtWeek,
-    });
-    project = {
-      ...project,
-      evaluations: {
-        ...project.evaluations,
-        musicShow: {
-          id: "musicShow",
-          week: input.cumulativeWeek,
-          score: battle.playerScore,
-          passed: battle.won,
-          summary: battle.won
-            ? `${MUSIC_SHOW_NAME} 1위. ${battle.rivalName}을(를) ${battle.playerScore - battle.rivalScore}점 차로 눌렀습니다.`
-            : `${MUSIC_SHOW_NAME} 1위 후보에 올랐지만 ${battle.rivalName}에게 ${battle.rivalScore - battle.playerScore}점 차로 밀렸습니다.`,
+
+    if (qualified) {
+      const battle = evaluateMusicShow({
+        playerPower: released?.performance?.chartPower ?? 0,
+        playerFanVote:
+          input.fandom.fandom * 0.6 + input.fandom.fandomLoyalty * 0.4,
+        competitors: input.competitors,
+        eventRivals: input.eventRivals,
+        backgroundGroups: input.backgroundGroups,
+        seed: input.cumulativeWeek * 577 + project.startedAtWeek,
+      });
+      const wins = (project.evaluations.musicShow?.score ?? 0) + (battle.won ? 1 : 0);
+      project = {
+        ...project,
+        evaluations: {
+          ...project.evaluations,
+          musicShow: {
+            id: "musicShow",
+            week: input.cumulativeWeek,
+            score: wins,
+            passed: wins > 0,
+            summary: battle.won
+              ? `${MUSIC_SHOW_NAME} 1위. ${battle.rivalName}을(를) ${battle.playerScore - battle.rivalScore}점 차로 눌렀습니다.`
+              : `${MUSIC_SHOW_NAME} 1위 후보에 올랐지만 ${battle.rivalName}에게 ${battle.rivalScore - battle.playerScore}점 차로 밀렸습니다.`,
+          },
         },
-      },
-    };
-    musicShowEvaluated = true;
-    events.push({
-      event: {
-        id: `music-show:${project.id}:w${input.cumulativeWeek}`,
-        type: "market",
-        tone: battle.won ? "positive" : "neutral",
-        title: battle.won ? "음악방송 첫 1위" : "음악방송 1위 후보",
-        description: project.evaluations.musicShow.summary,
-        resolved: false,
-        presentation: {
-          kind: "music-show",
-          showName: MUSIC_SHOW_NAME,
-          trackTitle: released?.titleTrack?.name ?? "타이틀곡",
-          playerScore: battle.playerScore,
-          rivalName: battle.rivalName,
-          rivalScore: battle.rivalScore,
-          won: battle.won,
+      };
+      musicShowEvaluated = true;
+      events.push({
+        event: {
+          id: `music-show:${project.id}:w${input.cumulativeWeek}`,
+          type: "market",
+          tone: battle.won ? "positive" : "neutral",
+          title: battle.won
+            ? wins === 1
+              ? "음악방송 첫 1위"
+              : `음악방송 1위 (${wins}회째)`
+            : "음악방송 1위 후보",
+          description: project.evaluations.musicShow.summary,
+          resolved: false,
+          presentation: {
+            kind: "music-show",
+            showName: MUSIC_SHOW_NAME,
+            trackTitle: released?.titleTrack?.name ?? "타이틀곡",
+            playerScore: battle.playerScore,
+            rivalName: battle.rivalName,
+            rivalScore: battle.rivalScore,
+            won: battle.won,
+          },
         },
-      },
-      effects: battle.won
-        ? { ...MUSIC_SHOW_OUTCOME.win }
-        : { ...MUSIC_SHOW_OUTCOME.lose },
-    });
+        effects: battle.won
+          ? { ...MUSIC_SHOW_OUTCOME.win }
+          : { ...MUSIC_SHOW_OUTCOME.lose },
+      });
+    } else if (
+      !project.evaluations.musicShow &&
+      !project.evaluations.musicShowMissed
+    ) {
+      // 차트는 감쇠만 하므로 한 번 밖이면 이번 활동에선 다시 들어오지 못한다.
+      project = {
+        ...project,
+        evaluations: {
+          ...project.evaluations,
+          musicShowMissed: {
+            id: "musicShowMissed",
+            week: input.cumulativeWeek,
+            score: melonRank,
+            passed: false,
+            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"} — 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했다.`,
+          },
+        },
+      };
+      events.push({
+        event: {
+          id: `music-show-missed:${project.id}:w${input.cumulativeWeek}`,
+          type: "market",
+          tone: "neutral",
+          title: "음악방송 무대",
+          description: `${MUSIC_SHOW_NAME} 무대에 올랐지만 아직 1위 후보권 밖이다. 후보에 서려면 차트 ${MUSIC_SHOW_CANDIDACY.maxChartRank}위 안에 들어야 한다.`,
+          resolved: false,
+        },
+        effects: { public: 1 },
+      });
+    }
   }
 
   // 정산·회고: 활동을 닫으며 다음 사이클의 질문을 꺼낸다.

@@ -201,6 +201,25 @@ describe("durable weekly workflow", () => {
     ).toBe(true);
   });
 
+  it("활동기가 아니면 프로모션 주문을 저장 전에 거부한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.weeklyDecisions = [];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    await expect(
+      runWeekAndSave(
+        {
+          trainingSchedule: { intensity: "normal", restDay: false },
+          resolvedDecisions: [],
+          promotionOrders: [{ activityId: "fanSign" }],
+        },
+        "user",
+        1,
+      ),
+    ).rejects.toThrow("activity period");
+    expect(saveGameMock).not.toHaveBeenCalled();
+  });
+
   it("제작 예산이 부족하면 컴백 기획을 저장 전에 거부한다", async () => {
     const snapshot = makeGameSnapshot({ week: 30 });
     snapshot.game.currentPhase = "debut";

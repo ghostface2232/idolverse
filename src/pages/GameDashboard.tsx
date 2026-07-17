@@ -6,6 +6,7 @@ import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverview
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
 import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal";
+import { ActivityPromotionPanel } from "@/components/dashboard/ActivityPromotionPanel";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
 import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
@@ -24,7 +25,11 @@ import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
-import { GAME_BALANCE, type ComebackBudgetTierId } from "@/data/balance";
+import {
+  COMEBACK_REQUIREMENTS,
+  GAME_BALANCE,
+  type ComebackBudgetTierId,
+} from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
@@ -53,13 +58,16 @@ import {
 import {
   buildGoalLanes,
   buildMilestoneMetrics,
+  toCumulativeWeek,
 } from "@/systems/progressionSystem";
 import { canStartComebackProject } from "@/systems/comebackSystem";
 import { getContractRemainingWeeks } from "@/systems/contractSystem";
+import { listAvailablePromotions } from "@/systems/promotionSystem";
 import type {
   ConceptMood,
   GameEvent,
   Genre,
+  PromotionActivityId,
   WeeklyDecisionTrigger,
 } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
@@ -95,6 +103,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [isTitleTrackSaving, setIsTitleTrackSaving] = useState(false);
   const [comebackPlanningOpen, setComebackPlanningOpen] = useState(false);
   const [isComebackSaving, setIsComebackSaving] = useState(false);
+  const [promotionId, setPromotionId] = useState<PromotionActivityId | null>(
+    null,
+  );
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
@@ -142,6 +153,34 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const canPlanComeback =
     weeklyFlow.state === "planning_ready" &&
     canStartComebackProject(currentPhase, activeProjects, currentAlbum);
+  // 활동기(발매 후) 프로젝트가 있으면 프로모션 실행이 열린다.
+  const activityProject = activeProjects.find(
+    (project) =>
+      project.kind === "comeback" &&
+      project.status !== "completed" &&
+      project.currentStageId === "activity",
+  );
+  const availablePromotions = useMemo(
+    () =>
+      activityProject
+        ? listAvailablePromotions({
+            phase: currentPhase,
+            public: fandomPublic,
+            fandom: fandomCore,
+            industry: fandomIndustry,
+          })
+        : [],
+    [activityProject, currentPhase, fandomPublic, fandomCore, fandomIndustry],
+  );
+  const activityWeeksLeft = activityProject
+    ? Math.max(
+        0,
+        activityProject.startedAtWeek +
+          COMEBACK_REQUIREMENTS.releaseWeek +
+          COMEBACK_REQUIREMENTS.activityWeeks -
+          toCumulativeWeek(currentYear, currentWeek),
+      )
+    : 0;
   const positionReviewProject = activeProjects.find(
     (project) => project.decisionStatuses.positionReview === "available",
   );
@@ -203,12 +242,13 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             restDay: trainingSchedule.restDay,
           },
           resolvedDecisions,
-          promotionOrders: [],
+          promotionOrders: promotionId ? [{ activityId: promotionId }] : [],
         },
         userId,
         DEFAULT_AUTO_SAVE_SLOT,
       );
 
+      setPromotionId(null);
       setSheetOpen(false);
       presentationBus.emit("playWeekTimeline", {
         resolutionId: gameVanillaStore.getState().weeklyFlow.resolutionId,
@@ -222,6 +262,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     }
   }, [
     canResolveWeek,
+    promotionId,
     resolvedDecisions,
     trainingSchedule,
     userId,
@@ -417,6 +458,16 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         >
           {workflowError}
         </p>
+      ) : null}
+      {activityProject && weeklyFlow.state === "planning_ready" ? (
+        <ActivityPromotionPanel
+          activities={availablePromotions}
+          selectedId={promotionId}
+          money={money}
+          activityWeeksLeft={activityWeeksLeft}
+          disabled={isAdvancing}
+          onSelect={setPromotionId}
+        />
       ) : null}
       {canPlanComeback ? (
         <button

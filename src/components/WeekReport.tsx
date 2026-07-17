@@ -124,11 +124,11 @@ function ComebackSettlementSection({
         <SettlementStat
           label="음악방송"
           value={
-            settlement.musicShowWon === null
-              ? "미개최"
-              : settlement.musicShowWon
-                ? "1위 달성"
-                : "1위 후보"
+            settlement.musicShowWins === null
+              ? "후보권 밖"
+              : settlement.musicShowWins > 0
+                ? `1위 ${settlement.musicShowWins}회`
+                : "1위 불발"
           }
         />
         <SettlementStat

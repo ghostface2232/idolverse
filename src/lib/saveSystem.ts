@@ -261,6 +261,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   const gameStore: GameStoreState = {
     ...rest,
     saveRevision: rest.saveRevision ?? 0,
+    campaignSeed: rest.campaignSeed ?? 0,
     trainingSchedule: rest.trainingSchedule ?? {
       intensity: "normal",
       focus: null,

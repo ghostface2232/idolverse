@@ -26,6 +26,12 @@ export interface WeekContext {
   weeksSinceDebut: number;
   debutWeek: number | null;
   currentWeek: number;
+  /**
+   * 약속된 데뷔 일정(창단 시 선택한 티어)을 넘긴 주 수. 완성형 24주를
+   * "선택"한 팀이 20주부터 불만을 갖는 건 서사적으로 틀리므로,
+   * 고정 임계 대신 약속 대비 지연으로 판정한다.
+   */
+  debutDelayWeeks: number;
   recentAward: boolean;
   musicShowWin: boolean;
   goodFanReaction: boolean;
@@ -54,7 +60,6 @@ export interface SatisfactionResult {
 
 const CONCEPT_AFFINITY_HIGH = 65;
 const CONCEPT_AFFINITY_LOW = 35;
-const DEBUT_DELAY_THRESHOLD_WEEKS = 20;
 const REST_ACTIVITIES = new Set(["rest", "vacation"]);
 
 function clamp(value: number, min: number, max: number): number {
@@ -123,7 +128,7 @@ function computeDelta(
   if (
     ctx.debutWeek === null &&
     ctx.currentPhase === "training" &&
-    ctx.currentWeek > DEBUT_DELAY_THRESHOLD_WEEKS
+    ctx.debutDelayWeeks > 0
   ) {
     delta -= 3;
     reasons.push("데뷔 지연");

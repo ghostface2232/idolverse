@@ -223,6 +223,8 @@ export function finalizeAlbumRelease(
   const releaseResult = evaluateRelease({
     albumQuality: quality,
     titleTrack: album.titleTrack,
+    concept: album.concept,
+    season: input.season,
     fandom: input.fandom.fandom,
     public: input.fandom.public,
     global: input.fandom.global,

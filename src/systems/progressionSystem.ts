@@ -106,6 +106,10 @@ export function buildMilestoneMetrics(
           project.kind === "comeback" &&
           project.evaluations.settlement !== undefined,
       ).length ?? 0,
+    musicShowCandidacies:
+      input.activeProjects?.filter(
+        (project) => project.evaluations.musicShow !== undefined,
+      ).length ?? 0,
   };
 }
 

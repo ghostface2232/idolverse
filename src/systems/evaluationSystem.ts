@@ -1,13 +1,18 @@
 import {
   BACKGROUND_CHART_POWER_SCALE,
   PUBLIC_DECAY_RATE,
+  RELEASE_MARKET_SWING,
   TITLE_TRACK_TYPE_WEIGHTS,
 } from "@/data/balance";
+import { SEASON_MOOD_FIT } from "@/data/concepts";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
   BackgroundGroup,
   CompetitorGroup,
+  ConceptMood,
   EventCompetitor,
+  Genre,
+  Season,
   TitleTrack,
 } from "@/types/game";
 
@@ -21,6 +26,9 @@ export interface MarketContext {
 export interface ReleaseInput {
   albumQuality: number;
   titleTrack: TitleTrack;
+  /** 트렌드·계절 스윙 판정에 쓰는 앨범 콘셉트. */
+  concept: { genre: Genre; mood: ConceptMood };
+  season: Season;
   fandom: number;
   public: number;
   global: number;
@@ -30,6 +38,33 @@ export interface ReleaseInput {
   backgroundGroups: readonly BackgroundGroup[];
   market: MarketContext;
   seed: number;
+}
+
+/**
+ * 트렌드 적중·계절 적합·발매 주 운의 곱 — 성적이 실력의 선형 함수가
+ * 되지 않게 하는 시장 배율. 성장은 기대값을 올릴 뿐 결과를 보장하지 않는다.
+ */
+export function computeMarketSwing(
+  concept: { genre: Genre; mood: ConceptMood },
+  season: Season,
+  market: MarketContext,
+  luckRoll: number,
+): { mult: number; trendMult: number; seasonMult: number; luckMult: number } {
+  let trendMult = 1;
+  if (concept.mood === market.hotMood) trendMult *= RELEASE_MARKET_SWING.hotMoodMult;
+  if (concept.mood === market.coldMood) trendMult *= RELEASE_MARKET_SWING.coldMoodMult;
+  if (concept.genre === market.hotGenre) trendMult *= RELEASE_MARKET_SWING.hotGenreMult;
+  if (concept.genre === market.coldGenre) trendMult *= RELEASE_MARKET_SWING.coldGenreMult;
+
+  const seasonMult =
+    1 +
+    (SEASON_MOOD_FIT[season]?.[concept.mood] ?? 0) *
+      RELEASE_MARKET_SWING.seasonFitScale;
+
+  const luckMult =
+    1 - RELEASE_MARKET_SWING.luckSpread + luckRoll * RELEASE_MARKET_SWING.luckSpread * 2;
+
+  return { mult: trendMult * seasonMult * luckMult, trendMult, seasonMult, luckMult };
 }
 
 export interface ChartEntry {
@@ -90,9 +125,11 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
 
   const random = createSeededRandom(seed);
 
-  const playerPower = computeChartPower(
-    albumQuality, fandom, publicStat, global, industry, market, titleTrack,
-  );
+  const swing = computeMarketSwing(input.concept, input.season, market, random());
+  const playerPower =
+    computeChartPower(
+      albumQuality, fandom, publicStat, global, industry, market, titleTrack,
+    ) * swing.mult;
 
   const chartPool: ChartEntry[] = [
     { name: "PLAYER", power: playerPower, isPlayer: true },

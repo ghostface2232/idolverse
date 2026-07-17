@@ -75,6 +75,17 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
     unlocks: "차트 경쟁·음악방송 활동",
   },
   {
+    // 후보권(차트 상위) 진입 자체가 성취다 — 지는 대결을 반복해서 보여주는
+    // 대신, 처음 후보에 서는 순간을 이정표로 만든다.
+    id: "music-show-candidate",
+    title: "첫 음악방송 1위 후보",
+    category: "release",
+    requirements: [
+      { metric: "musicShowCandidacies", target: 1, label: "후보 진입" },
+    ],
+    unlocks: "음악방송 1위 대결",
+  },
+  {
     id: "small-concert-open",
     title: "소극장 공연 규모 달성",
     category: "promotion",

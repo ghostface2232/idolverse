@@ -81,7 +81,7 @@ function startComeback(
   };
 }
 
-function playComeback(weeks = 14, selectTitleTrack = true) {
+function playComeback(weeks = 16, selectTitleTrack = true) {
   let snapshot = startComeback(makeDebutedSnapshot(), START_WEEK);
   const eventWeeks = new Map<string, number>();
   const reports: ReturnType<typeof processWeek>["weekReport"][] = [];
@@ -134,8 +134,8 @@ function playComeback(weeks = 14, selectTitleTrack = true) {
   return { snapshot, eventWeeks, reports };
 }
 
-describe("14주 컴백 프로젝트", () => {
-  it("컨셉 조사부터 발매·음악방송·정산까지 완주하고 성장기로 전환한다", () => {
+describe("16주 컴백 프로젝트", () => {
+  it("컨셉 조사부터 발매·활동기·정산까지 완주하고 성장기로 전환한다", () => {
     const result = playComeback();
     const project = result.snapshot.game.activeProjects.find(
       (candidate) => candidate.kind === "comeback",
@@ -156,11 +156,11 @@ describe("14주 컴백 프로젝트", () => {
     );
     expect(releaseReport?.week).toBe(START_WEEK + 11);
 
-    // 음악방송: 발매 다음 스테이지에서 1위 대결 연출이 열린다.
-    const musicShowReport = result.reports.find((report) =>
+    // 활동기: 후보권(차트 상위) 안이면 매주 1위 대결 연출이 열린다.
+    const musicShowReports = result.reports.filter((report) =>
       report.events.some((event) => event.presentation?.kind === "music-show"),
     );
-    expect(musicShowReport).toBeDefined();
+    expect(musicShowReports.length).toBeGreaterThanOrEqual(1);
 
     // 정산: 리포트가 격상되고 다음 사이클 훅을 제시한다.
     const settlementReport = result.reports.find(
@@ -170,7 +170,7 @@ describe("14주 컴백 프로젝트", () => {
       expect.objectContaining({
         projectId: project?.id,
         chartPeak: expect.any(Number),
-        musicShowWon: expect.any(Boolean),
+        musicShowWins: expect.any(Number),
       }),
     );
     expect(settlementReport?.comebackSettlement?.nextHook).toContain("다음");
@@ -207,9 +207,21 @@ describe("14주 컴백 프로젝트", () => {
     expect(briefing?.description).toContain("변화");
   });
 
-  it("같은 입력의 14주 리플레이가 결정론적으로 동일하다", () => {
+  it("같은 입력의 16주 리플레이가 결정론적으로 동일하다", () => {
     const first = playComeback();
     expect(playComeback()).toEqual(first);
+  });
+
+  it("활동기에는 프로모션이 실행되어 결과가 리포트에 남는다", () => {
+    const afterRelease = playComeback(13).snapshot;
+    const result = processWeek(afterRelease, {
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [],
+      promotionOrders: [{ activityId: "fanSign" }],
+    });
+    expect(result.weekReport.promotionResults).toHaveLength(1);
+    expect(result.weekReport.promotionResults[0].activityId).toBe("fanSign");
+    expect(result.weekReport.promotionResults[0].cost).toBeGreaterThan(0);
   });
 
   it("발매 후 활동기에는 다음 컴백 기획이 중첩될 수 있다", () => {
@@ -234,14 +246,15 @@ describe("14주 컴백 프로젝트", () => {
       ),
     ).toBe(true);
 
-    // 두 인스턴스가 같은 배열에서 독립적으로 진행된다.
+    // 두 인스턴스가 같은 배열에서 독립적으로 진행된다 —
+    // 첫 사이클은 활동기를 도는 중이고, 다음 기획은 컨셉 조사에 들어간다.
     let snapshot = startComeback(afterRelease, START_WEEK + 13);
     snapshot = processWeek(snapshot, NO_DECISIONS).newState;
     const comebacks = snapshot.game.activeProjects.filter(
       (candidate) => candidate.kind === "comeback",
     );
     expect(comebacks).toHaveLength(2);
-    expect(comebacks[0].status).toBe("completed");
+    expect(comebacks[0].currentStageId).toBe("activity");
     expect(comebacks[1].currentStageId).toBe("concept-research");
     expect(snapshot.album.currentAlbum).not.toBeNull();
   });

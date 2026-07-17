@@ -67,6 +67,8 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
   return {
     game: {
       saveRevision: 0,
+      // 0이면 구버전 세이브와 동일한 세계 진화 — 골든 스냅샷이 안정된다.
+      campaignSeed: 0,
       currentWeek: week,
       currentSeason: getSeasonForWeek(week),
       currentYear: year,

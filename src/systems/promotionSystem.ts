@@ -74,6 +74,19 @@ function checkRequirements(
   return true;
 }
 
+/**
+ * 활동기 UI가 노출할 실행 가능 프로모션. 요건(phase·팬덤·업계)은 이정표
+ * 해금 체인과 같은 상수를 참조하므로 "이정표 달성 → 여기 나타남"이 성립한다.
+ * musicShow는 활동기 음악방송 대결이 자동으로 다루므로 제외한다.
+ */
+export function listAvailablePromotions(
+  ctx: PromotionContext,
+): PromotionActivity[] {
+  return PROMOTION_ACTIVITIES.filter(
+    (activity) => activity.id !== "musicShow" && checkRequirements(activity, ctx),
+  );
+}
+
 function averageStat(
   trainees: readonly Trainee[],
   stat: TraineeStatKey | "teamwork" | "visualStyle",

@@ -87,10 +87,15 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       unlocks: "음악방송 활동",
     },
     {
-      id: "music-show",
-      title: "음악방송",
-      summary: "이번 주 1위 후보 대결. 활동기의 정점이다",
-      weekWindow: [13, 13],
+      // 발매 후 활동기 — 매주 음악방송(후보권 진입 시 1위 대결)과 프로모션
+      // 실행이 열리는, 사이클에서 가장 뜨거운 구간이다.
+      id: "activity",
+      title: "활동기",
+      summary: "음악방송과 프로모션이 몰아치는 컴백의 정점",
+      weekWindow: [
+        COMEBACK_REQUIREMENTS.releaseWeek + 1,
+        COMEBACK_REQUIREMENTS.releaseWeek + COMEBACK_REQUIREMENTS.activityWeeks,
+      ],
       entryRequirements: [
         { metric: "albumReleased", target: 1, label: "앨범 발매" },
       ],

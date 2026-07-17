@@ -687,6 +687,27 @@ function normalizeDecisions(
     );
   }
 
+  // 프로모션 실행은 활동기(발매 후 activity 스테이지)에만, 주당 1건 허용한다.
+  const promotionOrders = decisions.promotionOrders ?? [];
+  if (promotionOrders.length > 1) {
+    throw new WeeklyResolutionConflictError(
+      "Only one promotion can run per week.",
+    );
+  }
+  if (promotionOrders.length > 0) {
+    const inActivityPeriod = snapshot.game.activeProjects.some(
+      (project) =>
+        project.kind === "comeback" &&
+        project.status !== "completed" &&
+        project.currentStageId === "activity",
+    );
+    if (!inActivityPeriod) {
+      throw new WeeklyResolutionConflictError(
+        "Promotions are only available during an activity period.",
+      );
+    }
+  }
+
   const resolvedDecisions = snapshot.game.weeklyDecisions.flatMap((card) => {
     const submittedDecision = submitted.get(card.id);
     if (!submittedDecision && card.lane === "opportunity") return [];

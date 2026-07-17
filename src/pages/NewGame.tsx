@@ -181,6 +181,9 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         currentSeason: season,
         currentYear: 1,
         currentPhase: "founding",
+        // 회차별 세계 시드 — 주차 기반 RNG(경쟁 시뮬·스폰)에 섞여
+        // 회차마다 세계가 다르게 진화한다.
+        campaignSeed: Date.now() % 1_000_000,
         groupGender,
         companyName: companyName.trim() || pickRandom(COMPANY_NAME_CANDIDATES),
         groupName: groupName.trim() || pickRandom(GROUP_NAME_CANDIDATES),

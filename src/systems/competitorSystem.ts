@@ -114,13 +114,21 @@ export function simulateCompetitorWeek(
   competitors: readonly CompetitorGroup[],
   backgroundGroups: readonly BackgroundGroup[],
   week: number,
+  // 회차별 세계 시드. 0이면(구버전 세이브) 기존과 동일하게 진화한다.
+  campaignSeed = 0,
 ): CompetitorWeekResult {
-  const random = createSeededRandom(week * 137);
+  const random = createSeededRandom(week * 137 + campaignSeed);
   const comebacks: string[] = [];
 
   const updated = competitors.map((c) => {
     const rival = { ...c, stats: { ...c.stats } };
     rival.activeWeeks += 1;
+
+    // 시상식 지표용 연간 기록. 연초에 리셋한다 — currentAlbum 스냅샷은
+    // 4주 뒤 소멸해 시상 주의 지표를 붕괴시키기 때문에 별도로 든다.
+    if (week === 1) {
+      rival.seasonBestQuality = rival.currentAlbum?.quality ?? 0;
+    }
 
     const growth = 0.3 + random() * 0.4;
     rival.stats.vocal = Math.min(100, rival.stats.vocal + growth * 0.5);
@@ -146,6 +154,10 @@ export function simulateCompetitorWeek(
           quality,
           releaseWeek: week,
         };
+        rival.seasonBestQuality = Math.max(
+          rival.seasonBestQuality ?? 0,
+          quality,
+        );
         comebacks.push(rival.name);
       }
     }
@@ -198,8 +210,9 @@ export function spawnEventCompetitor(
   playerGender: GroupGender,
   week: number,
   force = false,
+  campaignSeed = 0,
 ): EventCompetitor | null {
-  const random = createSeededRandom(week * 211 + playerLevel);
+  const random = createSeededRandom(week * 211 + playerLevel + campaignSeed);
 
   if (!force && random() >= EVENT_COMPETITOR_SPAWN_CHANCE) return null;
 

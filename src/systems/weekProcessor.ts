@@ -150,8 +150,11 @@ export function processWeek(
   snapshot: GameSnapshot,
   decisions: PlayerDecisions,
 ): { newState: GameSnapshot; weekReport: WeekReport } {
+  const campaignSeed = snapshot.game.campaignSeed ?? 0;
   const seed =
-    snapshot.game.currentWeek * 997 + snapshot.game.currentYear * 31;
+    snapshot.game.currentWeek * 997 +
+    snapshot.game.currentYear * 31 +
+    campaignSeed;
   const report: WeekReport = {
     week: snapshot.game.currentWeek,
     season: snapshot.game.currentSeason,
@@ -475,6 +478,15 @@ export function processWeek(
   // ── 5. Satisfaction
   const lastReleasedAlbum =
     snapshot.album.releasedAlbums[snapshot.album.releasedAlbums.length - 1];
+  // 데뷔 지연은 고정 임계가 아니라 창단 시 약속한 일정 대비로 판정한다.
+  const activeDebutProject = activeProjects.find(
+    (project) => project.kind === "debut" && project.status !== "completed",
+  );
+  const promisedDebutWeek = activeDebutProject
+    ? activeDebutProject.startedAtWeek +
+      getDebutSchedule(activeDebutProject).debutWeek -
+      1
+    : null;
   const satCtx: SatisfactionContext = {
     currentPhase: snapshot.game.currentPhase,
     albumConcept,
@@ -487,6 +499,10 @@ export function processWeek(
         : 0,
     debutWeek: snapshot.game.currentPhase !== "training" ? 1 : null,
     currentWeek: snapshot.game.currentWeek,
+    debutDelayWeeks:
+      promisedDebutWeek !== null
+        ? Math.max(0, cumulativeWeek - promisedDebutWeek)
+        : 0,
     recentAward: playerWonAward,
     musicShowWin: false,
     goodFanReaction: fandomAxis.fandomLoyalty > 60,
@@ -548,6 +564,7 @@ export function processWeek(
     snapshot.competitor.permanentRivals,
     snapshot.competitor.backgroundGroups,
     snapshot.game.currentWeek,
+    campaignSeed,
   );
   report.competitorComebacks = compResult.comebacks;
 
@@ -556,6 +573,8 @@ export function processWeek(
     fandomAxis.public,
     snapshot.game.groupGender,
     snapshot.game.currentWeek,
+    false,
+    campaignSeed,
   );
   let eventRivals = [...snapshot.competitor.eventRivals];
   if (eventRival) {
@@ -637,6 +656,7 @@ export function processWeek(
         snapshot.game.groupGender,
         snapshot.game.currentWeek,
         true,
+        campaignSeed,
       );
       if (rookieRival) {
         eventRivals.push(rookieRival);
@@ -695,6 +715,7 @@ export function processWeek(
         snapshot.game.groupGender,
         snapshot.game.currentWeek,
         true,
+        campaignSeed,
       );
       if (guaranteedRival) {
         eventRivals.push(guaranteedRival);
