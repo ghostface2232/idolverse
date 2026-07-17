@@ -1088,6 +1088,8 @@ export function processWeek(
       weeksAfterRelease !== null && weeksAfterRelease >= 0
         ? weeksAfterRelease
         : null,
+    albumFirstWeekSales:
+      latestReleasedAlbum?.performance?.firstWeekSales ?? 0,
     hasReleasedAlbum: releasedAlbums.length > 0,
     promotionIncome: promotionTotalIncome,
     promotionCost: promotionTotalCost,

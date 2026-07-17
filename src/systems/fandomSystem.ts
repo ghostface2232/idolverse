@@ -67,7 +67,8 @@ export function updateFandom(
   if (ctx.chartRank !== null && ctx.chartRank <= 3) pDelta += 5;
   if (!ctx.isActive) pDelta += PUBLIC_DECAY_RATE;
 
-  if (ctx.albumReleaseThisWeek) fDelta += 8;
+  // 발매 주의 팬덤 보상은 발매 커밋(evaluateRelease의 품질 비례 델타)이
+  // 이미 준다 — 여기서 또 주면 이중 보상으로 팬덤이 인플레이션된다.
   if (ctx.concertThisWeek) fDelta += 6;
   if (ctx.fanServiceThisWeek) fDelta += 3;
 
@@ -88,7 +89,19 @@ export function updateFandom(
   if (ctx.scandalThisWeek) iDelta -= 5;
   if (ctx.qualityDecline) iDelta -= 3;
 
-  const newDisappointment = clamp(current.fandomDisappointment + dDelta, 0, 100);
+  // 실망은 래칫이 아니다: 새 실망이 없는 주에는 서서히 식는다(주 8%, 최소 1).
+  // 회복 경로 없이는 실망 임계 초과가 영구화되어 팬덤이 0으로 수렴한다
+  // (R6 프로브에서 관측). 팬서비스와 사과 카드가 회복을 앞당긴다.
+  const cooledDisappointment =
+    dDelta > 0
+      ? current.fandomDisappointment
+      : Math.max(
+          0,
+          current.fandomDisappointment -
+            calculateRecoveryRate(current.fandomDisappointment) -
+            (ctx.fanServiceThisWeek ? 2 : 0),
+        );
+  const newDisappointment = clamp(cooledDisappointment + dDelta, 0, 100);
 
   const disappointmentDrain =
     newDisappointment > FANDOM_LEAVE_THRESHOLD ? Math.round((newDisappointment - FANDOM_LEAVE_THRESHOLD) * 0.3) : 0;
@@ -96,7 +109,9 @@ export function updateFandom(
 
   const axis: Fandom4Axis = {
     public: clamp(current.public + pDelta, 0, 100),
-    fandom: Math.max(0, current.fandom + fDelta),
+    // 팬덤은 0~100 스케일 — 차트 파워·음악방송 화력·이정표가 전부 이
+    // 스케일을 소비한다. 상한이 없으면 판매량·수익이 무한 성장한다.
+    fandom: clamp(current.fandom + fDelta, 0, 100),
     fandomLoyalty: clamp(
       current.fandomLoyalty - disappointmentDrain * 0.5,
       0,

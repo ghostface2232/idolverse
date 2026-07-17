@@ -100,7 +100,8 @@ function computeChartPower(
     publicStat * 0.25 +
     fandom * 0.15 +
     industry * 0.1 +
-    global * 0.1;
+    // global 축은 누적치라 상한이 없다 — 차트 기여는 100까지만 센다.
+    Math.min(global, 100) * 0.1;
 
   const typeWeights = TITLE_TRACK_TYPE_WEIGHTS[titleTrack.type];
   const publicMult = "public" in typeWeights ? typeWeights.public : 1.0;
@@ -175,7 +176,9 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   const qualityFactor = albumQuality / 50;
   const varianceRoll = variance > 0 ? (random() - 0.5) * 2 * variance * 20 : 0;
 
-  const fandomDelta = Math.round((3 + qualityFactor * 4) * fandomMult + varianceRoll * 0.3);
+  // 발매 한 번의 팬덤 보상은 작게 — 팬덤 100은 여러 해의 누적이어야 한다
+  // (기성 역전 3~7년차 페이싱). 활동기 음방 승리·콘서트가 나머지를 쌓는다.
+  const fandomDelta = Math.round((2 + qualityFactor * 2) * fandomMult + varianceRoll * 0.3);
   const publicDelta = Math.round((2 + qualityFactor * 5) * publicMult + varianceRoll);
   const globalDelta = Math.round((1 + qualityFactor * 3) * globalMult);
   const industryDelta = Math.round(1 + qualityFactor * 2);

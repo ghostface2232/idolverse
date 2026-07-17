@@ -10,14 +10,22 @@ const STREAMING_FANDOM_RATE = 30000;
 const STREAMING_GLOBAL_RATE = 15000;
 const CHART_RANK_BONUS_THRESHOLD = 100;
 const CHART_RANK_BONUS_PER_RANK = 20000;
-const ALBUM_FANDOM_RATE = 50000;
+// 앨범 수익 = 초동 판매량 × 장당 마진(감쇠 주간에 걸쳐 분할). 판매량이
+// 품질×팬덤의 함수이므로 컴백 예산·스태프 투자가 실제로 회수되는 경로다 —
+// 팬덤 정률(×5만)이던 시절에는 사이클당 ~5M뿐이라 모든 예산 티어가
+// 구조적 적자였다(R6 프로브).
+const ALBUM_UNIT_MARGIN = 800;
 const ALBUM_DECAY_WEEKS = 4;
+/** 감쇠 가중치(1, 0.8, 0.6, 0.4, 0.2)의 합 — 총수익을 초동×마진으로 정규화한다. */
+const ALBUM_DECAY_WEIGHT_SUM = 3;
 
 export interface RevenueContext {
   fandom: number;
   global: number;
   chartRank: number | null;
   weeksAfterAlbumRelease: number | null;
+  /** 최신 발매 앨범의 초동 판매량. 발매 이력이 없으면 0. */
+  albumFirstWeekSales: number;
   hasReleasedAlbum: boolean;
   promotionIncome: number;
   promotionCost: number;
@@ -48,7 +56,7 @@ export function calculateStreamingRevenue(
 }
 
 export function calculateAlbumRevenue(
-  fandom: number,
+  firstWeekSales: number,
   weeksAfterRelease: number | null,
 ): number {
   if (weeksAfterRelease === null || weeksAfterRelease > ALBUM_DECAY_WEEKS) {
@@ -56,7 +64,10 @@ export function calculateAlbumRevenue(
   }
 
   const decayFactor = 1 - weeksAfterRelease / (ALBUM_DECAY_WEEKS + 1);
-  return Math.round(fandom * ALBUM_FANDOM_RATE * decayFactor);
+  return Math.round(
+    (firstWeekSales * ALBUM_UNIT_MARGIN * decayFactor) /
+      ALBUM_DECAY_WEIGHT_SUM,
+  );
 }
 
 export function processWeeklyFinances(
@@ -84,7 +95,10 @@ export function processWeeklyFinances(
     money += streaming;
   }
 
-  const album = calculateAlbumRevenue(ctx.fandom, ctx.weeksAfterAlbumRelease);
+  const album = calculateAlbumRevenue(
+    ctx.albumFirstWeekSales,
+    ctx.weeksAfterAlbumRelease,
+  );
   if (album > 0) {
     income.album = album;
     money += album;
