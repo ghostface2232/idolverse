@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, FastForward } from "lucide-react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
 import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverviewModal";
@@ -119,6 +119,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   );
   const [isCompanySaving, setIsCompanySaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
+  const [autoAdvance, setAutoAdvance] = useState(false);
   const isAdvancingRef = useRef(false);
 
   const currentWeek = useGameStore((state) => state.currentWeek);
@@ -133,6 +134,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const awardHistory = useGameStore((state) => state.awardHistory);
   const campaignSeed = useGameStore((state) => state.campaignSeed);
   const campaignFailure = useGameStore((state) => state.campaignFailure);
+  const insolvencyWeeks = useGameStore((state) => state.insolvencyWeeks);
   const groupName = useGameStore((state) => state.groupName);
   const staff = useStaffStore((state) => state.staff);
   const facilityUpgrades = useFinanceStore((state) => state.upgrades);
@@ -297,7 +299,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     );
   };
 
-  const handleCloseWeekReport = async () => {
+  const handleCloseWeekReport = useCallback(async () => {
     if (isWorkflowSaving) return;
     setIsWorkflowSaving(true);
     setWorkflowError(null);
@@ -309,7 +311,54 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     } finally {
       setIsWorkflowSaving(false);
     }
-  };
+  }, [isWorkflowSaving, userId]);
+
+  // R5: 조용한 주 자동 진행. 결정 카드·프로젝트 결정·활동기·파산 카운트다운·
+  // 열린 모달이 없을 때만 주가 흐르고, 무언가 생기면 그 자리에서 멈춘다.
+  const quietPlanning =
+    weeklyFlow.state === "planning_ready" &&
+    weeklyDecisions.length === 0 &&
+    !positionReviewProject &&
+    !titleTrackProject &&
+    !activityProject &&
+    insolvencyWeeks === 0 &&
+    !campaignFailure &&
+    !comebackPlanningOpen &&
+    companyModal === null &&
+    overviewModal === null &&
+    !notificationsOpen &&
+    !sheetOpen &&
+    workflowError === null;
+  const quietReport =
+    weeklyFlow.state === "report_ready" &&
+    weeklyFlow.eventQueueIds.length === 0 &&
+    weeklyFlow.report !== null &&
+    weeklyFlow.report.warnings.length === 0 &&
+    weeklyFlow.report.injuries.length === 0 &&
+    weeklyFlow.report.conflicts.length === 0 &&
+    !weeklyFlow.report.comebackSettlement &&
+    workflowError === null;
+
+  useEffect(() => {
+    if (!autoAdvance) return;
+    if (quietPlanning && canResolveWeek && !isAdvancing) {
+      const timer = setTimeout(() => void handleAdvanceWeek(), 450);
+      return () => clearTimeout(timer);
+    }
+    if (quietReport && !isWorkflowSaving) {
+      const timer = setTimeout(() => void handleCloseWeekReport(), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    autoAdvance,
+    quietPlanning,
+    quietReport,
+    canResolveWeek,
+    isAdvancing,
+    isWorkflowSaving,
+    handleAdvanceWeek,
+    handleCloseWeekReport,
+  ]);
 
   const handleCloseEvent = async () => {
     await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
@@ -541,6 +590,28 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         onConfirm={handleAdvanceWeek}
         isRunning={isAdvancing}
       />
+      <button
+        type="button"
+        aria-pressed={autoAdvance}
+        className={[
+          "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs transition",
+          autoAdvance
+            ? "bg-brand-cyan/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
+            : "bg-white/[0.04] text-text-muted shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]",
+        ].join(" ")}
+        onClick={() => setAutoAdvance((value) => !value)}
+      >
+        <span className="flex items-center gap-1.5">
+          <FastForward className="size-3.5" aria-hidden="true" />
+          조용한 주 자동 진행
+        </span>
+        <span>{autoAdvance ? "켜짐" : "꺼짐"}</span>
+      </button>
+      {autoAdvance ? (
+        <p className="px-1 text-[11px] leading-4 text-text-muted">
+          결정, 이벤트, 활동기가 나타나면 자동으로 멈춥니다.
+        </p>
+      ) : null}
     </div>
   );
 
