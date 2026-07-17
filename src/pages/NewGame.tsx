@@ -323,7 +323,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                         }
                       }}
                     >
-                      <div className="mb-3 w-1/2 overflow-hidden rounded-xl border-2 border-slate-600/80 bg-slate-950 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
+                      <div className="mb-3 w-1/2 overflow-hidden rounded-md border-2 border-slate-600/80 bg-slate-950 shadow-[inset_0_0_24px_rgba(15,23,42,0.6)]">
                         <img
                           src={style.logoSrc}
                           alt={`${investor.name} 로고`}
