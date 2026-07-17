@@ -17,6 +17,7 @@ const QUIET_WEEK: WeeklyFandomContext = {
   youtubeActivity: false,
   overseasPromotion: false,
   foreignMembers: [],
+  latestAlbumQuality: 100,
   musicQualityHigh: false,
   stageExcellent: false,
   awardWin: false,
@@ -84,5 +85,27 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
       { ...QUIET_WEEK, concertThisWeek: true, fanServiceThisWeek: true },
     );
     expect(result.axis.fandom).toBe(100);
+  });
+
+  it("음악 품질이 낮으면 반복 활동으로 얻은 코어·해외 팬덤을 상한에서 유지할 수 없다", () => {
+    const current = {
+      public: 80,
+      fandom: 100,
+      fandomLoyalty: 90,
+      fandomDisappointment: 0,
+      global: 100,
+      industry: 30,
+    };
+    const intermediate = updateFandom(current, {
+      ...QUIET_WEEK,
+      latestAlbumQuality: 50,
+    });
+    const expert = updateFandom(current, {
+      ...QUIET_WEEK,
+      latestAlbumQuality: 95,
+    });
+
+    expect(intermediate.axis.fandom).toBeLessThan(expert.axis.fandom);
+    expect(intermediate.axis.global).toBeLessThan(expert.axis.global);
   });
 });

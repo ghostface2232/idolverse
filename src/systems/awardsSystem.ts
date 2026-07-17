@@ -118,7 +118,9 @@ function isEligibleForCategory(
         contender.digitalIndex >=
           AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minDigitalIndex &&
         contender.albumSalesIndex >=
-          AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minAlbumSalesIndex
+          AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minAlbumSalesIndex &&
+        contender.judgesScore >=
+          AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minJudgesScore
       );
     case "daesang":
       return (

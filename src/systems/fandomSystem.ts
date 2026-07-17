@@ -1,4 +1,5 @@
 import {
+  AUDIENCE_QUALITY_RETENTION,
   FANDOM_DISAPPOINTMENT_COMMERCIAL,
   FANDOM_DISAPPOINTMENT_CONCEPT_BREAK,
   FANDOM_DISAPPOINTMENT_SCANDAL,
@@ -31,6 +32,7 @@ export interface WeeklyFandomContext {
   youtubeActivity: boolean;
   overseasPromotion: boolean;
   foreignMembers: readonly Trainee[];
+  latestAlbumQuality: number;
   musicQualityHigh: boolean;
   stageExcellent: boolean;
   awardWin: boolean;
@@ -96,6 +98,28 @@ export function updateFandom(
   pDelta = Math.round(dampPositive(pDelta, current.public));
   fDelta = Math.round(dampPositive(fDelta, current.fandom));
   gDelta = Math.round(dampPositive(gDelta, current.global));
+
+  if (!ctx.albumReleaseThisWeek) {
+    const quality = clamp(ctx.latestAlbumQuality, 0, 100);
+    const coreCeiling =
+      AUDIENCE_QUALITY_RETENTION.coreBase +
+      quality * AUDIENCE_QUALITY_RETENTION.coreQualityScale;
+    const globalCeiling =
+      AUDIENCE_QUALITY_RETENTION.globalBase +
+      quality * AUDIENCE_QUALITY_RETENTION.globalQualityScale;
+    const retentionErosion = (currentValue: number, ceiling: number) =>
+      currentValue > ceiling
+        ? Math.min(
+            AUDIENCE_QUALITY_RETENTION.maxWeeklyErosion,
+            Math.ceil(
+              (currentValue - ceiling) /
+                AUDIENCE_QUALITY_RETENTION.gapPerErosionPoint,
+            ),
+          )
+        : 0;
+    fDelta -= retentionErosion(current.fandom, coreCeiling);
+    gDelta -= retentionErosion(current.global, globalCeiling);
+  }
 
   if (ctx.musicQualityHigh) iDelta += 3;
   if (ctx.stageExcellent) iDelta += 4;

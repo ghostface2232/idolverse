@@ -91,19 +91,19 @@ export const DEBUT_SHOWCASE_GRADES: readonly {
   {
     min: 75,
     label: "완성형 데뷔",
-    summary: "무대 완성도가 기준선을 넘어 업계와 팬덤의 신뢰를 얻었다",
+    summary: "무대 완성도가 기준선을 넘어 업계와 팬덤의 신뢰를 얻었습니다",
     effects: { industry: 3, fandom: 2 },
   },
   {
     min: 55,
     label: "무난한 출발",
-    summary: "신인다운 무대. 성장 서사의 출발점으로는 충분하다",
+    summary: "신인다운 무대입니다. 성장 서사의 출발점으로는 충분합니다",
     effects: {},
   },
   {
     min: 0,
     label: "미완의 데뷔",
-    summary: "준비가 부족한 무대가 그대로 드러났다",
+    summary: "준비가 부족한 무대가 그대로 드러났습니다",
     effects: { industry: -2, fandomDisappointment: 4 },
   },
 ];
@@ -296,28 +296,28 @@ export const TEMPERAMENT_PROFILES: Record<
 > = {
   ambitious: {
     label: "야심가",
-    description: "기회와 조건에 민감하다. 성장이 대우로 돌아오지 않으면 먼저 움직인다",
+    description: "기회와 조건에 민감합니다. 성장이 대우로 돌아오지 않으면 먼저 움직입니다",
     gapSensitivity: 2,
     renegotiationBiasWeeks: -26,
     stressSensitivity: 1,
   },
   devoted: {
     label: "헌신형",
-    description: "팀의 성취를 자기 일처럼 여긴다. 격차에 관대하지만 무한하지는 않다",
+    description: "팀의 성취를 자기 일처럼 여깁니다. 격차에 관대하지만 무한하지는 않습니다",
     gapSensitivity: 0.5,
     renegotiationBiasWeeks: 13,
     stressSensitivity: 1,
   },
   steady: {
     label: "안정형",
-    description: "감정의 진폭이 작고 예측 가능하다",
+    description: "감정의 진폭이 작고 예측 가능합니다",
     gapSensitivity: 1,
     renegotiationBiasWeeks: 0,
     stressSensitivity: 1,
   },
   sensitive: {
     label: "섬세형",
-    description: "무대 표현이 섬세한 만큼 과로와 갈등에 쉽게 지친다",
+    description: "무대 표현이 섬세한 만큼 과로와 갈등에 쉽게 지칩니다",
     gapSensitivity: 1,
     renegotiationBiasWeeks: 0,
     stressSensitivity: 1.6,
@@ -465,6 +465,20 @@ export const SATISFACTION_REGRESSION_RATE = 1; // Fixed weekly decay above the b
 export const CONTRACT_SENTIMENT_SATISFIED_MIN = 65; // 계약 브리핑에서 확실한 만족으로 읽히는 구간. 기준점 근처의 일시적 호감과 구분한다.
 
 export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inactive week.
+/**
+ * 반복 노출만으로 코어·해외 팬덤 100을 유지하지 못하게 하는 음악 신뢰도 천장.
+ * 최신 앨범 품질이 높을수록 강한 팬덤을 유지할 수 있고, 천장을 넘은 수치는
+ * 한 주에 조금씩만 내려가므로 한 번의 실험작이 팬덤을 즉시 붕괴시키지는 않는다.
+ */
+export const AUDIENCE_QUALITY_RETENTION = {
+  coreBase: 65,
+  coreQualityScale: 0.35,
+  globalBase: 55,
+  globalQualityScale: 0.45,
+  gapPerErosionPoint: 8,
+  maxWeeklyErosion: 3,
+} as const;
+export const ALBUM_QUALITY_REPUTATION_THRESHOLD = 75;
 export const FANDOM_DISAPPOINTMENT_SCANDAL = 15; // Scandals need to be one of the fastest ways to damage loyalty.
 export const FANDOM_DISAPPOINTMENT_CONCEPT_BREAK = 10; // Hard pivots should hurt if not justified by quality.
 export const FANDOM_DISAPPOINTMENT_COMMERCIAL = 5; // Overt monetization should annoy fans, but less than scandals or betrayal.
@@ -496,9 +510,46 @@ export const CAMPAIGN_FAILURE = {
   insolvencyLimitWeeks: 8,
 } as const;
 
-export const INVESTOR_PENALTY_GRACE_WEEKS = 4; // A failed condition warns first so the player can react before being punished.
-export const INVESTOR_COMPLY_SUPPORT_LIMIT = 3; // The investor bails the player out only a few times; unlimited cash would invert the incentive to meet conditions.
-export const INVESTOR_NEGOTIATION_EXTENSION_WEEKS = 2; // 재협상은 기존 미달 조건의 페널티 유예를 실제로 두 주 연장한다.
+/**
+ * 투자사 개입은 자주 뜨는 소액 지원 카드가 아니라, 드물지만 결과가 큰 계약 위기다.
+ * 창업 후 36주는 조건 평가를 유예하며, 한 번 개입한 뒤에는 다시 36주 동안
+ * 반복 요구를 보내지 않는다.
+ */
+export const INVESTOR_INTERVENTION = {
+  firstEvaluationWeek: 36,
+  graceWeeks: 6,
+  negotiationExtensionWeeks: 3,
+  minDemandGapWeeks: 36,
+  supportLimit: 1,
+  supportAmount: 20_000_000,
+  comply: {
+    fandomDisappointment: 10,
+    stress: 10,
+    satisfaction: -8,
+  },
+  negotiate: {
+    cost: 20_000_000,
+    industry: -4,
+    satisfaction: 2,
+  },
+  defy: {
+    cost: 30_000_000,
+    industry: -6,
+    satisfaction: 6,
+    fandomLoyalty: 4,
+  },
+  penalty: {
+    cashRecallShare: 0.2,
+    equityPressureShare: 0.1,
+    contractPenaltyShare: 0.15,
+    managementStress: 10,
+    managementSatisfaction: -10,
+  },
+} as const;
+
+export const INVESTOR_PENALTY_GRACE_WEEKS = INVESTOR_INTERVENTION.graceWeeks;
+export const INVESTOR_NEGOTIATION_EXTENSION_WEEKS =
+  INVESTOR_INTERVENTION.negotiationExtensionWeeks;
 
 export const COMPETITOR_SCALING_FACTOR = 0.8; // Rivals should trail the player slightly so smart planning can overcome them.
 export const EVENT_COMPETITOR_SPAWN_CHANCE = 0.15; // Seasonal event rivals should be memorable spikes, not routine noise.
@@ -641,6 +692,18 @@ export const SYNTHETIC_CHART_MARKET = {
   noise: 4,
 } as const;
 
+/**
+ * 차트 파워의 음악 완성도와 도달력 배분. 완성도는 기본 경쟁력을 만들고,
+ * 대중·팬덤·평판으로 구성된 도달력에만 트렌드와 타이틀 전략 배율이 붙는다.
+ */
+export const CHART_POWER_WEIGHTS = {
+  quality: 0.55,
+  public: 0.2,
+  fandom: 0.1,
+  industry: 0.1,
+  global: 0.05,
+} as const;
+
 /** 긴급 조달은 연간/미상환 한도가 있고, 2년 안에 상환해야 한다. */
 export const EMERGENCY_FINANCING = {
   maxOriginationsPerYear: 2,
@@ -700,6 +763,7 @@ export const AWARD_ELIGIBILITY_THRESHOLDS = {
   bonsang: {
     minDigitalIndex: 65,
     minAlbumSalesIndex: 55,
+    minJudgesScore: 45, // 본상은 판매·화제성뿐 아니라 음악과 무대의 완성도도 증명해야 한다.
   },
   daesang: {
     minDigitalIndex: 80, // Top awards should require undeniable mainstream impact.

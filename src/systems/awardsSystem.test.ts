@@ -54,4 +54,30 @@ describe("buildContenderFromCompetitor 스케일", () => {
 
     expect(wins.length).toBeGreaterThan(0);
   });
+
+  it("본상은 화제성과 판매 기준만으로는 부족하고 심사 완성도도 요구한다", () => {
+    const reachOnly = buildContenderFromPlayer(
+      "reach-only",
+      "화제성그룹",
+      { digitalIndex: 90, albumSalesIndex: 90, fanVotes: 30, judgesScore: 44 },
+      1,
+    );
+    const complete = buildContenderFromPlayer(
+      "complete",
+      "완성도그룹",
+      { digitalIndex: 90, albumSalesIndex: 90, fanVotes: 30, judgesScore: 70 },
+      1,
+    );
+
+    const results = evaluateAwards([reachOnly, complete], 2, 20260717);
+    const reachOnlyBonsang = getPlayerAwardWins(results, "reach-only").filter(
+      (award) => award.category === "bonsang",
+    );
+    const completeBonsang = getPlayerAwardWins(results, "complete").filter(
+      (award) => award.category === "bonsang",
+    );
+
+    expect(reachOnlyBonsang).toHaveLength(0);
+    expect(completeBonsang.length).toBeGreaterThan(0);
+  });
 });

@@ -1,5 +1,6 @@
 import {
   BACKGROUND_CHART_POWER_SCALE,
+  CHART_POWER_WEIGHTS,
   PUBLIC_DECAY_RATE,
   RELEASE_MARKET_SWING,
   SYNTHETIC_CHART_MARKET,
@@ -90,24 +91,20 @@ function computeChartPower(
   publicStat: number,
   global: number,
   industry: number,
-  market: MarketContext,
   titleTrack: TitleTrack,
 ): number {
-  // 플레이어 팬덤·글로벌은 0~100 스케일이다. /100으로 나누면 만렙이어도
-  // 합계 0.25점 기여라 "팬덤을 키워 이긴다"가 산식에서 사라진다 —
-  // 성장 축이 차트 경쟁력에 그대로 반영되어야 성장으로 이기는 구조가 성립한다.
-  const base =
-    albumQuality * 0.4 +
-    publicStat * 0.25 +
-    fandom * 0.15 +
-    industry * 0.1 +
-    // global 축은 누적치라 상한이 없다 — 차트 기여는 100까지만 센다.
-    Math.min(global, 100) * 0.1;
-
   const typeWeights = TITLE_TRACK_TYPE_WEIGHTS[titleTrack.type];
   const publicMult = "public" in typeWeights ? typeWeights.public : 1.0;
+  const craftPower = albumQuality * CHART_POWER_WEIGHTS.quality;
+  const reachPower =
+    publicStat * CHART_POWER_WEIGHTS.public +
+    fandom * CHART_POWER_WEIGHTS.fandom +
+    industry * CHART_POWER_WEIGHTS.industry +
+    Math.min(global, 100) * CHART_POWER_WEIGHTS.global;
 
-  return base * publicMult;
+  // 곡 완성도는 차트의 바닥을 만든다. 트렌드와 타이틀 전략은 얼마나 넓게
+  // 퍼지는지를 바꾸되, 높은 완성도 자체를 운이 통째로 지우지는 않는다.
+  return craftPower + reachPower * publicMult;
 }
 
 export function evaluateRelease(input: ReleaseInput): ReleaseResult {
@@ -128,10 +125,11 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   const random = createSeededRandom(seed);
 
   const swing = computeMarketSwing(input.concept, input.season, market, random());
-  const playerPower =
-    computeChartPower(
-      albumQuality, fandom, publicStat, global, industry, market, titleTrack,
-    ) * swing.mult;
+  const craftPower = albumQuality * CHART_POWER_WEIGHTS.quality;
+  const unswungPower = computeChartPower(
+    albumQuality, fandom, publicStat, global, industry, titleTrack,
+  );
+  const playerPower = craftPower + (unswungPower - craftPower) * swing.mult;
 
   const chartPool: ChartEntry[] = [
     { name: "PLAYER", power: playerPower, isPlayer: true },
@@ -140,20 +138,21 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   for (const c of competitors) {
     if (!c.currentAlbum) continue;
     const power =
-      c.currentAlbum.quality * 0.4 +
-      c.public * 0.25 +
-      (c.fandom / 100) * 0.15 +
-      c.industry * 0.1 +
-      (c.global / 100) * 0.1;
+      c.currentAlbum.quality * CHART_POWER_WEIGHTS.quality +
+      c.public * CHART_POWER_WEIGHTS.public +
+      (c.fandom / 100) * CHART_POWER_WEIGHTS.fandom +
+      c.industry * CHART_POWER_WEIGHTS.industry +
+      (c.global / 100) * CHART_POWER_WEIGHTS.global;
     chartPool.push({ name: c.name, power, isPlayer: false });
   }
 
   for (const e of eventRivals) {
     const power =
-      e.intensity * 0.5 +
-      e.public * 0.25 +
-      (e.fandom / 100) * 0.15 +
-      e.industry * 0.1;
+      e.intensity * CHART_POWER_WEIGHTS.quality +
+      e.public * CHART_POWER_WEIGHTS.public +
+      (e.fandom / 100) * CHART_POWER_WEIGHTS.fandom +
+      e.industry * CHART_POWER_WEIGHTS.industry +
+      (e.global / 100) * CHART_POWER_WEIGHTS.global;
     chartPool.push({ name: e.name, power, isPlayer: false });
   }
 

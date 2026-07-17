@@ -1051,6 +1051,26 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
     expect(median(intermediate, "averageAlbumQuality")).toBeLessThan(
       median(expert, "averageAlbumQuality"),
     );
+    // 높은 품질이 경제 외 결과에서도 눈에 띄는 보상으로 남아야 한다.
+    expect(
+      median(intermediate, "averageChartRank") -
+        median(expert, "averageChartRank"),
+    ).toBeGreaterThan(10);
+    expect(median(expert, "topTenAlbums")).toBeGreaterThanOrEqual(
+      median(intermediate, "topTenAlbums") + 5,
+    );
+    expect(median(expert, "musicShowWins")).toBeGreaterThanOrEqual(
+      median(intermediate, "musicShowWins") + 10,
+    );
+    expect(median(expert, "awards")).toBeGreaterThanOrEqual(
+      median(intermediate, "awards") + 6,
+    );
+    expect(median(expert, "fandom")).toBeGreaterThanOrEqual(
+      median(intermediate, "fandom") + 8,
+    );
+    expect(median(expert, "global")).toBeGreaterThanOrEqual(
+      median(intermediate, "global") + 6,
+    );
     expect(median(intermediate, "averageChemistry")).toBeGreaterThan(
       median(novice, "averageChemistry") + 5,
     );

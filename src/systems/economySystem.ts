@@ -5,6 +5,7 @@ import type {
   InvestorCompany,
   InvestorCondition,
 } from "@/types/game";
+import { INVESTOR_INTERVENTION } from "@/data/balance";
 
 const STREAMING_FANDOM_RATE = 30000;
 const STREAMING_GLOBAL_RATE = 15000;
@@ -232,7 +233,9 @@ export function applyInvestorPenalty(
         effects.industry = -3;
         break;
       case "cashRecall":
-        effects.money = -Math.round(investor.fundAmount * 0.1);
+        effects.money = -Math.round(
+          investor.fundAmount * INVESTOR_INTERVENTION.penalty.cashRecallShare,
+        );
         break;
       case "broadcastDisadvantage":
         effects.public = -4;
@@ -242,15 +245,20 @@ export function applyInvestorPenalty(
         effects.industry = -5;
         break;
       case "managementInterference":
-        effects.satisfaction = -5;
-        effects.stress = 5;
+        effects.satisfaction =
+          INVESTOR_INTERVENTION.penalty.managementSatisfaction;
+        effects.stress = INVESTOR_INTERVENTION.penalty.managementStress;
         break;
       case "equityPressure":
-        effects.money = -Math.round(investor.fundAmount * 0.05);
+        effects.money = -Math.round(
+          investor.fundAmount * INVESTOR_INTERVENTION.penalty.equityPressureShare,
+        );
         effects.satisfaction = -3;
         break;
       case "contractPenalty":
-        effects.money = -50000000;
+        effects.money = -Math.round(
+          investor.fundAmount * INVESTOR_INTERVENTION.penalty.contractPenaltyShare,
+        );
         break;
       case "reputationDrop":
         effects.industry = -4;
