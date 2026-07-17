@@ -67,7 +67,7 @@ export function StaffManagementModal({
     <Modal title="인사 관리" onClose={onClose} isCloseDisabled={isSaving}>
       <div className="space-y-4 text-sm">
         <p className="text-pretty text-xs leading-5 text-text-muted">
-          이번 주 시장 풀 상한 {poolCap} — 업계 신뢰가 오르면 더 좋은 인재가
+          이번 주 시장 풀 상한 {poolCap}. 업계 신뢰가 오르면 더 좋은 인재가
           찾아옵니다. 후보는 매주 바뀌고, 함께해 온 스태프의 교체는 멤버들의
           만족도({STAFF_MARKET.replaceTeamSatisfactionPenalty})로 돌아옵니다.
         </p>
@@ -92,7 +92,7 @@ export function StaffManagementModal({
                     <span className={headroom?.tone}>{headroom?.label}</span>
                   </span>
                 ) : (
-                  <span className="text-xs text-rose-300">공석 — 전문 작업이 멈춰 있습니다</span>
+                  <span className="text-xs text-rose-300">공석. 전문 작업이 멈춰 있습니다</span>
                 )}
               </div>
               <div className="mt-1.5 space-y-1.5">

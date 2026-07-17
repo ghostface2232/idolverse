@@ -377,7 +377,7 @@ function buildRecontractCard(
         id: "raise",
         label: "조건 인상",
         description: `처우를 ${nextTier}등급으로 올리고 계약금을 지급한다.`,
-        tradeoff: `계약금 ${formatSigning(signing)} — 인기가 높을수록 몸값도 높다.`,
+        tradeoff: `계약금 ${formatSigning(signing)}. 인기가 높을수록 몸값도 높다.`,
         effects: { money: -signing, satisfaction: 12 },
         targetTraineeIds: [member.id],
       },

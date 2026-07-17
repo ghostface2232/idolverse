@@ -97,7 +97,7 @@ export const DEBUT_SHOWCASE_GRADES: readonly {
   {
     min: 55,
     label: "무난한 출발",
-    summary: "신인다운 무대 — 성장 서사의 출발점으로는 충분하다",
+    summary: "신인다운 무대. 성장 서사의 출발점으로는 충분하다",
     effects: {},
   },
   {
@@ -166,7 +166,7 @@ export const COMEBACK_BUDGET_TIERS = [
     label: "대형",
     cost: 120_000_000,
     baseProgress: 30,
-    summary: "높은 출발선 — 시설·스태프 투자와 자금을 경쟁합니다",
+    summary: "높은 출발선. 시설·스태프 투자와 자금을 경쟁합니다",
   },
 ] as const;
 

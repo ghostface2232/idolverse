@@ -267,6 +267,31 @@ export function finalizeAlbumRelease(
   };
 }
 
+/**
+ * 발매 결과에 실을 센터 조합 반응. 어떤 특성이 어떤 컨셉과 맞는지는
+ * 사전에 알려주지 않는다 — 이 반응이 플레이어가 매핑을 추측할 유일한 단서다.
+ */
+export function describeCenterFit(
+  album: Album,
+  trainees: readonly Trainee[],
+): string {
+  const mood = album.concept.mood;
+  const center = album.centerTraineeId
+    ? trainees.find((t) => t.id === album.centerTraineeId) ?? null
+    : trainees.find((t) => t.position === "center") ?? null;
+  if (!center) return "";
+  const fit =
+    (center.conceptAffinity[mood] ?? 50) +
+    traitComboBonus(center.traits ?? [], mood);
+  if (fit >= 75) {
+    return ` 센터 ${center.name}의 분위기가 이번 컨셉과 맞아떨어졌다는 반응이 뜨겁다.`;
+  }
+  if (fit < 40) {
+    return ` 센터 ${center.name}과(와) 컨셉이 어딘가 어긋난다는 반응이 눈에 띈다.`;
+  }
+  return "";
+}
+
 export interface FandomExpectationResult {
   fitScore: number;
   fandomPenalty: number;

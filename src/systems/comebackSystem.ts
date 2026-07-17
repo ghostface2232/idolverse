@@ -17,6 +17,7 @@ import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
 import { createSeededRandom } from "@/lib/seededRandom";
 import {
   calculateFandomExpectation,
+  describeCenterFit,
   finalizeAlbumRelease,
   generateTitleTrackCandidates,
 } from "@/systems/albumSystem";
@@ -371,7 +372,7 @@ function buildSettlement(
   const moodLabel = lastMood ? CONCEPT_MOOD_DATA[lastMood].label : "";
   const nextHook = lastMood
     ? streak >= 2
-      ? `팬덤은 ${moodLabel} 계열을 ${streak}번 연속 지켜봤습니다. 같은 색을 지킬지, 새로운 색으로 넘어갈지 — 다음 기획의 질문입니다.`
+      ? `팬덤은 ${moodLabel} 계열을 ${streak}번 연속 지켜봤습니다. 같은 색을 지킬지, 새로운 색으로 넘어갈지가 다음 기획의 질문입니다.`
       : `${moodLabel} 색이 팀의 첫인상으로 자리 잡았습니다. 다음 앨범 기획을 바로 시작할 수 있습니다.`
     : "다음 앨범 기획을 바로 시작할 수 있습니다.";
 
@@ -475,6 +476,7 @@ export function processComebackProjectWeek(
       backgroundGroups: input.backgroundGroups,
       market: input.calendar.marketTrend,
     });
+    const centerNote = describeCenterFit(album, input.trainees);
     releasedAlbum = released.album;
     releaseResult = released.releaseResult;
     project = { ...project, releasedAlbumId: released.album.id };
@@ -485,7 +487,7 @@ export function processComebackProjectWeek(
         type: "market",
         tone: "positive",
         title: "컴백 차트 진입",
-        description: `${released.album.title}의 첫 차트 순위가 집계되었습니다.`,
+        description: `${released.album.title}의 첫 차트 순위가 집계되었습니다.${centerNote}`,
         resolved: false,
         presentation: {
           kind: "chart-reveal",
@@ -579,7 +581,7 @@ export function processComebackProjectWeek(
             week: input.cumulativeWeek,
             score: melonRank,
             passed: false,
-            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"} — 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했다.`,
+            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"}. 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했다.`,
           },
         },
       };
@@ -617,7 +619,7 @@ export function processComebackProjectWeek(
           week: input.cumulativeWeek,
           score: settlement.chartPeak,
           passed: settlement.chartPeak > 0 && settlement.chartPeak <= 30,
-          summary: `${settlement.albumTitle} 활동 정산 — 차트 최고 ${settlement.chartPeak}위, 초동 ${settlement.firstWeekSales.toLocaleString("ko-KR")}장.`,
+          summary: `${settlement.albumTitle} 활동 정산: 차트 최고 ${settlement.chartPeak}위, 초동 ${settlement.firstWeekSales.toLocaleString("ko-KR")}장.`,
         },
       },
     };

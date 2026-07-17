@@ -11,7 +11,7 @@ import {
   TITLE_TRACK_SELECTION_DECISION_ID,
 } from "@/data/debutProject";
 import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
-import { finalizeAlbumRelease } from "@/systems/albumSystem";
+import { describeCenterFit, finalizeAlbumRelease } from "@/systems/albumSystem";
 import type { ReleaseResult } from "@/systems/evaluationSystem";
 import { instantiateEvent } from "@/systems/eventSystem";
 import { directDebutPacing, type PacingBeatKind } from "@/systems/pacingDirector";
@@ -144,7 +144,7 @@ export function evaluateDebutShowcase(
     week: cumulativeWeek,
     score,
     passed: score >= 55,
-    summary: `${grade.label} — ${grade.summary}.`,
+    summary: `${grade.label}: ${grade.summary}.`,
   };
 }
 
@@ -345,7 +345,7 @@ export function processDebutProjectWeek(
         type: "market",
         tone: "positive",
         title: "데뷔 차트 진입",
-        description: `${releasedAlbum.title}의 첫 차트 순위가 집계되었습니다.`,
+        description: `${releasedAlbum.title}의 첫 차트 순위가 집계되었습니다.${describeCenterFit(releasedAlbum, input.trainees)}`,
         resolved: false,
         presentation: {
           kind: "chart-reveal",

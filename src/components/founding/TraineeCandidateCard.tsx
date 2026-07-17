@@ -54,12 +54,9 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
   const topStatKeys = [...STAT_DISPLAY_ORDER]
     .sort((a, b) => trainee.stats[b] - trainee.stats[a])
     .slice(0, 2);
-  // 멤버에게는 장르 태그가 아니라 인간적 특성이 붙는다. 어울리는 컨셉은
-  // 특성에서 파생된 친화 중 상위 1개만 참고로 보여준다.
+  // 멤버에게는 장르 태그가 아니라 인간적 특성이 붙는다. 어떤 컨셉과
+  // 어울리는지는 알려주지 않는다 — 추측하고 무대로 확인하는 것이 컨텐츠다.
   const traits = traitLabels(trainee);
-  const bestMood = Object.entries(trainee.conceptAffinity).sort(
-    ([, a], [, b]) => b - a,
-  )[0];
   const recommendedPositions = ALL_POSITIONS.map((position) => {
     const fitness = calculatePositionFitness(trainee.stats, position);
     return {
@@ -153,13 +150,6 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
               {label}
             </span>
           ))}
-          {bestMood ? (
-            <span className="rounded-full border border-slate-600 bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">
-              {CONCEPT_MOOD_DATA[bestMood[0] as keyof typeof CONCEPT_MOOD_DATA]
-                ?.label ?? bestMood[0]}{" "}
-              어울림
-            </span>
-          ) : null}
           {isForeign && (
             <BadgeIcon icon={flag} label="해외 팬덤 보너스" tone="amber" />
           )}

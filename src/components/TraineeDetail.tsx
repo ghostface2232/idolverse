@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Modal } from "@/components/common/Modal";
-import { CONCEPT_MOOD_DATA, CONCEPT_MOODS } from "@/data/concepts";
+import { traitLabels } from "@/data/memberTraits";
 import {
   calculatePositionFitness,
   POSITION_LABELS,
@@ -267,36 +267,25 @@ export function TraineeDetail({
           </div>
         </section>
 
+        {/* 컨셉과의 어울림은 수치로 알려주지 않는다 — 특성을 보고 추측하고,
+            발매 결과의 반응으로 확인하는 것이 컨텐츠다. */}
         <section className="space-y-2">
           <p className="text-xs uppercase tracking-[0.18em] text-brand-cyan">
-            콘셉트 친화도
+            특성
           </p>
-          <div className="space-y-1.5">
-            {CONCEPT_MOODS.map((mood) => {
-              const value = trainee.conceptAffinity[mood] ?? 50;
-              return (
-                <div
-                  key={mood}
-                  className="flex items-center gap-2 text-[11px] text-slate-300"
-                >
-                  <span className="w-14 shrink-0">
-                    {CONCEPT_MOOD_DATA[mood].label}
-                  </span>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={["h-full rounded-full", affinityColor(value)].join(
-                        " ",
-                      )}
-                      style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
-                    />
-                  </div>
-                  <span className="w-8 shrink-0 text-right text-slate-400">
-                    {value}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex flex-wrap gap-2">
+            {traitLabels(trainee).map((label) => (
+              <span
+                key={label}
+                className="rounded-full border border-pink-400/30 bg-pink-500/10 px-2.5 py-1 text-xs text-pink-200"
+              >
+                {label}
+              </span>
+            ))}
           </div>
+          <p className="text-[11px] leading-4 text-slate-500">
+            어떤 컨셉과 만났을 때 빛나는지는 무대가 말해줍니다.
+          </p>
         </section>
 
         <section className="space-y-2">

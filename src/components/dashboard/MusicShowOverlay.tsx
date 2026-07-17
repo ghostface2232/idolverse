@@ -100,7 +100,7 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
               ) : (
                 <Mic2 className="size-4" aria-hidden="true" />
               )}
-              {command.won ? "음악방송 1위!" : "아쉬운 2위 — 다음 무대를 기약합니다"}
+              {command.won ? "음악방송 1위!" : "아쉬운 2위, 다음 무대를 기약합니다"}
             </div>
           ) : (
             <p className="mt-7 text-xs text-text-muted">집계 중…</p>

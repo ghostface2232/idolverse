@@ -15,7 +15,7 @@ import {
   GENRE_DATA,
   GENRES,
 } from "@/data/concepts";
-import { traitComboBonus, traitLabels } from "@/data/memberTraits";
+import { traitLabels } from "@/data/memberTraits";
 import { calculateFandomExpectation } from "@/systems/albumSystem";
 import type {
   CalendarStoreState,
@@ -40,20 +40,6 @@ interface ComebackPlanningModalProps {
   onClose: () => void;
 }
 
-/** 선택한 무드와 멤버의 어울림 등급 — 특성 친화 + 조합 보너스. */
-function centerFitLabel(
-  trainee: Trainee,
-  mood: ConceptMood | null,
-): { label: string; tone: string } {
-  if (!mood) return { label: "무드 먼저", tone: "text-text-muted" };
-  const fit =
-    (trainee.conceptAffinity[mood] ?? 50) +
-    traitComboBonus(trainee.traits ?? [], mood);
-  if (fit >= 75) return { label: "환상의 조합", tone: "text-amber-300" };
-  if (fit >= 60) return { label: "잘 어울림", tone: "text-emerald-300" };
-  if (fit >= 45) return { label: "무난", tone: "text-slate-300" };
-  return { label: "어색함", tone: "text-rose-300" };
-}
 
 function expectationBadge(
   conceptHistory: readonly ConceptMood[],
@@ -134,7 +120,7 @@ export function ComebackPlanningModal({
       <div className="space-y-4 text-sm">
         <p className="text-pretty leading-6 text-text-secondary">
           컨셉을 정하면 14주 컴백 사이클이 시작됩니다. 팬덤은 팀이 지금까지
-          보여준 색을 기억하고 있습니다 — 지킬지, 바꿀지가 이번 기획의 첫
+          보여준 색을 기억하고 있습니다. 지킬지, 바꿀지가 이번 기획의 첫
           질문입니다.
         </p>
 
@@ -261,8 +247,8 @@ export function ComebackPlanningModal({
             이번 앨범의 센터
           </h3>
           <p className="mt-1 text-[11px] leading-4 text-text-muted">
-            컨셉의 얼굴을 앨범마다 바꿔 세울 수 있습니다. 특성이 컨셉과 맞는
-            멤버가 센터에 서면 완성도와 개인 인기가 함께 오릅니다.
+            컨셉의 얼굴을 앨범마다 바꿔 세울 수 있습니다. 어떤 특성이 어떤
+            컨셉과 만나 빛나는지는 발매가 말해줍니다.
           </p>
           <RadioGroup
             aria-label="센터 선택"
@@ -271,37 +257,31 @@ export function ComebackPlanningModal({
             isDisabled={isSaving}
             className="mt-2 space-y-1.5"
           >
-            {trainees.map((trainee) => {
-              const fit = centerFitLabel(trainee, mood);
-              return (
-                <Radio
-                  key={trainee.id}
-                  value={trainee.id}
-                  className={({ isSelected, isPressed }) =>
-                    [
-                      "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl bg-surface-shell/72 px-3 py-2 outline-none",
-                      "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
-                      isPressed ? "scale-[0.98]" : "scale-100",
-                      isSelected
-                        ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
-                        : "",
-                    ].join(" ")
-                  }
-                >
-                  <span className="min-w-0 truncate text-xs">
-                    <span className="font-semibold text-text-primary">
-                      {trainee.name}
-                    </span>
-                    <span className="ml-2 text-text-muted">
-                      {traitLabels(trainee).join("·")}
-                    </span>
+            {trainees.map((trainee) => (
+              <Radio
+                key={trainee.id}
+                value={trainee.id}
+                className={({ isSelected, isPressed }) =>
+                  [
+                    "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl bg-surface-shell/72 px-3 py-2 outline-none",
+                    "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
+                    isPressed ? "scale-[0.98]" : "scale-100",
+                    isSelected
+                      ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
+                      : "",
+                  ].join(" ")
+                }
+              >
+                <span className="min-w-0 truncate text-xs">
+                  <span className="font-semibold text-text-primary">
+                    {trainee.name}
                   </span>
-                  <span className={`shrink-0 text-[11px] font-semibold ${fit.tone}`}>
-                    {fit.label}
+                  <span className="ml-2 text-text-muted">
+                    {traitLabels(trainee).join("·")}
                   </span>
-                </Radio>
-              );
-            })}
+                </span>
+              </Radio>
+            ))}
           </RadioGroup>
           <p className="mt-1.5 text-[11px] text-text-muted">
             선택하지 않으면 포지션 센터가 그대로 섭니다.

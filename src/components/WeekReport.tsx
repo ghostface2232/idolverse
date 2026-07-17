@@ -117,7 +117,7 @@ function ComebackSettlementSection({
     <section className="rounded-2xl bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.14),transparent_55%)] bg-slate-950/60 p-3 shadow-[inset_0_0_0_1px_rgba(236,72,153,0.25)]">
       <h3 className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-pink-300">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        컴백 정산 — {settlement.albumTitle}
+        컴백 정산: {settlement.albumTitle}
       </h3>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <SettlementStat label="차트 최고" value={`${settlement.chartPeak}위`} />

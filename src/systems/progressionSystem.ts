@@ -360,7 +360,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
   ) {
     longTerm.push({
       id: "rookie-award",
-      title: "신인상 도전 — 같은 신인들 사이에서 우위를 잡으세요",
+      title: "신인상 도전: 같은 신인들 사이에서 우위를 잡으세요",
       deadlineLabel: `W-${input.rookieAwardDeadlineWeek - elapsedWeeks}`,
     });
   }

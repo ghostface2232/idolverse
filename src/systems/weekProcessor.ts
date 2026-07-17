@@ -549,7 +549,7 @@ export function processWeek(
   for (const risk of satResult.leaveRisks) {
     report.warnings.push(
       risk.level === "leaving"
-        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction}) — 회복하지 못하면 몇 주 안에 떠납니다`
+        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction}). 회복하지 못하면 몇 주 안에 떠납니다`
         : `${risk.traineeName} 이탈 경고 (만족도 ${risk.satisfaction})`,
     );
   }
@@ -735,7 +735,7 @@ export function processWeek(
       if (rookieRival) {
         eventRivals.push(rookieRival);
         report.warnings.push(
-          `경쟁 신인 ${rookieRival.name}이(가) 같은 주에 데뷔합니다 — 시장의 시선이 갈립니다`,
+          `경쟁 신인 ${rookieRival.name}이(가) 같은 주에 데뷔합니다. 시장의 시선이 갈립니다`,
         );
       }
     }
@@ -932,7 +932,7 @@ export function processWeek(
           investorNotes,
         };
         report.warnings.push(
-          `컴백 정산 완료: ${comebackResult.settlement.albumTitle} — 다음 앨범 기획이 열렸습니다`,
+          `컴백 정산 완료: ${comebackResult.settlement.albumTitle}. 다음 앨범 기획이 열렸습니다`,
         );
       }
     }
@@ -1406,8 +1406,8 @@ export function processWeek(
     if (!popularityDemand && !overworkDemand) return trainee;
     report.warnings.push(
       popularityDemand
-        ? `${trainee.name}의 인기가 처우를 앞질렀습니다 — 재계약 협상이 앞당겨집니다`
-        : `지친 ${trainee.name}이(가) 처우 재논의를 원합니다 — 재계약 협상이 앞당겨집니다`,
+        ? `${trainee.name}의 인기가 처우를 앞질렀습니다. 재계약 협상이 앞당겨집니다`
+        : `지친 ${trainee.name}이(가) 처우 재논의를 원합니다. 재계약 협상이 앞당겨집니다`,
     );
     return {
       ...trainee,
