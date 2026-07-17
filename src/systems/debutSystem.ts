@@ -5,8 +5,8 @@ import {
   TITLE_TRACK_SELECTION_DECISION_ID,
 } from "@/data/debutProject";
 import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
-import { calculateAlbumQuality } from "@/systems/albumSystem";
-import { evaluateRelease, type ReleaseResult } from "@/systems/evaluationSystem";
+import { finalizeAlbumRelease } from "@/systems/albumSystem";
+import type { ReleaseResult } from "@/systems/evaluationSystem";
 import { instantiateEvent } from "@/systems/eventSystem";
 import { directDebutPacing, type PacingBeatKind } from "@/systems/pacingDirector";
 import {
@@ -138,6 +138,7 @@ function toProjectMetrics(
     averageVocal: readiness.averageVocal,
     showcasePassed: showcasePassed ? 1 : 0,
     titleTrackSelected: album?.titleTrack ? 1 : 0,
+    albumReleased: 0,
   };
 }
 
@@ -191,43 +192,20 @@ function releaseDebutAlbum(
   input: DebutProjectWeekInput,
   album: Album,
 ): { album: Album; releaseResult: ReleaseResult } {
-  if (!album.titleTrack) throw new Error("A title track is required for release.");
-  const quality = calculateAlbumQuality({
+  return finalizeAlbumRelease({
     album,
+    cumulativeWeek: input.cumulativeWeek,
     trainees: input.trainees,
     teamChemistry: calculateDebutReadiness(album, input.trainees, 1).teamChemistry,
     season: input.season,
     conceptHistory: input.conceptHistory,
     equipmentLevel: input.equipmentLevel,
-  });
-  const releaseResult = evaluateRelease({
-    albumQuality: quality,
-    titleTrack: album.titleTrack,
-    fandom: input.fandom.fandom,
-    public: input.fandom.public,
-    global: input.fandom.global,
-    industry: input.fandom.industry,
+    fandom: input.fandom,
     competitors: input.competitors,
     eventRivals: input.eventRivals,
     backgroundGroups: input.backgroundGroups,
     market: input.calendar.marketTrend,
-    seed: input.cumulativeWeek * 389,
   });
-  return {
-    releaseResult,
-    album: {
-      ...album,
-      quality,
-      releaseWeek: input.cumulativeWeek,
-      performance: {
-        chartPeak: releaseResult.chartRank,
-        chartPower: releaseResult.chartPower,
-        firstWeekSales: Math.round(quality * (600 + input.fandom.fandom * 25)),
-        totalStreams: Math.round(releaseResult.chartPower * 125000),
-        fanGrowth: releaseResult.fandomDelta,
-      },
-    },
-  };
 }
 
 export function processDebutProjectWeek(
@@ -334,6 +312,7 @@ export function processDebutProjectWeek(
       const released = releaseDebutAlbum(input, album);
       releasedAlbum = released.album;
       releaseResult = released.releaseResult;
+      project = { ...project, releasedAlbumId: released.album.id };
       events.push({
         event: {
           id: `chart-reveal:${releasedAlbum.id}:w${input.cumulativeWeek}`,

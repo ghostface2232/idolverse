@@ -7,6 +7,8 @@ import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
 import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
+import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
+import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
@@ -29,10 +31,11 @@ import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
   applyEventChoiceAndSave,
-  completeChartRevealAndSave,
+  completePresentationEventAndSave,
   completePositionReviewAndSave,
   completeTitleTrackSelectionAndSave,
   runWeekAndSave,
+  startComebackProjectAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
 import { useAlbumStore } from "@/stores/albumStore";
@@ -50,8 +53,14 @@ import {
   buildGoalLanes,
   buildMilestoneMetrics,
 } from "@/systems/progressionSystem";
+import { canStartComebackProject } from "@/systems/comebackSystem";
 import { getContractRemainingWeeks } from "@/systems/contractSystem";
-import type { GameEvent, WeeklyDecisionTrigger } from "@/types/game";
+import type {
+  ConceptMood,
+  GameEvent,
+  Genre,
+  WeeklyDecisionTrigger,
+} from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
 
 const SEASON_LABELS = {
@@ -83,6 +92,8 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
   const [isPositionReviewSaving, setIsPositionReviewSaving] = useState(false);
   const [isTitleTrackSaving, setIsTitleTrackSaving] = useState(false);
+  const [comebackPlanningOpen, setComebackPlanningOpen] = useState(false);
+  const [isComebackSaving, setIsComebackSaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
@@ -104,6 +115,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const fandomIndustry = useFandomStore((state) => state.industry);
   const currentAlbum = useAlbumStore((state) => state.currentAlbum);
   const releasedAlbums = useAlbumStore((state) => state.releasedAlbums);
+  const conceptHistory = useAlbumStore((state) => state.conceptHistory);
   const weeklyFlow = useGameStore(weeklyFlowSelectors.flow);
   const remainingDecisions = useGameStore(
     weeklyFlowSelectors.remainingDecisionCount,
@@ -121,6 +133,13 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     activeEvent?.presentation?.kind === "chart-reveal"
       ? activeEvent.presentation
       : null;
+  const musicShow =
+    activeEvent?.presentation?.kind === "music-show"
+      ? activeEvent.presentation
+      : null;
+  const canPlanComeback =
+    weeklyFlow.state === "planning_ready" &&
+    canStartComebackProject(currentPhase, activeProjects, currentAlbum);
   const positionReviewProject = activeProjects.find(
     (project) => project.decisionStatuses.positionReview === "available",
   );
@@ -236,18 +255,36 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
   };
 
-  const handleCompleteChartReveal = async (eventId: string) => {
+  const handleCompletePresentationEvent = async (eventId: string) => {
     setWorkflowError(null);
     try {
-      await completeChartRevealAndSave(
+      await completePresentationEventAndSave(
         eventId,
         userId,
         DEFAULT_AUTO_SAVE_SLOT,
       );
     } catch (error) {
-      console.error("Chart reveal save failed.", error);
-      setWorkflowError("차트 결과를 저장하지 못했습니다. 다시 확인해 주세요.");
+      console.error("Presentation event save failed.", error);
+      setWorkflowError("결과를 저장하지 못했습니다. 다시 확인해 주세요.");
       throw error;
+    }
+  };
+
+  const handleStartComeback = async (concept: {
+    genre: Genre;
+    mood: ConceptMood;
+  }) => {
+    if (isComebackSaving) return;
+    setIsComebackSaving(true);
+    setWorkflowError(null);
+    try {
+      await startComebackProjectAndSave(concept, userId, DEFAULT_AUTO_SAVE_SLOT);
+      setComebackPlanningOpen(false);
+    } catch (error) {
+      console.error("Comeback planning save failed.", error);
+      setWorkflowError("컴백 기획을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsComebackSaving(false);
     }
   };
 
@@ -301,6 +338,16 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     });
   }, [activeEvent, chartReveal, weeklyFlow.state]);
 
+  useEffect(() => {
+    if (weeklyFlow.state !== "event_focus" || !activeEvent || !musicShow) {
+      return;
+    }
+    presentationBus.emit("musicShow", {
+      eventId: activeEvent.id,
+      ...musicShow,
+    });
+  }, [activeEvent, musicShow, weeklyFlow.state]);
+
   const goalLanes = useMemo(() => {
     const metrics = buildMilestoneMetrics({
       trainees,
@@ -352,6 +399,24 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         >
           {workflowError}
         </p>
+      ) : null}
+      {canPlanComeback ? (
+        <button
+          type="button"
+          className="w-full rounded-2xl bg-[linear-gradient(120deg,rgba(236,72,153,0.14),rgba(34,211,238,0.1))] p-3 text-left shadow-[inset_0_0_0_1px_rgba(236,72,153,0.3)] transition-transform active:scale-[0.98]"
+          onClick={() => setComebackPlanningOpen(true)}
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-300">
+            제작 슬롯 비어 있음
+          </p>
+          <p className="mt-1 text-sm font-semibold text-text-primary">
+            다음 컴백 기획 시작
+          </p>
+          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
+            컨셉을 정하면 14주 사이클이 시작됩니다. 활동 정산 중에도 다음
+            기획을 겹쳐 진행할 수 있습니다.
+          </p>
+        </button>
       ) : null}
       <DecisionCardDeck
         key={`${currentYear}-W${currentWeek}`}
@@ -473,7 +538,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         />
       ) : null}
 
-      {weeklyFlow.state === "event_focus" && activeEvent && !chartReveal ? (
+      {weeklyFlow.state === "event_focus" &&
+      activeEvent &&
+      !activeEvent.presentation ? (
         <EventModal
           key={activeEvent.id}
           event={activeEvent}
@@ -482,7 +549,21 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         />
       ) : null}
 
-      <ChartRevealOverlay onComplete={handleCompleteChartReveal} />
+      <ChartRevealOverlay onComplete={handleCompletePresentationEvent} />
+      <MusicShowOverlay onComplete={handleCompletePresentationEvent} />
+
+      {comebackPlanningOpen && canPlanComeback ? (
+        <ComebackPlanningModal
+          conceptHistory={conceptHistory}
+          marketTrend={marketTrend}
+          isSaving={isComebackSaving}
+          errorMessage={workflowError}
+          onConfirm={handleStartComeback}
+          onClose={() => {
+            if (!isComebackSaving) setComebackPlanningOpen(false);
+          }}
+        />
+      ) : null}
 
       {weeklyFlow.state === "planning_ready" && positionReviewProject ? (
         <PositionReviewModal

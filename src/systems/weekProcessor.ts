@@ -16,7 +16,11 @@ import {
 } from "@/systems/satisfactionSystem";
 import { progressAlbum } from "@/systems/albumSystem";
 import { processDebutProjectWeek } from "@/systems/debutSystem";
-import { weeklyChartDecay } from "@/systems/evaluationSystem";
+import { processComebackProjectWeek } from "@/systems/comebackSystem";
+import {
+  weeklyChartDecay,
+  type ReleaseResult,
+} from "@/systems/evaluationSystem";
 import {
   simulateCompetitorWeek,
   spawnEventCompetitor,
@@ -63,6 +67,7 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  COMEBACK_REQUIREMENTS,
   DEBUT_REQUIREMENTS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
@@ -71,6 +76,7 @@ import {
 import { createSeededRandom } from "@/lib/seededRandom";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import { DEBUT_PROJECT } from "@/data/debutProject";
+import { COMEBACK_PROJECT } from "@/data/comebackProject";
 import {
   captureWeekDeltaState,
   diffWeekDeltaState,
@@ -159,6 +165,7 @@ export function processWeek(
     competitorComebacks: [],
     promotionResults: [],
     awardResults: null,
+    comebackSettlement: null,
   };
 
   let trainees = [...snapshot.trainee.trainees];
@@ -519,6 +526,52 @@ export function processWeek(
     .map((e) => ({ ...e, duration: e.duration - 1 }))
     .filter((e) => e.duration > 0);
 
+  // 발매 확정 절차는 데뷔와 컴백이 완전히 같다: 차트 포지션 초기화,
+  // 발매 팬덤 델타 적용, 경고·델타 기록까지 한 곳에서 커밋한다.
+  const commitAlbumRelease = (
+    released: Album,
+    release: ReleaseResult,
+    label: string,
+  ) => {
+    releasedAlbums = [...releasedAlbums, released];
+    conceptHistory = [...conceptHistory, released.concept.mood];
+    albumReleasedThisWeek = true;
+    chartPositions = {
+      melon: release.chartRank,
+      spotify: Math.min(100, release.chartRank + 2),
+      youtube: Math.min(100, release.chartRank + 4),
+      albumSales: Math.min(100, Math.max(1, release.chartRank + 1)),
+    };
+    applyToState(
+      {
+        fandom: release.fandomDelta,
+        public: release.publicDelta,
+        global: release.globalDelta,
+        industry: release.industryDelta,
+        fandomDisappointment: release.fandomDisappointmentDelta,
+      },
+      { kind: "album", id: released.id, label: `${released.title} 발매` },
+      6,
+    );
+    report.warnings.push(
+      `${label}: ${released.title}, 멜론 ${release.chartRank}위 진입`,
+    );
+    report.deltas.push({
+      id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+      source: { kind: "album", id: released.id, label },
+      target: {
+        kind: "album",
+        id: released.id,
+        field: "performance.chartPeak",
+        label: "차트 진입 순위",
+      },
+      before: null,
+      after: release.chartRank,
+      day: 6,
+      severity: "notice",
+    });
+  };
+
   // ── 7.5 Stage project / pacing director / debut release
   const debutProjectIndex = activeProjects.findIndex(
     (project) =>
@@ -605,45 +658,119 @@ export function processWeek(
     }
 
     if (debutResult.releasedAlbum && debutResult.releaseResult) {
-      const released = debutResult.releasedAlbum;
-      const release = debutResult.releaseResult;
-      releasedAlbums = [...releasedAlbums, released];
-      conceptHistory = [...conceptHistory, released.concept.mood];
-      albumReleasedThisWeek = true;
-      chartPositions = {
-        melon: release.chartRank,
-        spotify: Math.min(100, release.chartRank + 2),
-        youtube: Math.min(100, release.chartRank + 4),
-        albumSales: Math.min(100, Math.max(1, release.chartRank + 1)),
-      };
-      applyToState(
-        {
-          fandom: release.fandomDelta,
-          public: release.publicDelta,
-          global: release.globalDelta,
-          industry: release.industryDelta,
-          fandomDisappointment: release.fandomDisappointmentDelta,
-        },
-        { kind: "album", id: released.id, label: `${released.title} 발매` },
-        6,
+      commitAlbumRelease(
+        debutResult.releasedAlbum,
+        debutResult.releaseResult,
+        "데뷔 앨범 발매",
       );
-      report.warnings.push(
-        `데뷔 앨범 발매: ${released.title}, 멜론 ${release.chartRank}위 진입`,
-      );
-      report.deltas.push({
-        id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
-        source: { kind: "album", id: released.id, label: "데뷔 앨범 발매" },
-        target: {
-          kind: "album",
-          id: released.id,
-          field: "performance.chartPeak",
-          label: "차트 진입 순위",
-        },
-        before: null,
-        after: release.chartRank,
-        day: 6,
-        severity: "notice",
+    }
+  }
+
+  // ── 7.6 Comeback projects — 상위 루프(M4). 발매를 마친 사이클이 음악방송·
+  // 정산을 도는 동안 다음 기획이 같은 배열에 중첩될 수 있어 전 인스턴스를 돈다.
+  if (
+    snapshot.game.currentPhase === "debut" ||
+    snapshot.game.currentPhase === "growth" ||
+    snapshot.game.currentPhase === "peak"
+  ) {
+    for (let index = 0; index < activeProjects.length; index++) {
+      const candidate = activeProjects[index];
+      if (candidate.kind !== "comeback" || candidate.status === "completed") {
+        continue;
+      }
+
+      const comebackResult = processComebackProjectWeek({
+        project: candidate,
+        cumulativeWeek,
+        season: snapshot.game.currentSeason,
+        album,
+        releasedAlbums,
+        trainees,
+        staff,
+        fandom: { ...snapshot.fandom, ...fandomAxis, chartPositions },
+        competitors: compResult.competitors,
+        eventRivals,
+        backgroundGroups: compResult.backgroundGroups,
+        calendar: snapshot.calendar,
+        equipmentLevel: upgrades.equipmentLevel,
+        conceptHistory,
       });
+      const previousStageId = candidate.currentStageId;
+      activeProjects[index] = comebackResult.project;
+      album = comebackResult.album;
+
+      for (const stageId of comebackResult.enteredStageIds) {
+        const stage = COMEBACK_PROJECT.stages.find(
+          (stageCandidate) => stageCandidate.id === stageId,
+        );
+        if (!stage) continue;
+        report.warnings.push(`컴백 진행: ${stage.title}`);
+        report.deltas.push({
+          id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
+          source: { kind: "project", id: COMEBACK_PROJECT.id, label: stage.title },
+          target: {
+            kind: "project",
+            id: comebackResult.project.id,
+            field: "currentStageId",
+            label: "컴백 단계",
+          },
+          before: previousStageId,
+          after: stageId,
+          day: 5,
+          severity: "notice",
+        });
+      }
+
+      for (const projectEvent of comebackResult.events) {
+        report.events.push(projectEvent.event);
+        applyToState(
+          projectEvent.effects,
+          {
+            kind: "project",
+            id: projectEvent.event.id,
+            label: projectEvent.event.title,
+          },
+          5,
+          projectEvent.targetTraineeIds,
+        );
+      }
+
+      if (comebackResult.releasedAlbum && comebackResult.releaseResult) {
+        commitAlbumRelease(
+          comebackResult.releasedAlbum,
+          comebackResult.releaseResult,
+          "컴백 앨범 발매",
+        );
+      }
+
+      if (comebackResult.musicShowEvaluated) {
+        report.warnings.push(
+          comebackResult.project.evaluations.musicShow.summary,
+        );
+      }
+
+      if (comebackResult.settlement) {
+        const investor = INVESTOR_COMPANIES.find(
+          (company) => company.type === snapshot.game.investorType,
+        );
+        const investorNotes = investor
+          ? checkInvestorConditions(
+              investor,
+              buildInvestorMetrics(snapshot, fandomAxis, trainees, awardHistory),
+              cumulativeWeek,
+            ).map(
+              (check) =>
+                `${check.met ? "달성" : "미달"} · ${check.description}`,
+            )
+          : [];
+        report.comebackSettlement = {
+          ...comebackResult.settlement,
+          investorNotes,
+        };
+        report.warnings.push(
+          `컴백 정산 완료: ${comebackResult.settlement.albumTitle} — 다음 앨범 기획이 열렸습니다`,
+        );
+      }
     }
   }
 
@@ -963,6 +1090,8 @@ export function processWeek(
     money,
     currentAlbum: album,
     releasedAlbums,
+    awardHistory,
+    activeProjects,
   });
   const achievedIds = new Set(
     snapshot.game.milestonesAchieved.map((m) => m.id),
@@ -1074,19 +1203,27 @@ export function processWeek(
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
     competitorComebacks: compResult.comebacks,
     projectDeadlineWeeks: (() => {
-      const debutProject = activeProjects.find(
-        (project) => project.kind === "debut" && project.status !== "completed",
-      );
-      if (!debutProject) return null;
       const nextCumulativeWeek = toCumulativeWeek(
         advancedGame.currentYear,
         advancedGame.currentWeek,
       );
-      const relativeWeek = Math.max(
-        1,
-        nextCumulativeWeek - debutProject.startedAtWeek + 1,
-      );
-      return Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - relativeWeek);
+      // 데뷔는 프로젝트 종료, 컴백은 발매 주가 결정의 마감 맥락이 된다.
+      const deadlines = activeProjects
+        .filter((project) => project.status !== "completed")
+        .flatMap((project) => {
+          const relativeWeek = Math.max(
+            1,
+            nextCumulativeWeek - project.startedAtWeek + 1,
+          );
+          if (project.kind === "debut") {
+            return [Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - relativeWeek)];
+          }
+          if (project.kind === "comeback" && !project.releasedAlbumId) {
+            return [Math.max(0, COMEBACK_REQUIREMENTS.releaseWeek - relativeWeek)];
+          }
+          return [];
+        });
+      return deadlines.length > 0 ? Math.min(...deadlines) : null;
     })(),
   });
   const nextCumulativeWeek = toCumulativeWeek(

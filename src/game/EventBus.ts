@@ -22,6 +22,15 @@ export interface PresentationEvents {
     trackTitle: string;
     chartPower: number;
   };
+  musicShow: {
+    eventId: string;
+    showName: string;
+    trackTitle: string;
+    playerScore: number;
+    rivalName: string;
+    rivalScore: number;
+    won: boolean;
+  };
 }
 
 type PresentationEventHandler<TPayload> = (payload: TPayload) => void;

@@ -8,9 +8,17 @@ import {
 } from "@/data/balance";
 import { CONCEPT_SYNERGY_TABLE, SEASON_MOOD_FIT } from "@/data/concepts";
 import { createSeededRandom } from "@/lib/seededRandom";
+import {
+  evaluateRelease,
+  type MarketContext,
+  type ReleaseResult,
+} from "@/systems/evaluationSystem";
 import type {
   Album,
+  BackgroundGroup,
+  CompetitorGroup,
   ConceptMood,
+  EventCompetitor,
   Genre,
   Season,
   Staff,
@@ -173,6 +181,71 @@ export function calculateAlbumQuality(input: AlbumQualityInput): number {
     equipmentMult;
 
   return clamp(Math.round(raw), 1, 100);
+}
+
+export interface FinalizeAlbumReleaseInput {
+  album: Album;
+  cumulativeWeek: number;
+  trainees: readonly Trainee[];
+  teamChemistry: number;
+  season: Season;
+  conceptHistory: readonly ConceptMood[];
+  equipmentLevel: 1 | 2 | 3 | 4;
+  fandom: { fandom: number; public: number; global: number; industry: number };
+  competitors: readonly CompetitorGroup[];
+  eventRivals: readonly EventCompetitor[];
+  backgroundGroups: readonly BackgroundGroup[];
+  market: MarketContext;
+}
+
+/**
+ * 품질 확정 → 차트 평가 → 성과 기록까지 발매의 전체 조합을 한 곳에서 한다.
+ * 데뷔(M2)와 컴백(M4)이 같은 공식을 쓰므로 차트 개봉 연출이 어느 쪽이든
+ * 같은 chartRank를 신뢰할 수 있다.
+ */
+export function finalizeAlbumRelease(
+  input: FinalizeAlbumReleaseInput,
+): { album: Album; releaseResult: ReleaseResult } {
+  const { album } = input;
+  if (!album.titleTrack) throw new Error("A title track is required for release.");
+
+  const quality = calculateAlbumQuality({
+    album,
+    trainees: input.trainees,
+    teamChemistry: input.teamChemistry,
+    season: input.season,
+    conceptHistory: input.conceptHistory,
+    equipmentLevel: input.equipmentLevel,
+  });
+  const releaseResult = evaluateRelease({
+    albumQuality: quality,
+    titleTrack: album.titleTrack,
+    fandom: input.fandom.fandom,
+    public: input.fandom.public,
+    global: input.fandom.global,
+    industry: input.fandom.industry,
+    competitors: input.competitors,
+    eventRivals: input.eventRivals,
+    backgroundGroups: input.backgroundGroups,
+    market: input.market,
+    seed: input.cumulativeWeek * 389,
+  });
+
+  return {
+    releaseResult,
+    album: {
+      ...album,
+      quality,
+      releaseWeek: input.cumulativeWeek,
+      performance: {
+        chartPeak: releaseResult.chartRank,
+        chartPower: releaseResult.chartPower,
+        firstWeekSales: Math.round(quality * (600 + input.fandom.fandom * 25)),
+        totalStreams: Math.round(releaseResult.chartPower * 125000),
+        fanGrowth: releaseResult.fandomDelta,
+      },
+    },
+  };
 }
 
 export interface FandomExpectationResult {

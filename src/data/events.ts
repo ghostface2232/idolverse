@@ -94,8 +94,119 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
   },
 ];
 
+/** 컴백 프로젝트 스테이지가 결정론적으로 스폰하는 사건. */
+export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
+  {
+    id: "comeback-concept-research",
+    type: "neutral",
+    title: "컴백 컨셉 조사 착수",
+    description: "다음 활동의 색을 정하기 위해 트렌드 리포트와 팬 커뮤니티 반응을 훑기 시작했다.",
+    probability: 0,
+    conditions: {},
+    effects: { albumMarketing: 3 },
+  },
+  {
+    id: "comeback-song-candidates",
+    type: "positive",
+    title: "타이틀 후보 도착",
+    description: "프로듀서 팀이 이번 컴백의 방향을 가를 타이틀 후보들을 올렸다. 결정은 대표의 몫이다.",
+    probability: 0,
+    conditions: {},
+    effects: { albumSong: 3 },
+  },
+  {
+    id: "comeback-part-assignment",
+    type: "neutral",
+    title: "파트 분배 회의",
+    description: "확정된 타이틀의 킬링파트를 누구에게 맡길지 회의가 길어졌다.",
+    probability: 0,
+    conditions: {},
+    effects: {},
+    choices: [
+      {
+        label: "에이스에게 집중",
+        description: "가장 완성도 높은 멤버에게 핵심 파트를 몰아준다.",
+        tradeoff: "무대 완성도는 오르지만 파트가 적은 멤버들의 만족도가 떨어진다.",
+        effects: { albumSong: 5, albumChoreography: 3, satisfaction: -4 },
+      },
+      {
+        label: "고르게 분배",
+        description: "전원의 분량을 균형 있게 맞춘다.",
+        tradeoff: "팀 분위기는 좋아지지만 임팩트 있는 순간이 줄어든다.",
+        effects: { satisfaction: 4, chemistry: 3, albumSong: 1 },
+      },
+    ],
+  },
+  {
+    id: "comeback-recording-accident",
+    type: "negative",
+    title: "녹음 사고",
+    description: "메인 트랙 녹음본 일부가 손상된 채 발견됐다. 발매까지 남은 시간이 많지 않다.",
+    probability: 0,
+    conditions: {},
+    effects: { stress: 4 },
+    choices: [
+      {
+        label: "밤샘 재녹음",
+        description: "이번 주 안에 손상 구간을 다시 녹음한다.",
+        tradeoff: "퀄리티는 지키지만 멤버들의 피로가 쌓인다.",
+        effects: { albumSong: 6, stress: 6, condition: -4 },
+      },
+      {
+        label: "백업 테이크 사용",
+        description: "보관 중이던 예비 테이크로 대체한다.",
+        tradeoff: "일정은 지키지만 곡 완성도가 조금 떨어진다.",
+        effects: { albumSong: -3, satisfaction: 2 },
+      },
+    ],
+  },
+  {
+    id: "comeback-choreo-draft",
+    type: "neutral",
+    title: "안무 시안 선택",
+    description: "안무팀이 상반된 두 가지 시안을 가져왔다. 무대의 인상이 여기서 갈린다.",
+    probability: 0,
+    conditions: {},
+    effects: {},
+    choices: [
+      {
+        label: "고난도 시안",
+        description: "화제성을 노리고 어려운 동선을 채택한다.",
+        tradeoff: "무대 임팩트가 크지만 연습 부담과 부상 위험이 있다.",
+        effects: { albumChoreography: 7, stress: 5, condition: -3 },
+      },
+      {
+        label: "안정형 시안",
+        description: "전원이 소화 가능한 완성형 동선을 택한다.",
+        tradeoff: "안정적인 라이브가 가능하지만 화제성은 낮다.",
+        effects: { albumChoreography: 4, satisfaction: 2 },
+      },
+    ],
+  },
+  {
+    id: "comeback-teaser-reaction",
+    type: "positive",
+    title: "티저 반응 도착",
+    description: "첫 티저가 공개되자 커뮤니티와 숏폼에 반응이 모이기 시작했다.",
+    probability: 0,
+    conditions: {},
+    effects: { public: 3, albumMarketing: 5 },
+  },
+  {
+    id: "comeback-expectation-briefing",
+    type: "neutral",
+    title: "사전 반응 브리핑",
+    description: "마케팅팀이 팬덤 기대치 조사를 정리해 보고했다.",
+    probability: 0,
+    conditions: {},
+    effects: { albumMarketing: 3 },
+  },
+];
+
 export const PROJECT_EVENT_TEMPLATES_BY_ID = new Map(
-  DEBUT_PROJECT_EVENT_POOL.map((template) => [template.id, template]),
+  [...DEBUT_PROJECT_EVENT_POOL, ...COMEBACK_PROJECT_EVENT_POOL].map(
+    (template) => [template.id, template],
+  ),
 );
 
 export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [

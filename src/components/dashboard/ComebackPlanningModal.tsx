@@ -1,0 +1,223 @@
+import { useMemo, useState } from "react";
+import { Flame, Snowflake } from "lucide-react";
+import { Radio, RadioGroup } from "react-aria-components";
+import { Button } from "@/components/common/Button";
+import { Modal } from "@/components/common/Modal";
+import {
+  CONCEPT_MOOD_DATA,
+  CONCEPT_MOODS,
+  CONCEPT_SYNERGY_TABLE,
+  GENRE_DATA,
+  GENRES,
+} from "@/data/concepts";
+import { calculateFandomExpectation } from "@/systems/albumSystem";
+import type { CalendarStoreState, ConceptMood, Genre } from "@/types/game";
+
+interface ComebackPlanningModalProps {
+  conceptHistory: readonly ConceptMood[];
+  marketTrend: CalendarStoreState["marketTrend"];
+  isSaving: boolean;
+  errorMessage?: string | null;
+  onConfirm: (concept: { genre: Genre; mood: ConceptMood }) => void | Promise<void>;
+  onClose: () => void;
+}
+
+function expectationBadge(
+  conceptHistory: readonly ConceptMood[],
+  mood: ConceptMood,
+): { label: string; tone: string } {
+  const expectation = calculateFandomExpectation(conceptHistory, mood);
+  if (conceptHistory.length === 0) {
+    return { label: "첫 색", tone: "bg-cyan-400/12 text-cyan-200" };
+  }
+  if (expectation.publicBonus < 0) {
+    return { label: "식상 위험", tone: "bg-amber-400/12 text-amber-200" };
+  }
+  if (expectation.fandomPenalty < 0) {
+    return { label: "승부수", tone: "bg-pink-400/12 text-pink-200" };
+  }
+  if (expectation.fitScore === 3) {
+    return { label: "점진 변화", tone: "bg-violet-400/12 text-violet-200" };
+  }
+  return { label: "안정", tone: "bg-emerald-400/12 text-emerald-200" };
+}
+
+const SYNERGY_TONE: Record<string, string> = {
+  S: "bg-amber-400/15 text-amber-200",
+  A: "bg-emerald-400/12 text-emerald-200",
+  B: "bg-slate-400/12 text-slate-200",
+  C: "bg-orange-400/12 text-orange-200",
+  D: "bg-rose-400/12 text-rose-200",
+};
+
+export function ComebackPlanningModal({
+  conceptHistory,
+  marketTrend,
+  isSaving,
+  errorMessage,
+  onConfirm,
+  onClose,
+}: ComebackPlanningModalProps) {
+  const [mood, setMood] = useState<ConceptMood | null>(null);
+  const [genre, setGenre] = useState<Genre | null>(null);
+
+  const selectedExpectation = useMemo(
+    () => (mood ? calculateFandomExpectation(conceptHistory, mood) : null),
+    [conceptHistory, mood],
+  );
+  const visibleGenres = GENRES.filter((candidate) => !GENRE_DATA[candidate].hidden);
+
+  return (
+    <Modal
+      title="다음 컴백 기획"
+      onClose={onClose}
+      isCloseDisabled={isSaving}
+      footer={
+        <Button
+          className="w-full"
+          isDisabled={!mood || !genre || isSaving}
+          onPress={() => {
+            if (mood && genre) void onConfirm({ genre, mood });
+          }}
+        >
+          {isSaving ? "저장 중…" : "이 컨셉으로 기획 시작"}
+        </Button>
+      }
+    >
+      <div className="space-y-4 text-sm">
+        <p className="text-pretty leading-6 text-text-secondary">
+          컨셉을 정하면 14주 컴백 사이클이 시작됩니다. 팬덤은 팀이 지금까지
+          보여준 색을 기억하고 있습니다 — 지킬지, 바꿀지가 이번 기획의 첫
+          질문입니다.
+        </p>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
+            콘셉트 무드
+          </h3>
+          <RadioGroup
+            aria-label="컨셉 무드"
+            value={mood ?? ""}
+            onChange={(value) => setMood(value as ConceptMood)}
+            isDisabled={isSaving}
+            className="mt-2 grid grid-cols-2 gap-2"
+          >
+            {CONCEPT_MOODS.map((candidate) => {
+              const badge = expectationBadge(conceptHistory, candidate);
+              const isHot = marketTrend.hotMood === candidate;
+              const isCold = marketTrend.coldMood === candidate;
+              return (
+                <Radio
+                  key={candidate}
+                  value={candidate}
+                  className={({ isSelected, isPressed }) =>
+                    [
+                      "cursor-pointer rounded-2xl bg-surface-shell/72 p-3 outline-none",
+                      "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
+                      isPressed ? "scale-[0.96]" : "scale-100",
+                      isSelected
+                        ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
+                        : "",
+                    ].join(" ")
+                  }
+                >
+                  <span className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-semibold text-text-primary">
+                      {CONCEPT_MOOD_DATA[candidate].label}
+                    </span>
+                    {isHot ? (
+                      <Flame
+                        className="size-3.5 text-orange-300"
+                        aria-label="시장 강세 무드"
+                      />
+                    ) : isCold ? (
+                      <Snowflake
+                        className="size-3.5 text-slate-400"
+                        aria-label="시장 약세 무드"
+                      />
+                    ) : null}
+                  </span>
+                  <span
+                    className={`mt-1.5 inline-block rounded-lg px-1.5 py-0.5 text-[10px] font-semibold ${badge.tone}`}
+                  >
+                    {badge.label}
+                  </span>
+                </Radio>
+              );
+            })}
+          </RadioGroup>
+          {selectedExpectation ? (
+            <p className="mt-2 rounded-xl bg-surface-shell/72 px-3 py-2 text-pretty text-xs leading-5 text-text-secondary">
+              {selectedExpectation.description}
+            </p>
+          ) : null}
+        </section>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
+            장르
+          </h3>
+          <RadioGroup
+            aria-label="장르"
+            value={genre ?? ""}
+            onChange={(value) => setGenre(value as Genre)}
+            isDisabled={isSaving}
+            className="mt-2 flex flex-wrap gap-2"
+          >
+            {visibleGenres.map((candidate) => {
+              const synergy = mood
+                ? CONCEPT_SYNERGY_TABLE[candidate][mood]
+                : null;
+              return (
+                <Radio
+                  key={candidate}
+                  value={candidate}
+                  className={({ isSelected, isPressed }) =>
+                    [
+                      "flex cursor-pointer items-center gap-1.5 rounded-xl bg-surface-shell/72 px-3 py-2 outline-none",
+                      "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
+                      isPressed ? "scale-[0.96]" : "scale-100",
+                      isSelected
+                        ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
+                        : "",
+                    ].join(" ")
+                  }
+                >
+                  <span className="text-xs font-semibold text-text-primary">
+                    {GENRE_DATA[candidate].label}
+                  </span>
+                  {synergy ? (
+                    <span
+                      className={`rounded-md px-1 py-0.5 text-[10px] font-bold ${SYNERGY_TONE[synergy]}`}
+                    >
+                      {synergy}
+                    </span>
+                  ) : null}
+                </Radio>
+              );
+            })}
+          </RadioGroup>
+          <p className="mt-2 text-[11px] leading-5 text-text-muted">
+            등급은 무드와 장르의 시너지입니다. 시장 강세{" "}
+            <span className="font-semibold text-text-secondary">
+              {GENRE_DATA[marketTrend.hotGenre].label}
+            </span>
+            {" · "}약세{" "}
+            <span className="font-semibold text-text-secondary">
+              {GENRE_DATA[marketTrend.coldGenre].label}
+            </span>
+          </p>
+        </section>
+
+        {errorMessage ? (
+          <p
+            role="alert"
+            className="rounded-xl bg-state-danger/12 px-3 py-2 text-pretty text-sm text-rose-200"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+      </div>
+    </Modal>
+  );
+}

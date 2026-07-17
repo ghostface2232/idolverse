@@ -12,9 +12,20 @@ import {
   diffWeekDeltaState,
   type WeekDeltaState,
 } from "@/systems/weekDelta";
-import type { EffectMap, GameEvent, Position } from "@/types/game";
+import type {
+  ConceptMood,
+  EffectMap,
+  GameEvent,
+  Genre,
+  Position,
+} from "@/types/game";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
+import {
+  canStartComebackProject,
+  createComebackPlan,
+} from "@/systems/comebackSystem";
+import { toCumulativeWeek } from "@/systems/progressionSystem";
 
 export class WeeklyResolutionConflictError extends Error {
   constructor(message: string) {
@@ -271,8 +282,8 @@ export async function advanceWeeklyEventAndSave(
   hydrateGameState(saved.gameState);
 }
 
-/** 차트 공개 해결과 이벤트 큐 이동을 한 번의 저장으로 원자적으로 확정한다. */
-export async function completeChartRevealAndSave(
+/** 연출 이벤트(차트 공개·음악방송) 해결과 큐 이동을 한 번의 저장으로 원자적으로 확정한다. */
+export async function completePresentationEventAndSave(
   eventId: string,
   userId: string,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
@@ -286,10 +297,10 @@ export async function completeChartRevealAndSave(
   if (
     flow.state !== "event_focus" ||
     activeEventId !== eventId ||
-    activeEvent?.presentation?.kind !== "chart-reveal"
+    !activeEvent?.presentation
   ) {
     throw new WeeklyResolutionConflictError(
-      `Chart reveal ${eventId} is not the active event.`,
+      `Presentation event ${eventId} is not the active event.`,
     );
   }
 
@@ -433,6 +444,63 @@ export async function completePositionReviewAndSave(
     toPersistedSnapshot(nextSnapshot),
   );
   hydrateGameState(saved.gameState);
+}
+
+/**
+ * 컨셉 확정과 함께 컴백 프로젝트와 제작 앨범을 만든다. 발매를 마친 이전
+ * 사이클이 음악방송·정산을 도는 동안에도 시작할 수 있다(중첩 대기).
+ */
+export async function startComebackProjectAndSave(
+  concept: { genre: Genre; mood: ConceptMood },
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+    throw new WeeklyResolutionConflictError(
+      "A comeback project can only start while planning the week.",
+    );
+  }
+  if (
+    !canStartComebackProject(
+      snapshot.game.currentPhase,
+      snapshot.game.activeProjects,
+      snapshot.album.currentAlbum,
+    )
+  ) {
+    throw new WeeklyResolutionConflictError(
+      "A new comeback project is not available right now.",
+    );
+  }
+
+  const plan = createComebackPlan({
+    concept,
+    startedAtWeek: toCumulativeWeek(
+      snapshot.game.currentYear,
+      snapshot.game.currentWeek,
+    ),
+    season: snapshot.game.currentSeason,
+    trainees: snapshot.trainee.trainees,
+    conceptHistory: snapshot.album.conceptHistory,
+  });
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: [...snapshot.game.activeProjects, plan.project],
+    },
+    album: {
+      ...snapshot.album,
+      currentAlbum: plan.album,
+    },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+  return plan;
 }
 
 export async function completeTitleTrackSelectionAndSave(

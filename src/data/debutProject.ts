@@ -1,4 +1,5 @@
 import { DEBUT_REQUIREMENTS } from "@/data/balance";
+import { COMEBACK_PROJECT } from "@/data/comebackProject";
 import type { ProjectDefinition } from "@/types/game";
 
 export const DEBUT_PROJECT_ID = "debut-project";
@@ -73,7 +74,10 @@ export const DEBUT_PROJECT: ProjectDefinition = {
   ],
 };
 
-export const PROJECT_DEFINITIONS = [DEBUT_PROJECT] satisfies ProjectDefinition[];
+export const PROJECT_DEFINITIONS = [
+  DEBUT_PROJECT,
+  COMEBACK_PROJECT,
+] satisfies ProjectDefinition[];
 
 export const PROJECT_DEFINITIONS_BY_ID = new Map(
   PROJECT_DEFINITIONS.map((definition) => [definition.id, definition]),

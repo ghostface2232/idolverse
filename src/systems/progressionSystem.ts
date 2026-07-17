@@ -1,4 +1,5 @@
 import {
+  COMEBACK_REQUIREMENTS,
   CONTRACT_TERM_WEEKS,
   DEBUT_REQUIREMENTS,
   GAME_BALANCE,
@@ -8,6 +9,7 @@ import { PROJECT_DEFINITIONS_BY_ID } from "@/data/debutProject";
 import type {
   Album,
   AchievedMilestone,
+  AwardRecord,
   GamePhase,
   InvestorCondition,
   MilestoneDefinition,
@@ -32,6 +34,10 @@ export interface MilestoneMetricsInput {
   money: number;
   currentAlbum: Album | null;
   releasedAlbums: readonly Album[];
+  /** phase 게이트(growth→peak)가 참조한다. 생략하면 0으로 본다. */
+  awardHistory?: readonly AwardRecord[];
+  /** phase 게이트(debut→growth)가 참조한다. 생략하면 0으로 본다. */
+  activeProjects?: readonly ProjectInstance[];
 }
 
 function averageStat(
@@ -92,6 +98,13 @@ export function buildMilestoneMetrics(
         ? 100
         : 0,
     releasedAlbums: input.releasedAlbums.length,
+    awardsWon: input.awardHistory?.length ?? 0,
+    comebacksSettled:
+      input.activeProjects?.filter(
+        (project) =>
+          project.kind === "comeback" &&
+          project.evaluations.settlement !== undefined,
+      ).length ?? 0,
   };
 }
 
@@ -263,9 +276,13 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
         )
       : null;
 
-  const activeProject = input.activeProjects?.find(
-    (candidate) => candidate.status !== "completed",
-  );
+  // 중첩 대기 중에는 발매 전(제작 중) 프로젝트가 다음 결정의 맥락이므로 우선한다.
+  const activeCandidates =
+    input.activeProjects?.filter((candidate) => candidate.status !== "completed") ??
+    [];
+  const activeProject =
+    activeCandidates.find((candidate) => !candidate.releasedAlbumId) ??
+    activeCandidates[0];
   const activeDefinition = activeProject
     ? PROJECT_DEFINITIONS_BY_ID.get(activeProject.definitionId)
     : null;
@@ -277,25 +294,48 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
       ),
     );
     const stage = activeDefinition.stages[stageIndex];
-    const readinessRatio = Math.min(
-      1,
-      input.metrics.debutReadiness / DEBUT_REQUIREMENTS.readiness,
-    );
-    const vocalRatio = Math.min(
-      1,
-      input.metrics.averageVocal / DEBUT_REQUIREMENTS.averageVocal,
-    );
     const cumulativeWeek =
       (input.currentYear - 1) * GAME_BALANCE.weeksPerYear + input.currentWeek;
     const elapsed = cumulativeWeek - activeProject.startedAtWeek + 1;
-    project = {
-      id: activeProject.id,
-      title: `${stageIndex + 1}/${activeDefinition.stages.length} · ${stage.title}`,
-      progressLabel: `준비 ${Math.floor(input.metrics.debutReadiness)}/${DEBUT_REQUIREMENTS.readiness} · 보컬 ${Math.floor(input.metrics.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
-      progressRatio: Math.min(readinessRatio, vocalRatio),
-      deadlineLabel: `데뷔 W-${Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - elapsed)}`,
-      unlocks: stage.unlocks,
-    };
+    const stageLabel = `${stageIndex + 1}/${activeDefinition.stages.length} · ${stage.title}`;
+
+    if (activeProject.kind === "comeback") {
+      const released = Boolean(activeProject.releasedAlbumId);
+      project = {
+        id: activeProject.id,
+        title: stageLabel,
+        progressLabel: released
+          ? undefined
+          : `준비 ${Math.floor(input.metrics.debutReadiness)}/${COMEBACK_REQUIREMENTS.readiness}`,
+        progressRatio: released
+          ? 1
+          : Math.min(
+              1,
+              input.metrics.debutReadiness / COMEBACK_REQUIREMENTS.readiness,
+            ),
+        deadlineLabel: released
+          ? `정산 W-${Math.max(0, COMEBACK_REQUIREMENTS.projectWeeks - elapsed)}`
+          : `발매 D-${Math.max(0, COMEBACK_REQUIREMENTS.releaseWeek - elapsed)}`,
+        unlocks: stage.unlocks,
+      };
+    } else {
+      const readinessRatio = Math.min(
+        1,
+        input.metrics.debutReadiness / DEBUT_REQUIREMENTS.readiness,
+      );
+      const vocalRatio = Math.min(
+        1,
+        input.metrics.averageVocal / DEBUT_REQUIREMENTS.averageVocal,
+      );
+      project = {
+        id: activeProject.id,
+        title: stageLabel,
+        progressLabel: `준비 ${Math.floor(input.metrics.debutReadiness)}/${DEBUT_REQUIREMENTS.readiness} · 보컬 ${Math.floor(input.metrics.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
+        progressRatio: Math.min(readinessRatio, vocalRatio),
+        deadlineLabel: `데뷔 W-${Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - elapsed)}`,
+        unlocks: stage.unlocks,
+      };
+    }
   }
 
   const elapsedWeeks =

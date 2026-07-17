@@ -28,6 +28,25 @@ export const DEBUT_REQUIREMENTS = {
   projectWeeks: 20,
 } as const;
 
+/**
+ * 컴백 프로젝트의 공개 게이트·페이싱. 데뷔보다 짧은 14주 사이클로,
+ * 발매 전 준비도 게이트와 D-day 표시·테스트가 같은 값을 쓴다.
+ */
+export const COMEBACK_REQUIREMENTS = {
+  readiness: 65, // 발매 진입에 필요한 앨범 진행 4축 평균.
+  releaseWeek: 12, // 발매 스테이지가 열리는 상대 주차. D-day 카운트의 기준.
+  projectWeeks: 14, // 컨셉 조사부터 정산·회고까지의 표준 사이클 길이.
+  baseProgress: 20, // 기획 착수 시 사전 제작분. 데뷔 경험이 있는 팀의 출발선.
+} as const;
+
+// 음악방송 1위 대결의 보상. 승리는 활동기의 정점이어야 하고,
+// 패배는 다음 주 결정을 바꿀 만큼만 아프고 회복 불가능해서는 안 된다.
+export const MUSIC_SHOW_OUTCOME = {
+  win: { fandom: 4, public: 5, industry: 3, satisfaction: 6 },
+  lose: { fandomLoyalty: 2, stress: 3 },
+} as const;
+
+
 export const TRAINING_BASE_GROWTH = 0.8; // A single week should matter, but not outscale album-level decisions.
 
 // 휴식일은 스트레스 완화 대가로 그 주 성장을 깎는다. 무비용이면 항상 켜는

@@ -12,6 +12,7 @@ const READY: ProjectMetrics = {
   averageVocal: 65,
   showcasePassed: 1,
   titleTrackSelected: 1,
+  albumReleased: 1,
 };
 
 describe("projectSystem", () => {

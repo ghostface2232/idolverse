@@ -169,7 +169,9 @@ export type MilestoneMetricKey =
   | "digitalIndex"
   | "albumSalesIndex"
   | "debutReadiness"
-  | "releasedAlbums";
+  | "releasedAlbums"
+  | "awardsWon"
+  | "comebacksSettled";
 
 export type ProjectKind = "debut" | "comeback" | "campaign";
 export type ProjectStatus = "active" | "blocked" | "completed";
@@ -180,7 +182,8 @@ export type ProjectMetricKey =
   | "readiness"
   | "averageVocal"
   | "showcasePassed"
-  | "titleTrackSelected";
+  | "titleTrackSelected"
+  | "albumReleased";
 
 export interface ProjectStageRequirement {
   metric: ProjectMetricKey;
@@ -229,6 +232,8 @@ export interface ProjectInstance {
   decisionStatuses: Record<string, ProjectDecisionStatus>;
   evaluations: Record<string, ProjectEvaluationResult>;
   completedAtWeek?: number;
+  /** 이 프로젝트가 발매한 앨범. 음악방송·정산 단계가 발매 결과를 참조한다. */
+  releasedAlbumId?: string;
 }
 
 export type MilestoneCategory =
@@ -556,6 +561,15 @@ export interface GameEvent {
         albumTitle: string;
         trackTitle: string;
         chartPower: number;
+      }
+    | {
+        kind: "music-show";
+        showName: string;
+        trackTitle: string;
+        playerScore: number;
+        rivalName: string;
+        rivalScore: number;
+        won: boolean;
       };
 }
 
@@ -722,6 +736,23 @@ export interface WeekDelta {
   severity: WeekDeltaSeverity;
 }
 
+/** 컴백 정산 주에 리포트를 격상시키는 요약. 발매 성과와 다음 사이클 훅을 담는다. */
+export interface ComebackSettlementReport {
+  projectId: string;
+  albumTitle: string;
+  trackTitle: string;
+  chartPeak: number;
+  firstWeekSales: number;
+  totalStreams: number;
+  fanGrowth: number;
+  /** 음악방송 대결 결과. 아직 열리지 않았으면 null. */
+  musicShowWon: boolean | null;
+  /** 정산 시점의 투자사 조건 대비 현황 요약. */
+  investorNotes: string[];
+  /** 다음 사이클을 여는 질문(컨셉 히스토리 기반). */
+  nextHook: string;
+}
+
 /** 저장 가능한 주간 리포트의 공통 부분. Phase 2 결과 UI는 이 계약만 소비한다. */
 export interface WeeklyReportSnapshot {
   week: number;
@@ -735,6 +766,8 @@ export interface WeeklyReportSnapshot {
   injuries: { traineeId: string; traineeName: string }[];
   conflicts: { a: string; b: string; resolved: boolean }[];
   competitorComebacks: string[];
+  /** 컴백 정산 주에만 채워진다. 구버전 리포트에는 없다. */
+  comebackSettlement?: ComebackSettlementReport | null;
 }
 
 export interface WeeklyFlowSnapshot {

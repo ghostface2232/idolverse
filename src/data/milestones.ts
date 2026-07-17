@@ -228,7 +228,29 @@ export const MILESTONES_BY_ID = new Map(
 
 /**
  * phase 전이 게이트 테이블. 전이 판정은 progressionSystem이 매주 이 테이블로
- * 수행한다. training→debut 게이트는 데뷔 프로젝트(M2)가 쇼케이스 결과와 함께
- * 공급하고, debut→growth→peak는 컴백 루프(M4)가 공급한다.
+ * 수행한다. training→debut는 데뷔 프로젝트(M2)가 쇼케이스·발매 결과로 직접
+ * 전이시키므로 여기 없다. debut→growth→peak는 컴백 루프(M4)가 공급한다.
  */
-export const PHASE_GATES: PhaseGate[] = [];
+export const PHASE_GATES: PhaseGate[] = [
+  {
+    from: "debut",
+    to: "growth",
+    requirements: [
+      { metric: "comebacksSettled", target: 1, label: "컴백 정산" },
+    ],
+    description: "첫 컴백의 정산·회고를 마치면 성장기로 전환된다.",
+  },
+  {
+    from: "growth",
+    to: "peak",
+    requirements: [
+      { metric: "awardsWon", target: 1, label: "수상" },
+      {
+        metric: "global",
+        target: GLOBAL_EXPANSION_REQUIREMENTS.regionalPartnership.minGlobal,
+        label: "글로벌",
+      },
+    ],
+    description: "연말 시상식 수상과 글로벌 이정표를 함께 넘으면 전성기가 열린다.",
+  },
+];

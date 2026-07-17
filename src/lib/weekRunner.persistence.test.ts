@@ -16,7 +16,7 @@ import {
 } from "@/lib/saveSystem";
 import {
   applyEventChoiceAndSave,
-  completeChartRevealAndSave,
+  completePresentationEventAndSave,
   completeTitleTrackSelectionAndSave,
   runWeekAndSave,
 } from "@/lib/weekRunner";
@@ -68,7 +68,7 @@ describe("durable weekly workflow", () => {
       createSavedResult(gameState),
     );
 
-    await completeChartRevealAndSave(event.id, "user", 1);
+    await completePresentationEventAndSave(event.id, "user", 1);
 
     expect(saveGameMock).toHaveBeenCalledTimes(1);
     const committed = captureGameState();
@@ -85,7 +85,7 @@ describe("durable weekly workflow", () => {
       createSavedResult(gameState),
     );
 
-    await completeChartRevealAndSave(event.id, "user", 1);
+    await completePresentationEventAndSave(event.id, "user", 1);
 
     expect(saveGameMock).toHaveBeenCalledTimes(1);
     expect(captureGameState().gameStore.weeklyFlow.state).toBe(
@@ -99,7 +99,7 @@ describe("durable weekly workflow", () => {
     saveGameMock.mockRejectedValueOnce(new Error("network"));
 
     await expect(
-      completeChartRevealAndSave(event.id, "user", 1),
+      completePresentationEventAndSave(event.id, "user", 1),
     ).rejects.toThrow("network");
     expect(captureGameState()).toEqual(before);
   });
