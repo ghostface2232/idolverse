@@ -9,7 +9,9 @@ import {
   type TrainingSchedule,
 } from "@/systems/trainingSystem";
 import { updateChemistry } from "@/systems/chemistrySystem";
+import { updateMemberPopularity } from "@/systems/popularitySystem";
 import {
+  calculateMemberLeaveImpact,
   getEffectiveSatisfaction,
   updateSatisfaction,
   type WeekContext as SatisfactionContext,
@@ -70,8 +72,11 @@ import {
   COMEBACK_REQUIREMENTS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
+  MEMBER_CONTRACT,
+  MEMBER_LEAVE,
   PRODUCTION_RISK,
   STAFF_GROWTH,
+  TEMPERAMENT_PROFILES,
   VARIETY_OUTCOME,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
@@ -341,6 +346,29 @@ export function processWeek(
     if (d.cardId === "emergency-investor" && d.optionId === "comply") {
       investorComplianceCount += 1;
     }
+    // 재계약(M5): 계약 상태는 EffectMap으로 표현할 수 없어 카드 id로 처리한다.
+    if (d.cardId.startsWith("recontract:")) {
+      const traineeId = d.cardId.split(":")[1];
+      trainees = trainees.map((trainee) => {
+        if (trainee.id !== traineeId) return trainee;
+        const profile = TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"];
+        const tier =
+          d.optionId === "raise"
+            ? Math.min(MEMBER_CONTRACT.maxTier, (trainee.contract?.tier ?? 1) + 1)
+            : trainee.contract?.tier ?? 1;
+        const interval =
+          d.optionId === "raise"
+            ? MEMBER_CONTRACT.renegotiationIntervalWeeks +
+              profile.renegotiationBiasWeeks
+            : d.optionId === "bonus"
+              ? Math.round(MEMBER_CONTRACT.renegotiationIntervalWeeks / 2)
+              : 26;
+        return {
+          ...trainee,
+          contract: { tier, nextRenegotiationWeek: cumulativeWeek + interval },
+        };
+      });
+    }
     if (d.cardId === "emergency-investor" && d.optionId === "negotiate") {
       for (const [conditionId, progress] of Object.entries(
         investorConditionProgress,
@@ -521,9 +549,55 @@ export function processWeek(
   for (const risk of satResult.leaveRisks) {
     report.warnings.push(
       risk.level === "leaving"
-        ? `${risk.traineeName} 이탈 확정 (만족도 ${risk.satisfaction})`
+        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction}) — 회복하지 못하면 몇 주 안에 떠납니다`
         : `${risk.traineeName} 이탈 경고 (만족도 ${risk.satisfaction})`,
     );
+  }
+
+  // ── 5.5 이탈 (M5): 경고가 반복되면 실제로 떠난다. 최소 인원은 지킨다.
+  trainees = trainees.map((trainee) => {
+    const leaving = satResult.leaveRisks.some(
+      (risk) => risk.traineeId === trainee.id && risk.level === "leaving",
+    );
+    const countdown = leaving ? (trainee.leaveCountdown ?? 0) + 1 : 0;
+    return countdown === (trainee.leaveCountdown ?? 0)
+      ? trainee
+      : { ...trainee, leaveCountdown: countdown };
+  });
+  const departing = trainees.filter(
+    (trainee) => (trainee.leaveCountdown ?? 0) >= MEMBER_LEAVE.countdownWeeks,
+  );
+  for (const member of departing) {
+    if (trainees.length <= MEMBER_LEAVE.minTeamSize) {
+      report.warnings.push(
+        `${member.name}의 마음이 떠났지만 팀 해체를 막기 위해 간신히 붙잡았습니다`,
+      );
+      trainees = trainees.map((trainee) =>
+        trainee.id === member.id ? { ...trainee, leaveCountdown: 0 } : trainee,
+      );
+      continue;
+    }
+    trainees = trainees.filter((trainee) => trainee.id !== member.id);
+    const impact = calculateMemberLeaveImpact(
+      snapshot.game.currentPhase !== "training",
+    );
+    applyToState(
+      {
+        fandom: -Math.round((fandomAxis.fandom * impact.fandomLossPercent) / 100),
+        industry: -impact.industryPenalty,
+      },
+      { kind: "event", id: `member-leave:${member.id}`, label: `${member.name} 탈퇴` },
+      5,
+    );
+    report.events.push({
+      id: `member-leave:${member.id}:w${cumulativeWeek}`,
+      type: "member",
+      tone: "negative",
+      title: `${member.name} 탈퇴`,
+      description: `${member.name}이(가) 낮은 처우와 지친 마음을 견디지 못하고 팀을 떠났다. 팬덤이 흔들린다.`,
+      resolved: false,
+    });
+    report.warnings.push(`${member.name}이(가) 팀을 떠났습니다`);
   }
 
   // ── 6. Album progress
@@ -748,6 +822,7 @@ export function processWeek(
 
   // ── 7.6 Comeback projects — 상위 루프(M4). 발매를 마친 사이클이 음악방송·
   // 정산을 도는 동안 다음 기획이 같은 배열에 중첩될 수 있어 전 인스턴스를 돈다.
+  let musicShowWonThisWeek = false;
   if (
     snapshot.game.currentPhase === "debut" ||
     snapshot.game.currentPhase === "growth" ||
@@ -827,6 +902,15 @@ export function processWeek(
         report.warnings.push(
           comebackResult.project.evaluations.musicShow.summary,
         );
+        if (
+          comebackResult.events.some(
+            (projectEvent) =>
+              projectEvent.event.presentation?.kind === "music-show" &&
+              projectEvent.event.presentation.won,
+          )
+        ) {
+          musicShowWonThisWeek = true;
+        }
       }
 
       if (comebackResult.settlement) {
@@ -1063,6 +1147,33 @@ export function processWeek(
     }
   }
 
+  // ── 11.5 개인 인기도 — 활동·노출의 주간 축적 (M5)
+  const viralEvent = rolledEvents.find(
+    (rolled) => rolled.template.id === "viral-performance-cut",
+  );
+  const viralMemberId =
+    viralEvent && trainees.length > 0
+      ? trainees[
+          Math.floor(createSeededRandom(seed + 13)() * trainees.length)
+        ].id
+      : null;
+  const inActivityPeriod = activeProjects.some(
+    (project) =>
+      project.kind === "comeback" &&
+      project.status !== "completed" &&
+      project.currentStageId === "activity",
+  );
+  const popularityResult = updateMemberPopularity(trainees, {
+    inActivityPeriod,
+    musicShowWon: musicShowWonThisWeek,
+    viralMemberId,
+    promotionMemberIds: promotionOrders.flatMap(
+      (order) => order.assignedMemberIds ?? [],
+    ),
+  });
+  trainees = popularityResult.trainees;
+  report.warnings.push(...popularityResult.highlights);
+
   // ── 12. Investor condition check
   const investor = INVESTOR_COMPANIES.find(
     (c) => c.type === snapshot.game.investorType,
@@ -1276,6 +1387,29 @@ export function processWeek(
       ? { ...trainee, currentActivity: "training" }
       : trainee,
   );
+
+  // ── 13.8 재계약 조기 트리거 (M5): 인기 급상승·과로는 협상을 앞당긴다.
+  trainees = trainees.map((trainee) => {
+    const contract = trainee.contract ?? { tier: 1, nextRenegotiationWeek: cumulativeWeek + 52 };
+    const earlyWeek = cumulativeWeek + MEMBER_CONTRACT.earlyTriggerLeadWeeks;
+    if (contract.nextRenegotiationWeek <= earlyWeek) return trainee;
+    const popularityDemand =
+      (trainee.popularity ?? 0) >=
+      contract.tier * 15 + MEMBER_CONTRACT.earlyTriggerPopularityMargin;
+    const overworkDemand =
+      trainee.stress >= MEMBER_CONTRACT.overworkTriggerStress &&
+      (trainee.popularity ?? 0) >= MEMBER_CONTRACT.overworkTriggerPopularity;
+    if (!popularityDemand && !overworkDemand) return trainee;
+    report.warnings.push(
+      popularityDemand
+        ? `${trainee.name}의 인기가 처우를 앞질렀습니다 — 재계약 협상이 앞당겨집니다`
+        : `지친 ${trainee.name}이(가) 처우 재논의를 원합니다 — 재계약 협상이 앞당겨집니다`,
+    );
+    return {
+      ...trainee,
+      contract: { ...contract, nextRenegotiationWeek: earlyWeek },
+    };
+  });
 
   // ── 14. Generate next week's decision cards
   const decisionTrainees = trainees.map((trainee) => ({

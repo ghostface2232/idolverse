@@ -15,15 +15,22 @@ import {
 import type {
   ConceptMood,
   EffectMap,
+  FinanceStoreActions,
   GameEvent,
   Genre,
   Position,
+  Staff,
 } from "@/types/game";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
+  STAFF_MARKET,
   type ComebackBudgetTierId,
 } from "@/data/balance";
+import {
+  calculateWeeklyFixedTotal,
+  financeVanillaStore,
+} from "@/stores/financeStore";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import {
   canStartComebackProject,
@@ -582,6 +589,81 @@ export async function completeTitleTrackSelectionAndSave(
     toPersistedSnapshot(nextSnapshot),
   );
   hydrateGameState(saved.gameState);
+}
+
+/**
+ * 스태프 교체(M5 재모집): 같은 역할의 기존 스태프를 내보내고 새 인재를
+ * 들인다. 오래 함께한 스태프의 교체는 팀 만족도로 대가를 치른다.
+ */
+export async function hireStaffAndSave(
+  newStaff: Staff,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+    throw new WeeklyResolutionConflictError(
+      "Staff changes are only allowed while planning the week.",
+    );
+  }
+  const replacing = snapshot.staff.staff.find(
+    (member) => member.role === newStaff.role,
+  );
+  const staffList = [
+    ...snapshot.staff.staff.filter((member) => member.role !== newStaff.role),
+    newStaff,
+  ];
+  const fixedCosts = {
+    ...snapshot.finance.fixedCosts,
+    staffSalary: staffList.reduce((sum, member) => sum + member.salary, 0),
+  };
+  const trainees = replacing
+    ? snapshot.trainee.trainees.map((trainee) => ({
+        ...trainee,
+        satisfaction: Math.max(
+          0,
+          Math.min(
+            100,
+            trainee.satisfaction +
+              STAFF_MARKET.replaceTeamSatisfactionPenalty,
+          ),
+        ),
+      }))
+    : snapshot.trainee.trainees;
+
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    staff: { staff: staffList },
+    trainee: { trainees },
+    finance: {
+      ...snapshot.finance,
+      fixedCosts,
+      weeklyFixedTotal: calculateWeeklyFixedTotal(fixedCosts),
+    },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+/** 시설 상시 업그레이드(M5): 스토어 액션 적용과 저장을 원자적으로 묶는다. */
+export async function upgradeFacilityAndSave(
+  target: Parameters<FinanceStoreActions["upgrade"]>[0],
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const original = captureGameState();
+  financeVanillaStore.getState().upgrade(target);
+  try {
+    const saved = await saveGame(userId, slotNumber, captureGameState());
+    hydrateGameState(saved.gameState);
+  } catch (error) {
+    hydrateGameState(original);
+    throw error;
+  }
 }
 
 export function createWeeklyResolutionId(year: number, week: number) {

@@ -9,7 +9,9 @@ import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal"
 import { ActivityPromotionPanel } from "@/components/dashboard/ActivityPromotionPanel";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
+import { FacilityUpgradeModal } from "@/components/dashboard/FacilityUpgradeModal";
 import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
+import { StaffManagementModal } from "@/components/dashboard/StaffManagementModal";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
@@ -40,8 +42,10 @@ import {
   completePresentationEventAndSave,
   completePositionReviewAndSave,
   completeTitleTrackSelectionAndSave,
+  hireStaffAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
 import { useAlbumStore } from "@/stores/albumStore";
@@ -50,6 +54,7 @@ import { useEventStore } from "@/stores/eventStore";
 import { useFandomStore } from "@/stores/fandomStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
+import { useStaffStore } from "@/stores/staffStore";
 import { useTraineeStore } from "@/stores/traineeStore";
 import {
   isWeeklyDecisionComplete,
@@ -68,6 +73,7 @@ import type {
   GameEvent,
   Genre,
   PromotionActivityId,
+  Staff,
   WeeklyDecisionTrigger,
 } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
@@ -106,6 +112,10 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [promotionId, setPromotionId] = useState<PromotionActivityId | null>(
     null,
   );
+  const [companyModal, setCompanyModal] = useState<"staff" | "facility" | null>(
+    null,
+  );
+  const [isCompanySaving, setIsCompanySaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
@@ -119,6 +129,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const investorConditions = useGameStore((state) => state.investorConditions);
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
   const awardHistory = useGameStore((state) => state.awardHistory);
+  const campaignSeed = useGameStore((state) => state.campaignSeed);
+  const staff = useStaffStore((state) => state.staff);
+  const facilityUpgrades = useFinanceStore((state) => state.upgrades);
   const activeProjects = useGameStore((state) => state.activeProjects);
   const trainees = useTraineeStore((state) => state.trainees);
   const fandomPublic = useFandomStore((state) => state.public);
@@ -377,6 +390,36 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     }
   };
 
+  const handleHireStaff = async (candidate: Staff) => {
+    if (isCompanySaving) return;
+    setIsCompanySaving(true);
+    setWorkflowError(null);
+    try {
+      await hireStaffAndSave(candidate, userId, DEFAULT_AUTO_SAVE_SLOT);
+    } catch (error) {
+      console.error("Staff hire save failed.", error);
+      setWorkflowError("스태프 변경을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsCompanySaving(false);
+    }
+  };
+
+  const handleUpgradeFacility = async (
+    target: Parameters<typeof upgradeFacilityAndSave>[0],
+  ) => {
+    if (isCompanySaving) return;
+    setIsCompanySaving(true);
+    setWorkflowError(null);
+    try {
+      await upgradeFacilityAndSave(target, userId, DEFAULT_AUTO_SAVE_SLOT);
+    } catch (error) {
+      console.error("Facility upgrade save failed.", error);
+      setWorkflowError("시설 투자를 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsCompanySaving(false);
+    }
+  };
+
   useEffect(() => {
     if (weeklyFlow.state !== "event_focus" || !activeEvent || !chartReveal) {
       return;
@@ -558,7 +601,11 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         {activeSection === "members" ? <MemberOverview /> : null}
         {activeSection === "market" ? <MarketOverview /> : null}
         {activeSection === "more" ? (
-          <MoreOverview onOpenNotifications={() => setNotificationsOpen(true)} />
+          <MoreOverview
+            onOpenNotifications={() => setNotificationsOpen(true)}
+            onOpenStaff={() => setCompanyModal("staff")}
+            onOpenFacilities={() => setCompanyModal("facility")}
+          />
         ) : null}
       </GameShell>
 
@@ -589,6 +636,35 @@ export function GameDashboard({ userId }: GameDashboardProps) {
 
       {overviewModal === "market" ? (
         <MarketOverviewModal onClose={() => setOverviewModal(null)} />
+      ) : null}
+
+      {companyModal === "staff" ? (
+        <StaffManagementModal
+          staff={staff}
+          money={money}
+          industry={fandomIndustry}
+          campaignSeed={campaignSeed}
+          cumulativeWeek={toCumulativeWeek(currentYear, currentWeek)}
+          isSaving={isCompanySaving}
+          errorMessage={workflowError}
+          onHire={handleHireStaff}
+          onClose={() => {
+            if (!isCompanySaving) setCompanyModal(null);
+          }}
+        />
+      ) : null}
+
+      {companyModal === "facility" ? (
+        <FacilityUpgradeModal
+          upgrades={facilityUpgrades}
+          money={money}
+          isSaving={isCompanySaving}
+          errorMessage={workflowError}
+          onUpgrade={handleUpgradeFacility}
+          onClose={() => {
+            if (!isCompanySaving) setCompanyModal(null);
+          }}
+        />
       ) : null}
 
       <NotificationsModal

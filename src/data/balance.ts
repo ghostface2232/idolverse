@@ -1,6 +1,8 @@
 import type {
   ConceptSynergyGrade,
   EffectMap,
+  MemberTemperament,
+  Position,
   Season,
   TrainingIntensity,
 } from "@/types/game";
@@ -232,6 +234,107 @@ export const POTENTIAL_TAPER_WINDOW = 18;
 // 창단 시장에는 검증된 인재가 오지 않는다. 상위 풀은 회사가 성장한 뒤
 // 재모집(M5)에서 열린다.
 export const FOUNDING_STAFF_ABILITY_CAP = 60;
+
+// 상시 스태프 시장(M5): 풀 상한이 업계 신뢰와 함께 열리고, 후보는 매주
+// 회전한다. 오래 함께한 스태프의 교체는 팀 만족도로 대가를 치른다.
+export const STAFF_MARKET = {
+  industryScale: 0.5, // 풀 상한 = 창단 상한(60) + 업계 신뢰 × 이 값.
+  candidatesPerRole: 3,
+  replaceTeamSatisfactionPenalty: -4,
+  salaryRange: { min: 28_000_000, max: 98_000_000 }, // 연봉 밴드 전체.
+} as const;
+
+// ── M5 「사람」: 개인 인기도·성격·재계약 ─────────────────────────────
+
+// 개인 인기도는 활동과 노출로 쌓인다. 팀이 쉬면 서서히 식는다 —
+// "가장 인기 있는 멤버"가 데이터로 구분되어 재계약 격차 서사의 근거가 된다.
+export const MEMBER_POPULARITY = {
+  /** 활동기 주간 기본 노출. */
+  activityWeekBase: 0.8,
+  /** 포지션별 노출 가중 — 활동기에 더해진다. */
+  positionExposure: {
+    center: 0.6,
+    visual: 0.5,
+    mainVocal: 0.5,
+    mainDancer: 0.4,
+    variety: 0.55,
+    leader: 0.3,
+    producing: 0.25,
+  } as Partial<Record<Position, number>>,
+  entertainmentGain: 2.5, // 개인 예능/유튜브 스케줄 수행.
+  promotionGain: 1.2, // 프로모션 지정 참가 멤버.
+  musicShowWinGain: 1.5, // 1위 무대는 전원에게 남는다.
+  viralGain: 8, // 직캠 바이럴의 주인공.
+  weeklyDecay: 0.4, // 아무 노출이 없는 주의 감쇠.
+} as const;
+
+/** 성격이 재계약 요구 시점·조건 격차 반응·스트레스 민감도를 가른다. */
+export const TEMPERAMENT_PROFILES: Record<
+  MemberTemperament,
+  {
+    label: string;
+    description: string;
+    /** 조건 격차 불만 배율. */
+    gapSensitivity: number;
+    /** 재계약 주기 보정(주). 음수면 더 일찍 협상을 요구한다. */
+    renegotiationBiasWeeks: number;
+    /** 과로 불만 배율(satisfactionSystem). */
+    stressSensitivity: number;
+  }
+> = {
+  ambitious: {
+    label: "야심가",
+    description: "기회와 조건에 민감하다. 성장이 대우로 돌아오지 않으면 먼저 움직인다",
+    gapSensitivity: 2,
+    renegotiationBiasWeeks: -26,
+    stressSensitivity: 1,
+  },
+  devoted: {
+    label: "헌신형",
+    description: "팀의 성취를 자기 일처럼 여긴다. 격차에 관대하지만 무한하지는 않다",
+    gapSensitivity: 0.5,
+    renegotiationBiasWeeks: 13,
+    stressSensitivity: 1,
+  },
+  steady: {
+    label: "안정형",
+    description: "감정의 진폭이 작고 예측 가능하다",
+    gapSensitivity: 1,
+    renegotiationBiasWeeks: 0,
+    stressSensitivity: 1,
+  },
+  sensitive: {
+    label: "섬세형",
+    description: "무대 표현이 섬세한 만큼 과로와 갈등에 쉽게 지친다",
+    gapSensitivity: 1,
+    renegotiationBiasWeeks: 0,
+    stressSensitivity: 1.6,
+  },
+};
+
+// 멤버 재계약: 주기 도래 또는 조기 트리거(인기 급상승·과로)로 협상 카드가
+// 올라온다. 동결은 공짜가 아니고, 격차는 매주 불만으로 되돌아온다.
+export const MEMBER_CONTRACT = {
+  initialTier: 1,
+  maxTier: 5,
+  renegotiationIntervalWeeks: 78, // 기본 1.5년 주기.
+  /** 인기 조기 트리거: popularity ≥ tier×15 + 이 값이면 앞당겨 요구한다. */
+  earlyTriggerPopularityMargin: 30,
+  overworkTriggerStress: 70, // 과로 조기 트리거(인기 40+ 필요).
+  overworkTriggerPopularity: 40,
+  earlyTriggerLeadWeeks: 8, // 조기 트리거 시 협상이 앞당겨지는 간격.
+  signingBase: 10_000_000, // 조건 인상 계약금 = base + 인기×perPopularity.
+  signingPerPopularity: 1_500_000,
+  gapTierThreshold: 2, // 팀 내 최고 처우와 이만큼 벌어지면 불만.
+  gapPenalty: -2, // 주간 격차 불만(성격 배율 적용 전).
+  freezeSatisfactionPenalty: -12,
+} as const;
+
+/** 만족도 바닥이 이만큼 연속되면 실제로 떠난다. 최소 인원 밑으로는 남는다. */
+export const MEMBER_LEAVE = {
+  countdownWeeks: 4,
+  minTeamSize: 3,
+} as const;
 
 // 스태프도 잠재 상한이 있다. 실무로 조금씩 성장하지만(연 +3 수준) 본인의
 // 천장(채용 시 랜덤 결정)을 넘지 못한다 — 회사가 커지면 결국 새 인재

@@ -152,6 +152,17 @@ export type TraineeStatKey =
   | "stamina"
   | "mental";
 
+/** 멤버 성격. 재계약 요구 시점·조건 격차 반응·스트레스 민감도를 가른다. */
+export type MemberTemperament = "ambitious" | "devoted" | "steady" | "sensitive";
+
+/** 멤버별 처우 계약. 팀 전속계약(156주)과 별개로 개인 조건을 다룬다. */
+export interface MemberContract {
+  /** 처우 등급 1(신인 표준)~5(최상급). 팀 내 격차가 불만의 근거가 된다. */
+  tier: number;
+  /** 다음 재계약 협상이 도래하는 누적 주차. */
+  nextRenegotiationWeek: number;
+}
+
 /**
  * 이정표 판정에 쓰는 지표의 단일 계약. progressionSystem이 게임 상태에서
  * 이 키들의 현재 값을 산출하고, data/milestones.ts의 정의가 목표치를 든다.
@@ -389,7 +400,8 @@ export type WeeklyDecisionTriggerKind =
   | "fandom"
   | "morale"
   | "overwork"
-  | "opportunity";
+  | "opportunity"
+  | "contract";
 
 export interface WeeklyDecisionTrigger {
   kind: WeeklyDecisionTriggerKind;
@@ -437,6 +449,12 @@ export interface Trainee {
   chemistry: Record<string, number>;
   currentActivity: TraineeActivity;
   injuryWeeks: number;
+  /** 개인 인기도(0~100). 활동·노출로 쌓이고 비활동 주에 서서히 식는다. */
+  popularity: number;
+  temperament: MemberTemperament;
+  contract: MemberContract;
+  /** 만족도 바닥이 연속된 주 수. 임계에 닿으면 실제로 이탈한다. */
+  leaveCountdown?: number;
 }
 
 export interface Staff {

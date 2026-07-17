@@ -1,9 +1,11 @@
 import {
   GAME_BALANCE,
+  MEMBER_CONTRACT,
   RECRUIT_POTENTIAL,
   RECRUIT_STAT_BANDS,
   STAFF_GROWTH,
   STAFF_SALARY_BANDS,
+  TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
 import {
@@ -19,6 +21,7 @@ import { createSeededRandom } from "@/lib/seededRandom";
 import type {
   ConceptMood,
   GroupGender,
+  MemberTemperament,
   Nationality,
   Staff,
   StaffRole,
@@ -161,6 +164,16 @@ export function generateTraineeCandidates(
         (method.type === "scout" ? RECRUIT_POTENTIAL.scoutBonus : 0),
     );
 
+    const temperamentRoll = random();
+    const temperament: MemberTemperament =
+      temperamentRoll < 0.25
+        ? "ambitious"
+        : temperamentRoll < 0.5
+          ? "devoted"
+          : temperamentRoll < 0.85
+            ? "steady"
+            : "sensitive";
+
     candidates.push({
       id: `recruit-${seed}-${i}`,
       name,
@@ -178,6 +191,14 @@ export function generateTraineeCandidates(
       chemistry: {},
       currentActivity: null,
       injuryWeeks: 0,
+      popularity: 0,
+      temperament,
+      contract: {
+        tier: MEMBER_CONTRACT.initialTier,
+        nextRenegotiationWeek:
+          MEMBER_CONTRACT.renegotiationIntervalWeeks +
+          TEMPERAMENT_PROFILES[temperament].renegotiationBiasWeeks,
+      },
     });
   }
 

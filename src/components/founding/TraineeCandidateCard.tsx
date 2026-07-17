@@ -2,6 +2,7 @@ import { BadgeIcon } from "@/components/common/BadgeIcon";
 import { Card } from "@/components/common/Card";
 import { PixelText } from "@/components/common/PixelText";
 import { StatBar } from "@/components/common/StatBar";
+import { TEMPERAMENT_PROFILES } from "@/data/balance";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import {
   ALL_POSITIONS,
@@ -104,7 +105,7 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
         <div className="flex items-center justify-between rounded-xl bg-slate-950/50 px-3 py-2">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-              잠재력
+              잠재력 · {TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"].label}
             </p>
             <p className={`text-sm font-semibold ${potentialTier.tone}`}>
               {potentialTier.label}

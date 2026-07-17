@@ -36,6 +36,9 @@ export function makeTrainee(id: string, overrides: Partial<Trainee> = {}): Train
     chemistry: {},
     currentActivity: "training",
     injuryWeeks: 0,
+    popularity: 0,
+    temperament: "steady",
+    contract: { tier: 1, nextRenegotiationWeek: 78 },
     ...overrides,
   };
 }

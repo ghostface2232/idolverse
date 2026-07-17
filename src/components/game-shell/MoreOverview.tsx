@@ -1,4 +1,4 @@
-import { Bell, Building, Landmark, WalletCards } from "lucide-react";
+import { Bell, Building, Landmark, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { INVESTOR_PROFILES } from "@/data/investors";
 import { useFinanceStore } from "@/stores/financeStore";
@@ -6,9 +6,15 @@ import { useGameStore } from "@/stores/gameStore";
 
 interface MoreOverviewProps {
   onOpenNotifications: () => void;
+  onOpenStaff: () => void;
+  onOpenFacilities: () => void;
 }
 
-export function MoreOverview({ onOpenNotifications }: MoreOverviewProps) {
+export function MoreOverview({
+  onOpenNotifications,
+  onOpenStaff,
+  onOpenFacilities,
+}: MoreOverviewProps) {
   const companyName = useGameStore((state) => state.companyName);
   const investorType = useGameStore((state) => state.investorType);
   const money = useFinanceStore((state) => state.money);
@@ -32,7 +38,15 @@ export function MoreOverview({ onOpenNotifications }: MoreOverviewProps) {
           value={`₩${weeklyFixedTotal.toLocaleString("ko-KR")}`}
         />
       </div>
-      <Button className="mt-4 w-full gap-2" tone="secondary" onPress={onOpenNotifications}>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Button className="w-full gap-2" tone="secondary" onPress={onOpenStaff}>
+          <Users className="size-4" aria-hidden="true" /> 인사 관리
+        </Button>
+        <Button className="w-full gap-2" tone="secondary" onPress={onOpenFacilities}>
+          <Building className="size-4" aria-hidden="true" /> 시설 투자
+        </Button>
+      </div>
+      <Button className="mt-3 w-full gap-2" tone="secondary" onPress={onOpenNotifications}>
         <Bell className="size-4" aria-hidden="true" /> 알림 센터 열기
       </Button>
     </section>

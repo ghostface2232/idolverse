@@ -1,8 +1,13 @@
-import { Activity, HeartPulse, UserRound } from "lucide-react";
+import { Activity, HeartPulse, Star, UserRound } from "lucide-react";
+import { TEMPERAMENT_PROFILES } from "@/data/balance";
 import { useTraineeStore } from "@/stores/traineeStore";
 
 export function MemberOverview() {
   const trainees = useTraineeStore((state) => state.trainees);
+  const maxPopularity = trainees.reduce(
+    (max, trainee) => Math.max(max, trainee.popularity ?? 0),
+    0,
+  );
 
   return (
     <section className="h-full overflow-y-auto p-4">
@@ -22,13 +27,25 @@ export function MemberOverview() {
                 <UserRound className="size-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <h2 className="truncate font-semibold text-text-primary">{trainee.name}</h2>
+                <h2 className="flex items-center gap-1.5 truncate font-semibold text-text-primary">
+                  {trainee.name}
+                  {maxPopularity > 0 && (trainee.popularity ?? 0) === maxPopularity ? (
+                    <span
+                      className="rounded-md bg-amber-400/15 px-1 py-0.5 text-[10px] font-semibold text-amber-200"
+                      title="팀 내 최고 인기"
+                    >
+                      인기 1위
+                    </span>
+                  ) : null}
+                </h2>
                 <p className="truncate text-xs text-text-muted">
-                  {trainee.position ?? "포지션 미정"}
+                  {trainee.position ?? "포지션 미정"} ·{" "}
+                  {TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"].label} ·{" "}
+                  처우 {trainee.contract?.tier ?? 1}등급
                 </p>
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
               <div className="rounded-xl bg-surface-shell/70 p-2.5">
                 <dt className="flex items-center gap-1.5 text-text-muted">
                   <HeartPulse className="size-3.5" aria-hidden="true" /> 컨디션
@@ -43,6 +60,14 @@ export function MemberOverview() {
                 </dt>
                 <dd className="mt-1 truncate font-semibold text-text-primary">
                   {activityLabel(trainee.currentActivity)}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-surface-shell/70 p-2.5">
+                <dt className="flex items-center gap-1.5 text-text-muted">
+                  <Star className="size-3.5" aria-hidden="true" /> 인기
+                </dt>
+                <dd className="mt-1 font-semibold tabular-nums text-text-primary">
+                  {Math.round(trainee.popularity ?? 0)}
                 </dd>
               </div>
             </dl>

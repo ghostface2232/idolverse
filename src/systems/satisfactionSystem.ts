@@ -2,12 +2,14 @@ import {
   CHEMISTRY_CONFLICT_THRESHOLD,
   DORM_SATISFACTION_BONUS,
   LIVING_EXPENSE_SATISFACTION_BONUS,
+  MEMBER_CONTRACT,
   SATISFACTION_BASELINE,
   SATISFACTION_CONCEPT_MISMATCH_PENALTY,
   SATISFACTION_LEAVE_THRESHOLD,
   SATISFACTION_OVERWORK_PENALTY,
   SATISFACTION_REGRESSION_RATE,
   SATISFACTION_WARNING_THRESHOLD,
+  TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import type {
   ConceptMood,
@@ -112,12 +114,27 @@ function computeDelta(
     }
   }
 
+  // 섬세형은 과로에 더 빨리 지친다.
+  const profile = TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"];
   if (ctx.trainingIntensity === "extreme") {
-    delta += SATISFACTION_OVERWORK_PENALTY;
+    delta += Math.round(SATISFACTION_OVERWORK_PENALTY * profile.stressSensitivity);
     reasons.push("과도한 스케줄");
   } else if (ctx.trainingIntensity === "hard" && trainee.stress > 70) {
-    delta += SATISFACTION_OVERWORK_PENALTY;
+    delta += Math.round(SATISFACTION_OVERWORK_PENALTY * profile.stressSensitivity);
     reasons.push("높은 스트레스 속 강훈련");
+  }
+
+  // 팀 내 처우 격차: 최고 등급과 벌어질수록 낮은 쪽이 불만을 품는다.
+  // 야심가는 두 배로 민감하고, 헌신형은 절반만 반응한다.
+  const maxTier = trainees.reduce(
+    (max, member) => Math.max(max, member.contract?.tier ?? 1),
+    1,
+  );
+  if (
+    maxTier - (trainee.contract?.tier ?? 1) >= MEMBER_CONTRACT.gapTierThreshold
+  ) {
+    delta += Math.round(MEMBER_CONTRACT.gapPenalty * profile.gapSensitivity);
+    reasons.push("조건 격차");
   }
 
   if (hasConflictingPeer(trainee, trainees)) {

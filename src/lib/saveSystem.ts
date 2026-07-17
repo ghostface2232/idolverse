@@ -305,7 +305,26 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   };
 
   gameVanillaStore.setState(gameStore, false);
-  traineeVanillaStore.setState(gameState.traineeStore, false);
+  // M5 이전 세이브의 멤버에게 인기·성격·계약 기본값을 보완한다.
+  const hydratedCumulativeWeek =
+    (gameStore.currentYear - 1) * GAME_BALANCE.weeksPerYear +
+    gameStore.currentWeek;
+  traineeVanillaStore.setState(
+    {
+      ...gameState.traineeStore,
+      trainees: gameState.traineeStore.trainees.map((trainee) => ({
+        ...trainee,
+        popularity: trainee.popularity ?? 0,
+        temperament: trainee.temperament ?? ("steady" as const),
+        contract:
+          trainee.contract ?? {
+            tier: 1,
+            nextRenegotiationWeek: hydratedCumulativeWeek + 52,
+          },
+      })),
+    },
+    false,
+  );
   staffVanillaStore.setState(gameState.staffStore, false);
   albumVanillaStore.setState(gameState.albumStore, false);
   fandomVanillaStore.setState(gameState.fandomStore, false);

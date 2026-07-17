@@ -3,13 +3,16 @@ import {
   DECISION_TRIGGER_THRESHOLDS,
   GAME_BALANCE,
   INVESTOR_COMPLY_SUPPORT_LIMIT,
+  MEMBER_CONTRACT,
   OPPORTUNITY_PACING,
   SATISFACTION_WARNING_THRESHOLD,
+  TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import { OPPORTUNITY_DEFINITIONS } from "@/data/opportunities";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
   GamePhase,
+  MemberTemperament,
   Season,
   Trainee,
   WeeklyDecision,
@@ -23,6 +26,11 @@ export interface DecisionMemberContext {
   condition: number;
   stress: number;
   satisfaction: number;
+  /** M5 재계약 카드용. 구버전 projection 호환을 위해 선택적으로 둔다. */
+  popularity?: number;
+  temperament?: MemberTemperament;
+  contractTier?: number;
+  renegotiationDueWeek?: number;
 }
 
 export interface DecisionConflictContext {
@@ -103,6 +111,11 @@ export function buildDecisionCardContext(
       condition: trainee.condition,
       stress: trainee.stress,
       satisfaction: trainee.satisfaction,
+      popularity: trainee.popularity ?? 0,
+      temperament: trainee.temperament ?? "steady",
+      contractTier: trainee.contract?.tier ?? 1,
+      renegotiationDueWeek:
+        trainee.contract?.nextRenegotiationWeek ?? Number.MAX_SAFE_INTEGER,
     })),
     conflicts: conflicts.sort((a, b) => a.chemistry - b.chemistry),
     investorPressure: state.investorPressure,
@@ -135,6 +148,23 @@ export function generateWeeklyDecisionCards(
     .sort((a, b) => b.injuryWeeks - a.injuryWeeks || a.condition - b.condition)[0];
   if (injured) {
     candidates.push({ priority: 100 + injured.injuryWeeks, card: buildInjuryCard(injured) });
+  }
+
+  // 재계약 협상(M5): 도래한 멤버 중 가장 오래 기다린 한 명만 이번 주에 올린다.
+  const renegotiationDue = [...ctx.members]
+    .filter(
+      (member) =>
+        member.renegotiationDueWeek !== undefined &&
+        member.renegotiationDueWeek <= cumulativeWeek,
+    )
+    .sort(
+      (a, b) => (a.renegotiationDueWeek ?? 0) - (b.renegotiationDueWeek ?? 0),
+    )[0];
+  if (renegotiationDue) {
+    candidates.push({
+      priority: 95,
+      card: buildRecontractCard(renegotiationDue, cumulativeWeek),
+    });
   }
 
   if (ctx.investorPressure) {
@@ -304,6 +334,70 @@ function buildOpportunityCard(
         ? { targetSelection: { ...option.targetSelection } }
         : {}),
     })),
+  };
+}
+
+/**
+ * 멤버 재계약 협상(M5). tier·다음 협상 시점 갱신은 weekProcessor가
+ * cardId(`recontract:{id}`)를 특수 처리한다 — EffectMap으로는 계약 상태를
+ * 표현할 수 없기 때문(emergency-investor와 같은 패턴).
+ */
+function buildRecontractCard(
+  member: DecisionMemberContext,
+  cumulativeWeek: number,
+): WeeklyDecision {
+  const temperament = member.temperament ?? "steady";
+  const popularity = member.popularity ?? 0;
+  const contractTier = member.contractTier ?? 1;
+  const profile = TEMPERAMENT_PROFILES[temperament];
+  const signing =
+    MEMBER_CONTRACT.signingBase +
+    Math.round(popularity) * MEMBER_CONTRACT.signingPerPopularity;
+  const freezePenalty = Math.round(
+    MEMBER_CONTRACT.freezeSatisfactionPenalty * profile.gapSensitivity,
+  );
+  const nextTier = Math.min(MEMBER_CONTRACT.maxTier, contractTier + 1);
+  const formatSigning = (amount: number) =>
+    `${Math.round(amount / 1_000_000).toLocaleString("ko-KR")}백만`;
+
+  return {
+    id: `recontract:${member.id}:w${cumulativeWeek}`,
+    lane: "crisis",
+    category: "계약",
+    title: `${member.name} 재계약 협상`,
+    summary: `${profile.label} ${member.name}의 처우 협상이 도래했다 (현재 ${contractTier}등급 · 개인 인기 ${Math.round(popularity)}). ${profile.description}.`,
+    trigger: {
+      kind: "contract",
+      severity: temperament === "ambitious" ? "critical" : "warning",
+      entityIds: [member.id],
+      description: `${member.name} 재계약 협상 도래`,
+    },
+    options: [
+      {
+        id: "raise",
+        label: "조건 인상",
+        description: `처우를 ${nextTier}등급으로 올리고 계약금을 지급한다.`,
+        tradeoff: `계약금 ${formatSigning(signing)} — 인기가 높을수록 몸값도 높다.`,
+        effects: { money: -signing, satisfaction: 12 },
+        targetTraineeIds: [member.id],
+      },
+      {
+        id: "bonus",
+        label: "보너스로 달랜다",
+        description: "등급은 유지하되 일시 보너스를 지급한다.",
+        tradeoff: "비용은 절반이지만 협상이 절반 주기로 다시 돌아온다.",
+        effects: { money: -Math.round(signing / 2), satisfaction: 5 },
+        targetTraineeIds: [member.id],
+      },
+      {
+        id: "freeze",
+        label: "동결",
+        description: "지금 조건을 유지하자고 설득한다.",
+        tradeoff: `만족도가 크게 떨어지고(${freezePenalty}) 협상이 반년 안에 다시 돌아온다.`,
+        effects: { satisfaction: freezePenalty },
+        targetTraineeIds: [member.id],
+      },
+    ],
   };
 }
 
