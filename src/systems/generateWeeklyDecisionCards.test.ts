@@ -158,6 +158,35 @@ describe("상황 기반 주간 결정 생성", () => {
     );
   });
 
+  it("투자사 요구 수용 지원은 한 번뿐이고 수용 비용은 크게 남는다", () => {
+    const firstCard = generateWeeklyDecisionCards(
+      37,
+      "fall",
+      healthyContext({ investorPressure: true, investorComplianceCount: 0 }),
+    ).find((card) => card.id === "emergency-investor");
+    const laterCard = generateWeeklyDecisionCards(
+      73,
+      "summer",
+      healthyContext({ investorPressure: true, investorComplianceCount: 1 }),
+    ).find((card) => card.id === "emergency-investor");
+
+    expect(firstCard?.options.find((option) => option.id === "comply")?.effects).toEqual(
+      {
+        money: 20_000_000,
+        fandomDisappointment: 10,
+        stress: 10,
+        satisfaction: -8,
+      },
+    );
+    expect(laterCard?.options.find((option) => option.id === "comply")?.effects).toEqual(
+      {
+        fandomDisappointment: 10,
+        stress: 10,
+        satisfaction: -8,
+      },
+    );
+  });
+
   it("건강한 주에는 누적 주차 기준 2~3주 간격으로 선택 기회를 제시한다", () => {
     let lastOpportunityWeek: number | null = null;
     const offeredWeeks: number[] = [];

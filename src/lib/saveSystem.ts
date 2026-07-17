@@ -280,6 +280,8 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorConditionProgress: rest.investorConditionProgress ?? {},
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
+    lastInvestorDemandWeek: rest.lastInvestorDemandWeek ?? null,
+    adContractsSigned: rest.adContractsSigned ?? 0,
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
     // 5년 성과 미달은 더 이상 캠페인 종료 조건이 아니다. 과거 버전에서
     // 잠긴 세이브도 불러오는 즉시 정상 진행 상태로 복구한다.

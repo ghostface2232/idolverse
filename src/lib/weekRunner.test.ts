@@ -276,7 +276,7 @@ describe("weekly resolution workflow", () => {
 
 describe("persistent event queue", () => {
   const event: GameEvent = {
-    id: "event-test",
+    id: "event-brand-ad-offer-w6",
     type: "market",
     title: "테스트 이벤트",
     description: "선택 결과가 즉시 저장 가능한 상태가 된다.",
@@ -313,6 +313,7 @@ describe("persistent event queue", () => {
     expect(afterChoice.financeStore.money).toBe(1_000_000_100);
     expect(afterChoice.eventStore.pendingEvents[0].resolved).toBe(true);
     expect(afterChoice.eventStore.pendingEvents[0].resolvedChoiceIndex).toBe(0);
+    expect(afterChoice.gameStore.adContractsSigned).toBe(1);
     expect(afterChoice.gameStore.weeklyFlow.report?.deltas).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: "event", id: event.id }),

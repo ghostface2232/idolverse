@@ -3,7 +3,7 @@ import {
   DECISION_TRIGGER_THRESHOLDS,
   EMERGENCY_FINANCING,
   GAME_BALANCE,
-  INVESTOR_COMPLY_SUPPORT_LIMIT,
+  INVESTOR_INTERVENTION,
   MEMBER_CONTRACT,
   OPPORTUNITY_PACING,
   SATISFACTION_WARNING_THRESHOLD,
@@ -552,7 +552,11 @@ function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
 }
 
 function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
-  const supportAvailable = complianceCount < INVESTOR_COMPLY_SUPPORT_LIMIT;
+  const supportAvailable = complianceCount < INVESTOR_INTERVENTION.supportLimit;
+  const complyEffects = {
+    ...(supportAvailable ? { money: INVESTOR_INTERVENTION.supportAmount } : {}),
+    ...INVESTOR_INTERVENTION.comply,
+  };
   return {
     id: "emergency-investor",
     lane: "crisis",
@@ -566,26 +570,33 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
         label: "요구 수용",
         description: "상업 활동을 늘리고 투자사 지표를 우선한다.",
         tradeoff: supportAvailable
-          ? "단기 지원금을 받지만 팬 실망과 멤버 피로가 누적된다."
-          : "추가 지원금 없이 팬 실망과 멤버 피로만 누적된다.",
-        effects: supportAvailable
-          ? { money: 20000000, fandomDisappointment: 5, stress: 5, satisfaction: -4 }
-          : { fandomDisappointment: 5, stress: 5, satisfaction: -4 },
+          ? "이번 한 번만 긴급 예산을 받는다. 대신 팬 신뢰와 멤버 상태가 크게 나빠진다."
+          : "추가 지원금 없이 팬 신뢰와 멤버 상태가 크게 나빠진다.",
+        effects: complyEffects,
         activityOverride: "entertainment",
       },
       {
         id: "negotiate",
         label: "조건 재협상",
         description: "기한 연장과 평가 기준 완화를 요청한다.",
-        tradeoff: "유예 기간이 2주 늘어나지만 자문 비용과 업계 마찰이 생긴다.",
-        effects: { money: -10000000, industry: -2, satisfaction: 2 },
+        tradeoff: "유예 기간이 3주 늘어난다. 자문 비용과 업계 마찰을 감수해야 한다.",
+        effects: {
+          money: -INVESTOR_INTERVENTION.negotiate.cost,
+          industry: INVESTOR_INTERVENTION.negotiate.industry,
+          satisfaction: INVESTOR_INTERVENTION.negotiate.satisfaction,
+        },
       },
       {
         id: "defy",
         label: "자체 방침 고수",
         description: "지원 축소를 감수하고 팀의 방향성을 지킨다.",
-        tradeoff: "멤버와 팬은 안도하지만 현금과 업계 관계가 악화된다.",
-        effects: { satisfaction: 5, fandomLoyalty: 3, money: -15000000, industry: -3 },
+        tradeoff: "멤버와 팬은 안도한다. 대신 자체 예산을 투입하고 업계 관계가 크게 악화된다.",
+        effects: {
+          satisfaction: INVESTOR_INTERVENTION.defy.satisfaction,
+          fandomLoyalty: INVESTOR_INTERVENTION.defy.fandomLoyalty,
+          money: -INVESTOR_INTERVENTION.defy.cost,
+          industry: INVESTOR_INTERVENTION.defy.industry,
+        },
       },
     ],
   };

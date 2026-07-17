@@ -216,6 +216,8 @@ function resolveEventChoice(
   }
 
   const effects = choice?.effects ?? {};
+  const signedAdContract =
+    pendingEvent.id.startsWith("event-brand-ad-offer-") && choiceIndex === 0;
   const before = captureWeekDeltaState(toWeekDeltaState(snapshot));
   const nextSnapshot = applySnapshotEffects(snapshot, effects);
   const eventDeltas = diffWeekDeltaState(
@@ -239,6 +241,8 @@ function resolveEventChoice(
     ...nextSnapshot,
     game: {
       ...nextSnapshot.game,
+      adContractsSigned:
+        nextSnapshot.game.adContractsSigned + (signedAdContract ? 1 : 0),
       weeklyFlow: {
         ...nextSnapshot.game.weeklyFlow,
         report,

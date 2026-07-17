@@ -25,12 +25,12 @@ describe("processWeek 골든 스냅샷", () => {
     expect(result).toMatchSnapshot();
   });
 
-  it("투자사 마감 주간(VC 13주차)의 출력이 스냅샷과 일치한다", () => {
+  it("투자사 첫 평가 주간(VC 36주차)의 출력이 스냅샷과 일치한다", () => {
     const result = processWeek(
-      makeGameSnapshot({ week: 13, investorType: "vc" }),
+      makeGameSnapshot({ week: 36, investorType: "vc" }),
       NO_DECISIONS,
     );
-    // 분기 수익 0 → 조건 첫 미달 → 유예 경고가 기록되어야 한다
+    // 최소 운영 기간 뒤 분기 수익 0 → 조건 첫 미달 → 유예 경고가 기록되어야 한다
     expect(
       result.weekReport.warnings.some((w) => w.includes("투자사 조건 미달")),
     ).toBe(true);

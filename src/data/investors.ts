@@ -4,6 +4,14 @@ import type {
   InvestorType,
 } from "@/types/game";
 
+export const INVESTOR_TREND_FIT_SCORING = {
+  baseline: 50,
+  hotMatchBonus: 25,
+  coldMatchPenalty: 25,
+  min: 0,
+  max: 100,
+} as const;
+
 export const INVESTOR_COMPANIES: InvestorCompany[] = [
   {
     id: "nextbeat",
@@ -17,16 +25,16 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         id: "nextbeat-followers",
         metric: "snsFollowers",
         target: 100000,
-        deadlineWeeks: 26,
-        description: "6개월 안에 주요 SNS 합산 팔로워 10만 달성",
+        deadlineWeeks: 36,
+        description: "첫 투자 검토까지 주요 SNS 합산 팔로워 10만 달성",
         penalty: "디지털 마케팅 지원이 중단되고 다음 라운드 검토가 보류된다.",
       },
       {
         id: "nextbeat-streams",
         metric: "spotifyStreams",
         target: 1000000,
-        deadlineWeeks: 26,
-        description: "6개월 안에 스포티파이 누적 100만 스트리밍 달성",
+        deadlineWeeks: 36,
+        description: "첫 투자 검토까지 스포티파이 누적 100만 스트리밍 달성",
         penalty: "자체 플레이리스트 편성이 끊기고 성과 추적 보고가 강화된다.",
       },
     ],
@@ -120,8 +128,8 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         id: "summit-quarterly",
         metric: "quarterlyRevenue",
         target: 0,
-        deadlineWeeks: 13,
-        description: "첫 분기 영업 현금흐름 흑자 달성",
+        deadlineWeeks: 36,
+        description: "첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성",
         penalty: "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
       },
       {

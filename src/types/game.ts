@@ -924,6 +924,10 @@ export interface GameStoreState {
   /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
   investorPressureWeeks: number;
   investorComplianceCount: number;
+  /** 마지막 투자사 개입 카드가 제시된 누적 주차. 반복 요구의 최소 간격을 보장한다. */
+  lastInvestorDemandWeek: number | null;
+  /** 실제 광고 제안을 수락해 체결한 누적 광고 계약 수. */
+  adContractsSigned: number;
   /** 자금이 마이너스로 이어진 주 수. 한 주라도 회복하면 0으로 돌아간다. */
   insolvencyWeeks: number;
   /** 파산으로 인한 캠페인 종료 기록. null이 아니면 주간 진행이 잠긴다. */

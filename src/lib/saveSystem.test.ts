@@ -42,7 +42,9 @@ describe("saveSystem 왕복", () => {
       investorConditionProgress: _progress,
       investorPressureWeeks: _pressure,
       investorComplianceCount: _count,
+      lastInvestorDemandWeek: _lastInvestorDemandWeek,
       fiveYearReview: _fiveYearReview,
+      adContractsSigned: _adContractsSigned,
       weeklyFlow: _weeklyFlow,
       ...legacyGameStore
     } = modern.gameStore;
@@ -67,7 +69,9 @@ describe("saveSystem 왕복", () => {
     expect(capturedGame.investorConditionProgress).toEqual({});
     expect(capturedGame.investorPressureWeeks).toBe(0);
     expect(capturedGame.investorComplianceCount).toBe(0);
+    expect(capturedGame.lastInvestorDemandWeek).toBeNull();
     expect(capturedGame.fiveYearReview).toBeNull();
+    expect(capturedGame.adContractsSigned).toBe(0);
     expect(capturedGame.weeklyFlow).toEqual({
       state: "planning_ready",
       selectedDecisionIds: {},
@@ -102,6 +106,8 @@ describe("saveSystem 왕복", () => {
       "summit-quarterly": { firstFailedWeek: 13, penaltyApplied: true },
     };
     sessionA.gameStore.investorComplianceCount = 2;
+    sessionA.gameStore.lastInvestorDemandWeek = 18;
+    sessionA.gameStore.adContractsSigned = 3;
     hydrateGameState(sessionA);
 
     // 세션 B: 신규 필드가 없는 구버전 세이브를 이어서 로드
@@ -109,6 +115,8 @@ describe("saveSystem 왕복", () => {
     const {
       investorConditionProgress: _progress,
       investorComplianceCount: _count,
+      lastInvestorDemandWeek: _lastInvestorDemandWeek,
+      adContractsSigned: _adContractsSigned,
       ...legacyGameStore
     } = modern.gameStore;
     const legacy = {
@@ -120,5 +128,7 @@ describe("saveSystem 왕복", () => {
     const captured = captureGameState();
     expect(captured.gameStore.investorConditionProgress).toEqual({});
     expect(captured.gameStore.investorComplianceCount).toBe(0);
+    expect(captured.gameStore.lastInvestorDemandWeek).toBeNull();
+    expect(captured.gameStore.adContractsSigned).toBe(0);
   });
 });

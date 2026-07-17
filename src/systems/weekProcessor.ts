@@ -72,11 +72,13 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  ALBUM_QUALITY_REPUTATION_THRESHOLD,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   EMERGENCY_FINANCING,
   FIVE_YEAR_REVIEW,
   INVESTOR_PENALTY_GRACE_WEEKS,
+  INVESTOR_INTERVENTION,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
   MEMBER_CONTRACT,
   MEMBER_LEAVE,
@@ -87,7 +89,10 @@ import {
   VARIETY_OUTCOME,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
-import { INVESTOR_COMPANIES } from "@/data/investors";
+import {
+  INVESTOR_COMPANIES,
+  INVESTOR_TREND_FIT_SCORING,
+} from "@/data/investors";
 import { DEBUT_PROJECT } from "@/data/debutProject";
 import { COMEBACK_PROJECT } from "@/data/comebackProject";
 import {
@@ -214,6 +219,7 @@ export function processWeek(
   let money = snapshot.finance.money;
   let investorPenaltyActive = snapshot.game.investorPenaltyActive;
   let investorPressureWeeks = snapshot.game.investorPressureWeeks ?? 0;
+  let lastInvestorDemandWeek = snapshot.game.lastInvestorDemandWeek ?? null;
   let strategicExpansion = {
     ...(snapshot.game.strategicExpansion ?? {
       production: 0,
@@ -366,6 +372,7 @@ export function processWeek(
 
   // ── 1. Apply player decisions
   let investorComplianceCount = snapshot.game.investorComplianceCount ?? 0;
+  let adContractsSigned = snapshot.game.adContractsSigned ?? 0;
   let emergencyFinancing = [...(snapshot.game.emergencyFinancing ?? [])];
   let financingIncomeThisWeek = 0;
   let financingRepaymentThisWeek = 0;
@@ -393,6 +400,9 @@ export function processWeek(
     }
     if (d.cardId === "emergency-investor" && d.optionId === "comply") {
       investorComplianceCount += 1;
+    }
+    if (isAcceptedAdvertisingOpportunity(d.cardId, d.optionId)) {
+      adContractsSigned += 1;
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
       const track = d.optionId.slice(
@@ -1078,6 +1088,8 @@ export function processWeek(
                 trainees,
                 awardHistory,
                 activeProjects,
+                releasedAlbums,
+                adContractsSigned,
               ),
               cumulativeWeek,
             ).map(
@@ -1355,7 +1367,10 @@ export function processWeek(
     youtubeActivity: fandomAxis.global > 500,
     overseasPromotion: false,
     foreignMembers: trainees.filter((t) => t.nationality !== "korean"),
-    musicQualityHigh: fandomAxis.industry > 50,
+    latestAlbumQuality: latestReleasedAlbum?.quality ?? 0,
+    musicQualityHigh:
+      albumReleasedThisWeek &&
+      (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
     stageExcellent: false,
     awardWin: playerWonAward,
     qualityDecline: false,
@@ -1411,24 +1426,36 @@ export function processWeek(
   const investor = INVESTOR_COMPANIES.find(
     (c) => c.type === snapshot.game.investorType,
   );
-  if (investor) {
-    const cumulativeWeek =
-      (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear +
-      snapshot.game.currentWeek;
+  let anyConditionFailing = false;
+  // 투자사는 창업 직후 성과를 재촉하지 않는다. 발매 여부와 무관하게
+  // 최소 운영 기간이 지난 뒤부터 계약 지표를 평가한다.
+  if (
+    investor &&
+    cumulativeWeek >= INVESTOR_INTERVENTION.firstEvaluationWeek
+  ) {
     const investorMetrics = buildInvestorMetrics(
       snapshot,
       fandomAxis,
       trainees,
       awardHistory,
       activeProjects,
+      releasedAlbums,
+      adContractsSigned,
+      {
+        income: report.finance.income,
+        expenses: report.finance.expenses,
+      },
     );
     const investorChecks = checkInvestorConditions(
       investor,
       investorMetrics,
       cumulativeWeek,
     );
+    const canStartInvestorEpisode =
+      lastInvestorDemandWeek === null ||
+      cumulativeWeek + 1 - lastInvestorDemandWeek >=
+        INVESTOR_INTERVENTION.minDemandGapWeeks;
 
-    let anyConditionFailing = false;
     let penaltyDueThisWeek = false;
     for (const check of investorChecks) {
       const existingProgress = investorConditionProgress[check.conditionId];
@@ -1447,9 +1474,13 @@ export function processWeek(
       // 1회성 계약 페널티가 집행된 뒤에는 같은 실패로 매주 경영 개입을 반복하지 않는다.
       if (progress?.penaltyApplied) continue;
 
-      anyConditionFailing = true;
-
       if (!progress) {
+        // 직전 개입 뒤 36주 동안은 새 조건 실패를 열지 않는다. 이미 열린
+        // 실패의 회복·유예·조치는 계속 진행하되 새로운 알림 국면은 미룬다.
+        if (!canStartInvestorEpisode) {
+          continue;
+        }
+        anyConditionFailing = true;
         investorConditionProgress[check.conditionId] = {
           firstFailedWeek: cumulativeWeek,
           penaltyApplied: false,
@@ -1460,11 +1491,17 @@ export function processWeek(
         continue;
       }
 
+      anyConditionFailing = true;
+
       const failedWeeks = cumulativeWeek - progress.firstFailedWeek;
       if (failedWeeks < INVESTOR_PENALTY_GRACE_WEEKS) {
-        report.warnings.push(
-          `투자사 조건 미달: ${check.description} (유예 ${INVESTOR_PENALTY_GRACE_WEEKS - failedWeeks}주 남음)`,
-        );
+        const remainingWeeks = INVESTOR_PENALTY_GRACE_WEEKS - failedWeeks;
+        // 첫 통보 뒤에는 조용히 대응할 시간을 주고, 조치 직전 한 번만 다시 알린다.
+        if (remainingWeeks === 1) {
+          report.warnings.push(
+            `투자사 최종 통보: ${check.description}. 다음 주까지 회복하지 못하면 계약상 조치가 시작됩니다.`,
+          );
+        }
         continue;
       }
 
@@ -1488,11 +1525,10 @@ export function processWeek(
         );
       }
     }
-
-    // 조건발 압박은 미달 여부로 매주 재계산해 영구 고착을 막고,
-    // 이벤트/카드발 압박(investorPressureWeeks)은 남은 주 수만큼 별도로 유지한다.
-    investorPenaltyActive = anyConditionFailing || investorPressureWeeks > 0;
   }
+  // 조건발 압박은 미달 여부로 매주 재계산해 영구 고착을 막고,
+  // 이벤트/카드발 압박(investorPressureWeeks)은 남은 주 수만큼 별도로 유지한다.
+  investorPenaltyActive = anyConditionFailing || investorPressureWeeks > 0;
   const beforePressureDecay = captureWeekDeltaState(getDeltaState());
   investorPressureWeeks = Math.max(0, investorPressureWeeks - 1);
   recordTransition(
@@ -1699,10 +1735,21 @@ export function processWeek(
       upgrades.livingExpenseLevel,
     ),
   }));
+  const nextCumulativeWeek = toCumulativeWeek(
+    advancedGame.currentYear,
+    advancedGame.currentWeek,
+  );
+  const investorDemandDue =
+    investorPenaltyActive &&
+    (lastInvestorDemandWeek === null ||
+      nextCumulativeWeek - lastInvestorDemandWeek >=
+        INVESTOR_INTERVENTION.minDemandGapWeeks);
   const cardCtx = buildDecisionCardContext({
     phase: advancedGame.currentPhase,
     trainees: decisionTrainees,
-    investorPressure: investorPenaltyActive,
+    // 압박 상태와 카드 빈도를 분리한다. 압박은 계속되어도 개입 카드는
+    // 최소 간격이 지난 계약 국면에만 한 번 제시한다.
+    investorPressure: investorDemandDue,
     investorComplianceCount,
     money,
     weeklyFixedTotal: snapshot.finance.weeklyFixedTotal,
@@ -1741,10 +1788,6 @@ export function processWeek(
       return deadlines.length > 0 ? Math.min(...deadlines) : null;
     })(),
   });
-  const nextCumulativeWeek = toCumulativeWeek(
-    advancedGame.currentYear,
-    advancedGame.currentWeek,
-  );
   const nextDecisions = generateWeeklyDecisionCards(
     nextCumulativeWeek,
     advancedGame.currentSeason,
@@ -1753,6 +1796,9 @@ export function processWeek(
   const opportunityOffered = nextDecisions.some(
     (decision) => decision.lane === "opportunity",
   );
+  if (nextDecisions.some((decision) => decision.id === "emergency-investor")) {
+    lastInvestorDemandWeek = nextCumulativeWeek;
+  }
 
   // ── Assemble new state
   const newState: GameSnapshot = {
@@ -1762,6 +1808,8 @@ export function processWeek(
       investorConditionProgress,
       investorPressureWeeks,
       investorComplianceCount,
+      lastInvestorDemandWeek,
+      adContractsSigned,
       insolvencyWeeks,
       campaignFailure,
       lastOpportunityWeek: opportunityOffered
@@ -1885,6 +1933,12 @@ function buildInvestorMetrics(
   trainees: readonly Trainee[],
   awardHistory: readonly AwardRecord[],
   activeProjects: readonly ProjectInstance[],
+  releasedAlbums: readonly Album[],
+  adContractsSigned: number,
+  currentFinance?: {
+    income: Readonly<Record<string, number>>;
+    expenses: Readonly<Record<string, number>>;
+  },
 ): {
   snsFollowers: number;
   spotifyStreams: number;
@@ -1897,20 +1951,38 @@ function buildInvestorMetrics(
   trendFit: number;
   styleScore: number;
 } {
-  const last13 = snapshot.finance.incomeHistory.slice(-13);
+  const incomeHistory = currentFinance
+    ? [
+        ...snapshot.finance.incomeHistory,
+        {
+          week: snapshot.game.currentWeek,
+          breakdown: currentFinance.income,
+        },
+      ]
+    : snapshot.finance.incomeHistory;
+  const expenseHistory = currentFinance
+    ? [
+        ...snapshot.finance.expenseHistory,
+        {
+          week: snapshot.game.currentWeek,
+          breakdown: currentFinance.expenses,
+        },
+      ]
+    : snapshot.finance.expenseHistory;
+  const last13 = incomeHistory.slice(-13);
   const quarterlyRevenue = last13.reduce(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
-  const last13Expenses = snapshot.finance.expenseHistory.slice(-13).reduce(
+  const last13Expenses = expenseHistory.slice(-13).reduce(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
-  const cumulativeIncome = snapshot.finance.incomeHistory.reduce(
+  const cumulativeIncome = incomeHistory.reduce(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
-  const cumulativeExpenses = snapshot.finance.expenseHistory.reduce(
+  const cumulativeExpenses = expenseHistory.reduce(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
@@ -1932,10 +2004,47 @@ function buildInvestorMetrics(
     quarterlyRevenue: quarterlyRevenue - last13Expenses,
     cumulativeRevenue: cumulativeIncome - cumulativeExpenses,
     visualAverage: visualAvg,
-    adContracts: snapshot.finance.incomeHistory.filter(
-      (week) => (week.breakdown.promotions ?? 0) > 0,
-    ).length,
-    trendFit: fandomAxis.industry,
+    adContracts: adContractsSigned,
+    trendFit: calculateTrendFit(
+      releasedAlbums[releasedAlbums.length - 1] ?? null,
+      snapshot.calendar.marketTrend,
+    ),
     styleScore: visualAvg,
   };
+}
+
+function isAcceptedAdvertisingOpportunity(
+  cardId: string,
+  optionId: string,
+): boolean {
+  return (
+    cardId.startsWith("opportunity:advertising-offer:") &&
+    (optionId === "sign-campaign" || optionId === "limit-campaign")
+  );
+}
+
+function calculateTrendFit(
+  album: Album | null,
+  market: GameSnapshot["calendar"]["marketTrend"],
+): number {
+  if (!album) return 0;
+
+  let score = INVESTOR_TREND_FIT_SCORING.baseline;
+  if (album.concept.mood === market.hotMood) {
+    score += INVESTOR_TREND_FIT_SCORING.hotMatchBonus;
+  }
+  if (album.concept.mood === market.coldMood) {
+    score -= INVESTOR_TREND_FIT_SCORING.coldMatchPenalty;
+  }
+  if (album.concept.genre === market.hotGenre) {
+    score += INVESTOR_TREND_FIT_SCORING.hotMatchBonus;
+  }
+  if (album.concept.genre === market.coldGenre) {
+    score -= INVESTOR_TREND_FIT_SCORING.coldMatchPenalty;
+  }
+  return clamp(
+    score,
+    INVESTOR_TREND_FIT_SCORING.min,
+    INVESTOR_TREND_FIT_SCORING.max,
+  );
 }
