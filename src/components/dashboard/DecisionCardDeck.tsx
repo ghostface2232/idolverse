@@ -129,21 +129,21 @@ export function DecisionCardDeck({
       <section className="space-y-4" aria-labelledby="weekly-review-title">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
-            Final review
+            매니저 브리핑
           </p>
           <h2 id="weekly-review-title" className="mt-1 text-xl font-semibold text-text-primary">
-            이번 주 계획 검토
+            이번 주 일정 검토
           </h2>
           <p className="mt-1 text-pretty text-sm text-text-muted">
-            실행하면 선택과 매니저 AI 배정이 함께 처리됩니다.
+            확정하면 선택한 방침과 매니저가 짠 세부 일정대로 한 주가 시작됩니다.
           </p>
         </header>
 
         {cards.length === 0 ? (
           <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
-            <p className="text-sm font-semibold text-cyan-100">핵심 결정 없음</p>
+            <p className="text-sm font-semibold text-cyan-100">직접 결정할 일 없음</p>
             <p className="mt-2 text-pretty text-sm leading-6 text-text-muted">
-              이번 주는 긴급한 직접 결정이 없습니다. 훈련과 운영 일정은 매니저 AI가 현재 방침에 따라 배정합니다.
+              이번 주에는 직접 챙길 긴급 사안이 없습니다. 매니저가 현재 방침에 맞춰 훈련과 운영 일정을 정리했습니다.
             </p>
           </article>
         ) : (
@@ -210,7 +210,7 @@ export function DecisionCardDeck({
                         </>
                       ) : card.lane === "opportunity" ? (
                         <p className="mt-1 text-pretty text-xs leading-5 text-cyan-100/70">
-                          아무 효과 없이 이번 주 종료 시 소멸합니다.
+                          수락하지 않으면 제안은 이번 주가 끝날 때 만료됩니다.
                         </p>
                       ) : null}
                     </div>
@@ -234,9 +234,9 @@ export function DecisionCardDeck({
         )}
 
         <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
-          <p className="text-xs font-semibold text-action-secondary">매니저 AI 자동 운영</p>
+          <p className="text-xs font-semibold text-action-secondary">매니저 운영안</p>
           <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            선택하지 않은 세부 훈련, 휴식, 내부 업무는 팀 컨디션과 현재 투자자 KPI를 기준으로 자동 처리됩니다.
+            직접 정하지 않은 훈련, 휴식, 내부 업무는 매니저가 팀 컨디션과 투자사 KPI에 맞춰 배정했습니다.
           </p>
         </article>
 
@@ -246,7 +246,7 @@ export function DecisionCardDeck({
           onPress={onConfirm}
         >
           <Play className="ml-0.5 size-4" aria-hidden="true" />
-          {isRunning ? "주간 처리 중…" : "이번 주 실행"}
+          {isRunning ? "이번 주 일정 진행 중…" : "이번 주 진행"}
         </Button>
       </section>
     );
@@ -259,7 +259,7 @@ export function DecisionCardDeck({
       <header>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
-            Weekly decision
+            이번 주 안건
           </p>
           <span className="text-xs font-semibold tabular-nums text-text-muted">
             {safeIndex + 1} / {cards.length}
@@ -386,11 +386,11 @@ export function DecisionCardDeck({
                 {selectedTargets.length}/
                 {targetSelection.min === targetSelection.max
                   ? targetSelection.min
-                  : `${targetSelection.min}–${targetSelection.max}`}
+                  : `${targetSelection.min}~${targetSelection.max}`}
               </span>
             </div>
             <p className="mt-1 text-xs leading-5 text-text-muted">
-              선택한 멤버만 이번 주 개인 일정으로 전환되고 멤버 효과를 받습니다.
+              선택한 멤버만 개인 일정에 참여합니다. 다른 멤버들은 기존 일정을 이어갑니다.
             </p>
 
             <div className="mt-3 grid grid-cols-2 gap-2">

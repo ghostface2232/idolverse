@@ -27,7 +27,7 @@ interface NewGameProps {
 type Step = "prologue" | "investor" | "group";
 
 const PROLOGUE_TEXT =
-  "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 당신은 능력과 열정을 겸비한 동료들과 함께 수많은 스타를 배출해 냈고, 이제 새로운 길을 향해 나아가려 합니다... 바로 당신만의 회사와 그룹을 만드는 것이죠.";
+  "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 능력과 열정을 겸비한 동료들과 수많은 스타를 키워 냈고, 이제 새로운 길을 향해 나아가려 합니다. 바로 당신만의 회사와 그룹을 만드는 것이죠.";
 
 const PROLOGUE_IMAGE_SRC = assetUrl("/prologue-director.png");
 
@@ -196,8 +196,8 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           {
             id: "noti-new-game",
             type: "success",
-            title: "새 기획사 설립",
-            message: `${selectedInvestor.name} 투자를 받아 새 프로젝트를 시작했습니다.`,
+            title: "새 기획사 출범",
+            message: `${selectedInvestor.name}의 투자를 받아 새 기획사를 열었습니다.`,
             week: firstWeek,
           },
         ],
@@ -227,7 +227,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                       ? "bg-brand-cyan"
                       : "bg-slate-800",
                 ].join(" ")}
-                aria-label={`Step ${index + 1}`}
+                aria-label={`창단 준비 ${index + 1}단계`}
               />
             ))}
           </div>
@@ -237,10 +237,10 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           <section key="prologue" className="stagger-fade flex h-full min-h-0 flex-col gap-4">
             <div className="rounded-[28px] border-2 border-brand-pink/50 bg-slate-900 px-5 py-4 text-center shadow-[0_8px_0_rgba(15,23,42,0.76)]">
               <PixelText as="h1" className="text-3xl text-pink-200">
-                PROLOGUE
+                새로운 시작
               </PixelText>
               <p className="mt-2 text-xs uppercase tracking-[0.28em] text-brand-cyan">
-                Director's new road
+                나만의 기획사를 향해
               </p>
             </div>
 
@@ -282,7 +282,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                   투자사 선택
                 </PixelText>
                 <p className="mt-2 text-sm text-slate-400">
-                  투자자는 시작 자금과 플레이 압력을 동시에 결정합니다.
+                  투자사는 시작 자금을 대는 대신 회사의 목표와 경영 방향에도 영향을 줍니다.
                 </p>
               </div>
 
@@ -358,7 +358,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
 
             <Card className="space-y-3 pb-5 text-center [word-break:keep-all] [overflow-wrap:break-word]">
               <p className="text-xs uppercase tracking-[0.24em] text-brand-cyan">
-                Selected
+                선택한 투자사
               </p>
               <div
                 key={selectedInvestor.id}
@@ -394,7 +394,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                   그룹 설정
                 </PixelText>
                 <p className="mt-2 text-sm text-slate-400">
-                  첫 프로젝트의 정체성을 정합니다. 이름은 이후 UI에서 교체 가능합니다.
+                  첫 그룹의 정체성을 정합니다. 회사명과 그룹명은 나중에도 바꿀 수 있습니다.
                 </p>
               </div>
 
@@ -409,10 +409,10 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     />
                     <Button
                       tone="secondary"
-                      aria-label="회사명 랜덤 생성"
+                      aria-label="새 회사명 추천"
                       onClick={() => setCompanyName(pickRandom(COMPANY_NAME_CANDIDATES))}
                     >
-                      랜덤
+                      이름 추천
                     </Button>
                   </div>
                 </label>
@@ -427,10 +427,10 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                     />
                     <Button
                       tone="secondary"
-                      aria-label="그룹명 랜덤 생성"
+                      aria-label="새 그룹명 추천"
                       onClick={() => setGroupName(pickRandom(GROUP_NAME_CANDIDATES))}
                     >
-                      랜덤
+                      이름 추천
                     </Button>
                   </div>
                 </label>
@@ -473,7 +473,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                 이전
               </Button>
               <Button tone="success" onClick={startGame}>
-                시작
+                창단 시작
               </Button>
             </div>
           </section>
@@ -498,7 +498,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         >
           <div className="space-y-5 text-center text-sm leading-6 [word-break:keep-all] [overflow-wrap:break-word]">
             <div>
-              <p className="text-slate-100">조건 전문</p>
+              <p className="text-slate-100">투자 조건</p>
               <ul className="mt-2 space-y-2 text-slate-300">
                 {detailInvestor.conditions.map((condition) => (
                   <li key={condition.id}>{condition.description}</li>
@@ -514,7 +514,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               </ul>
             </div>
             <div>
-              <p className="text-emerald-300">달성 보너스</p>
+              <p className="text-emerald-300">약속을 지켰을 때</p>
               <ul className="mt-2 space-y-2 text-emerald-200">
                 {detailInvestor.bonusEffects.map((effect) => (
                   <li key={effect.type}>{effect.description}</li>
@@ -522,7 +522,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
               </ul>
             </div>
             <p className="rounded-2xl border border-slate-600 bg-slate-950 p-4 text-slate-300">
-              {detailInvestor.personality} 플레이스타일은 {describePlaystyle(detailInvestor)}에 맞춰집니다.
+              {detailInvestor.personality} 이 투자사와 함께하면 회사는 {describePlaystyle(detailInvestor)}에 무게를 두게 됩니다.
             </p>
           </div>
         </Modal>
@@ -550,11 +550,11 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
           }
         >
           <p className="text-center text-sm leading-6 text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
-            이 투자사를 선택하면 게임 플레이스타일이{" "}
+            이 투자사를 선택하면 회사의 경영 방향은{" "}
             <span className="text-brand-cyan">
               {describePlaystyle(confirmInvestor)}
             </span>
-            에 맞춰집니다.
+            중심으로 정해집니다.
           </p>
         </Modal>
       ) : null}

@@ -20,9 +20,9 @@ At the start of each week, the player is presented with 3–4 decision cards. Ea
 - Member A’s Schedule: Maintain team practice / Send them to appear on a variety show / Individual vocal lessons
 - Emergency Event Response: (Only if triggered) Allocate funds to manage a scandal / Maintain silence / Issue an official statement
 
-The Manager AI automatically handles the remaining details (specific schedules, meal plans, individual training allocations, etc.). The higher the Manager’s stats, the more efficient the automatic allocation.
+The Manager handles the remaining details (specific schedules, meal plans, individual training assignments, etc.). The stronger the Manager’s planning and coordination skills, the more efficiently those schedules are arranged.
 
-During Auto-Progress (1x/2x/3x), the process pauses only when an event occurs or an important decision is required.
+During continuous progress (1x/2x/3x), the schedule pauses only when something happens or an important decision is required.
 
 ### Trade-off Pressure Structure
 

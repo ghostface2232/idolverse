@@ -21,12 +21,12 @@ export function WeekReport({
 
   return (
     <Modal
-      title={`W${report.week} 주간 리포트`}
+      title={`${report.week}주차 결산`}
       onClose={onClose}
       isCloseDisabled={isSaving}
       footer={
         <Button className="w-full" isDisabled={isSaving} onPress={onClose}>
-          {isSaving ? "저장 중…" : "확인"}
+          {isSaving ? "저장 중…" : "결산 확인"}
         </Button>
       }
     >
@@ -40,7 +40,7 @@ export function WeekReport({
           </p>
         ) : null}
 
-        <ReportSection title="능력치 변동" empty="변동 없음">
+        <ReportSection title="멤버 성장" empty="뚜렷한 변화 없음">
           {report.statChanges.map((change) => (
             <li key={change}>{change}</li>
           ))}
@@ -52,7 +52,7 @@ export function WeekReport({
           ))}
         </ReportSection>
 
-        <ReportSection title="케미/갈등" empty="갈등 없음">
+        <ReportSection title="멤버 관계" empty="갈등 없음">
           {report.conflicts.map((conflict) => (
             <li key={`${conflict.a}-${conflict.b}`}>
               {conflict.a} / {conflict.b} 갈등
@@ -71,7 +71,7 @@ export function WeekReport({
           </div>
         </section>
 
-        <ReportSection title="이벤트" empty="이벤트 없음">
+        <ReportSection title="이번 주 주요 소식" empty="주요 소식 없음">
           {report.events.map((event) => (
             <li key={event.id}>{event.title}</li>
           ))}
@@ -89,7 +89,7 @@ export function WeekReport({
           ))}
         </ReportSection>
 
-        <ReportSection title="경고 사항" empty="경고 없음">
+        <ReportSection title="확인할 문제" empty="확인할 문제 없음">
           {report.warnings.map((warning) => (
             <li key={warning}>{warning}</li>
           ))}

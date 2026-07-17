@@ -84,7 +84,7 @@ export function LoginForm({ onSwitchMode }: LoginFormProps) {
 
       <div className="space-y-3">
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "로그인 중..." : "로그인"}
+          {isPending ? "로그인 중…" : "로그인"}
         </Button>
         <Button
           type="button"

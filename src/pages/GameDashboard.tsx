@@ -217,7 +217,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       await acknowledgeWeeklyReportAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
     } catch (error) {
       console.error("Weekly report save failed.", error);
-      setWorkflowError("리포트 확인 상태를 저장하지 못했습니다. 다시 시도해 주세요.");
+      setWorkflowError("결산 확인을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setIsWorkflowSaving(false);
     }

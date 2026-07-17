@@ -32,7 +32,7 @@ function LaneRow({
   deadlineLabel,
   unlocks,
 }: LaneRowProps) {
-  const tooltip = unlocks ? `${title} — 달성하면 다음 단계: ${unlocks}` : title;
+  const tooltip = unlocks ? `${title}. 달성 후 다음 단계: ${unlocks}` : title;
   return (
     <div className="flex min-w-0 items-center gap-2">
       {icon}

@@ -123,7 +123,7 @@ export function SignUpForm({ onSwitchMode }: SignUpFormProps) {
 
       <div className="space-y-3">
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "계정 만드는 중..." : "가입하기"}
+          {isPending ? "계정 만드는 중…" : "가입하기"}
         </Button>
         <Button
           type="button"

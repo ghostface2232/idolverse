@@ -15,7 +15,7 @@ Core gameplay: Strategic choices based on trade-offs. Results are determined by 
 - System logic is implemented as pure functions in src/systems/. Takes the current state and returns a new state. Separated from UI/rendering code.
 
 ## Core Game Rules (Always refer to these when implementing code)
-- Each week, players make only 3–4 key decision cards; the rest are automatically handled by the manager AI
+- Each week, players make only 3–4 key decision cards; the manager handles the remaining schedules and operational details
 - Every choice has an opportunity cost (e.g., sending a member to variety shows skips training; skipping training lowers their condition)
 - Members have specific positions (Leader/Main Vocalist/Main Dancer/Center/Visual/Variety/Producing)
 - Trainee stats are visual, vocal, dance, charm, stamina, and mental. Stamina includes the old diligence role; do not add a separate diligence stat.
@@ -33,6 +33,8 @@ Core gameplay: Strategic choices based on trade-offs. Results are determined by 
 - Dark theme by default (background #0f172a–#1e293b, accent pink #ec4899 + cyan #06b6d4)
 - Touch area minimum 44px
 - Pixel fonts only within the game view; system fonts for UI panels
+- Player-facing copy must treat members, staff, content, and company operations as real people and work. Use "manager," not "manager AI," and prefer human actions such as planning, assigning, reporting, and negotiating over implementation terms such as automation, processing, logic, or system.
+- Keep real industry language such as KPI when it fits the speaker and context. In Korean player-facing copy, avoid em dashes and en dashes; use short sentences, commas, parentheses, or `~` for ranges.
 
 ## Asset Loading
 - All static images (under `public/images/` in dev) are referenced via `assetUrl()` from `src/utils/assets.ts`

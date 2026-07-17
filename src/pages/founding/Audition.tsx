@@ -123,7 +123,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                     />
                     <p className="mt-1 text-[11px] text-slate-400">
                       {m === "open"
-                        ? "누가 올지 모르는 열린 무대 — 원석을 만날 수도"
+                        ? "누가 올지 모르는 열린 무대. 숨은 원석을 만날 수도 있습니다"
                         : "검증된 유망주를 직접 데려온다"}
                     </p>
                   </button>

@@ -39,7 +39,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
       <section className="relative z-10 w-full max-w-[360px] space-y-6 rounded-[36px] border-2 border-brand-cyan/50 bg-slate-900/86 p-5 text-center shadow-[0_10px_0_rgba(15,23,42,0.72),0_20px_48px_rgba(15,23,42,0.34)] backdrop-blur-md">
         <div className="neon-sign rounded-2xl border-2 border-brand-pink/70 bg-slate-950/70 px-4 py-7 shadow-[inset_0_0_28px_rgba(236,72,153,0.16)]">
           <p className="text-xs uppercase tracking-[0.34em] text-brand-cyan">
-            K-POP Manager Sim
+            K-POP Agency
           </p>
           <PixelText as="h1" className="mt-3 text-5xl leading-none text-pink-200">
             IDOLVERSE
@@ -72,7 +72,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
         <div className="rounded-2xl border border-slate-600 bg-slate-950/55 px-4 py-3 text-left text-xs leading-5 text-slate-400">
           <p className="text-slate-200">매니저 노트</p>
           <p className="[word-break:keep-all]">
-            3-4개의 핵심 카드로 한 주를 운영하고, 나머지는 매니저 AI가 처리합니다.
+            한 주에 꼭 필요한 3~4가지 방향만 정하세요. 세부 일정은 매니저가 맡습니다.
           </p>
         </div>
       </section>

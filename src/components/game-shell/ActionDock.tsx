@@ -29,11 +29,11 @@ export function ActionDock({
         <div className="min-w-0">
           <p className="text-sm font-semibold text-text-primary">
             {totalDecisions === 0
-              ? "매니저 AI 계획 완료"
+              ? "매니저가 일정을 짰습니다"
               : `이번 주 결정 ${completed}/${totalDecisions}`}
           </p>
           <p className="mt-0.5 truncate text-xs text-text-muted">
-            {riskLabel ?? "자동 운영 항목은 매니저 AI가 처리합니다."}
+            {riskLabel ?? "세부 일정은 매니저가 맡습니다."}
           </p>
         </div>
         <span className="shrink-0 rounded-lg bg-white/[0.05] px-2 py-1 text-[10px] font-medium text-text-secondary">

@@ -76,7 +76,7 @@ export const INTERLUDE_ACTIVITIES: InterludeTemplate[] = [
   },
   {
     id: "controversyIgnore",
-    name: "논란 수습 — 무시",
+    name: "대응하지 않는다",
     duration: 1,
     effects: {
       fandomDisappointment: 15,
@@ -85,7 +85,7 @@ export const INTERLUDE_ACTIVITIES: InterludeTemplate[] = [
   },
   {
     id: "controversyClarify",
-    name: "논란 수습 — 해명",
+    name: "입장을 밝힌다",
     cost: 2000,
     duration: 1,
     effects: {
@@ -96,7 +96,7 @@ export const INTERLUDE_ACTIVITIES: InterludeTemplate[] = [
   },
   {
     id: "controversyApologize",
-    name: "논란 수습 — 사과",
+    name: "공식 사과한다",
     cost: 1000,
     duration: 1,
     effects: {

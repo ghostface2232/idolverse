@@ -72,7 +72,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
           </p>
           <h1 className="text-2xl text-slate-50">세션 확인 중</h1>
           <p className="text-sm text-slate-400">
-            프로듀서 계정을 불러오고 있습니다...
+            프로듀서 계정을 불러오고 있습니다…
           </p>
         </Card>
       </main>
@@ -107,7 +107,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
         <div className="stagger-fade relative mx-auto flex min-h-full w-full max-w-md flex-col justify-center-safe gap-4">
           <div className="text-center">
             <p className="text-xs uppercase tracking-[0.34em] text-brand-cyan">
-              K-POP Manager Sim
+              K-POP Agency
             </p>
             <PixelText as="h1" className="mt-2 text-5xl leading-none text-pink-200">
               IDOLVERSE

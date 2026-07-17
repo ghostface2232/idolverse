@@ -599,8 +599,8 @@ export function processWeek(
       const showcase = debutResult.project.evaluations.showcase;
       report.warnings.push(
         showcase.passed
-          ? `쇼케이스 통과: 종합 ${showcase.score}점 — 데뷔 승인`
-          : `쇼케이스 보완: 종합 ${showcase.score}점 — 준비도 ${Math.floor(debutResult.readiness.readiness)}/${DEBUT_REQUIREMENTS.readiness}, 평균 보컬 ${Math.floor(debutResult.readiness.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
+          ? `쇼케이스 통과: 종합 ${showcase.score}점. 데뷔를 확정했습니다`
+          : `쇼케이스 보완 필요: 종합 ${showcase.score}점. 준비도 ${Math.floor(debutResult.readiness.readiness)}/${DEBUT_REQUIREMENTS.readiness}, 평균 보컬 ${Math.floor(debutResult.readiness.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
       );
     }
 
@@ -628,7 +628,7 @@ export function processWeek(
         6,
       );
       report.warnings.push(
-        `데뷔 앨범 발매: ${released.title} — 멜론 ${release.chartRank}위 진입`,
+        `데뷔 앨범 발매: ${released.title}, 멜론 ${release.chartRank}위 진입`,
       );
       report.deltas.push({
         id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
@@ -894,7 +894,7 @@ export function processWeek(
           penaltyApplied: false,
         };
         report.warnings.push(
-          `투자사 조건 미달: ${check.description} — ${INVESTOR_PENALTY_GRACE_WEEKS}주 안에 회복하지 못하면 투자사가 조치에 나섭니다.`,
+          `투자사 조건 미달: ${check.description}. ${INVESTOR_PENALTY_GRACE_WEEKS}주 안에 회복하지 못하면 투자사가 조치에 나섭니다.`,
         );
         continue;
       }
@@ -983,7 +983,7 @@ export function processWeek(
       },
     ];
     report.warnings.push(
-      `🎯 이정표 달성: ${definition.title} — 이제 '${definition.unlocks}'의 길이 열렸습니다`,
+      `이정표 달성: ${definition.title}. 이제 ${definition.unlocks}에 도전할 수 있습니다`,
     );
     report.deltas.push({
       id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,

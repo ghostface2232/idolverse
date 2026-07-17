@@ -83,25 +83,25 @@ function pickComment(
   conflictPartner: string | null,
 ): string {
   if (conflictPartner) {
-    return `${conflictPartner}랑 좀 힘들어요...`;
+    return `${conflictPartner}랑 좀 힘들어요…`;
   }
   if (trainee.injuryWeeks > 0) {
-    return "빨리 복귀할게요...";
+    return "빨리 복귀할게요…";
   }
   if (trainee.stress >= 75) {
-    return "좀 쉬고 싶어요...";
+    return "좀 쉬고 싶어요…";
   }
   if (effectiveSatisfaction >= 70) {
     const high = ["오늘 컨디션 최고예요!", "이 콘셉트 너무 좋아요!"];
     return high[trainee.id.length % high.length];
   }
   if (effectiveSatisfaction >= 40) {
-    const mid = ["열심히 할게요", "좀 더 쉬고 싶긴 한데..."];
+    const mid = ["열심히 할게요", "좀 더 쉬고 싶긴 한데…"];
     return mid[trainee.id.length % mid.length];
   }
   const low = [
-    "저 이거 계속 해야 하나요...",
-    "좀 쉬고 싶어요...",
+    "저 이거 계속 해야 하나요…",
+    "좀 쉬고 싶어요…",
     "회사가 절 신경 써주긴 하나요?",
   ];
   return low[trainee.id.length % low.length];
@@ -365,7 +365,7 @@ export function TraineeDetail({
             성장 추이 (최근 4주)
           </p>
           <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-4 text-center text-xs text-slate-500">
-            아직 누적된 성장 데이터가 없습니다.
+            아직 기록된 성장 변화가 없습니다.
           </div>
         </section>
 

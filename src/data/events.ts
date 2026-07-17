@@ -139,7 +139,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
       {
         label: "표준 조건으로 진행한다",
         description: "무난한 수준의 계약으로 협업을 성사시킨다.",
-        tradeoff: "효과는 좋지만 절대적인 최고 효율은 아니다.",
+        tradeoff: "비용과 기대 성과가 가장 균형 잡힌 선택이다.",
         effects: { money: -45000000, albumSong: 12, industry: 4 },
       },
       {

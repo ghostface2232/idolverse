@@ -206,7 +206,7 @@ export function calculateFandomExpectation(
       fandomPenalty: 0,
       publicBonus: -5,
       publicBonusChance: 0,
-      description: "동일 콘셉트 3회 이상 반복 — 팬덤 안정, 대중 식상",
+      description: "같은 콘셉트를 3회 이상 반복했습니다. 팬덤은 안정적이지만 대중에게는 식상할 수 있습니다.",
     };
   }
 
@@ -216,7 +216,7 @@ export function calculateFandomExpectation(
       fandomPenalty: 0,
       publicBonus: 0,
       publicBonusChance: 0,
-      description: "같은 계열 유지 — 안전한 선택",
+      description: "같은 계열을 유지해 기존 팬의 기대를 지킵니다.",
     };
   }
 
@@ -227,7 +227,7 @@ export function calculateFandomExpectation(
       fandomPenalty: 0,
       publicBonus: 0,
       publicBonusChance: 0,
-      description: "점진적 변화 — 리스크 낮음",
+      description: "익숙한 색을 남긴 채 조금씩 변화를 줍니다.",
     };
   }
 
@@ -236,7 +236,7 @@ export function calculateFandomExpectation(
     fandomPenalty: FANDOM_EXPECTATION_RISKY.fandomPenalty,
     publicBonus: FANDOM_EXPECTATION_RISKY.publicBonusAmount,
     publicBonusChance: FANDOM_EXPECTATION_RISKY.publicBonusChance,
-    description: "급격한 변화 — 고위험 고보상",
+    description: "팀의 색을 크게 바꿉니다. 성공하면 반향도 크지만 팬들이 낯설어할 수 있습니다.",
   };
 }
 

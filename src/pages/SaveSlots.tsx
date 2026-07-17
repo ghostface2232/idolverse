@@ -66,7 +66,7 @@ export function SaveSlots({
       .catch((error: unknown) => {
         if (isMounted) {
           setMessage(
-            error instanceof Error ? error.message : "세이브 목록을 불러오지 못했습니다.",
+            error instanceof Error ? error.message : "저장 기록을 불러오지 못했습니다.",
           );
         }
       })
@@ -88,13 +88,13 @@ export function SaveSlots({
       const loaded = await loadGame(userId, slotNumber);
 
       if (!loaded) {
-        setMessage("해당 슬롯에는 세이브 데이터가 없습니다.");
+        setMessage("이 슬롯에는 저장된 진행 기록이 없습니다.");
         return;
       }
 
       onLoadGame();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "로드에 실패했습니다.");
+      setMessage(error instanceof Error ? error.message : "진행 기록을 불러오지 못했습니다.");
     }
   };
 
@@ -107,7 +107,7 @@ export function SaveSlots({
       await deleteSave(userId, deleteTarget.slotNumber);
       setSaves(await listSaves(userId));
       setDeleteTarget(null);
-      setMessage("세이브 슬롯을 삭제했습니다.");
+      setMessage("저장 슬롯을 삭제했습니다.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "삭제에 실패했습니다.");
     }
@@ -123,7 +123,7 @@ export function SaveSlots({
       {!embedded ? (
         <header className="space-y-2 text-center">
           <PixelText as="h1" className="text-3xl text-slate-50">
-            SAVE SLOTS
+            저장 기록
           </PixelText>
           <p className="text-sm text-slate-400">프로듀서 계정당 3개의 클라우드 슬롯</p>
         </header>
@@ -137,14 +137,14 @@ export function SaveSlots({
 
       <section className="space-y-4">
         {isLoading ? (
-          <Card className="text-center text-sm text-slate-300">세이브 슬롯 확인 중...</Card>
+          <Card className="text-center text-sm text-slate-300">저장 슬롯 확인 중…</Card>
         ) : (
           saves.map((save) => (
             <Card key={save.slotNumber} className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-brand-cyan">
-                    Slot {save.slotNumber}
+                    저장 슬롯 {save.slotNumber}
                   </p>
                   <h2 className="mt-1 text-xl text-slate-50">
                     {save.hasData ? save.groupName : "빈 슬롯"}
@@ -156,7 +156,7 @@ export function SaveSlots({
                   </p>
                 </div>
                 <span className="rounded-full border border-slate-500 bg-slate-950/60 px-3 py-1 text-xs text-slate-200">
-                  {save.hasData ? formatPhase(save.currentPhase) : "EMPTY"}
+                  {save.hasData ? formatPhase(save.currentPhase) : "비어 있음"}
                 </span>
               </div>
 
@@ -181,7 +181,7 @@ export function SaveSlots({
                 {save.hasData ? (
                   <>
                     <Button onClick={() => void handleLoad(save.slotNumber)}>
-                      로드
+                      이어하기
                     </Button>
                     <Button tone="danger" onClick={() => setDeleteTarget(save)}>
                       삭제
@@ -200,7 +200,7 @@ export function SaveSlots({
 
       {deleteTarget ? (
         <Modal
-          title={`Slot ${deleteTarget.slotNumber} 삭제`}
+          title={`저장 슬롯 ${deleteTarget.slotNumber} 삭제`}
           onClose={() => setDeleteTarget(null)}
           footer={
             <div className="grid grid-cols-2 gap-3">
@@ -214,7 +214,7 @@ export function SaveSlots({
           }
         >
           <p className="text-sm leading-6 text-slate-300">
-            이 세이브 슬롯을 삭제하면 복구할 수 없습니다. 정말 삭제하시겠습니까?
+            이 저장 슬롯을 삭제하면 복구할 수 없습니다. 정말 삭제하시겠습니까?
           </p>
         </Modal>
       ) : null}

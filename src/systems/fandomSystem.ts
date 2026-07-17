@@ -175,7 +175,7 @@ export function checkFandomCrisis(axis: Fandom4Axis): FandomCrisisEffect | null 
   return {
     fandomLoss,
     loyaltyLoss,
-    description: `팬 실망도 임계점 초과 (${axis.fandomDisappointment}) — 팬카페 이탈과 음반 구매 감소 발생`,
+    description: "팬들의 실망이 크게 쌓였습니다. 팬카페 이탈과 음반 구매 감소가 이어지고 있습니다.",
   };
 }
 
