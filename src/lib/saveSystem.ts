@@ -281,7 +281,12 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
-    campaignFailure: rest.campaignFailure ?? null,
+    // 5년 성과 미달은 더 이상 캠페인 종료 조건이 아니다. 과거 버전에서
+    // 잠긴 세이브도 불러오는 즉시 정상 진행 상태로 복구한다.
+    campaignFailure:
+      rest.campaignFailure?.reason === "performance"
+        ? null
+        : (rest.campaignFailure ?? null),
     lastOpportunityWeek: rest.lastOpportunityWeek ?? null,
     emergencyFinancing: rest.emergencyFinancing ?? [],
     strategicExpansion: rest.strategicExpansion ?? {
@@ -289,6 +294,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
       fandom: 0,
       global: 0,
     },
+    fiveYearReview: rest.fiveYearReview ?? null,
     lastStrategicExpansionWeek: rest.lastStrategicExpansionWeek ?? null,
     awardHistory: rest.awardHistory ?? [],
     milestonesAchieved: rest.milestonesAchieved ?? [],

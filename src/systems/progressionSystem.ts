@@ -2,11 +2,16 @@ import {
   COMEBACK_REQUIREMENTS,
   CONTRACT_TERM_WEEKS,
   DEBUT_REQUIREMENTS,
+  FIVE_YEAR_REVIEW,
   GAME_BALANCE,
 } from "@/data/balance";
 import { MILESTONE_DEFINITIONS, PHASE_GATES } from "@/data/milestones";
 import { PROJECT_DEFINITIONS_BY_ID } from "@/data/debutProject";
 import { getDebutSchedule } from "@/systems/debutSystem";
+import {
+  getFiveYearRouteProgress,
+  type FiveYearReviewInput,
+} from "@/systems/fiveYearReviewSystem";
 import type {
   Album,
   AchievedMilestone,
@@ -186,14 +191,23 @@ export interface GoalLaneItem {
   /** 0..1 진행률. 게이지 표시에 쓴다. */
   progressRatio?: number;
   deadlineLabel?: string;
+  /** 한 목표의 모든 판정 조건. 5년 기록처럼 복수 기준을 숨김없이 보여준다. */
+  detailLines?: string[];
   /** 달성 시 열리는 행동. */
   unlocks?: string;
+}
+
+export interface FiveYearReviewLane {
+  deadlineLabel: string;
+  pointsPerRoute: number;
+  items: GoalLaneItem[];
 }
 
 export interface GoalLanes {
   weekly: GoalLaneItem;
   project: GoalLaneItem | null;
   longTerm: GoalLaneItem[];
+  fiveYearReview: FiveYearReviewLane | null;
 }
 
 export interface GoalLanesInput {
@@ -207,6 +221,7 @@ export interface GoalLanesInput {
   activeProjects?: readonly ProjectInstance[];
   /** 신인상 자격 마감(누적 주차). 데뷔 후 2년차 말까지만 존재한다. */
   rookieAwardDeadlineWeek?: number | null;
+  fiveYearReviewInput?: FiveYearReviewInput;
 }
 
 const PHASE_PROJECT_CATEGORIES: Record<
@@ -239,6 +254,46 @@ function toLaneItem(progress: MilestoneProgress): GoalLaneItem {
     progressLabel: `${bottleneck.label} ${formatMetricValue(bottleneck.metric, bottleneckCurrent)}/${formatMetricValue(bottleneck.metric, bottleneck.target)}`,
     progressRatio: ratio,
     unlocks: definition.unlocks,
+  };
+}
+
+function formatReviewValue(
+  format: "number" | "money",
+  value: number,
+): string {
+  if (format === "money") {
+    const eok = value / 100_000_000;
+    return `${Number.isInteger(eok) ? eok : eok.toFixed(1)}억`;
+  }
+  return `${Math.floor(value)}`;
+}
+
+function buildFiveYearReviewLane(
+  input: GoalLanesInput,
+  elapsedWeeks: number,
+): FiveYearReviewLane | null {
+  if (
+    !input.fiveYearReviewInput ||
+    input.currentYear > FIVE_YEAR_REVIEW.year
+  ) {
+    return null;
+  }
+
+  const deadlineWeeks =
+    FIVE_YEAR_REVIEW.year * GAME_BALANCE.weeksPerYear - elapsedWeeks;
+  return {
+    deadlineLabel: `W-${Math.max(0, deadlineWeeks)}`,
+    pointsPerRoute: FIVE_YEAR_REVIEW.leaderboardPointsPerRoute,
+    items: getFiveYearRouteProgress(input.fiveYearReviewInput).map((route) => ({
+      id: `five-year:${route.route}`,
+      title: route.label,
+      progressLabel: route.achieved ? "기록 기준 달성" : "기록 기준 준비 중",
+      progressRatio: route.ratio,
+      detailLines: route.criteria.map(
+        (criterion) =>
+          `${criterion.label} ${formatReviewValue(criterion.format, criterion.current)}/${formatReviewValue(criterion.format, criterion.target)}`,
+      ),
+    })),
   };
 }
 
@@ -394,7 +449,12 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
     deadlineLabel: `W-${Math.max(0, CONTRACT_TERM_WEEKS - elapsedWeeks)}`,
   });
 
-  return { weekly, project, longTerm };
+  return {
+    weekly,
+    project,
+    longTerm,
+    fiveYearReview: buildFiveYearReviewLane(input, elapsedWeeks),
+  };
 }
 
 /** weekProcessor에서 달성 기록을 만들 때 쓰는 누적 주차 계산. */

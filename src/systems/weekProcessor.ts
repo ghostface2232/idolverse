@@ -91,7 +91,7 @@ import { INVESTOR_COMPANIES } from "@/data/investors";
 import { DEBUT_PROJECT } from "@/data/debutProject";
 import { COMEBACK_PROJECT } from "@/data/comebackProject";
 import {
-  evaluateFiveYearVictoryRoutes,
+  createFiveYearReviewRecord,
   FIVE_YEAR_VICTORY_ROUTE_LABELS,
 } from "@/systems/fiveYearReviewSystem";
 import {
@@ -1517,13 +1517,19 @@ export function processWeek(
     return { ...member, ability, potentialCap };
   });
 
+  let fiveYearReview = snapshot.game.fiveYearReview;
   if (
-    campaignFailure === null &&
+    fiveYearReview === null &&
     snapshot.game.currentYear === FIVE_YEAR_REVIEW.year &&
     snapshot.game.currentWeek === FIVE_YEAR_REVIEW.week
   ) {
-    const victoryRoutes = evaluateFiveYearVictoryRoutes({
+    fiveYearReview = createFiveYearReviewRecord({
       albumQualities: releasedAlbums.map((released) => released.quality),
+      topTenAlbums: releasedAlbums.filter(
+        (released) =>
+          released.performance?.chartPeak != null &&
+          released.performance.chartPeak <= 10,
+      ).length,
       public: fandomAxis.public,
       fandom: fandomAxis.fandom,
       fandomLoyalty: fandomAxis.fandomLoyalty,
@@ -1533,22 +1539,20 @@ export function processWeek(
       awards: awardHistory.length,
       strategicExpansion,
     });
-    if (victoryRoutes.length === 0) {
-      campaignFailure = {
-        reason: "performance",
-        year: snapshot.game.currentYear,
-        week: snapshot.game.currentWeek,
-      };
-      report.warnings.push(
-        "5년 경영 평가에서 지속 가능한 성과 경로를 증명하지 못했습니다",
-      );
-    } else {
-      report.warnings.push(
-        `5년 경영 평가 통과: ${victoryRoutes
-          .map((route) => FIVE_YEAR_VICTORY_ROUTE_LABELS[route])
-          .join(", ")}`,
-      );
-    }
+    const achievedSummary =
+      fiveYearReview.achievedRoutes.length > 0
+        ? fiveYearReview.achievedRoutes
+            .map((route) => FIVE_YEAR_VICTORY_ROUTE_LABELS[route])
+            .join(", ")
+        : "아직 대표 경로 없음";
+    report.events.push({
+      id: `five-year-review-${FIVE_YEAR_REVIEW.year}`,
+      type: "system",
+      tone: "positive",
+      title: "5년 경영 기록 확정",
+      description: `대표 성과: ${achievedSummary}. 리더보드 점수 ${fiveYearReview.score.toLocaleString("ko-KR")}점으로 기록했습니다. 다음 주에도 회사 운영은 계속됩니다.`,
+      resolved: false,
+    });
   }
 
   // ── 13. Advance week
@@ -1765,6 +1769,7 @@ export function processWeek(
         : snapshot.game.lastOpportunityWeek,
       emergencyFinancing,
       strategicExpansion,
+      fiveYearReview,
       lastStrategicExpansionWeek,
       awardHistory,
       milestonesAchieved,

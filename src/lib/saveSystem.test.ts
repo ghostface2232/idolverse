@@ -42,6 +42,7 @@ describe("saveSystem 왕복", () => {
       investorConditionProgress: _progress,
       investorPressureWeeks: _pressure,
       investorComplianceCount: _count,
+      fiveYearReview: _fiveYearReview,
       weeklyFlow: _weeklyFlow,
       ...legacyGameStore
     } = modern.gameStore;
@@ -66,6 +67,7 @@ describe("saveSystem 왕복", () => {
     expect(capturedGame.investorConditionProgress).toEqual({});
     expect(capturedGame.investorPressureWeeks).toBe(0);
     expect(capturedGame.investorComplianceCount).toBe(0);
+    expect(capturedGame.fiveYearReview).toBeNull();
     expect(capturedGame.weeklyFlow).toEqual({
       state: "planning_ready",
       selectedDecisionIds: {},
@@ -75,6 +77,21 @@ describe("saveSystem 왕복", () => {
       resolutionId: null,
       report: null,
     });
+  });
+
+  it("과거 5년 성과 미달로 잠긴 세이브를 계속 플레이할 수 있게 복구한다", () => {
+    const legacy = toGameStateSnapshot(
+      makeGameSnapshot({ year: 6, week: 1 }),
+    );
+    legacy.gameStore.campaignFailure = {
+      reason: "performance",
+      year: 5,
+      week: 52,
+    };
+
+    hydrateGameState(legacy);
+
+    expect(captureGameState().gameStore.campaignFailure).toBeNull();
   });
 
   it("직전 세션의 투자사 상태가 다른 세이브 로드로 새어 들어오지 않는다", () => {

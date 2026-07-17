@@ -391,6 +391,36 @@ export type StrategicExpansionTrack = "production" | "fandom" | "global";
 
 export type StrategicExpansionLevels = Record<StrategicExpansionTrack, number>;
 
+export type FiveYearReviewRoute =
+  | "hitmaker"
+  | "fandom"
+  | "global"
+  | "business"
+  | "awards";
+
+/** 5년차 52주에 한 번 확정되는 개인 경영 기록. 이후 플레이는 계속된다. */
+export interface FiveYearReviewRecord {
+  year: number;
+  week: number;
+  score: number;
+  achievedRoutes: FiveYearReviewRoute[];
+  routeProgress: Record<FiveYearReviewRoute, number>;
+  metrics: {
+    releases: number;
+    topTenAlbums: number;
+    averageAlbumQuality: number;
+    bestAlbumQuality: number;
+    public: number;
+    fandom: number;
+    fandomLoyalty: number;
+    global: number;
+    industry: number;
+    money: number;
+    awards: number;
+    strategicExpansion: StrategicExpansionLevels;
+  };
+}
+
 export interface InvestorEffect<TType extends string = string> {
   type: TType;
   severity?: InvestorEffectSeverity;
@@ -896,7 +926,7 @@ export interface GameStoreState {
   investorComplianceCount: number;
   /** 자금이 마이너스로 이어진 주 수. 한 주라도 회복하면 0으로 돌아간다. */
   insolvencyWeeks: number;
-  /** 캠페인 종료 기록. null이 아니면 게임이 끝났고 주간 진행이 잠긴다. */
+  /** 파산으로 인한 캠페인 종료 기록. null이 아니면 주간 진행이 잠긴다. */
   campaignFailure: CampaignFailure | null;
   /** 마지막 기회 카드가 제시된 누적 주차. 수락 여부와 무관하게 빈도를 제어한다. */
   lastOpportunityWeek: number | null;
@@ -904,6 +934,8 @@ export interface GameStoreState {
   emergencyFinancing: EmergencyFinancingRecord[];
   /** 성장기 이후 회사가 구축한 장기 역량. 한 경로에 몰거나 여러 경로를 조합할 수 있다. */
   strategicExpansion: StrategicExpansionLevels;
+  /** 5년차 말에 확정된 경영 기록. 평가는 캠페인을 종료하지 않는다. */
+  fiveYearReview: FiveYearReviewRecord | null;
   /** 마지막 장기 확장 과제를 선택한 누적 주차. 다음 연간 검토 시점을 계산한다. */
   lastStrategicExpansionWeek: number | null;
   /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */

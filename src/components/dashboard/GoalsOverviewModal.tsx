@@ -3,6 +3,7 @@ import {
   CalendarClock,
   Flag,
   Target,
+  Trophy,
 } from "lucide-react";
 import { Modal } from "@/components/common/Modal";
 import type { GoalLaneItem, GoalLanes } from "@/systems/progressionSystem";
@@ -70,6 +71,15 @@ function GoalItem({ item, emphasized = false }: GoalItemProps) {
       </div>
       {item.progressRatio !== undefined ? (
         <GoalProgress ratio={item.progressRatio} />
+      ) : null}
+      {item.detailLines ? (
+        <ul className="mt-3 grid gap-1.5 border-t border-white/8 pt-3 text-xs text-text-secondary sm:grid-cols-2">
+          {item.detailLines.map((line) => (
+            <li key={line} className="tabular-nums">
+              {line}
+            </li>
+          ))}
+        </ul>
       ) : null}
       {item.unlocks ? (
         <p className="mt-3 border-t border-white/8 pt-3 text-xs leading-relaxed text-text-muted">
@@ -148,6 +158,39 @@ export function GoalsOverviewModal({
             </p>
           )}
         </section>
+
+        {lanes.fiveYearReview ? (
+          <section aria-labelledby="five-year-review-heading">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Trophy
+                  className="size-4 text-action-secondary"
+                  aria-hidden="true"
+                />
+                <h2
+                  id="five-year-review-heading"
+                  className="text-sm font-semibold text-text-primary"
+                >
+                  5년 경영 기록
+                </h2>
+              </div>
+              <span className="text-xs font-semibold tabular-nums text-text-secondary">
+                {lanes.fiveYearReview.deadlineLabel}
+              </span>
+            </div>
+            <p className="mb-3 text-sm leading-relaxed text-text-muted">
+              다섯 경로 중 달성한 성과가 5년차 마지막 주에 리더보드 기록으로
+              남습니다. 점수는 각 경로 달성도를 최대{" "}
+              {lanes.fiveYearReview.pointsPerRoute.toLocaleString("ko-KR")}점씩
+              합산합니다. 기준을 채우지 못해도 회사 운영은 계속됩니다.
+            </p>
+            <div className="space-y-3">
+              {lanes.fiveYearReview.items.map((item) => (
+                <GoalItem key={item.id} item={item} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section aria-labelledby="long-term-goal-heading">
           <div className="mb-3 flex items-center gap-2">

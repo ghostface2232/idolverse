@@ -678,6 +678,7 @@ export const STRATEGIC_EXPANSION = {
 export const FIVE_YEAR_REVIEW = {
   year: 5,
   week: 52,
+  leaderboardPointsPerRoute: 1_000,
   hitmaker: { minReleases: 10, minAverageQuality: 47, minBestQuality: 75 },
   fandom: { minPublic: 80, minFandom: 85, minLoyalty: 75, minExpansionLevel: 1 },
   global: { minGlobal: 85, minIndustry: 20, minExpansionLevel: 1 },

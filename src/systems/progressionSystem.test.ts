@@ -79,13 +79,32 @@ describe("progressionSystem", () => {
           description: "분기 손익 개선",
         },
       ],
-      });
+      fiveYearReviewInput: {
+        albumQualities: [],
+        topTenAlbums: 0,
+        public: 10,
+        fandom: 5,
+        fandomLoyalty: 50,
+        global: 2,
+        industry: 20,
+        money: 100_000_000,
+        awards: 0,
+        strategicExpansion: { production: 0, fandom: 0, global: 0 },
+      },
+    });
     expect(lanes.weekly.title).toContain("한 주");
     expect(lanes.project).not.toBeNull();
     expect(lanes.project?.unlocks).toBeTruthy();
     expect(lanes.longTerm.some((item) => item.id === "investor:cond-1")).toBe(true);
     const contract = lanes.longTerm.find((item) => item.id === "contract-term");
     expect(contract?.deadlineLabel).toBe(`W-${CONTRACT_TERM_WEEKS - 4}`);
+    expect(lanes.fiveYearReview?.items).toHaveLength(5);
+    expect(lanes.fiveYearReview?.deadlineLabel).toBe("W-256");
+    expect(
+      lanes.fiveYearReview?.items.find(
+        (item) => item.id === "five-year:business",
+      )?.detailLines,
+    ).toEqual(["보유 자금 1억/10억", "앨범 0/8"]);
   });
 
   it("주간 처리에서 이정표 달성이 기록·통지되고 상태에 영속화된다", () => {

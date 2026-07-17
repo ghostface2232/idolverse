@@ -134,6 +134,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const investorConditions = useGameStore((state) => state.investorConditions);
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
   const awardHistory = useGameStore((state) => state.awardHistory);
+  const strategicExpansion = useGameStore((state) => state.strategicExpansion);
   const campaignSeed = useGameStore((state) => state.campaignSeed);
   const campaignFailure = useGameStore((state) => state.campaignFailure);
   const insolvencyWeeks = useGameStore((state) => state.insolvencyWeeks);
@@ -533,6 +534,8 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       money,
       currentAlbum,
       releasedAlbums,
+      awardHistory,
+      activeProjects,
     });
     // 신인상 창: 데뷔(첫 발매) 연차 기준 2년차 말까지, 아직 못 받았을 때만.
     const firstReleaseWeek = releasedAlbums[0]?.releaseWeek;
@@ -552,6 +555,22 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       investorConditions,
       activeProjects,
       rookieAwardDeadlineWeek,
+      fiveYearReviewInput: {
+        albumQualities: releasedAlbums.map((album) => album.quality),
+        topTenAlbums: releasedAlbums.filter(
+          (album) =>
+            album.performance?.chartPeak != null &&
+            album.performance.chartPeak <= 10,
+        ).length,
+        public: fandomPublic,
+        fandom: fandomCore,
+        fandomLoyalty,
+        global: fandomGlobal,
+        industry: fandomIndustry,
+        money,
+        awards: awardHistory.length,
+        strategicExpansion,
+      },
     });
   }, [
     trainees,
@@ -568,6 +587,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     currentYear,
     milestonesAchieved,
     awardHistory,
+    strategicExpansion,
     weeklyDecisions,
     investorConditions,
     activeProjects,

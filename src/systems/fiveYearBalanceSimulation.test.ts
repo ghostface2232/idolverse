@@ -1032,7 +1032,9 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
     expect(median(expert, "averageChartRank")).toBeLessThan(
       median(novice, "averageChartRank"),
     );
-    expect(novice.every((run) => run.failedAtWeek === 260)).toBe(true);
+    // 5년 평가는 기록 체크포인트다. 파산은 여전히 종료 조건이지만 성과
+    // 경로 미달만으로 260주에 캠페인이 끝나서는 안 된다.
+    expect(novice.every((run) => run.failedAtWeek !== 260)).toBe(true);
     expect(
       intermediate.filter((run) => run.failedAtWeek === null).length,
     ).toBeGreaterThanOrEqual(Math.ceil(seeds.length * 0.75));
