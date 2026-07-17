@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  computeInjuryProbability,
   previewTraineeWeek,
   processTrainingWeek,
   type TrainingSchedule,
@@ -26,6 +27,12 @@ function totalGrowth(preview: ReturnType<typeof previewTraineeWeek>): number {
 }
 
 describe("trainingSystem 트레이드오프", () => {
+  it("부상 위험은 일상 훈련에서는 낮고 낮은 체력과 높은 스트레스에서 커진다", () => {
+    expect(computeInjuryProbability(100, 0)).toBeCloseTo(0.004);
+    expect(computeInjuryProbability(60, 50)).toBeCloseTo(0.0144);
+    expect(computeInjuryProbability(0, 100)).toBeCloseTo(0.026);
+  });
+
   it("휴식일은 스트레스를 줄이는 대신 성장을 깎는다 (지배 선택 해소)", () => {
     const trainee = makeTrainee("t1");
     const withoutRest = previewTraineeWeek(

@@ -1056,6 +1056,11 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
       median(intermediate, "averageChemistry") + 5,
     );
 
+    // 2026-07-17 기준 중앙값(초보 57.5, 중급 50, 숙련 46)의 1/4 이하여야 한다.
+    expect(median(novice, "injuries")).toBeLessThanOrEqual(57.5 / 4);
+    expect(median(intermediate, "injuries")).toBeLessThanOrEqual(50 / 4);
+    expect(median(expert, "injuries")).toBeLessThanOrEqual(46 / 4);
+
     // 첫 연말 전에 파산하면 데뷔·첫 컴백·시상식의 최소 루프조차 관찰할 수 없다.
     expect(Math.min(...novice.map((run) => run.weeksPlayed))).toBeGreaterThanOrEqual(52);
     expect(Math.min(...expert.map((run) => run.weeksPlayed))).toBeGreaterThanOrEqual(52);
@@ -1074,8 +1079,13 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
     expect(specialists.bestAlbumQuality).toBeGreaterThanOrEqual(
       lean.bestAlbumQuality,
     );
-    expect(specialists.failedAtWeek).not.toBeNull();
-    expect(specialists.financingBorrowed).toBeGreaterThan(0);
+    expect(specialists.averageAlbumQuality).toBeGreaterThan(
+      lean.averageAlbumQuality,
+    );
+    expect(specialists.totalExpenses).toBeGreaterThan(lean.totalExpenses);
+    expect(specialists.minimumMoney).toBeLessThan(lean.minimumMoney);
+    expect(specialists.endingMoney).toBeLessThan(lean.endingMoney);
+    expect(specialists.failedAtWeek).toBeNull();
     expect(lean.failedAtWeek).toBeNull();
   });
 });

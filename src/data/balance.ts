@@ -408,9 +408,11 @@ export const STRESS_DECREASE_RATE = {
   vacation: -25, // Vacation is the hard reset lever for near-burnout situations.
 } as const;
 
-export const INJURY_PROBABILITY_BASE = 0.02; // Even careful teams need a low background risk for tension.
-export const INJURY_STAMINA_FACTOR = 0.0003; // Applied to (100 - stamina): stamina 0 adds +3%p weekly risk, stamina 100 adds none.
-export const INJURY_STRESS_FACTOR = 0.0008; // Stress is the clearest player-controlled lever: +8%p weekly risk at stress 100.
+export const INJURY_PROBABILITY_BASE = 0.004; // Keep routine weeks quiet enough that an injury remains an exceptional setback.
+export const INJURY_STAMINA_FACTOR = 0.00006; // Applied to (100 - stamina): stamina 0 adds +0.6%p weekly risk, stamina 100 adds none.
+export const INJURY_STRESS_FACTOR = 0.00016; // Stress remains the clearest player-controlled lever: +1.6%p weekly risk at stress 100.
+export const INJURY_RISK_WARNING_THRESHOLD = 0.008;
+export const INJURY_RISK_CRITICAL_THRESHOLD = 0.016;
 
 export const CHEMISTRY_JOINT_TRAINING_GAIN = 2; // Shared practice should improve team feel slowly, not instantly.
 export const CHEMISTRY_CONFLICT_THRESHOLD = -50; // Below this, conflict is severe enough to justify explicit events.

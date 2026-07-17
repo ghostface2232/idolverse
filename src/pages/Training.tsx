@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Card } from "@/components/common/Card";
 import { TabPanel } from "@/components/common/TabPanel";
 import { TraineeDetail } from "@/components/TraineeDetail";
-import { CHEMISTRY_CONFLICT_THRESHOLD } from "@/data/balance";
+import {
+  CHEMISTRY_CONFLICT_THRESHOLD,
+  INJURY_RISK_CRITICAL_THRESHOLD,
+  INJURY_RISK_WARNING_THRESHOLD,
+} from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
 import { useAlbumStore } from "@/stores/albumStore";
 import { useFinanceStore } from "@/stores/financeStore";
@@ -116,8 +120,8 @@ function statusIcon(label: "mood" | "stress" | "condition", value: number) {
 function injuryRiskLabel(probability: number): string | null {
   // 확률 수치를 그대로 노출하지 않고 트레이너의 어조로 옮긴다.
   if (probability <= 0) return null;
-  if (probability < 0.04) return null;
-  if (probability < 0.08) return "몸에 무리가 갈 수 있음";
+  if (probability < INJURY_RISK_WARNING_THRESHOLD) return null;
+  if (probability < INJURY_RISK_CRITICAL_THRESHOLD) return "몸에 무리가 갈 수 있음";
   return "부상이 걱정되는 상태";
 }
 
