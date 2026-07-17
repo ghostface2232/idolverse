@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dumbbell } from "lucide-react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
+import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverviewModal";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
+import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
+import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
@@ -11,15 +14,16 @@ import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
 import { GameShell } from "@/components/game-shell/GameShell";
 import { GameWorldHost } from "@/components/game-shell/GameWorldHost";
-import { GoalStrip } from "@/components/game-shell/GoalStrip";
 import { MarketOverview } from "@/components/game-shell/MarketOverview";
 import { MemberOverview } from "@/components/game-shell/MemberOverview";
 import { MoreOverview } from "@/components/game-shell/MoreOverview";
+import { OverviewPills } from "@/components/game-shell/OverviewPills";
 import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
+import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
 import {
   acknowledgeWeeklyReportAndSave,
@@ -46,6 +50,7 @@ import {
   buildGoalLanes,
   buildMilestoneMetrics,
 } from "@/systems/progressionSystem";
+import { getContractRemainingWeeks } from "@/systems/contractSystem";
 import type { GameEvent, WeeklyDecisionTrigger } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
 
@@ -62,6 +67,8 @@ const RISK_PRIORITY: Record<WeeklyDecisionTrigger["severity"], number> = {
   critical: 3,
 };
 
+type OverviewModal = "goals" | "contracts" | "market" | null;
+
 interface GameDashboardProps {
   userId: string;
 }
@@ -70,6 +77,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [activeSection, setActiveSection] = useState<GameSection>("company");
   const [weekView, setWeekView] = useState<"decisions" | "training">("decisions");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [overviewModal, setOverviewModal] = useState<OverviewModal>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
@@ -104,6 +112,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const activeEventId = useGameStore(weeklyFlowSelectors.activeEventId);
   const money = useFinanceStore((state) => state.money);
   const news = useCalendarStore((state) => state.kpopNews);
+  const marketTrend = useCalendarStore((state) => state.marketTrend);
   const pendingEvents = useEventStore((state) => state.pendingEvents);
 
   const activeEvent =
@@ -368,7 +377,17 @@ export function GameDashboard({ userId }: GameDashboardProps) {
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
         }
-        goalStrip={<GoalStrip lanes={goalLanes} risk={primaryRisk} />}
+        overviewBar={
+          <OverviewPills
+            goalSummary={goalLanes.project?.deadlineLabel ?? "이번 주"}
+            contractSummary={`${getContractRemainingWeeks(currentYear, currentWeek)}주`}
+            marketSummary={`${CONCEPT_MOOD_DATA[marketTrend.hotMood].label} 강세`}
+            hasGoalRisk={Boolean(primaryRisk)}
+            onOpenGoals={() => setOverviewModal("goals")}
+            onOpenContracts={() => setOverviewModal("contracts")}
+            onOpenMarket={() => setOverviewModal("market")}
+          />
+        }
         commandPanel={activeSection === "company" ? plan : undefined}
         actionDock={
           activeSection === "company" ? (
@@ -416,6 +435,27 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       >
         {plan}
       </BottomSheet>
+
+      {overviewModal === "goals" ? (
+        <GoalsOverviewModal
+          lanes={goalLanes}
+          risk={primaryRisk}
+          onClose={() => setOverviewModal(null)}
+        />
+      ) : null}
+
+      {overviewModal === "contracts" ? (
+        <ContractsOverviewModal
+          trainees={trainees}
+          currentYear={currentYear}
+          currentWeek={currentWeek}
+          onClose={() => setOverviewModal(null)}
+        />
+      ) : null}
+
+      {overviewModal === "market" ? (
+        <MarketOverviewModal onClose={() => setOverviewModal(null)} />
+      ) : null}
 
       <NotificationsModal
         open={notificationsOpen}

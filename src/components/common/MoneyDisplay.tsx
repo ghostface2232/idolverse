@@ -19,7 +19,7 @@ export function MoneyDisplay({ amount, size = "sm", className = "" }: MoneyDispl
         className,
       ].join(" ")}
     >
-      <span className="[font-family:'DungGeunMo',monospace]">
+      <span className="font-semibold tracking-[-0.01em] tabular-nums">
         <span aria-hidden="true">₩</span>
         {new Intl.NumberFormat("ko-KR").format(amount)}
       </span>

@@ -22,7 +22,7 @@ export function TopStatusBar({
   return (
     <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/8 bg-surface-shell/95 px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="shrink-0 text-sm font-semibold tabular-nums text-text-primary [font-family:'DungGeunMo',monospace]">
+        <span className="shrink-0 text-sm font-semibold tracking-[-0.01em] tabular-nums text-text-primary">
           Y{year} W{String(week).padStart(2, "0")}
         </span>
         <span className="rounded-lg bg-action-secondary/10 px-2 py-1 text-xs font-medium text-action-secondary shadow-[var(--shadow-surface)]">

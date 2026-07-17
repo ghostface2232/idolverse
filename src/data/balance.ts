@@ -92,6 +92,7 @@ export const SATISFACTION_WARNING_THRESHOLD = 30; // At this point, the player s
 export const SATISFACTION_LEAVE_THRESHOLD = 10; // This is low enough that ignoring it is a clear strategic failure.
 export const SATISFACTION_BASELINE = 50; // Base satisfaction regresses toward this value so past bonuses fade over time.
 export const SATISFACTION_REGRESSION_RATE = 1; // Fixed weekly decay above the baseline keeps small bonuses ephemeral and big ones lasting.
+export const CONTRACT_SENTIMENT_SATISFIED_MIN = 65; // 계약 브리핑에서 확실한 만족으로 읽히는 구간. 기준점 근처의 일시적 호감과 구분한다.
 
 export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inactive week.
 export const FANDOM_DISAPPOINTMENT_SCANDAL = 15; // Scandals need to be one of the fastest ways to damage loyalty.
