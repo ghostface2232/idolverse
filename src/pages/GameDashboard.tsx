@@ -330,6 +330,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     genre: Genre;
     mood: ConceptMood;
     budgetTierId: ComebackBudgetTierId;
+    centerTraineeId: string | null;
   }) => {
     if (isComebackSaving) return;
     setIsComebackSaving(true);
@@ -338,6 +339,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       await startComebackProjectAndSave(
         { genre: plan.genre, mood: plan.mood },
         plan.budgetTierId,
+        plan.centerTraineeId,
         userId,
         DEFAULT_AUTO_SAVE_SLOT,
       );
@@ -701,6 +703,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         <ComebackPlanningModal
           conceptHistory={conceptHistory}
           marketTrend={marketTrend}
+          trainees={trainees}
           money={money}
           isSaving={isComebackSaving}
           errorMessage={workflowError}

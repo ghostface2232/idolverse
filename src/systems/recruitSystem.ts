@@ -16,7 +16,10 @@ import {
   KOREAN_SURNAMES,
   THAI_NAMES_BY_GENDER,
 } from "@/data/names";
-import { CONCEPT_MOODS } from "@/data/concepts";
+import {
+  deriveConceptAffinity,
+  pickMemberTraits,
+} from "@/data/memberTraits";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
   ConceptMood,
@@ -81,28 +84,6 @@ function generateAge(random: () => number): number {
   return 15 + Math.floor(random() * 8);
 }
 
-function generateConceptAffinity(
-  random: () => number,
-): Record<ConceptMood, number> {
-  const affinity: Partial<Record<ConceptMood, number>> = {};
-
-  const strongCount = 2 + Math.floor(random() * 2);
-  const shuffled = [...CONCEPT_MOODS].sort(() => random() - 0.5);
-  const strongMoods = shuffled.slice(0, strongCount);
-  const weakMoods = shuffled.slice(strongCount, strongCount + 2);
-
-  for (const mood of CONCEPT_MOODS) {
-    if (strongMoods.includes(mood)) {
-      affinity[mood] = 65 + Math.floor(random() * 30);
-    } else if (weakMoods.includes(mood)) {
-      affinity[mood] = 10 + Math.floor(random() * 30);
-    } else {
-      affinity[mood] = 35 + Math.floor(random() * 30);
-    }
-  }
-
-  return affinity as Record<ConceptMood, number>;
-}
 
 export interface RecruitmentMethod {
   type: "open" | "scout" | "trainee_transfer";
@@ -174,6 +155,9 @@ export function generateTraineeCandidates(
             ? "steady"
             : "sensitive";
 
+    // 인간적 특성(성격+인상)이 먼저고, 컨셉 친화는 거기서 파생된다.
+    const traits = pickMemberTraits(random);
+
     candidates.push({
       id: `recruit-${seed}-${i}`,
       name,
@@ -182,7 +166,8 @@ export function generateTraineeCandidates(
       stats,
       position: null,
       subPosition: null,
-      conceptAffinity: generateConceptAffinity(random),
+      traits,
+      conceptAffinity: deriveConceptAffinity(traits, random),
       mood: 60 + Math.floor(random() * 20),
       stress: 5 + Math.floor(random() * 15),
       condition: 70 + Math.floor(random() * 20),

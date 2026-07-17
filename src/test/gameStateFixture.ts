@@ -27,6 +27,7 @@ export function makeTrainee(id: string, overrides: Partial<Trainee> = {}): Train
     stats: { visual: 50, vocal: 50, dance: 50, charm: 50, stamina: 80, mental: 80 },
     position: "mainVocal",
     subPosition: null,
+    traits: ["pure", "doglike"],
     conceptAffinity: { ...NEUTRAL_CONCEPT_AFFINITY },
     mood: 50,
     stress: 10,

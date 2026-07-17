@@ -9,6 +9,8 @@ export interface PopularityWeekContext {
   viralMemberId: string | null;
   /** 이번 주 프로모션에 지정 참가한 멤버들. */
   promotionMemberIds: readonly string[];
+  /** 활동 중인 앨범의 센터 — 포지션과 무관하게 센터 노출을 받는다. */
+  albumCenterId?: string | null;
 }
 
 export interface PopularityWeekResult {
@@ -41,7 +43,14 @@ export function updateMemberPopularity(
   const updated = trainees.map((trainee) => {
     let gain = 0;
     if (ctx.inActivityPeriod) {
-      gain += MEMBER_POPULARITY.activityWeekBase + exposureFor(trainee);
+      // 이번 앨범의 센터는 포지션과 무관하게 센터급 노출을 받는다.
+      const centerExposure =
+        ctx.albumCenterId === trainee.id
+          ? MEMBER_POPULARITY.positionExposure.center ?? 0.6
+          : 0;
+      gain +=
+        MEMBER_POPULARITY.activityWeekBase +
+        Math.max(exposureFor(trainee), centerExposure);
     }
     if (ctx.musicShowWon) {
       gain += MEMBER_POPULARITY.musicShowWinGain;

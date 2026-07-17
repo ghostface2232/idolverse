@@ -112,6 +112,8 @@ export function canStartComebackProject(
 export interface ComebackPlanInput {
   concept: { genre: Genre; mood: ConceptMood };
   budgetTierId: ComebackBudgetTierId;
+  /** 이 앨범의 센터. 없으면 포지션 센터가 기본. */
+  centerTraineeId?: string | null;
   startedAtWeek: number;
   season: Season;
   trainees: readonly Trainee[];
@@ -150,6 +152,7 @@ export function createComebackPlan(input: ComebackPlanInput): {
       concept,
       titleTrackCandidates: [],
       titleTrack: null,
+      centerTraineeId: input.centerTraineeId ?? null,
       progress: { song: base, visual: base, choreography: base, marketing: base },
       memberConceptFit: Math.round(avgAffinity),
       seasonFit: Math.max(

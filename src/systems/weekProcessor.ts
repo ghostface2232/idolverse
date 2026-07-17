@@ -1157,19 +1157,23 @@ export function processWeek(
           Math.floor(createSeededRandom(seed + 13)() * trainees.length)
         ].id
       : null;
-  const inActivityPeriod = activeProjects.some(
+  const activityProject = activeProjects.find(
     (project) =>
       project.kind === "comeback" &&
       project.status !== "completed" &&
       project.currentStageId === "activity",
   );
+  const activityAlbum = activityProject?.releasedAlbumId
+    ? releasedAlbums.find((a) => a.id === activityProject.releasedAlbumId)
+    : undefined;
   const popularityResult = updateMemberPopularity(trainees, {
-    inActivityPeriod,
+    inActivityPeriod: activityProject !== undefined,
     musicShowWon: musicShowWonThisWeek,
     viralMemberId,
     promotionMemberIds: promotionOrders.flatMap(
       (order) => order.assignedMemberIds ?? [],
     ),
+    albumCenterId: activityAlbum?.centerTraineeId ?? null,
   });
   trainees = popularityResult.trainees;
   report.warnings.push(...popularityResult.highlights);

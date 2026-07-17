@@ -464,6 +464,7 @@ export async function completePositionReviewAndSave(
 export async function startComebackProjectAndSave(
   concept: { genre: Genre; mood: ConceptMood },
   budgetTierId: ComebackBudgetTierId,
+  centerTraineeId: string | null,
   userId: string,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
@@ -495,10 +496,19 @@ export async function startComebackProjectAndSave(
       "Not enough money for the selected production budget.",
     );
   }
+  if (
+    centerTraineeId &&
+    !snapshot.trainee.trainees.some((trainee) => trainee.id === centerTraineeId)
+  ) {
+    throw new WeeklyResolutionConflictError(
+      "The selected center is not a current member.",
+    );
+  }
 
   const plan = createComebackPlan({
     concept,
     budgetTierId,
+    centerTraineeId,
     startedAtWeek: toCumulativeWeek(
       snapshot.game.currentYear,
       snapshot.game.currentWeek,

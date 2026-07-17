@@ -155,6 +155,23 @@ export type TraineeStatKey =
 /** 멤버 성격. 재계약 요구 시점·조건 격차 반응·스트레스 민감도를 가른다. */
 export type MemberTemperament = "ambitious" | "devoted" | "steady" | "sensitive";
 
+/**
+ * 인간적 특성 — 성격(순수·도도 등)과 인상(고양이상·장신 등).
+ * 컨셉 무드와의 어울림(conceptAffinity)은 여기서 파생된다(data/memberTraits.ts).
+ */
+export type MemberTraitId =
+  | "pure"
+  | "bubbly"
+  | "haughty"
+  | "energetic"
+  | "reserved"
+  | "catlike"
+  | "doglike"
+  | "tall"
+  | "elegant"
+  | "mysterious"
+  | "wholesome";
+
 /** 멤버별 처우 계약. 팀 전속계약(156주)과 별개로 개인 조건을 다룬다. */
 export interface MemberContract {
   /** 처우 등급 1(신인 표준)~5(최상급). 팀 내 격차가 불만의 근거가 된다. */
@@ -440,6 +457,9 @@ export interface Trainee {
   };
   position: Position | null;
   subPosition: Position | null;
+  /** 인간적 특성(성격 1 + 인상 1). conceptAffinity의 단일 소스. */
+  traits: MemberTraitId[];
+  /** 특성에서 파생된 무드 친화 캐시. 시스템들이 소비한다. */
   conceptAffinity: Record<ConceptMood, number>;
   mood: number;
   stress: number;
@@ -495,6 +515,11 @@ export interface Album {
   };
   titleTrackCandidates: TitleTrack[];
   titleTrack: TitleTrack | null;
+  /**
+   * 이 앨범의 센터. 컨셉과 어울리는 얼굴을 앨범마다 바꿔 세울 수 있다 —
+   * 없으면 포지션 센터가 기본값이 된다.
+   */
+  centerTraineeId?: string | null;
   progress: {
     song: number;
     visual: number;

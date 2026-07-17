@@ -16,6 +16,8 @@ import {
 import { staffVanillaStore } from "@/stores/staffStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
 import { DEBUT_PROJECT } from "@/data/debutProject";
+import { deriveConceptAffinity, pickMemberTraits } from "@/data/memberTraits";
+import { createSeededRandom } from "@/lib/seededRandom";
 import { createProjectInstance } from "@/systems/projectSystem";
 import type {
   AlbumStoreState,
@@ -253,6 +255,14 @@ export function captureGameState(): GameStateSnapshot {
   });
 }
 
+function hashTraineeId(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
 export function hydrateGameState(gameState: GameStateSnapshot) {
   const { gameSpeed: _legacyGameSpeed, ...rest } =
     gameState.gameStore as GameStoreState & { gameSpeed?: unknown };
@@ -312,7 +322,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   traineeVanillaStore.setState(
     {
       ...gameState.traineeStore,
-      trainees: gameState.traineeStore.trainees.map((trainee) => ({
+      trainees: gameState.traineeStore.trainees.map((trainee, index) => ({
         ...trainee,
         popularity: trainee.popularity ?? 0,
         temperament: trainee.temperament ?? ("steady" as const),
@@ -321,6 +331,15 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
             tier: 1,
             nextRenegotiationWeek: hydratedCumulativeWeek + 52,
           },
+        // 특성이 없는 구버전 멤버는 시드 기반으로 특성을 받고 친화를 재파생한다.
+        ...(trainee.traits && trainee.traits.length > 0
+          ? {}
+          : (() => {
+              const traits = pickMemberTraits(
+                createSeededRandom(hashTraineeId(trainee.id) + index),
+              );
+              return { traits, conceptAffinity: deriveConceptAffinity(traits) };
+            })()),
       })),
     },
     false,

@@ -1,5 +1,6 @@
 import { Activity, HeartPulse, Star, UserRound } from "lucide-react";
 import { TEMPERAMENT_PROFILES } from "@/data/balance";
+import { traitLabels } from "@/data/memberTraits";
 import { useTraineeStore } from "@/stores/traineeStore";
 
 export function MemberOverview() {
@@ -40,6 +41,7 @@ export function MemberOverview() {
                 </h2>
                 <p className="truncate text-xs text-text-muted">
                   {trainee.position ?? "포지션 미정"} ·{" "}
+                  {traitLabels(trainee).join("·")} ·{" "}
                   {TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"].label} ·{" "}
                   처우 {trainee.contract?.tier ?? 1}등급
                 </p>

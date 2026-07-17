@@ -184,6 +184,7 @@ describe("durable weekly workflow", () => {
     await startComebackProjectAndSave(
       { genre: "dancePop", mood: "y2k" },
       "blockbuster",
+      null,
       "user",
       1,
     );
@@ -231,6 +232,7 @@ describe("durable weekly workflow", () => {
       startComebackProjectAndSave(
         { genre: "dancePop", mood: "y2k" },
         "lean",
+        null,
         "user",
         1,
       ),

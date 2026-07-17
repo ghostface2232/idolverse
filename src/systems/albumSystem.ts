@@ -7,6 +7,7 @@ import {
   SEASON_FIT_BONUS,
 } from "@/data/balance";
 import { CONCEPT_SYNERGY_TABLE, SEASON_MOOD_FIT } from "@/data/concepts";
+import { traitComboBonus } from "@/data/memberTraits";
 import { createSeededRandom } from "@/lib/seededRandom";
 import {
   evaluateRelease,
@@ -153,7 +154,20 @@ export function calculateAlbumQuality(input: AlbumQualityInput): number {
   const avgAffinity =
     trainees.reduce((s, t) => s + (t.conceptAffinity[mood] ?? 50), 0) /
     Math.max(trainees.length, 1);
-  const memberFitMult = 1 + avgAffinity / 200;
+  // 앨범 센터가 컨셉의 얼굴이다: 팀 평균 60% + 센터 40%. 성격과 인상이
+  // 모두 컨셉을 지지하는 센터(도도×고양이상×섹시)는 조합 보너스를 받는다.
+  const center = album.centerTraineeId
+    ? trainees.find((t) => t.id === album.centerTraineeId) ?? null
+    : trainees.find((t) => t.position === "center") ?? null;
+  const centerAffinity = center
+    ? Math.min(
+        100,
+        (center.conceptAffinity[mood] ?? 50) +
+          traitComboBonus(center.traits ?? [], mood),
+      )
+    : avgAffinity;
+  const memberFit = avgAffinity * 0.6 + centerAffinity * 0.4;
+  const memberFitMult = 1 + memberFit / 200;
 
   const seasonBonus = (SEASON_MOOD_FIT[season]?.[mood] ?? 0) / 100;
   const seasonMult = 1 + seasonBonus * SEASON_FIT_BONUS * 10;
