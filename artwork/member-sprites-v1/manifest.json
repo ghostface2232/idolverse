@@ -1,0 +1,278 @@
+{
+  "version": 1,
+  "grid": [
+    5,
+    2
+  ],
+  "canvas": [
+    256,
+    448
+  ],
+  "contentHeight": 400,
+  "pivot": [
+    128,
+    424
+  ],
+  "sprites": [
+    {
+      "id": "female-01",
+      "hairType": "straight-long-bangs",
+      "file": "female/female-01-straight-long-bangs.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-02",
+      "hairType": "straight-long-center",
+      "file": "female/female-02-straight-long-center.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-03",
+      "hairType": "high-ponytail",
+      "file": "female/female-03-high-ponytail.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-04",
+      "hairType": "low-ponytail",
+      "file": "female/female-04-low-ponytail.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-05",
+      "hairType": "twin-tails",
+      "file": "female/female-05-twin-tails.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-06",
+      "hairType": "bob-bangs",
+      "file": "female/female-06-bob-bangs.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-07",
+      "hairType": "layered-wolf",
+      "file": "female/female-07-layered-wolf.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-08",
+      "hairType": "pixie",
+      "file": "female/female-08-pixie.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-09",
+      "hairType": "long-waves",
+      "file": "female/female-09-long-waves.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "female-10",
+      "hairType": "braided-half-up",
+      "file": "female/female-10-braided-half-up.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-01",
+      "hairType": "short-fringe",
+      "file": "male/male-01-short-fringe.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-02",
+      "hairType": "curtain-center",
+      "file": "male/male-02-curtain-center.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-03",
+      "hairType": "comma-hair",
+      "file": "male/male-03-comma-hair.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-04",
+      "hairType": "layered-shag",
+      "file": "male/male-04-layered-shag.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-05",
+      "hairType": "long-tucked",
+      "file": "male/male-05-long-tucked.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-06",
+      "hairType": "swept-undercut",
+      "file": "male/male-06-swept-undercut.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-07",
+      "hairType": "wavy-perm",
+      "file": "male/male-07-wavy-perm.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-08",
+      "hairType": "layered-mullet",
+      "file": "male/male-08-layered-mullet.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-09",
+      "hairType": "low-man-bun",
+      "file": "male/male-09-low-man-bun.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    },
+    {
+      "id": "male-10",
+      "hairType": "buzz-cut",
+      "file": "male/male-10-buzz-cut.png",
+      "canvas": [
+        256,
+        448
+      ],
+      "pivot": [
+        128,
+        424
+      ]
+    }
+  ]
+}

@@ -1,7 +1,13 @@
 import { SIMULATION_ROOM_IDS } from "@/data/simulationWorld";
 import { financeVanillaStore } from "@/stores/financeStore";
+import { gameVanillaStore } from "@/stores/gameStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
-import type { FinanceStoreState, Trainee, TraineeActivity } from "@/types/game";
+import type {
+  FinanceStoreState,
+  GroupGender,
+  Trainee,
+  TraineeActivity,
+} from "@/types/game";
 
 export type SimulationRoomId =
   | (typeof SIMULATION_ROOM_IDS)[number]
@@ -26,6 +32,7 @@ export interface SimulationEntityProjection {
 
 export interface SimulationProjection {
   revision: number;
+  groupGender: GroupGender;
   rooms: RoomProjection[];
   entities: SimulationEntityProjection[];
 }
@@ -46,9 +53,11 @@ export function buildSimulationProjection(
   trainees: Trainee[],
   upgrades: Upgrades,
   revision: number,
+  groupGender: GroupGender = gameVanillaStore.getState().groupGender,
 ): SimulationProjection {
   return {
     revision,
+    groupGender,
     rooms: [
       { id: "practice", unlocked: upgrades.studioLevel >= 1, level: upgrades.studioLevel },
       { id: "dorm", unlocked: upgrades.dormLevel >= 1, level: upgrades.dormLevel },
@@ -76,6 +85,7 @@ class SimulationProjectionCoordinator {
     traineeVanillaStore.getState().trainees,
     financeVanillaStore.getState().upgrades,
     0,
+    gameVanillaStore.getState().groupGender,
   );
 
   getSnapshot = () => this.projection;
@@ -97,6 +107,7 @@ class SimulationProjectionCoordinator {
     this.storeUnsubscribers = [
       traineeVanillaStore.subscribe(refresh),
       financeVanillaStore.subscribe(refresh),
+      gameVanillaStore.subscribe(refresh),
     ];
     this.refresh();
   }
@@ -111,6 +122,7 @@ class SimulationProjectionCoordinator {
       traineeVanillaStore.getState().trainees,
       financeVanillaStore.getState().upgrades,
       this.projection.revision + 1,
+      gameVanillaStore.getState().groupGender,
     );
     if (sameProjection(this.projection, next)) return;
 
@@ -126,6 +138,7 @@ function toBand(value: number): SimulationBand {
 }
 
 function sameProjection(current: SimulationProjection, next: SimulationProjection) {
+  if (current.groupGender !== next.groupGender) return false;
   if (current.rooms.length !== next.rooms.length) return false;
   if (current.entities.length !== next.entities.length) return false;
 

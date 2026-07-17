@@ -28,9 +28,10 @@ describe("SimulationProjection", () => {
       mood: 72,
       injuryWeeks: 1,
     };
-    const projection = buildSimulationProjection([trainee], upgrades, 4);
+    const projection = buildSimulationProjection([trainee], upgrades, 4, "female");
 
     expect(projection.revision).toBe(4);
+    expect(projection.groupGender).toBe("female");
     expect(projection.rooms).toEqual([
       { id: "practice", unlocked: true, level: 3 },
       { id: "dorm", unlocked: true, level: 2 },

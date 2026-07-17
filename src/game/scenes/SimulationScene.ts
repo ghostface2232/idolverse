@@ -3,6 +3,12 @@ import {
   SIMULATION_ROOM_LABELS,
   SIMULATION_WORLD,
 } from "@/data/simulationWorld";
+import {
+  MEMBER_SPRITE_FRAME,
+  memberOutfitForActivity,
+  memberSpriteFrameForId,
+  memberSpriteKey,
+} from "@/game/assets/memberSprites";
 import { presentationBus } from "@/game/EventBus";
 import {
   simulationProjectionCoordinator,
@@ -20,14 +26,9 @@ interface RoomLayout {
   rect: Phaser.Geom.Rectangle;
 }
 
-function hashHairColor(traineeId: string): number {
-  let hash = 0;
-  for (let i = 0; i < traineeId.length; i += 1) {
-    hash = (hash * 31 + traineeId.charCodeAt(i)) & 0xffffff;
-  }
-  const palette = [0x111827, 0x4b2c20, 0x6b3410, 0x8b5cf6, 0xec4899, 0x06b6d4, 0xfacc15, 0x84cc16];
-  return palette[hash % palette.length];
-}
+const MEMBER_DISPLAY_HEIGHT = 52;
+const MEMBER_DISPLAY_SCALE = MEMBER_DISPLAY_HEIGHT / MEMBER_SPRITE_FRAME.height;
+const MEMBER_PIVOT_Y = MEMBER_SPRITE_FRAME.pivotY / MEMBER_SPRITE_FRAME.height;
 
 export class SimulationScene extends Phaser.Scene {
   private background?: Phaser.GameObjects.Graphics;
@@ -290,8 +291,8 @@ export class SimulationScene extends Phaser.Scene {
     const padX = 18;
     const padTop = 38;
     const padBottom = 16;
-    const charWidth = 28;
-    const charHeight = 30;
+    const charWidth = 36;
+    const charHeight = MEMBER_DISPLAY_HEIGHT;
     const innerWidth = room.rect.width - padX * 2;
     const cols = Math.max(1, Math.floor(innerWidth / charWidth));
     const colSpacing = innerWidth / cols;
@@ -314,6 +315,15 @@ export class SimulationScene extends Phaser.Scene {
         container = this.renderTrainee(trainee, x, y);
         this.traineeContainers.set(trainee.id, container);
       } else {
+        const expectedTextureKey = memberSpriteKey(
+          this.projection.groupGender,
+          memberOutfitForActivity(trainee.activity),
+        );
+        if (container.getData("textureKey") !== expectedTextureKey) {
+          container.destroy();
+          container = this.renderTrainee(trainee, x, y);
+          this.traineeContainers.set(trainee.id, container);
+        }
         container.setVisible(true).setActive(true);
         const injuryMark = container.getByName(
           "injury-mark",
@@ -335,65 +345,33 @@ export class SimulationScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Trainee placeholder. Sprite swap: replace this body with
-   * `this.add.sprite(x, y, key)` plus animation play call. Container
-   * shape stays the same so callers do not change.
-   */
   private renderTrainee(
     trainee: SimulationEntityProjection,
     x: number,
     y: number,
   ): Phaser.GameObjects.Container {
     const container = this.add.container(x, y).setDepth(4 + y / 10_000);
-    const hairColor = hashHairColor(trainee.id);
-    const outfitPalette = [0x2563eb, 0x7c3aed, 0xdb2777, 0x0891b2, 0x059669];
-    const outfitColor = outfitPalette[hairColor % outfitPalette.length];
+    const textureKey = memberSpriteKey(
+      this.projection.groupGender,
+      memberOutfitForActivity(trainee.activity),
+    );
+    container.setData("textureKey", textureKey);
 
     const shadow = this.add.graphics();
     shadow.fillStyle(0x000000, 0.32);
-    shadow.fillEllipse(0, 9, 18, 6);
+    shadow.fillEllipse(0, 2, 24, 7);
     container.add(shadow);
 
-    const sprite = this.add.container(0, 0);
+    const sprite = this.add
+      .sprite(0, 0, textureKey, memberSpriteFrameForId(trainee.id))
+      .setOrigin(0.5, MEMBER_PIVOT_Y)
+      .setScale(MEMBER_DISPLAY_SCALE)
+      .setName("member-sprite");
     container.add(sprite);
-
-    const legs = this.add.graphics();
-    legs.fillStyle(0x111827, 1);
-    legs.fillRect(-5, 4, 4, 7);
-    legs.fillRect(1, 4, 4, 7);
-    legs.fillStyle(0x0f172a, 1);
-    legs.fillRect(-6, 10, 5, 2);
-    legs.fillRect(1, 10, 5, 2);
-    sprite.add(legs);
-
-    const body = this.add.graphics();
-    body.fillStyle(outfitColor, 1);
-    body.fillRect(-6, -5, 12, 11);
-    body.fillStyle(0xffffff, 0.18);
-    body.fillRect(-4, -4, 2, 8);
-    sprite.add(body);
-
-    const head = this.add.graphics();
-    head.fillStyle(0xfde68a, 1);
-    head.fillRect(-5, -14, 10, 9);
-    head.fillRect(-6, -12, 1, 4);
-    head.fillRect(5, -12, 1, 4);
-    head.fillStyle(0x1f2937, 1);
-    head.fillRect(-3, -10, 1, 1);
-    head.fillRect(2, -10, 1, 1);
-    sprite.add(head);
-
-    const hair = this.add.graphics();
-    hair.fillStyle(hairColor, 1);
-    hair.fillRect(-5, -16, 10, 4);
-    hair.fillRect(-5, -12, 2, 4);
-    hair.fillRect(4, -12, 1, 3);
-    sprite.add(hair);
 
     const mark = this.add.graphics().setName("injury-mark");
     mark.fillStyle(0xef4444, 1);
-    mark.fillRect(5, -17, 3, 3);
+    mark.fillRect(8, -51, 4, 4);
     mark.setVisible(trainee.injured);
     container.add(mark);
 
@@ -401,7 +379,7 @@ export class SimulationScene extends Phaser.Scene {
       this.tweens.add({
         targets: sprite,
         y: -2,
-        duration: 900 + (hairColor % 240),
+        duration: 900 + memberSpriteFrameForId(trainee.id) * 24,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",

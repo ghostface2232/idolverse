@@ -1,0 +1,2519 @@
+{
+  "version": 2,
+  "grid": [
+    5,
+    2
+  ],
+  "canvas": [
+    256,
+    448
+  ],
+  "portrait": [
+    256,
+    256
+  ],
+  "contentHeight": 400,
+  "pivot": [
+    128,
+    424
+  ],
+  "outfits": [
+    {
+      "id": "base",
+      "labels": {
+        "ko": "다크 기본복",
+        "en": "Dark base"
+      }
+    },
+    {
+      "id": "trainee",
+      "labels": {
+        "ko": "기본 연습생복",
+        "en": "Basic trainee"
+      }
+    },
+    {
+      "id": "denim",
+      "labels": {
+        "ko": "데님",
+        "en": "Denim"
+      }
+    },
+    {
+      "id": "sports",
+      "labels": {
+        "ko": "스포츠",
+        "en": "Sports"
+      }
+    },
+    {
+      "id": "school",
+      "labels": {
+        "ko": "교복",
+        "en": "School concept"
+      }
+    },
+    {
+      "id": "stage",
+      "labels": {
+        "ko": "다크 네온 스테이지",
+        "en": "Dark neon stage"
+      }
+    },
+    {
+      "id": "leather",
+      "labels": {
+        "ko": "가죽 재킷",
+        "en": "Leather jacket"
+      }
+    },
+    {
+      "id": "hoodie",
+      "labels": {
+        "ko": "레코딩 후드",
+        "en": "Recording hoodie"
+      }
+    },
+    {
+      "id": "street",
+      "labels": {
+        "ko": "사이버 스트릿",
+        "en": "Cyber streetwear"
+      }
+    },
+    {
+      "id": "summer",
+      "labels": {
+        "ko": "브라이트 서머",
+        "en": "Bright summer"
+      }
+    },
+    {
+      "id": "winter",
+      "labels": {
+        "ko": "아이보리 윈터",
+        "en": "Ivory winter"
+      }
+    },
+    {
+      "id": "airport",
+      "labels": {
+        "ko": "공항 패션",
+        "en": "Airport fashion"
+      }
+    },
+    {
+      "id": "awards",
+      "labels": {
+        "ko": "프리미엄 시상식",
+        "en": "Premium awards"
+      }
+    }
+  ],
+  "spriteSheets": {
+    "female": {
+      "base": "female-base-sheet-transparent.png",
+      "trainee": "female-trainee-sheet-transparent.png",
+      "denim": "female-denim-sheet-transparent.png",
+      "sports": "female-sports-sheet-transparent.png",
+      "school": "female-school-sheet-transparent.png",
+      "stage": "female-stage-sheet-transparent.png",
+      "leather": "female-leather-sheet-transparent.png",
+      "hoodie": "female-hoodie-sheet-transparent.png",
+      "street": "female-street-sheet-transparent.png",
+      "summer": "female-summer-sheet-transparent.png",
+      "winter": "female-winter-sheet-transparent.png",
+      "airport": "female-airport-sheet-transparent.png",
+      "awards": "female-awards-sheet-transparent.png"
+    },
+    "male": {
+      "base": "male-base-sheet-transparent.png",
+      "trainee": "male-trainee-sheet-transparent.png",
+      "denim": "male-denim-sheet-transparent.png",
+      "sports": "male-sports-sheet-transparent.png",
+      "school": "male-school-sheet-transparent.png",
+      "stage": "male-stage-sheet-transparent.png",
+      "leather": "male-leather-sheet-transparent.png",
+      "hoodie": "male-hoodie-sheet-transparent.png",
+      "street": "male-street-sheet-transparent.png",
+      "summer": "male-summer-sheet-transparent.png",
+      "winter": "male-winter-sheet-transparent.png",
+      "airport": "male-airport-sheet-transparent.png",
+      "awards": "male-awards-sheet-transparent.png"
+    }
+  },
+  "portraitSheets": {
+    "female": {
+      "base": "female-base-portrait-sheet.png",
+      "trainee": "female-trainee-portrait-sheet.png",
+      "denim": "female-denim-portrait-sheet.png",
+      "sports": "female-sports-portrait-sheet.png",
+      "school": "female-school-portrait-sheet.png",
+      "stage": "female-stage-portrait-sheet.png",
+      "leather": "female-leather-portrait-sheet.png",
+      "hoodie": "female-hoodie-portrait-sheet.png",
+      "street": "female-street-portrait-sheet.png",
+      "summer": "female-summer-portrait-sheet.png",
+      "winter": "female-winter-portrait-sheet.png",
+      "airport": "female-airport-portrait-sheet.png",
+      "awards": "female-awards-portrait-sheet.png"
+    },
+    "male": {
+      "base": "male-base-portrait-sheet.png",
+      "trainee": "male-trainee-portrait-sheet.png",
+      "denim": "male-denim-portrait-sheet.png",
+      "sports": "male-sports-portrait-sheet.png",
+      "school": "male-school-portrait-sheet.png",
+      "stage": "male-stage-portrait-sheet.png",
+      "leather": "male-leather-portrait-sheet.png",
+      "hoodie": "male-hoodie-portrait-sheet.png",
+      "street": "male-street-portrait-sheet.png",
+      "summer": "male-summer-portrait-sheet.png",
+      "winter": "male-winter-portrait-sheet.png",
+      "airport": "male-airport-portrait-sheet.png",
+      "awards": "male-awards-portrait-sheet.png"
+    }
+  },
+  "sprites": [
+    {
+      "id": "female-base-01",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/base/female-base-01-straight-long-bangs.png",
+      "portrait": "portraits/female/base/female-base-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-base-02",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/base/female-base-02-straight-long-center.png",
+      "portrait": "portraits/female/base/female-base-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-base-03",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/base/female-base-03-high-ponytail.png",
+      "portrait": "portraits/female/base/female-base-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-base-04",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/base/female-base-04-low-ponytail.png",
+      "portrait": "portraits/female/base/female-base-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-base-05",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/base/female-base-05-twin-tails.png",
+      "portrait": "portraits/female/base/female-base-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-base-06",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/base/female-base-06-bob-bangs.png",
+      "portrait": "portraits/female/base/female-base-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-base-07",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/base/female-base-07-layered-wolf.png",
+      "portrait": "portraits/female/base/female-base-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-base-08",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/base/female-base-08-pixie.png",
+      "portrait": "portraits/female/base/female-base-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-base-09",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/base/female-base-09-long-waves.png",
+      "portrait": "portraits/female/base/female-base-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-base-10",
+      "gender": "female",
+      "outfit": "base",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/base/female-base-10-braided-half-up.png",
+      "portrait": "portraits/female/base/female-base-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-trainee-01",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/trainee/female-trainee-01-straight-long-bangs.png",
+      "portrait": "portraits/female/trainee/female-trainee-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-trainee-02",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/trainee/female-trainee-02-straight-long-center.png",
+      "portrait": "portraits/female/trainee/female-trainee-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-trainee-03",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/trainee/female-trainee-03-high-ponytail.png",
+      "portrait": "portraits/female/trainee/female-trainee-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-trainee-04",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/trainee/female-trainee-04-low-ponytail.png",
+      "portrait": "portraits/female/trainee/female-trainee-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-trainee-05",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/trainee/female-trainee-05-twin-tails.png",
+      "portrait": "portraits/female/trainee/female-trainee-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-trainee-06",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/trainee/female-trainee-06-bob-bangs.png",
+      "portrait": "portraits/female/trainee/female-trainee-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-trainee-07",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/trainee/female-trainee-07-layered-wolf.png",
+      "portrait": "portraits/female/trainee/female-trainee-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-trainee-08",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/trainee/female-trainee-08-pixie.png",
+      "portrait": "portraits/female/trainee/female-trainee-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-trainee-09",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/trainee/female-trainee-09-long-waves.png",
+      "portrait": "portraits/female/trainee/female-trainee-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-trainee-10",
+      "gender": "female",
+      "outfit": "trainee",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/trainee/female-trainee-10-braided-half-up.png",
+      "portrait": "portraits/female/trainee/female-trainee-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-denim-01",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/denim/female-denim-01-straight-long-bangs.png",
+      "portrait": "portraits/female/denim/female-denim-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-denim-02",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/denim/female-denim-02-straight-long-center.png",
+      "portrait": "portraits/female/denim/female-denim-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-denim-03",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/denim/female-denim-03-high-ponytail.png",
+      "portrait": "portraits/female/denim/female-denim-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-denim-04",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/denim/female-denim-04-low-ponytail.png",
+      "portrait": "portraits/female/denim/female-denim-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-denim-05",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/denim/female-denim-05-twin-tails.png",
+      "portrait": "portraits/female/denim/female-denim-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-denim-06",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/denim/female-denim-06-bob-bangs.png",
+      "portrait": "portraits/female/denim/female-denim-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-denim-07",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/denim/female-denim-07-layered-wolf.png",
+      "portrait": "portraits/female/denim/female-denim-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-denim-08",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/denim/female-denim-08-pixie.png",
+      "portrait": "portraits/female/denim/female-denim-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-denim-09",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/denim/female-denim-09-long-waves.png",
+      "portrait": "portraits/female/denim/female-denim-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-denim-10",
+      "gender": "female",
+      "outfit": "denim",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/denim/female-denim-10-braided-half-up.png",
+      "portrait": "portraits/female/denim/female-denim-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-sports-01",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/sports/female-sports-01-straight-long-bangs.png",
+      "portrait": "portraits/female/sports/female-sports-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-sports-02",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/sports/female-sports-02-straight-long-center.png",
+      "portrait": "portraits/female/sports/female-sports-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-sports-03",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/sports/female-sports-03-high-ponytail.png",
+      "portrait": "portraits/female/sports/female-sports-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-sports-04",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/sports/female-sports-04-low-ponytail.png",
+      "portrait": "portraits/female/sports/female-sports-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-sports-05",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/sports/female-sports-05-twin-tails.png",
+      "portrait": "portraits/female/sports/female-sports-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-sports-06",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/sports/female-sports-06-bob-bangs.png",
+      "portrait": "portraits/female/sports/female-sports-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-sports-07",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/sports/female-sports-07-layered-wolf.png",
+      "portrait": "portraits/female/sports/female-sports-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-sports-08",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/sports/female-sports-08-pixie.png",
+      "portrait": "portraits/female/sports/female-sports-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-sports-09",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/sports/female-sports-09-long-waves.png",
+      "portrait": "portraits/female/sports/female-sports-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-sports-10",
+      "gender": "female",
+      "outfit": "sports",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/sports/female-sports-10-braided-half-up.png",
+      "portrait": "portraits/female/sports/female-sports-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-school-01",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/school/female-school-01-straight-long-bangs.png",
+      "portrait": "portraits/female/school/female-school-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-school-02",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/school/female-school-02-straight-long-center.png",
+      "portrait": "portraits/female/school/female-school-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-school-03",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/school/female-school-03-high-ponytail.png",
+      "portrait": "portraits/female/school/female-school-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-school-04",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/school/female-school-04-low-ponytail.png",
+      "portrait": "portraits/female/school/female-school-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-school-05",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/school/female-school-05-twin-tails.png",
+      "portrait": "portraits/female/school/female-school-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-school-06",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/school/female-school-06-bob-bangs.png",
+      "portrait": "portraits/female/school/female-school-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-school-07",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/school/female-school-07-layered-wolf.png",
+      "portrait": "portraits/female/school/female-school-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-school-08",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/school/female-school-08-pixie.png",
+      "portrait": "portraits/female/school/female-school-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-school-09",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/school/female-school-09-long-waves.png",
+      "portrait": "portraits/female/school/female-school-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-school-10",
+      "gender": "female",
+      "outfit": "school",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/school/female-school-10-braided-half-up.png",
+      "portrait": "portraits/female/school/female-school-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-stage-01",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/stage/female-stage-01-straight-long-bangs.png",
+      "portrait": "portraits/female/stage/female-stage-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-stage-02",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/stage/female-stage-02-straight-long-center.png",
+      "portrait": "portraits/female/stage/female-stage-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-stage-03",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/stage/female-stage-03-high-ponytail.png",
+      "portrait": "portraits/female/stage/female-stage-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-stage-04",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/stage/female-stage-04-low-ponytail.png",
+      "portrait": "portraits/female/stage/female-stage-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-stage-05",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/stage/female-stage-05-twin-tails.png",
+      "portrait": "portraits/female/stage/female-stage-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-stage-06",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/stage/female-stage-06-bob-bangs.png",
+      "portrait": "portraits/female/stage/female-stage-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-stage-07",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/stage/female-stage-07-layered-wolf.png",
+      "portrait": "portraits/female/stage/female-stage-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-stage-08",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/stage/female-stage-08-pixie.png",
+      "portrait": "portraits/female/stage/female-stage-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-stage-09",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/stage/female-stage-09-long-waves.png",
+      "portrait": "portraits/female/stage/female-stage-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-stage-10",
+      "gender": "female",
+      "outfit": "stage",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/stage/female-stage-10-braided-half-up.png",
+      "portrait": "portraits/female/stage/female-stage-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-leather-01",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/leather/female-leather-01-straight-long-bangs.png",
+      "portrait": "portraits/female/leather/female-leather-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-leather-02",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/leather/female-leather-02-straight-long-center.png",
+      "portrait": "portraits/female/leather/female-leather-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-leather-03",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/leather/female-leather-03-high-ponytail.png",
+      "portrait": "portraits/female/leather/female-leather-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-leather-04",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/leather/female-leather-04-low-ponytail.png",
+      "portrait": "portraits/female/leather/female-leather-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-leather-05",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/leather/female-leather-05-twin-tails.png",
+      "portrait": "portraits/female/leather/female-leather-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-leather-06",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/leather/female-leather-06-bob-bangs.png",
+      "portrait": "portraits/female/leather/female-leather-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-leather-07",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/leather/female-leather-07-layered-wolf.png",
+      "portrait": "portraits/female/leather/female-leather-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-leather-08",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/leather/female-leather-08-pixie.png",
+      "portrait": "portraits/female/leather/female-leather-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-leather-09",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/leather/female-leather-09-long-waves.png",
+      "portrait": "portraits/female/leather/female-leather-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-leather-10",
+      "gender": "female",
+      "outfit": "leather",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/leather/female-leather-10-braided-half-up.png",
+      "portrait": "portraits/female/leather/female-leather-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-hoodie-01",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-01-straight-long-bangs.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-hoodie-02",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-02-straight-long-center.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-hoodie-03",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-03-high-ponytail.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-hoodie-04",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-04-low-ponytail.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-hoodie-05",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-05-twin-tails.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-hoodie-06",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-06-bob-bangs.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-hoodie-07",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-07-layered-wolf.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-hoodie-08",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-08-pixie.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-hoodie-09",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-09-long-waves.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-hoodie-10",
+      "gender": "female",
+      "outfit": "hoodie",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/hoodie/female-hoodie-10-braided-half-up.png",
+      "portrait": "portraits/female/hoodie/female-hoodie-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-street-01",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/street/female-street-01-straight-long-bangs.png",
+      "portrait": "portraits/female/street/female-street-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-street-02",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/street/female-street-02-straight-long-center.png",
+      "portrait": "portraits/female/street/female-street-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-street-03",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/street/female-street-03-high-ponytail.png",
+      "portrait": "portraits/female/street/female-street-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-street-04",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/street/female-street-04-low-ponytail.png",
+      "portrait": "portraits/female/street/female-street-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-street-05",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/street/female-street-05-twin-tails.png",
+      "portrait": "portraits/female/street/female-street-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-street-06",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/street/female-street-06-bob-bangs.png",
+      "portrait": "portraits/female/street/female-street-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-street-07",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/street/female-street-07-layered-wolf.png",
+      "portrait": "portraits/female/street/female-street-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-street-08",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/street/female-street-08-pixie.png",
+      "portrait": "portraits/female/street/female-street-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-street-09",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/street/female-street-09-long-waves.png",
+      "portrait": "portraits/female/street/female-street-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-street-10",
+      "gender": "female",
+      "outfit": "street",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/street/female-street-10-braided-half-up.png",
+      "portrait": "portraits/female/street/female-street-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-summer-01",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/summer/female-summer-01-straight-long-bangs.png",
+      "portrait": "portraits/female/summer/female-summer-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-summer-02",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/summer/female-summer-02-straight-long-center.png",
+      "portrait": "portraits/female/summer/female-summer-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-summer-03",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/summer/female-summer-03-high-ponytail.png",
+      "portrait": "portraits/female/summer/female-summer-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-summer-04",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/summer/female-summer-04-low-ponytail.png",
+      "portrait": "portraits/female/summer/female-summer-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-summer-05",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/summer/female-summer-05-twin-tails.png",
+      "portrait": "portraits/female/summer/female-summer-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-summer-06",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/summer/female-summer-06-bob-bangs.png",
+      "portrait": "portraits/female/summer/female-summer-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-summer-07",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/summer/female-summer-07-layered-wolf.png",
+      "portrait": "portraits/female/summer/female-summer-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-summer-08",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/summer/female-summer-08-pixie.png",
+      "portrait": "portraits/female/summer/female-summer-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-summer-09",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/summer/female-summer-09-long-waves.png",
+      "portrait": "portraits/female/summer/female-summer-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-summer-10",
+      "gender": "female",
+      "outfit": "summer",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/summer/female-summer-10-braided-half-up.png",
+      "portrait": "portraits/female/summer/female-summer-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-winter-01",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/winter/female-winter-01-straight-long-bangs.png",
+      "portrait": "portraits/female/winter/female-winter-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-winter-02",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/winter/female-winter-02-straight-long-center.png",
+      "portrait": "portraits/female/winter/female-winter-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-winter-03",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/winter/female-winter-03-high-ponytail.png",
+      "portrait": "portraits/female/winter/female-winter-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-winter-04",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/winter/female-winter-04-low-ponytail.png",
+      "portrait": "portraits/female/winter/female-winter-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-winter-05",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/winter/female-winter-05-twin-tails.png",
+      "portrait": "portraits/female/winter/female-winter-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-winter-06",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/winter/female-winter-06-bob-bangs.png",
+      "portrait": "portraits/female/winter/female-winter-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-winter-07",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/winter/female-winter-07-layered-wolf.png",
+      "portrait": "portraits/female/winter/female-winter-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-winter-08",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/winter/female-winter-08-pixie.png",
+      "portrait": "portraits/female/winter/female-winter-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-winter-09",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/winter/female-winter-09-long-waves.png",
+      "portrait": "portraits/female/winter/female-winter-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-winter-10",
+      "gender": "female",
+      "outfit": "winter",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/winter/female-winter-10-braided-half-up.png",
+      "portrait": "portraits/female/winter/female-winter-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-airport-01",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/airport/female-airport-01-straight-long-bangs.png",
+      "portrait": "portraits/female/airport/female-airport-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-airport-02",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/airport/female-airport-02-straight-long-center.png",
+      "portrait": "portraits/female/airport/female-airport-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-airport-03",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/airport/female-airport-03-high-ponytail.png",
+      "portrait": "portraits/female/airport/female-airport-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-airport-04",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/airport/female-airport-04-low-ponytail.png",
+      "portrait": "portraits/female/airport/female-airport-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-airport-05",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/airport/female-airport-05-twin-tails.png",
+      "portrait": "portraits/female/airport/female-airport-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-airport-06",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/airport/female-airport-06-bob-bangs.png",
+      "portrait": "portraits/female/airport/female-airport-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-airport-07",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/airport/female-airport-07-layered-wolf.png",
+      "portrait": "portraits/female/airport/female-airport-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-airport-08",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/airport/female-airport-08-pixie.png",
+      "portrait": "portraits/female/airport/female-airport-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-airport-09",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/airport/female-airport-09-long-waves.png",
+      "portrait": "portraits/female/airport/female-airport-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-airport-10",
+      "gender": "female",
+      "outfit": "airport",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/airport/female-airport-10-braided-half-up.png",
+      "portrait": "portraits/female/airport/female-airport-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "female-awards-01",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 0,
+      "hairType": "straight-long-bangs",
+      "fullbody": "fullbody/female/awards/female-awards-01-straight-long-bangs.png",
+      "portrait": "portraits/female/awards/female-awards-01-straight-long-bangs-portrait.png"
+    },
+    {
+      "id": "female-awards-02",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 1,
+      "hairType": "straight-long-center",
+      "fullbody": "fullbody/female/awards/female-awards-02-straight-long-center.png",
+      "portrait": "portraits/female/awards/female-awards-02-straight-long-center-portrait.png"
+    },
+    {
+      "id": "female-awards-03",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 2,
+      "hairType": "high-ponytail",
+      "fullbody": "fullbody/female/awards/female-awards-03-high-ponytail.png",
+      "portrait": "portraits/female/awards/female-awards-03-high-ponytail-portrait.png"
+    },
+    {
+      "id": "female-awards-04",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 3,
+      "hairType": "low-ponytail",
+      "fullbody": "fullbody/female/awards/female-awards-04-low-ponytail.png",
+      "portrait": "portraits/female/awards/female-awards-04-low-ponytail-portrait.png"
+    },
+    {
+      "id": "female-awards-05",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 4,
+      "hairType": "twin-tails",
+      "fullbody": "fullbody/female/awards/female-awards-05-twin-tails.png",
+      "portrait": "portraits/female/awards/female-awards-05-twin-tails-portrait.png"
+    },
+    {
+      "id": "female-awards-06",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 5,
+      "hairType": "bob-bangs",
+      "fullbody": "fullbody/female/awards/female-awards-06-bob-bangs.png",
+      "portrait": "portraits/female/awards/female-awards-06-bob-bangs-portrait.png"
+    },
+    {
+      "id": "female-awards-07",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 6,
+      "hairType": "layered-wolf",
+      "fullbody": "fullbody/female/awards/female-awards-07-layered-wolf.png",
+      "portrait": "portraits/female/awards/female-awards-07-layered-wolf-portrait.png"
+    },
+    {
+      "id": "female-awards-08",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 7,
+      "hairType": "pixie",
+      "fullbody": "fullbody/female/awards/female-awards-08-pixie.png",
+      "portrait": "portraits/female/awards/female-awards-08-pixie-portrait.png"
+    },
+    {
+      "id": "female-awards-09",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 8,
+      "hairType": "long-waves",
+      "fullbody": "fullbody/female/awards/female-awards-09-long-waves.png",
+      "portrait": "portraits/female/awards/female-awards-09-long-waves-portrait.png"
+    },
+    {
+      "id": "female-awards-10",
+      "gender": "female",
+      "outfit": "awards",
+      "appearanceFrame": 9,
+      "hairType": "braided-half-up",
+      "fullbody": "fullbody/female/awards/female-awards-10-braided-half-up.png",
+      "portrait": "portraits/female/awards/female-awards-10-braided-half-up-portrait.png"
+    },
+    {
+      "id": "male-base-01",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/base/male-base-01-short-fringe.png",
+      "portrait": "portraits/male/base/male-base-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-base-02",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/base/male-base-02-curtain-center.png",
+      "portrait": "portraits/male/base/male-base-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-base-03",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/base/male-base-03-comma-hair.png",
+      "portrait": "portraits/male/base/male-base-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-base-04",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/base/male-base-04-layered-shag.png",
+      "portrait": "portraits/male/base/male-base-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-base-05",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/base/male-base-05-long-tucked.png",
+      "portrait": "portraits/male/base/male-base-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-base-06",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/base/male-base-06-swept-undercut.png",
+      "portrait": "portraits/male/base/male-base-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-base-07",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/base/male-base-07-wavy-perm.png",
+      "portrait": "portraits/male/base/male-base-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-base-08",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/base/male-base-08-layered-mullet.png",
+      "portrait": "portraits/male/base/male-base-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-base-09",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/base/male-base-09-low-man-bun.png",
+      "portrait": "portraits/male/base/male-base-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-base-10",
+      "gender": "male",
+      "outfit": "base",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/base/male-base-10-buzz-cut.png",
+      "portrait": "portraits/male/base/male-base-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-trainee-01",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/trainee/male-trainee-01-short-fringe.png",
+      "portrait": "portraits/male/trainee/male-trainee-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-trainee-02",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/trainee/male-trainee-02-curtain-center.png",
+      "portrait": "portraits/male/trainee/male-trainee-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-trainee-03",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/trainee/male-trainee-03-comma-hair.png",
+      "portrait": "portraits/male/trainee/male-trainee-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-trainee-04",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/trainee/male-trainee-04-layered-shag.png",
+      "portrait": "portraits/male/trainee/male-trainee-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-trainee-05",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/trainee/male-trainee-05-long-tucked.png",
+      "portrait": "portraits/male/trainee/male-trainee-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-trainee-06",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/trainee/male-trainee-06-swept-undercut.png",
+      "portrait": "portraits/male/trainee/male-trainee-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-trainee-07",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/trainee/male-trainee-07-wavy-perm.png",
+      "portrait": "portraits/male/trainee/male-trainee-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-trainee-08",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/trainee/male-trainee-08-layered-mullet.png",
+      "portrait": "portraits/male/trainee/male-trainee-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-trainee-09",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/trainee/male-trainee-09-low-man-bun.png",
+      "portrait": "portraits/male/trainee/male-trainee-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-trainee-10",
+      "gender": "male",
+      "outfit": "trainee",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/trainee/male-trainee-10-buzz-cut.png",
+      "portrait": "portraits/male/trainee/male-trainee-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-denim-01",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/denim/male-denim-01-short-fringe.png",
+      "portrait": "portraits/male/denim/male-denim-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-denim-02",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/denim/male-denim-02-curtain-center.png",
+      "portrait": "portraits/male/denim/male-denim-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-denim-03",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/denim/male-denim-03-comma-hair.png",
+      "portrait": "portraits/male/denim/male-denim-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-denim-04",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/denim/male-denim-04-layered-shag.png",
+      "portrait": "portraits/male/denim/male-denim-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-denim-05",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/denim/male-denim-05-long-tucked.png",
+      "portrait": "portraits/male/denim/male-denim-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-denim-06",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/denim/male-denim-06-swept-undercut.png",
+      "portrait": "portraits/male/denim/male-denim-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-denim-07",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/denim/male-denim-07-wavy-perm.png",
+      "portrait": "portraits/male/denim/male-denim-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-denim-08",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/denim/male-denim-08-layered-mullet.png",
+      "portrait": "portraits/male/denim/male-denim-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-denim-09",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/denim/male-denim-09-low-man-bun.png",
+      "portrait": "portraits/male/denim/male-denim-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-denim-10",
+      "gender": "male",
+      "outfit": "denim",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/denim/male-denim-10-buzz-cut.png",
+      "portrait": "portraits/male/denim/male-denim-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-sports-01",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/sports/male-sports-01-short-fringe.png",
+      "portrait": "portraits/male/sports/male-sports-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-sports-02",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/sports/male-sports-02-curtain-center.png",
+      "portrait": "portraits/male/sports/male-sports-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-sports-03",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/sports/male-sports-03-comma-hair.png",
+      "portrait": "portraits/male/sports/male-sports-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-sports-04",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/sports/male-sports-04-layered-shag.png",
+      "portrait": "portraits/male/sports/male-sports-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-sports-05",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/sports/male-sports-05-long-tucked.png",
+      "portrait": "portraits/male/sports/male-sports-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-sports-06",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/sports/male-sports-06-swept-undercut.png",
+      "portrait": "portraits/male/sports/male-sports-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-sports-07",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/sports/male-sports-07-wavy-perm.png",
+      "portrait": "portraits/male/sports/male-sports-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-sports-08",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/sports/male-sports-08-layered-mullet.png",
+      "portrait": "portraits/male/sports/male-sports-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-sports-09",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/sports/male-sports-09-low-man-bun.png",
+      "portrait": "portraits/male/sports/male-sports-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-sports-10",
+      "gender": "male",
+      "outfit": "sports",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/sports/male-sports-10-buzz-cut.png",
+      "portrait": "portraits/male/sports/male-sports-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-school-01",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/school/male-school-01-short-fringe.png",
+      "portrait": "portraits/male/school/male-school-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-school-02",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/school/male-school-02-curtain-center.png",
+      "portrait": "portraits/male/school/male-school-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-school-03",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/school/male-school-03-comma-hair.png",
+      "portrait": "portraits/male/school/male-school-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-school-04",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/school/male-school-04-layered-shag.png",
+      "portrait": "portraits/male/school/male-school-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-school-05",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/school/male-school-05-long-tucked.png",
+      "portrait": "portraits/male/school/male-school-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-school-06",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/school/male-school-06-swept-undercut.png",
+      "portrait": "portraits/male/school/male-school-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-school-07",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/school/male-school-07-wavy-perm.png",
+      "portrait": "portraits/male/school/male-school-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-school-08",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/school/male-school-08-layered-mullet.png",
+      "portrait": "portraits/male/school/male-school-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-school-09",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/school/male-school-09-low-man-bun.png",
+      "portrait": "portraits/male/school/male-school-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-school-10",
+      "gender": "male",
+      "outfit": "school",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/school/male-school-10-buzz-cut.png",
+      "portrait": "portraits/male/school/male-school-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-stage-01",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/stage/male-stage-01-short-fringe.png",
+      "portrait": "portraits/male/stage/male-stage-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-stage-02",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/stage/male-stage-02-curtain-center.png",
+      "portrait": "portraits/male/stage/male-stage-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-stage-03",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/stage/male-stage-03-comma-hair.png",
+      "portrait": "portraits/male/stage/male-stage-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-stage-04",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/stage/male-stage-04-layered-shag.png",
+      "portrait": "portraits/male/stage/male-stage-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-stage-05",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/stage/male-stage-05-long-tucked.png",
+      "portrait": "portraits/male/stage/male-stage-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-stage-06",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/stage/male-stage-06-swept-undercut.png",
+      "portrait": "portraits/male/stage/male-stage-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-stage-07",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/stage/male-stage-07-wavy-perm.png",
+      "portrait": "portraits/male/stage/male-stage-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-stage-08",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/stage/male-stage-08-layered-mullet.png",
+      "portrait": "portraits/male/stage/male-stage-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-stage-09",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/stage/male-stage-09-low-man-bun.png",
+      "portrait": "portraits/male/stage/male-stage-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-stage-10",
+      "gender": "male",
+      "outfit": "stage",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/stage/male-stage-10-buzz-cut.png",
+      "portrait": "portraits/male/stage/male-stage-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-leather-01",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/leather/male-leather-01-short-fringe.png",
+      "portrait": "portraits/male/leather/male-leather-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-leather-02",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/leather/male-leather-02-curtain-center.png",
+      "portrait": "portraits/male/leather/male-leather-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-leather-03",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/leather/male-leather-03-comma-hair.png",
+      "portrait": "portraits/male/leather/male-leather-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-leather-04",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/leather/male-leather-04-layered-shag.png",
+      "portrait": "portraits/male/leather/male-leather-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-leather-05",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/leather/male-leather-05-long-tucked.png",
+      "portrait": "portraits/male/leather/male-leather-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-leather-06",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/leather/male-leather-06-swept-undercut.png",
+      "portrait": "portraits/male/leather/male-leather-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-leather-07",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/leather/male-leather-07-wavy-perm.png",
+      "portrait": "portraits/male/leather/male-leather-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-leather-08",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/leather/male-leather-08-layered-mullet.png",
+      "portrait": "portraits/male/leather/male-leather-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-leather-09",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/leather/male-leather-09-low-man-bun.png",
+      "portrait": "portraits/male/leather/male-leather-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-leather-10",
+      "gender": "male",
+      "outfit": "leather",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/leather/male-leather-10-buzz-cut.png",
+      "portrait": "portraits/male/leather/male-leather-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-hoodie-01",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-01-short-fringe.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-hoodie-02",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-02-curtain-center.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-hoodie-03",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-03-comma-hair.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-hoodie-04",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-04-layered-shag.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-hoodie-05",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-05-long-tucked.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-hoodie-06",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-06-swept-undercut.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-hoodie-07",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-07-wavy-perm.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-hoodie-08",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-08-layered-mullet.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-hoodie-09",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-09-low-man-bun.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-hoodie-10",
+      "gender": "male",
+      "outfit": "hoodie",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/hoodie/male-hoodie-10-buzz-cut.png",
+      "portrait": "portraits/male/hoodie/male-hoodie-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-street-01",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/street/male-street-01-short-fringe.png",
+      "portrait": "portraits/male/street/male-street-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-street-02",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/street/male-street-02-curtain-center.png",
+      "portrait": "portraits/male/street/male-street-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-street-03",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/street/male-street-03-comma-hair.png",
+      "portrait": "portraits/male/street/male-street-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-street-04",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/street/male-street-04-layered-shag.png",
+      "portrait": "portraits/male/street/male-street-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-street-05",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/street/male-street-05-long-tucked.png",
+      "portrait": "portraits/male/street/male-street-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-street-06",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/street/male-street-06-swept-undercut.png",
+      "portrait": "portraits/male/street/male-street-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-street-07",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/street/male-street-07-wavy-perm.png",
+      "portrait": "portraits/male/street/male-street-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-street-08",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/street/male-street-08-layered-mullet.png",
+      "portrait": "portraits/male/street/male-street-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-street-09",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/street/male-street-09-low-man-bun.png",
+      "portrait": "portraits/male/street/male-street-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-street-10",
+      "gender": "male",
+      "outfit": "street",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/street/male-street-10-buzz-cut.png",
+      "portrait": "portraits/male/street/male-street-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-summer-01",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/summer/male-summer-01-short-fringe.png",
+      "portrait": "portraits/male/summer/male-summer-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-summer-02",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/summer/male-summer-02-curtain-center.png",
+      "portrait": "portraits/male/summer/male-summer-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-summer-03",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/summer/male-summer-03-comma-hair.png",
+      "portrait": "portraits/male/summer/male-summer-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-summer-04",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/summer/male-summer-04-layered-shag.png",
+      "portrait": "portraits/male/summer/male-summer-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-summer-05",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/summer/male-summer-05-long-tucked.png",
+      "portrait": "portraits/male/summer/male-summer-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-summer-06",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/summer/male-summer-06-swept-undercut.png",
+      "portrait": "portraits/male/summer/male-summer-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-summer-07",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/summer/male-summer-07-wavy-perm.png",
+      "portrait": "portraits/male/summer/male-summer-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-summer-08",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/summer/male-summer-08-layered-mullet.png",
+      "portrait": "portraits/male/summer/male-summer-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-summer-09",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/summer/male-summer-09-low-man-bun.png",
+      "portrait": "portraits/male/summer/male-summer-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-summer-10",
+      "gender": "male",
+      "outfit": "summer",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/summer/male-summer-10-buzz-cut.png",
+      "portrait": "portraits/male/summer/male-summer-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-winter-01",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/winter/male-winter-01-short-fringe.png",
+      "portrait": "portraits/male/winter/male-winter-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-winter-02",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/winter/male-winter-02-curtain-center.png",
+      "portrait": "portraits/male/winter/male-winter-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-winter-03",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/winter/male-winter-03-comma-hair.png",
+      "portrait": "portraits/male/winter/male-winter-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-winter-04",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/winter/male-winter-04-layered-shag.png",
+      "portrait": "portraits/male/winter/male-winter-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-winter-05",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/winter/male-winter-05-long-tucked.png",
+      "portrait": "portraits/male/winter/male-winter-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-winter-06",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/winter/male-winter-06-swept-undercut.png",
+      "portrait": "portraits/male/winter/male-winter-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-winter-07",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/winter/male-winter-07-wavy-perm.png",
+      "portrait": "portraits/male/winter/male-winter-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-winter-08",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/winter/male-winter-08-layered-mullet.png",
+      "portrait": "portraits/male/winter/male-winter-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-winter-09",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/winter/male-winter-09-low-man-bun.png",
+      "portrait": "portraits/male/winter/male-winter-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-winter-10",
+      "gender": "male",
+      "outfit": "winter",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/winter/male-winter-10-buzz-cut.png",
+      "portrait": "portraits/male/winter/male-winter-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-airport-01",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/airport/male-airport-01-short-fringe.png",
+      "portrait": "portraits/male/airport/male-airport-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-airport-02",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/airport/male-airport-02-curtain-center.png",
+      "portrait": "portraits/male/airport/male-airport-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-airport-03",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/airport/male-airport-03-comma-hair.png",
+      "portrait": "portraits/male/airport/male-airport-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-airport-04",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/airport/male-airport-04-layered-shag.png",
+      "portrait": "portraits/male/airport/male-airport-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-airport-05",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/airport/male-airport-05-long-tucked.png",
+      "portrait": "portraits/male/airport/male-airport-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-airport-06",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/airport/male-airport-06-swept-undercut.png",
+      "portrait": "portraits/male/airport/male-airport-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-airport-07",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/airport/male-airport-07-wavy-perm.png",
+      "portrait": "portraits/male/airport/male-airport-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-airport-08",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/airport/male-airport-08-layered-mullet.png",
+      "portrait": "portraits/male/airport/male-airport-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-airport-09",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/airport/male-airport-09-low-man-bun.png",
+      "portrait": "portraits/male/airport/male-airport-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-airport-10",
+      "gender": "male",
+      "outfit": "airport",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/airport/male-airport-10-buzz-cut.png",
+      "portrait": "portraits/male/airport/male-airport-10-buzz-cut-portrait.png"
+    },
+    {
+      "id": "male-awards-01",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 0,
+      "hairType": "short-fringe",
+      "fullbody": "fullbody/male/awards/male-awards-01-short-fringe.png",
+      "portrait": "portraits/male/awards/male-awards-01-short-fringe-portrait.png"
+    },
+    {
+      "id": "male-awards-02",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 1,
+      "hairType": "curtain-center",
+      "fullbody": "fullbody/male/awards/male-awards-02-curtain-center.png",
+      "portrait": "portraits/male/awards/male-awards-02-curtain-center-portrait.png"
+    },
+    {
+      "id": "male-awards-03",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 2,
+      "hairType": "comma-hair",
+      "fullbody": "fullbody/male/awards/male-awards-03-comma-hair.png",
+      "portrait": "portraits/male/awards/male-awards-03-comma-hair-portrait.png"
+    },
+    {
+      "id": "male-awards-04",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 3,
+      "hairType": "layered-shag",
+      "fullbody": "fullbody/male/awards/male-awards-04-layered-shag.png",
+      "portrait": "portraits/male/awards/male-awards-04-layered-shag-portrait.png"
+    },
+    {
+      "id": "male-awards-05",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 4,
+      "hairType": "long-tucked",
+      "fullbody": "fullbody/male/awards/male-awards-05-long-tucked.png",
+      "portrait": "portraits/male/awards/male-awards-05-long-tucked-portrait.png"
+    },
+    {
+      "id": "male-awards-06",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 5,
+      "hairType": "swept-undercut",
+      "fullbody": "fullbody/male/awards/male-awards-06-swept-undercut.png",
+      "portrait": "portraits/male/awards/male-awards-06-swept-undercut-portrait.png"
+    },
+    {
+      "id": "male-awards-07",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 6,
+      "hairType": "wavy-perm",
+      "fullbody": "fullbody/male/awards/male-awards-07-wavy-perm.png",
+      "portrait": "portraits/male/awards/male-awards-07-wavy-perm-portrait.png"
+    },
+    {
+      "id": "male-awards-08",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 7,
+      "hairType": "layered-mullet",
+      "fullbody": "fullbody/male/awards/male-awards-08-layered-mullet.png",
+      "portrait": "portraits/male/awards/male-awards-08-layered-mullet-portrait.png"
+    },
+    {
+      "id": "male-awards-09",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 8,
+      "hairType": "low-man-bun",
+      "fullbody": "fullbody/male/awards/male-awards-09-low-man-bun.png",
+      "portrait": "portraits/male/awards/male-awards-09-low-man-bun-portrait.png"
+    },
+    {
+      "id": "male-awards-10",
+      "gender": "male",
+      "outfit": "awards",
+      "appearanceFrame": 9,
+      "hairType": "buzz-cut",
+      "fullbody": "fullbody/male/awards/male-awards-10-buzz-cut.png",
+      "portrait": "portraits/male/awards/male-awards-10-buzz-cut-portrait.png"
+    }
+  ]
+}
