@@ -20,6 +20,7 @@ import type {
   Genre,
   Position,
   Staff,
+  StaffTrainingId,
 } from "@/types/game";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import {
@@ -39,6 +40,11 @@ import {
   createComebackPlan,
 } from "@/systems/comebackSystem";
 import { toCumulativeWeek } from "@/systems/progressionSystem";
+import { getStaffTraining } from "@/data/staffTraining";
+import {
+  applyStaffTraining,
+  type StaffTrainingResult,
+} from "@/systems/staffTrainingSystem";
 
 export class WeeklyResolutionConflictError extends Error {
   constructor(message: string) {
@@ -659,6 +665,51 @@ export async function hireStaffAndSave(
     toPersistedSnapshot(nextSnapshot),
   );
   hydrateGameState(saved.gameState);
+}
+
+/** 유료 스태프 훈련을 적용하고 자금 차감과 저장을 한 번에 확정한다. */
+export async function trainStaffAndSave(
+  staffId: string,
+  trainingId: StaffTrainingId,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+): Promise<StaffTrainingResult> {
+  const snapshot = buildGameSnapshot();
+  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+    throw new WeeklyResolutionConflictError(
+      "Staff training is only allowed while planning the week.",
+    );
+  }
+
+  const staff = snapshot.staff.staff.find((member) => member.id === staffId);
+  const training = getStaffTraining(trainingId);
+  if (!staff || !training) {
+    throw new WeeklyResolutionConflictError("Staff or training could not be found.");
+  }
+  if (snapshot.finance.money < training.cost) {
+    throw new WeeklyResolutionConflictError("Not enough money for staff training.");
+  }
+
+  const result = applyStaffTraining(staff, trainingId);
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    staff: {
+      staff: snapshot.staff.staff.map((member) =>
+        member.id === staffId ? result.staff : member,
+      ),
+    },
+    finance: {
+      ...snapshot.finance,
+      money: snapshot.finance.money - training.cost,
+    },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+  return result;
 }
 
 /** 시설 상시 업그레이드(M5): 스토어 액션 적용과 저장을 원자적으로 묶는다. */

@@ -57,6 +57,14 @@ export type TraineeActivity =
   | "individual"
   | null;
 export type StaffRole = "manager" | "producer" | "designer" | "marketer";
+
+export type StaffTrainingId =
+  | "film-study"
+  | "exhibition-visit"
+  | "directing-workshop"
+  | "beatmaking-lab"
+  | "leadership-workshop"
+  | "trend-fieldwork";
 export type CompetitorType =
   | "traditional"
   | "viral"
@@ -484,6 +492,8 @@ export interface Staff {
   ability: number;
   /** 실무 성장의 천장. 채용 시 랜덤 결정되며 이 이상은 오르지 않는다. */
   potentialCap?: number;
+  /** 훈련별 참여 횟수. 같은 훈련을 반복할수록 새롭게 얻는 것이 줄어든다. */
+  trainingCounts?: Partial<Record<StaffTrainingId, number>>;
   salary: number;
   specialty?: string;
   profileImagePath?: string;

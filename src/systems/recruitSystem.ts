@@ -244,7 +244,8 @@ export function generateStaffCandidates(
       ability +
         STAFF_GROWTH.capMarginMin +
         Math.round(
-          random() * (STAFF_GROWTH.capMarginMax - STAFF_GROWTH.capMarginMin),
+          random() ** STAFF_GROWTH.potentialSkew *
+            (STAFF_GROWTH.capMarginMax - STAFF_GROWTH.capMarginMin),
         ),
       ability,
       100,
@@ -272,6 +273,7 @@ export function generateStaffCandidates(
       role,
       ability,
       potentialCap,
+      trainingCounts: {},
       salary: monthlySalary,
       specialty,
       ...profile,

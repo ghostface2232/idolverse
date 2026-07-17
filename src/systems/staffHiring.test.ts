@@ -48,4 +48,20 @@ describe("창단 스태프 채용 풀 분포", () => {
     );
     expect(inversion).toBe(true);
   });
+
+  it("현재 능력과 성장 잠재력은 서로 독립적인 채용 판단이 된다", () => {
+    const lowAbilityHighPotential = pool.some(
+      (staff) =>
+        staff.ability < 25 &&
+        (staff.potentialCap ?? staff.ability) - staff.ability >= 45,
+    );
+    const capableButNearCeiling = pool.some(
+      (staff) =>
+        staff.ability >= 40 &&
+        (staff.potentialCap ?? staff.ability) - staff.ability <= 5,
+    );
+
+    expect(lowAbilityHighPotential).toBe(true);
+    expect(capableButNearCeiling).toBe(true);
+  });
 });

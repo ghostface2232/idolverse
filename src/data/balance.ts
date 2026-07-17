@@ -353,8 +353,9 @@ export const MEMBER_LEAVE = {
 // 채용(M5 재모집)이 필요해지는 구조의 근거다.
 export const STAFF_GROWTH = {
   weeklyGrowth: 0.06, // 실무 주간 성장. 연 환산 약 +3.
-  capMarginMin: 5, // 잠재 상한 = 채용 시 능력 + [min, max] 랜덤 마진.
-  capMarginMax: 25,
+  capMarginMin: 0, // 잠재 상한 = 채용 시 능력 + [min, max] 랜덤 마진.
+  capMarginMax: 75,
+  potentialSkew: 1.7, // 큰 성장 폭은 드물지만 낮은 능력의 원석도 충분히 등장한다.
   legacyCapMargin: 10, // 상한 정보가 없는 구버전 세이브 스태프의 기본 헤드룸.
 } as const;
 

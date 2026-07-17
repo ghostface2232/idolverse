@@ -20,9 +20,11 @@ import {
   completeTitleTrackSelectionAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  trainStaffAndSave,
   upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
 import { COMEBACK_BUDGET_TIERS_BY_ID } from "@/data/balance";
+import { getStaffTraining } from "@/data/staffTraining";
 import {
   DEBUT_PROJECT,
   TITLE_TRACK_SELECTION_DECISION_ID,
@@ -238,6 +240,54 @@ describe("durable weekly workflow", () => {
       ),
     ).rejects.toThrow("activity period");
     expect(saveGameMock).not.toHaveBeenCalled();
+  });
+
+  it("스태프 훈련은 능력 상승과 비용을 한 번의 저장으로 확정한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const manager = snapshot.staff.staff[0];
+    manager.ability = 20;
+    manager.potentialCap = 80;
+    manager.trainingCounts = {};
+    snapshot.finance.money = 100_000_000;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    const result = await trainStaffAndSave(
+      manager.id,
+      "leadership-workshop",
+      "user",
+      1,
+    );
+
+    const committed = captureGameState();
+    const training = getStaffTraining("leadership-workshop");
+    expect(saveGameMock).toHaveBeenCalledTimes(1);
+    expect(result.abilityGain).toBeGreaterThan(0);
+    expect(committed.financeStore.money).toBe(100_000_000 - (training?.cost ?? 0));
+    expect(committed.staffStore.staff[0].ability).toBe(result.afterAbility);
+    expect(
+      committed.staffStore.staff[0].trainingCounts?.["leadership-workshop"],
+    ).toBe(1);
+  });
+
+  it("훈련비가 부족하면 저장하거나 로컬 상태를 바꾸지 않는다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    snapshot.finance.money = 1;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    await expect(
+      trainStaffAndSave(
+        snapshot.staff.staff[0].id,
+        "leadership-workshop",
+        "user",
+        1,
+      ),
+    ).rejects.toThrow("Not enough money");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
   });
 
   it("이정표 언락 전에는 시설 3단계 업그레이드를 거부한다", async () => {

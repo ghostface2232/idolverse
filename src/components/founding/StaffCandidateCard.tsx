@@ -3,6 +3,7 @@ import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { PixelText } from "@/components/common/PixelText";
 import { radioTileClasses } from "@/components/common/selectionTokens";
 import { StatBar } from "@/components/common/StatBar";
+import { StaffPotentialStars } from "@/components/staff/StaffPotentialStars";
 import { getStaffProfileClassNames } from "@/data/staffProfiles";
 import type { Staff } from "@/types/game";
 import { assetUrl } from "@/utils/assets";
@@ -69,6 +70,7 @@ export function StaffCandidateCard({
           </div>
 
           <StatBar label="능력" value={staff.ability} />
+          <StaffPotentialStars staff={staff} className="text-xs" />
         </div>
       </div>
 

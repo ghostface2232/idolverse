@@ -46,6 +46,7 @@ import {
   hireStaffAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  trainStaffAndSave,
   upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
@@ -75,6 +76,7 @@ import type {
   Genre,
   PromotionActivityId,
   Staff,
+  StaffTrainingId,
   WeeklyDecisionTrigger,
 } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
@@ -459,6 +461,29 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     }
   };
 
+  const handleTrainStaff = async (
+    staffId: string,
+    trainingId: StaffTrainingId,
+  ) => {
+    if (isCompanySaving) return null;
+    setIsCompanySaving(true);
+    setWorkflowError(null);
+    try {
+      return await trainStaffAndSave(
+        staffId,
+        trainingId,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
+    } catch (error) {
+      console.error("Staff training save failed.", error);
+      setWorkflowError("스태프 훈련을 저장하지 못했습니다. 다시 시도해 주세요.");
+      return null;
+    } finally {
+      setIsCompanySaving(false);
+    }
+  };
+
   const handleUpgradeFacility = async (
     target: Parameters<typeof upgradeFacilityAndSave>[0],
   ) => {
@@ -725,6 +750,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           isSaving={isCompanySaving}
           errorMessage={workflowError}
           onHire={handleHireStaff}
+          onTrain={handleTrainStaff}
           onClose={() => {
             if (!isCompanySaving) setCompanyModal(null);
           }}
