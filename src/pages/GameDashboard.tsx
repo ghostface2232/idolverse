@@ -660,6 +660,9 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         <FacilityUpgradeModal
           upgrades={facilityUpgrades}
           money={money}
+          achievedMilestoneIds={
+            new Set(milestonesAchieved.map((milestone) => milestone.id))
+          }
           isSaving={isCompanySaving}
           errorMessage={workflowError}
           onUpgrade={handleUpgradeFacility}

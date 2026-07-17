@@ -3,10 +3,12 @@ import { createStore } from "zustand/vanilla";
 import { WEEKS_PER_MONTH } from "@/data/balance";
 import type { FinanceStore, FinanceStoreState } from "@/types/game";
 
+// 3~4단계는 이정표 언락 뒤에만 열리며, 열려도 컴백 예산·글로벌 투자와
+// 정면으로 경쟁하는 가격이어야 한다. 큰 맘을 먹는 결정이 맞다.
 export const UPGRADE_COSTS = {
-  dormLevel: { 1: 9000000, 2: 14000000, 3: 22000000, 4: 0 },
-  studioLevel: { 1: 12000000, 2: 18000000, 3: 26000000, 4: 0 },
-  equipmentLevel: { 1: 8000000, 2: 15000000, 3: 23000000, 4: 0 },
+  dormLevel: { 1: 9000000, 2: 70000000, 3: 220000000, 4: 0 },
+  studioLevel: { 1: 12000000, 2: 90000000, 3: 280000000, 4: 0 },
+  equipmentLevel: { 1: 8000000, 2: 60000000, 3: 200000000, 4: 0 },
   hasHealthcare: 7000000,
   hasSecurity: 6000000,
 } as const;

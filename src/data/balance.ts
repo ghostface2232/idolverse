@@ -235,6 +235,19 @@ export const POTENTIAL_TAPER_WINDOW = 18;
 // 재모집(M5)에서 열린다.
 export const FOUNDING_STAFF_ABILITY_CAP = 60;
 
+// 신생 기획사의 창단 시장에는 상위 시설이 아예 매물로 나오지 않는다.
+// 3~4단계는 이정표 언락 이후에만 보이고, 열려도 큰 맘을 먹어야 하는 가격이다.
+export const FOUNDING_FACILITY_MAX_LEVEL = 2;
+
+/** 시설 상위 단계의 언락 이정표. 달성 전에는 업그레이드 목록에서 잠긴다. */
+export const FACILITY_TIER_UNLOCKS: Record<
+  3 | 4,
+  { milestoneId: string; label: string }
+> = {
+  3: { milestoneId: "first-release", label: "첫 앨범 발매" },
+  4: { milestoneId: "mid-concert-open", label: "중극장 공연 규모 달성" },
+};
+
 // 상시 스태프 시장(M5): 풀 상한이 업계 신뢰와 함께 열리고, 후보는 매주
 // 회전한다. 오래 함께한 스태프의 교체는 팀 만족도로 대가를 치른다.
 export const STAFF_MARKET = {

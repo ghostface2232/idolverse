@@ -24,12 +24,14 @@ import type {
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
+  FACILITY_TIER_UNLOCKS,
   STAFF_MARKET,
   type ComebackBudgetTierId,
 } from "@/data/balance";
 import {
   calculateWeeklyFixedTotal,
   financeVanillaStore,
+  UPGRADE_COSTS,
 } from "@/stores/financeStore";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import {
@@ -666,6 +668,34 @@ export async function upgradeFacilityAndSave(
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
   const original = captureGameState();
+  // 상위 단계(3~4)는 이정표 언락 이후에만, 그리고 자금이 있어야 열린다.
+  if (
+    target === "dormLevel" ||
+    target === "studioLevel" ||
+    target === "equipmentLevel"
+  ) {
+    const currentLevel = financeVanillaStore.getState().upgrades[target];
+    const nextLevel = currentLevel + 1;
+    if (nextLevel === 3 || nextLevel === 4) {
+      const unlock = FACILITY_TIER_UNLOCKS[nextLevel];
+      const achieved = original.gameStore.milestonesAchieved.some(
+        (milestone) => milestone.id === unlock.milestoneId,
+      );
+      if (!achieved) {
+        throw new WeeklyResolutionConflictError(
+          `Facility tier ${nextLevel} is locked until ${unlock.milestoneId}.`,
+        );
+      }
+    }
+    if (currentLevel < 4) {
+      const cost = UPGRADE_COSTS[target][currentLevel as 1 | 2 | 3];
+      if (original.financeStore.money < cost) {
+        throw new WeeklyResolutionConflictError(
+          "Not enough money for the facility upgrade.",
+        );
+      }
+    }
+  }
   financeVanillaStore.getState().upgrade(target);
   try {
     const saved = await saveGame(userId, slotNumber, captureGameState());

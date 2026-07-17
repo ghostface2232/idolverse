@@ -4,7 +4,13 @@ import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { checkTileClasses } from "@/components/common/selectionTokens";
 import { FacilityTierSelector } from "@/components/founding/FacilityTierSelector";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
+import { FOUNDING_FACILITY_MAX_LEVEL } from "@/data/balance";
 import { FOUNDING_FACILITY_TIERS, FOUNDING_ONETIME_UPGRADES } from "@/data/founding";
+
+// 신생 기획사의 창단 시장에는 상위 시설이 매물로 나오지 않는다.
+// 3~4단계는 이후 이정표 언락과 함께 시설 투자에서 열린다.
+const foundingTiers = <T extends { level: number }>(tiers: readonly T[]) =>
+  tiers.filter((tier) => tier.level <= FOUNDING_FACILITY_MAX_LEVEL);
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 
@@ -72,19 +78,19 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
 
         <FacilityTierSelector
           category="숙소"
-          tiers={FOUNDING_FACILITY_TIERS.dormitory}
+          tiers={foundingTiers(FOUNDING_FACILITY_TIERS.dormitory)}
           selectedLevel={sel.dormLevel}
           onSelect={(l) => update({ dormLevel: l as 1 | 2 | 3 | 4 })}
         />
         <FacilityTierSelector
           category="연습실"
-          tiers={FOUNDING_FACILITY_TIERS.studio}
+          tiers={foundingTiers(FOUNDING_FACILITY_TIERS.studio)}
           selectedLevel={sel.studioLevel}
           onSelect={(l) => update({ studioLevel: l as 1 | 2 | 3 | 4 })}
         />
         <FacilityTierSelector
           category="장비"
-          tiers={FOUNDING_FACILITY_TIERS.equipment}
+          tiers={foundingTiers(FOUNDING_FACILITY_TIERS.equipment)}
           selectedLevel={sel.equipmentLevel}
           onSelect={(l) => update({ equipmentLevel: l as 1 | 2 | 3 | 4 })}
         />

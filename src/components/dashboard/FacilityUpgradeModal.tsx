@@ -1,6 +1,8 @@
+import { Lock } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { FACILITY_TIER_UNLOCKS } from "@/data/balance";
 import { FOUNDING_FACILITY_TIERS } from "@/data/founding";
 import { UPGRADE_COSTS } from "@/stores/financeStore";
 import type { FinanceStoreState } from "@/types/game";
@@ -20,6 +22,7 @@ const FACILITY_ROWS: {
 interface FacilityUpgradeModalProps {
   upgrades: FinanceStoreState["upgrades"];
   money: number;
+  achievedMilestoneIds: ReadonlySet<string>;
   isSaving: boolean;
   errorMessage?: string | null;
   onUpgrade: (target: FacilityTarget | "hasHealthcare" | "hasSecurity") => void | Promise<void>;
@@ -30,6 +33,7 @@ interface FacilityUpgradeModalProps {
 export function FacilityUpgradeModal({
   upgrades,
   money,
+  achievedMilestoneIds,
   isSaving,
   errorMessage,
   onUpgrade,
@@ -46,6 +50,13 @@ export function FacilityUpgradeModal({
             level < 4
               ? UPGRADE_COSTS[target][level as 1 | 2 | 3]
               : 0;
+          // 상위 단계는 이정표 언락 이후에만 열린다.
+          const unlock =
+            next && (next.level === 3 || next.level === 4)
+              ? FACILITY_TIER_UNLOCKS[next.level as 3 | 4]
+              : null;
+          const locked =
+            unlock !== null && !achievedMilestoneIds.has(unlock.milestoneId);
           return (
             <section
               key={target}
@@ -59,19 +70,26 @@ export function FacilityUpgradeModal({
                   </span>
                 </span>
                 {next ? (
-                  <Button
-                    tone="secondary"
-                    className="shrink-0 px-3 py-1.5 text-xs"
-                    isDisabled={isSaving || money < cost}
-                    onPress={() => void onUpgrade(target)}
-                  >
-                    Lv.{next.level} <MoneyDisplay amount={cost} size="sm" />
-                  </Button>
+                  locked ? (
+                    <span className="flex shrink-0 items-center gap-1 rounded-lg bg-white/[0.05] px-2.5 py-1.5 text-[11px] text-text-muted">
+                      <Lock className="size-3" aria-hidden="true" />
+                      {unlock?.label} 후 개방
+                    </span>
+                  ) : (
+                    <Button
+                      tone="secondary"
+                      className="shrink-0 px-3 py-1.5 text-xs"
+                      isDisabled={isSaving || money < cost}
+                      onPress={() => void onUpgrade(target)}
+                    >
+                      Lv.{next.level} <MoneyDisplay amount={cost} size="sm" />
+                    </Button>
+                  )
                 ) : (
                   <span className="text-xs text-emerald-300">최고 등급</span>
                 )}
               </div>
-              {next ? (
+              {next && !locked ? (
                 <p className="mt-1.5 text-pretty text-xs leading-4 text-text-muted">
                   {next.name}: {next.effect}
                 </p>

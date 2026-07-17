@@ -20,6 +20,7 @@ import {
   completeTitleTrackSelectionAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
 import { COMEBACK_BUDGET_TIERS_BY_ID } from "@/data/balance";
 import {
@@ -219,6 +220,32 @@ describe("durable weekly workflow", () => {
       ),
     ).rejects.toThrow("activity period");
     expect(saveGameMock).not.toHaveBeenCalled();
+  });
+
+  it("이정표 언락 전에는 시설 3단계 업그레이드를 거부한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    snapshot.finance.upgrades.studioLevel = 2;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    await expect(
+      upgradeFacilityAndSave("studioLevel", "user", 1),
+    ).rejects.toThrow("locked");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
+
+    // 언락 이정표 달성 후에는 통과한다.
+    const unlocked = makeGameSnapshot({ week: 10 });
+    unlocked.finance.upgrades.studioLevel = 2;
+    unlocked.game.milestonesAchieved = [
+      { id: "first-release", year: 1, week: 9 },
+    ];
+    hydrateGameState(toGameStateSnapshot(unlocked));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+    await upgradeFacilityAndSave("studioLevel", "user", 1);
+    expect(captureGameState().financeStore.upgrades.studioLevel).toBe(3);
   });
 
   it("제작 예산이 부족하면 컴백 기획을 저장 전에 거부한다", async () => {
