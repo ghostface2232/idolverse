@@ -8,7 +8,7 @@ import { PotentialRatingStars } from "@/components/founding/PotentialRatingStars
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
   ALL_POSITIONS,
-  calculatePositionPotentialRating,
+  calculateRelativePositionPotentialRatings,
   isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
@@ -56,6 +56,13 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
     const t = trainees.find((tr) => tr.id === id);
     if (t) assignedMap.set(pos, t);
   }
+
+  const potentialRatingsByPosition = new Map(
+    ALL_POSITIONS.map((position) => [
+      position,
+      calculateRelativePositionPotentialRatings(trainees, position),
+    ]),
+  );
 
   const allRequiredFilled = REQUIRED_POSITIONS.every((pos) => assignedMap.has(pos));
 
@@ -197,11 +204,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                 {REQUIRED_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
                   const potentialRating = assigned
-                    ? calculatePositionPotentialRating(
-                        assigned.stats,
-                        assigned.potential,
-                        position,
-                      )
+                    ? potentialRatingsByPosition.get(position)?.[assigned.id] ?? null
                     : null;
 
                   return (
@@ -247,11 +250,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                 {OPTIONAL_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
                   const potentialRating = assigned
-                    ? calculatePositionPotentialRating(
-                        assigned.stats,
-                        assigned.potential,
-                        position,
-                      )
+                    ? potentialRatingsByPosition.get(position)?.[assigned.id] ?? null
                     : null;
 
                   return (
@@ -313,11 +312,8 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
             {trainees.map((trainee) => {
               const heldPositions = getTraineePositions(trainee.id, assignments);
               const isHere = heldPositions.includes(selectingPosition);
-              const potentialRating = calculatePositionPotentialRating(
-                trainee.stats,
-                trainee.potential,
-                selectingPosition,
-              );
+              const potentialRating =
+                potentialRatingsByPosition.get(selectingPosition)?.[trainee.id] ?? 3;
 
               return (
                 <button
@@ -343,15 +339,16 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                     )}
                   </div>
                   <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
-                    잠재 적합도
+                    팀 내 적합도
                     <PotentialRatingStars rating={potentialRating} />
                   </span>
                 </button>
               );
             })}
             <p className="px-1 pt-1 text-[11px] leading-5 text-slate-400">
-              잠재 적합도는 신인 단계의 분야별 강점과 성장 잠재력을 함께 본
-              예상치입니다. 실제 기량은 훈련 뒤 포지션 선발전에서 확인합니다.
+              별은 현재 멤버끼리 비교한 상대 평가입니다. 역할에 맞는 분야별
+              강점을 중심으로 성장 잠재력을 함께 보며, 비슷한 후보는 같은 별을
+              받을 수 있습니다.
             </p>
             <button
               type="button"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculatePositionPotentialRating } from "@/data/founding";
+import { calculateRelativePositionPotentialRatings } from "@/data/founding";
 import type { TraineeStatKey } from "@/types/game";
 
 const rookieStats: Record<TraineeStatKey, number> = {
@@ -11,53 +11,82 @@ const rookieStats: Record<TraineeStatKey, number> = {
   mental: 32,
 };
 
-describe("calculatePositionPotentialRating", () => {
-  it("40 이하의 신인 능력치도 완성형 기준의 1단계로 고정하지 않는다", () => {
-    expect(calculatePositionPotentialRating(rookieStats, 1.2, "center")).toBe(3);
-  });
+function candidate(
+  id: string,
+  stats: Partial<Record<TraineeStatKey, number>> = {},
+  potential = 1.6,
+) {
+  return {
+    id,
+    potential,
+    stats: { ...rookieStats, ...stats },
+  };
+}
 
-  it("같은 멤버의 분야별 강점을 포지션마다 다르게 반영한다", () => {
-    const vocalSpecialist: Record<TraineeStatKey, number> = {
-      visual: 18,
-      vocal: 45,
-      dance: 18,
-      charm: 18,
-      stamina: 30,
-      mental: 30,
-    };
-
-    expect(
-      calculatePositionPotentialRating(vocalSpecialist, 1.2, "mainVocal"),
-    ).toBe(4);
-    expect(
-      calculatePositionPotentialRating(vocalSpecialist, 1.2, "mainDancer"),
-    ).toBe(2);
-  });
-
-  it("같은 분야별 강점에서는 성장 잠재력이 높은 멤버를 더 높게 본다", () => {
-    const lowPotential = calculatePositionPotentialRating(
-      rookieStats,
-      0.75,
-      "leader",
-    );
-    const highPotential = calculatePositionPotentialRating(
-      rookieStats,
-      1.7,
-      "leader",
+describe("calculateRelativePositionPotentialRatings", () => {
+  it("전원이 고잠재여도 포지션 분야 강점에 따라 별을 넓게 나눈다", () => {
+    const ratings = calculateRelativePositionPotentialRatings(
+      [
+        candidate("ace", { vocal: 45 }),
+        candidate("strong", { vocal: 36 }),
+        candidate("developing", { vocal: 27 }),
+        candidate("raw", { vocal: 18 }),
+      ],
+      "mainVocal",
     );
 
-    expect(highPotential).toBeGreaterThan(lowPotential);
+    expect(ratings).toEqual({
+      ace: 5,
+      strong: 4,
+      developing: 2,
+      raw: 1,
+    });
   });
 
-  it("입력 범위를 벗어나도 별 등급을 1~5 사이로 제한한다", () => {
-    const veryLowStats = Object.fromEntries(
-      Object.keys(rookieStats).map((stat) => [stat, 0]),
-    ) as Record<TraineeStatKey, number>;
-    const veryHighStats = Object.fromEntries(
-      Object.keys(rookieStats).map((stat) => [stat, 100]),
-    ) as Record<TraineeStatKey, number>;
+  it("멤버 간 차이가 작으면 순위만으로 별 차이를 강제하지 않는다", () => {
+    const ratings = calculateRelativePositionPotentialRatings(
+      [
+        candidate("a", { vocal: 30 }),
+        candidate("b", { vocal: 31 }),
+        candidate("c", { vocal: 31 }),
+        candidate("d", { vocal: 32 }),
+      ],
+      "mainVocal",
+    );
 
-    expect(calculatePositionPotentialRating(veryLowStats, 0, "visual")).toBe(1);
-    expect(calculatePositionPotentialRating(veryHighStats, 2, "visual")).toBe(5);
+    expect(new Set(Object.values(ratings))).toEqual(new Set([3]));
+  });
+
+  it("분야 강점이 충분하면 낮은 잠재력으로도 고잠재 원석보다 앞선다", () => {
+    const ratings = calculateRelativePositionPotentialRatings(
+      [
+        candidate("high-potential", { vocal: 22 }, 1.7),
+        candidate("ready-vocal", { vocal: 38 }, 0.75),
+      ],
+      "mainVocal",
+    );
+
+    expect(ratings["ready-vocal"]).toBeGreaterThan(ratings["high-potential"]);
+  });
+
+  it("분야 강점이 같으면 성장 잠재력이 상대 평가에 보정으로 작용한다", () => {
+    const ratings = calculateRelativePositionPotentialRatings(
+      [
+        candidate("low-potential", {}, 0.75),
+        candidate("high-potential", {}, 1.7),
+      ],
+      "leader",
+    );
+
+    expect(ratings["high-potential"]).toBeGreaterThan(ratings["low-potential"]);
+  });
+
+  it("모든 비교 조건이 같으면 전원에게 중간 별을 준다", () => {
+    const ratings = calculateRelativePositionPotentialRatings(
+      [candidate("a"), candidate("b"), candidate("c")],
+      "center",
+    );
+
+    expect(ratings).toEqual({ a: 3, b: 3, c: 3 });
   });
 });

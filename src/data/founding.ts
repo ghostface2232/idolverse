@@ -292,44 +292,85 @@ export function calculatePositionFitnessRating(
   return positionFitnessToRating(calculatePositionFitness(stats, position));
 }
 
-const POSITION_POTENTIAL_WEIGHTS = {
-  fieldStrength: 0.6,
-  growthPotential: 0.4,
+const POSITION_POTENTIAL_MULTIPLIER = {
+  min: 0.9,
+  max: 1.1,
+} as const;
+
+const POSITION_RELATIVE_RATING = {
+  center: 3,
+  minimumScorePerStar: 4,
+  standardDeviationScale: 0.75,
 } as const;
 
 function normalize(value: number, min: number, max: number): number {
   return Math.max(0, Math.min(1, (value - min) / (max - min)));
 }
 
-/**
- * 창단 신인군의 낮은 현재 기량을 완성형 기준으로 평가하지 않고, 해당
- * 포지션의 분야별 강점과 멤버의 성장 잠재력을 함께 보아 1~5단계로 추정한다.
- */
-export function calculatePositionPotentialRating(
-  stats: Record<TraineeStatKey, number>,
-  potential: number,
+export type PositionPotentialRating = 1 | 2 | 3 | 4 | 5;
+
+interface PositionPotentialProfile {
+  stats: Record<TraineeStatKey, number>;
+  potential: number;
+}
+
+interface PositionPotentialCandidate extends PositionPotentialProfile {
+  id: string;
+}
+
+function calculatePositionPotentialScore(
+  trainee: PositionPotentialProfile,
   position: Position,
-): 1 | 2 | 3 | 4 | 5 {
-  const fieldStrength = normalize(
-    calculatePositionFitness(stats, position),
-    RECRUIT_STAT_BANDS.min,
-    RECRUIT_STAT_BANDS.hardCap,
-  );
+): number {
   const growthPotential = normalize(
-    potential,
+    trainee.potential,
     RECRUIT_POTENTIAL.base,
     RECRUIT_POTENTIAL.max,
   );
-  const combined =
-    fieldStrength * POSITION_POTENTIAL_WEIGHTS.fieldStrength +
-    growthPotential * POSITION_POTENTIAL_WEIGHTS.growthPotential;
+  const potentialMultiplier =
+    POSITION_POTENTIAL_MULTIPLIER.min +
+    growthPotential *
+      (POSITION_POTENTIAL_MULTIPLIER.max - POSITION_POTENTIAL_MULTIPLIER.min);
 
-  return Math.max(1, Math.min(5, Math.round(1 + combined * 4))) as
-    | 1
-    | 2
-    | 3
-    | 4
-    | 5;
+  return calculatePositionFitness(trainee.stats, position) * potentialMultiplier;
+}
+
+/**
+ * 창단 멤버끼리 해당 포지션의 가능성을 비교한다. 잠재력은 분야별 강점을
+ * 보조하는 계수로만 쓰며, 작은 점수 차이는 별 차이로 과장하지 않는다.
+ */
+export function calculateRelativePositionPotentialRatings(
+  trainees: readonly PositionPotentialCandidate[],
+  position: Position,
+): Record<string, PositionPotentialRating> {
+  if (trainees.length === 0) return {};
+
+  const scores = trainees.map((trainee) => ({
+    id: trainee.id,
+    score: calculatePositionPotentialScore(trainee, position),
+  }));
+  const mean = scores.reduce((sum, entry) => sum + entry.score, 0) / scores.length;
+  const variance =
+    scores.reduce((sum, entry) => sum + (entry.score - mean) ** 2, 0) /
+    scores.length;
+  const scorePerStar = Math.max(
+    POSITION_RELATIVE_RATING.minimumScorePerStar,
+    Math.sqrt(variance) * POSITION_RELATIVE_RATING.standardDeviationScale,
+  );
+
+  return Object.fromEntries(
+    scores.map(({ id, score }) => {
+      const rating = Math.max(
+        1,
+        Math.min(
+          5,
+          POSITION_RELATIVE_RATING.center +
+            Math.round((score - mean) / scorePerStar),
+        ),
+      ) as PositionPotentialRating;
+      return [id, rating];
+    }),
+  );
 }
 
 export function potentialToStars(potential: number): number {

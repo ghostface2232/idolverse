@@ -1,5 +1,7 @@
+import type { PositionPotentialRating } from "@/data/founding";
+
 interface PotentialRatingStarsProps {
-  rating: 1 | 2 | 3 | 4 | 5;
+  rating: PositionPotentialRating;
 }
 
 export function PotentialRatingStars({ rating }: PotentialRatingStarsProps) {

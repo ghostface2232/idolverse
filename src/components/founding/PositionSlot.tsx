@@ -1,12 +1,12 @@
 import { PixelText } from "@/components/common/PixelText";
 import { PotentialRatingStars } from "@/components/founding/PotentialRatingStars";
-import { POSITION_LABELS } from "@/data/founding";
+import { POSITION_LABELS, type PositionPotentialRating } from "@/data/founding";
 import type { Position } from "@/types/game";
 
 interface PositionSlotProps {
   position: Position;
   assignedName: string | null;
-  potentialRating: 1 | 2 | 3 | 4 | 5 | null;
+  potentialRating: PositionPotentialRating | null;
   required: boolean;
   onTap: () => void;
 }
@@ -49,7 +49,7 @@ export function PositionSlot({
             </PixelText>
             {potentialRating !== null && (
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                잠재 적합도
+                팀 내 적합도
                 <PotentialRatingStars rating={potentialRating} />
               </span>
             )}
