@@ -1,25 +1,20 @@
 import { PixelText } from "@/components/common/PixelText";
+import { PotentialRatingStars } from "@/components/founding/PotentialRatingStars";
 import { POSITION_LABELS } from "@/data/founding";
 import type { Position } from "@/types/game";
 
 interface PositionSlotProps {
   position: Position;
   assignedName: string | null;
-  fitnessRating: number | null;
+  potentialRating: 1 | 2 | 3 | 4 | 5 | null;
   required: boolean;
   onTap: () => void;
-}
-
-function fitnessColor(fitnessRating: number): string {
-  if (fitnessRating >= 4) return "text-emerald-300";
-  if (fitnessRating >= 3) return "text-amber-300";
-  return "text-red-300";
 }
 
 export function PositionSlot({
   position,
   assignedName,
-  fitnessRating,
+  potentialRating,
   required,
   onTap,
 }: PositionSlotProps) {
@@ -52,11 +47,10 @@ export function PositionSlot({
             <PixelText className="text-base text-slate-50 [text-shadow:none]">
               {assignedName}
             </PixelText>
-            {fitnessRating !== null && (
-              <span
-                className={["text-xs", fitnessColor(fitnessRating)].join(" ")}
-              >
-                적합 {fitnessRating}/5
+            {potentialRating !== null && (
+              <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                잠재 적합도
+                <PotentialRatingStars rating={potentialRating} />
               </span>
             )}
           </>

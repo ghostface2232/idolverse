@@ -4,10 +4,11 @@ import { Modal } from "@/components/common/Modal";
 import { PixelText } from "@/components/common/PixelText";
 import { radioTileClasses } from "@/components/common/selectionTokens";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
+import { PotentialRatingStars } from "@/components/founding/PotentialRatingStars";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
   ALL_POSITIONS,
-  calculatePositionFitnessRating,
+  calculatePositionPotentialRating,
   isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
@@ -195,8 +196,12 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {REQUIRED_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitnessRating = assigned
-                    ? calculatePositionFitnessRating(assigned.stats, position)
+                  const potentialRating = assigned
+                    ? calculatePositionPotentialRating(
+                        assigned.stats,
+                        assigned.potential,
+                        position,
+                      )
                     : null;
 
                   return (
@@ -204,7 +209,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       key={position}
                       position={position}
                       assignedName={assigned?.name ?? null}
-                      fitnessRating={fitnessRating}
+                      potentialRating={potentialRating}
                       required
                       onTap={() => setSelectingPosition(position)}
                     />
@@ -241,8 +246,12 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {OPTIONAL_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitnessRating = assigned
-                    ? calculatePositionFitnessRating(assigned.stats, position)
+                  const potentialRating = assigned
+                    ? calculatePositionPotentialRating(
+                        assigned.stats,
+                        assigned.potential,
+                        position,
+                      )
                     : null;
 
                   return (
@@ -250,7 +259,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       key={position}
                       position={position}
                       assignedName={assigned?.name ?? null}
-                      fitnessRating={fitnessRating}
+                      potentialRating={potentialRating}
                       required={false}
                       onTap={() => setSelectingPosition(position)}
                     />
@@ -304,8 +313,9 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
             {trainees.map((trainee) => {
               const heldPositions = getTraineePositions(trainee.id, assignments);
               const isHere = heldPositions.includes(selectingPosition);
-              const fitnessRating = calculatePositionFitnessRating(
+              const potentialRating = calculatePositionPotentialRating(
                 trainee.stats,
+                trainee.potential,
                 selectingPosition,
               );
 
@@ -332,15 +342,16 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       </span>
                     )}
                   </div>
-                  <span className="whitespace-nowrap text-xs font-medium text-brand-cyan">
-                    기초 적합도 {fitnessRating}/5
+                  <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
+                    잠재 적합도
+                    <PotentialRatingStars rating={potentialRating} />
                   </span>
                 </button>
               );
             })}
             <p className="px-1 pt-1 text-[11px] leading-5 text-slate-400">
-              기초 적합도는 현재 능력치 기준 예상치입니다. 최종 배정은 훈련 뒤
-              포지션 선발전 결과를 보고 확정합니다.
+              잠재 적합도는 신인 단계의 분야별 강점과 성장 잠재력을 함께 본
+              예상치입니다. 실제 기량은 훈련 뒤 포지션 선발전에서 확인합니다.
             </p>
             <button
               type="button"

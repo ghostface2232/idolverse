@@ -1,4 +1,4 @@
-import { RECRUIT_STAT_BANDS } from "@/data/balance";
+import { RECRUIT_POTENTIAL, RECRUIT_STAT_BANDS } from "@/data/balance";
 import type { Nationality, Position, StaffRole, TraineeStatKey } from "@/types/game";
 
 export type FoundingStep = "staff" | "facility" | "audition" | "position";
@@ -290,6 +290,46 @@ export function calculatePositionFitnessRating(
   position: Position,
 ): 1 | 2 | 3 | 4 | 5 {
   return positionFitnessToRating(calculatePositionFitness(stats, position));
+}
+
+const POSITION_POTENTIAL_WEIGHTS = {
+  fieldStrength: 0.6,
+  growthPotential: 0.4,
+} as const;
+
+function normalize(value: number, min: number, max: number): number {
+  return Math.max(0, Math.min(1, (value - min) / (max - min)));
+}
+
+/**
+ * 창단 신인군의 낮은 현재 기량을 완성형 기준으로 평가하지 않고, 해당
+ * 포지션의 분야별 강점과 멤버의 성장 잠재력을 함께 보아 1~5단계로 추정한다.
+ */
+export function calculatePositionPotentialRating(
+  stats: Record<TraineeStatKey, number>,
+  potential: number,
+  position: Position,
+): 1 | 2 | 3 | 4 | 5 {
+  const fieldStrength = normalize(
+    calculatePositionFitness(stats, position),
+    RECRUIT_STAT_BANDS.min,
+    RECRUIT_STAT_BANDS.hardCap,
+  );
+  const growthPotential = normalize(
+    potential,
+    RECRUIT_POTENTIAL.base,
+    RECRUIT_POTENTIAL.max,
+  );
+  const combined =
+    fieldStrength * POSITION_POTENTIAL_WEIGHTS.fieldStrength +
+    growthPotential * POSITION_POTENTIAL_WEIGHTS.growthPotential;
+
+  return Math.max(1, Math.min(5, Math.round(1 + combined * 4))) as
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5;
 }
 
 export function potentialToStars(potential: number): number {
