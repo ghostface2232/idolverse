@@ -54,7 +54,6 @@ export function StaffManagementModal({
         role,
         candidates: generateStaffCandidates(
           role,
-          STAFF_MARKET.salaryRange,
           campaignSeed + cumulativeWeek * 7 + index,
           STAFF_MARKET.candidatesPerRole,
           poolCap,

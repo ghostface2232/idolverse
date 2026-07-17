@@ -4,7 +4,7 @@ import {
   RECRUIT_POTENTIAL,
   RECRUIT_STAT_BANDS,
   STAFF_GROWTH,
-  STAFF_SALARY_BANDS,
+  STAFF_HIRING,
   TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
@@ -205,12 +205,10 @@ const STAFF_NAME_POOL = [
 ];
 
 const STAFF_MONTHLY_SALARY_UNIT = 100_000;
-const STAFF_ABILITY_MIN = 15;
 const STAFF_ABILITY_MAX = 95;
 
 export function generateStaffCandidates(
   role: StaffRole,
-  salaryRange: { min: number; max: number },
   seed: number,
   requestedCount?: number,
   // 창단 시장에는 검증된 인재가 오지 않는다 — 상위 풀은 회사 성장 후
@@ -224,18 +222,21 @@ export function generateStaffCandidates(
   const roleProfiles = pickStaffProfiles(role, count, random);
 
   for (let i = 0; i < count; i++) {
-    const salary = salaryRange.min + Math.floor(random() * (salaryRange.max - salaryRange.min));
-
-    let ability = 20;
-    for (const band of STAFF_SALARY_BANDS) {
-      if (salary >= band.annualSalary * 0.8) {
-        ability = band.minAbility + Math.floor(random() * (band.maxAbility - band.minAbility));
-      }
-    }
-    ability = clamp(
-      ability + Math.floor((random() - 0.5) * 10),
-      STAFF_ABILITY_MIN,
-      Math.min(maxAbility, STAFF_ABILITY_MAX),
+    // 능력을 먼저 굴린다 — 저편중 분포라 풀 전 구간이 나오되 상위 능력은
+    // 드물다. 월급은 능력에서 파생되므로 "싼데 유능"은 협상 편차만큼만 존재한다.
+    const ceiling = Math.min(maxAbility, STAFF_ABILITY_MAX);
+    const ability = clamp(
+      Math.round(
+        STAFF_HIRING.abilityMin +
+          (ceiling - STAFF_HIRING.abilityMin) *
+            random() ** STAFF_HIRING.abilitySkew,
+      ),
+      STAFF_HIRING.abilityMin,
+      ceiling,
+    );
+    const salary = Math.round(
+      (STAFF_HIRING.salaryBase + ability * STAFF_HIRING.salaryPerAbility) *
+        (STAFF_HIRING.salaryNoiseMin + random() * STAFF_HIRING.salaryNoiseSpan),
     );
     // 실무 성장의 천장. 창단 풀 상한(60)과 무관하게 상한이 높은 원석이
     // 섞여 있어 저능력 채용에도 장기 성장의 도박이 성립한다.

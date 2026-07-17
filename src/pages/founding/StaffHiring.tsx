@@ -11,7 +11,7 @@ import {
   STAFF_ROLE_ORDER,
 } from "@/data/founding";
 import { getStaffProfileByName } from "@/data/staffProfiles";
-import { FOUNDING_STAFF_ABILITY_CAP, STAFF_SALARY_BANDS } from "@/data/balance";
+import { FOUNDING_STAFF_ABILITY_CAP } from "@/data/balance";
 import { generateStaffCandidates } from "@/systems/recruitSystem";
 import { useStaffStore } from "@/stores/staffStore";
 import { staffVanillaStore } from "@/stores/staffStore";
@@ -20,11 +20,6 @@ import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import type { Staff, StaffRole } from "@/types/game";
 
 const STAFF_CANDIDATE_COUNT = 4;
-
-const salaryRange = {
-  min: STAFF_SALARY_BANDS[0].annualSalary,
-  max: STAFF_SALARY_BANDS[STAFF_SALARY_BANDS.length - 1].annualSalary,
-};
 
 function withLinkedProfiles(role: StaffRole, staffList: Staff[]): Staff[] {
   return staffList.map((member) => {
@@ -80,7 +75,6 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
     // 창단 시장에는 검증된 인재가 오지 않는다 — 상위 풀은 회사 성장 후 재모집에서.
     const list = generateStaffCandidates(
       targetRole,
-      salaryRange,
       s + roleOffset,
       STAFF_CANDIDATE_COUNT,
       FOUNDING_STAFF_ABILITY_CAP,

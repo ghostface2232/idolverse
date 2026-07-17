@@ -254,7 +254,6 @@ export const STAFF_MARKET = {
   industryScale: 0.5, // 풀 상한 = 창단 상한(60) + 업계 신뢰 × 이 값.
   candidatesPerRole: 3,
   replaceTeamSatisfactionPenalty: -4,
-  salaryRange: { min: 28_000_000, max: 98_000_000 }, // 연봉 밴드 전체.
 } as const;
 
 // ── M5 「사람」: 개인 인기도·성격·재계약 ─────────────────────────────
@@ -573,28 +572,21 @@ export const FACILITY_LEVEL_COSTS = {
   },
 } as const;
 
-export const STAFF_SALARY_BANDS = [
-  {
-    minAbility: 1, // Rookie staff populate the bargain pool.
-    maxAbility: 39, // This band exists to support desperate early-game hires.
-    annualSalary: 28000000, // Cheap enough to onboard without collapsing cashflow.
-  },
-  {
-    minAbility: 40, // Competent staff should define the early-to-midgame baseline.
-    maxAbility: 59, // They remain obtainable for stable companies.
-    annualSalary: 42000000, // This price forces trade-offs against marketing or demos.
-  },
-  {
-    minAbility: 60, // Strong specialists are where role differentiation starts to matter.
-    maxAbility: 79, // This bracket should feel aspirational but realistic.
-    annualSalary: 68000000, // A serious salary that pressures weekly fixed costs.
-  },
-  {
-    minAbility: 80, // High-end talent is a strategic luxury.
-    maxAbility: 100, // Capped at 100 to align with the global stat scale.
-    annualSalary: 98000000, // Expensive enough that only successful teams can sustain them.
-  },
-] as const;
+/**
+ * 채용 풀의 능력 분포와 몸값 곡선. 능력을 저편중(제곱 편향)으로 먼저 굴리고
+ * 월급을 능력에서 파생시킨다 — 상위 능력은 드물게 나오고, 몸값은 능력을
+ * 따라가되 협상 편차 때문에 완전 비례하지는 않는다.
+ */
+export const STAFF_HIRING = {
+  abilityMin: 10,
+  /** 분포 편향 지수. 2면 창단 풀(상한 60)에서 45+가 약 16%로 나온다. */
+  abilitySkew: 2,
+  /** 연봉 = 기본 + 능력 × 단가. 이후 노이즈 배율이 곱해진다. */
+  salaryBase: 18_000_000,
+  salaryPerAbility: 800_000,
+  salaryNoiseMin: 0.85,
+  salaryNoiseSpan: 0.3,
+} as const;
 
 export const AWARD_ELIGIBILITY_THRESHOLDS = {
   rookie: {
