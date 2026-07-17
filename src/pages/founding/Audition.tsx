@@ -14,6 +14,7 @@ import {
 import { generateTraineeCandidates } from "@/systems/recruitSystem";
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { traineeVanillaStore } from "@/stores/traineeStore";
+import { initializeRosterChemistry } from "@/systems/chemistrySystem";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -77,7 +78,9 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
   };
 
   const handleNext = () => {
-    const selected = candidates.filter((c) => selectedIds.includes(c.id));
+    const selected = initializeRosterChemistry(
+      candidates.filter((c) => selectedIds.includes(c.id)),
+    );
     // 추가가 아닌 교체: "이전"으로 돌아와 선발을 바꿔도 복제·잔류 멤버가 생기지 않는다.
     traineeVanillaStore.setState({ trainees: selected }, false);
     const livingLevel = foundingVanillaStore.getState().facilitySelections.livingExpenseLevel;

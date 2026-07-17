@@ -63,8 +63,8 @@ export function updateFandom(
 
   if (ctx.hadVarietyAppearance) pDelta += 4;
   if (ctx.hadViralEvent) pDelta += 8;
-  if (ctx.chartRank !== null && ctx.chartRank <= 10) pDelta += 3;
-  if (ctx.chartRank !== null && ctx.chartRank <= 3) pDelta += 5;
+  if (ctx.isActive && ctx.chartRank !== null && ctx.chartRank <= 10) pDelta += 2;
+  if (ctx.isActive && ctx.chartRank !== null && ctx.chartRank <= 3) pDelta += 2;
   if (!ctx.isActive) pDelta += PUBLIC_DECAY_RATE;
 
   // 발매 주의 팬덤 보상은 발매 커밋(evaluateRelease의 품질 비례 델타)이
@@ -82,6 +82,20 @@ export function updateFandom(
 
   const foreignBonus = computeForeignMemberBonus(ctx.foreignMembers);
   gDelta += foreignBonus;
+  if (
+    !ctx.isActive &&
+    !ctx.spotifyStreaming &&
+    !ctx.youtubeActivity &&
+    !ctx.overseasPromotion
+  ) {
+    gDelta -= 1;
+  }
+
+  const dampPositive = (delta: number, currentValue: number) =>
+    delta > 0 ? delta * Math.max(0.2, 1 - currentValue / 120) : delta;
+  pDelta = Math.round(dampPositive(pDelta, current.public));
+  fDelta = Math.round(dampPositive(fDelta, current.fandom));
+  gDelta = Math.round(dampPositive(gDelta, current.global));
 
   if (ctx.musicQualityHigh) iDelta += 3;
   if (ctx.stageExcellent) iDelta += 4;
@@ -118,7 +132,7 @@ export function updateFandom(
       100,
     ),
     fandomDisappointment: newDisappointment,
-    global: Math.max(0, current.global + gDelta),
+    global: clamp(current.global + gDelta, 0, 100),
     industry: clamp(current.industry + iDelta, 0, 100),
   };
 

@@ -1,4 +1,8 @@
-import { RECRUIT_POTENTIAL, RECRUIT_STAT_BANDS } from "@/data/balance";
+import {
+  OPTIONAL_FACILITY_COSTS,
+  RECRUIT_POTENTIAL,
+  RECRUIT_STAT_BANDS,
+} from "@/data/balance";
 import type { Nationality, Position, StaffRole, TraineeStatKey } from "@/types/game";
 
 export type FoundingStep = "staff" | "facility" | "audition" | "position";
@@ -140,8 +144,8 @@ export const FOUNDING_FACILITY_TIERS = {
 } as const;
 
 export const FOUNDING_ONETIME_UPGRADES = {
-  healthcare: { cost: 30_000_000, name: "전담 메디컬팀", description: "전담 의료진이 상주해 부상을 미리 살피고, 다친 멤버의 회복을 돕습니다" },
-  security: { cost: 20_000_000, name: "보안팀", description: "경호팀이 멤버들의 사생활을 지켜 구설수와 사생팬 위협을 크게 줄입니다" },
+  healthcare: { cost: OPTIONAL_FACILITY_COSTS.healthcare.upfront, name: "전담 메디컬팀", description: "전담 의료진이 상주해 부상을 미리 살피고, 다친 멤버의 회복을 돕습니다" },
+  security: { cost: OPTIONAL_FACILITY_COSTS.security.upfront, name: "보안팀", description: "경호팀이 멤버들의 사생활을 지켜 구설수와 사생팬 위협을 크게 줄입니다" },
 } as const;
 
 export const FOUNDING_RECRUITMENT_COSTS = {

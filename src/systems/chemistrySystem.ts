@@ -1,10 +1,109 @@
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
+  CHEMISTRY_DYNAMICS,
   CHEMISTRY_JOINT_TRAINING_GAIN,
+  CHEMISTRY_PAIR_SYNERGY,
   TEAM_CHEMISTRY_PERFORMANCE_WEIGHT,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type { Trainee, TraineeActivity } from "@/types/game";
+
+const PERSONALITY_TRAITS = new Set([
+  "pure",
+  "bubbly",
+  "haughty",
+  "energetic",
+  "reserved",
+]);
+
+function hasPair(
+  pairs: readonly (readonly string[])[],
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  if (!left || !right) return false;
+  return pairs.some(
+    (pair) =>
+      (pair[0] === left && pair[1] === right) ||
+      (pair[0] === right && pair[1] === left),
+  );
+}
+
+function getPersonality(trainee: Trainee): string | undefined {
+  return trainee.traits.find((trait) => PERSONALITY_TRAITS.has(trait));
+}
+
+function getAppearance(trainee: Trainee): string | undefined {
+  return trainee.traits.find((trait) => !PERSONALITY_TRAITS.has(trait));
+}
+
+/** 팬이 알아보기 쉬운 또래, 성향, 인상 대비, 포지션 보완 조합을 수치화한다. */
+export function calculatePairChemistryAffinity(a: Trainee, b: Trainee): number {
+  let affinity = 0;
+  const ageDifference = Math.abs(a.age - b.age);
+  if (ageDifference === 0) affinity += CHEMISTRY_PAIR_SYNERGY.sameAge;
+  else if (ageDifference <= 2) affinity += CHEMISTRY_PAIR_SYNERGY.nearAge;
+
+  const personalityA = getPersonality(a);
+  const personalityB = getPersonality(b);
+  if (personalityA && personalityA === personalityB) {
+    affinity += CHEMISTRY_PAIR_SYNERGY.samePersonality;
+  } else if (
+    hasPair(
+      CHEMISTRY_PAIR_SYNERGY.complementaryPersonalityPairs,
+      personalityA,
+      personalityB,
+    )
+  ) {
+    affinity += CHEMISTRY_PAIR_SYNERGY.complementaryPersonality;
+  }
+
+  const appearanceA = getAppearance(a);
+  const appearanceB = getAppearance(b);
+  if (hasPair([["doglike", "catlike"]], appearanceA, appearanceB)) {
+    affinity += CHEMISTRY_PAIR_SYNERGY.dogCatVisual;
+  } else if (appearanceA && appearanceA === appearanceB) {
+    affinity += CHEMISTRY_PAIR_SYNERGY.sameAppearance;
+  }
+
+  if (
+    hasPair(
+      CHEMISTRY_PAIR_SYNERGY.complementaryPositionPairs,
+      a.position,
+      b.position,
+    ) ||
+    hasPair(
+      CHEMISTRY_PAIR_SYNERGY.complementaryPositionPairs,
+      a.subPosition,
+      b.position,
+    ) ||
+    hasPair(
+      CHEMISTRY_PAIR_SYNERGY.complementaryPositionPairs,
+      a.position,
+      b.subPosition,
+    )
+  ) {
+    affinity += CHEMISTRY_PAIR_SYNERGY.complementaryPosition;
+  }
+
+  return affinity;
+}
+
+export function initializeRosterChemistry(
+  trainees: readonly Trainee[],
+): Trainee[] {
+  return trainees.map((trainee) => ({
+    ...trainee,
+    chemistry: Object.fromEntries(
+      trainees
+        .filter((candidate) => candidate.id !== trainee.id)
+        .map((candidate) => [
+          candidate.id,
+          calculatePairChemistryAffinity(trainee, candidate),
+        ]),
+    ),
+  }));
+}
 
 export interface ChemistryUpdate {
   traineeId: string;
@@ -19,6 +118,14 @@ export interface ChemistryResult {
 
 function clampChemistry(value: number): number {
   return Math.max(-100, Math.min(100, value));
+}
+
+function diminishingGain(baseGain: number, currentValue: number): number {
+  return baseGain * Math.max(0.15, (100 - currentValue) / 100);
+}
+
+function pairKey(leftId: string, rightId: string): string {
+  return [leftId, rightId].sort().join(":");
 }
 
 function getActivityGroup(activity: TraineeActivity): "training" | "away" | "inactive" {
@@ -38,6 +145,7 @@ export function updateChemistry(
   }
 
   const conflicts: ChemistryResult["conflicts"] = [];
+  const sharedActivityPairs = new Set<string>();
 
   const trainingGroup = trainees.filter(
     (t) => getActivityGroup(t.currentActivity) === "training" && t.injuryWeeks === 0,
@@ -64,10 +172,32 @@ export function updateChemistry(
           conflicts.push({ a: a.id, b: b.id, resolved: false });
         }
       } else {
-        chemA[b.id] = clampChemistry(currentVal + CHEMISTRY_JOINT_TRAINING_GAIN);
-        chemB[a.id] = clampChemistry(
-          (chemB[a.id] ?? 0) + CHEMISTRY_JOINT_TRAINING_GAIN,
+        const pairAffinity = calculatePairChemistryAffinity(a, b);
+        const routineCeiling =
+          CHEMISTRY_DYNAMICS.baseRoutineTrainingCeiling + pairAffinity;
+        const pairStress = (a.stress + b.stress) / 2;
+        const stressFriction = Math.min(
+          CHEMISTRY_DYNAMICS.maxWeeklyStressFriction,
+          Math.max(
+            0,
+            (pairStress - CHEMISTRY_DYNAMICS.frictionStressThreshold) / 20,
+          ),
         );
+        const updateRoutineChemistry = (value: number) =>
+          value >= routineCeiling
+            ? value - CHEMISTRY_DYNAMICS.aboveCeilingWeeklyDecay - stressFriction
+            : value +
+              CHEMISTRY_JOINT_TRAINING_GAIN *
+                Math.max(
+                  0.15,
+                  (routineCeiling - value) / Math.max(routineCeiling, 1),
+                ) -
+              stressFriction;
+        chemA[b.id] = clampChemistry(updateRoutineChemistry(currentVal));
+        chemB[a.id] = clampChemistry(
+          updateRoutineChemistry(chemB[a.id] ?? 0),
+        );
+        sharedActivityPairs.add(pairKey(a.id, b.id));
       }
     }
   }
@@ -82,8 +212,45 @@ export function updateChemistry(
         const b = activeMembers[j];
         const chemA = chemMap.get(a.id)!;
         const chemB = chemMap.get(b.id)!;
-        chemA[b.id] = clampChemistry((chemA[b.id] ?? 0) + 5);
-        chemB[a.id] = clampChemistry((chemB[a.id] ?? 0) + 5);
+        const stageGain =
+          CHEMISTRY_DYNAMICS.sharedStageGain *
+          (1 + calculatePairChemistryAffinity(a, b) / 50);
+        chemA[b.id] = clampChemistry(
+          (chemA[b.id] ?? 0) +
+            diminishingGain(stageGain, chemA[b.id] ?? 0),
+        );
+        chemB[a.id] = clampChemistry(
+          (chemB[a.id] ?? 0) +
+            diminishingGain(stageGain, chemB[a.id] ?? 0),
+        );
+        sharedActivityPairs.add(pairKey(a.id, b.id));
+      }
+    }
+  }
+
+  for (let left = 0; left < trainees.length; left++) {
+    for (let right = left + 1; right < trainees.length; right++) {
+      const a = trainees[left];
+      const b = trainees[right];
+      if (sharedActivityPairs.has(pairKey(a.id, b.id))) continue;
+      const chemA = chemMap.get(a.id)!;
+      const chemB = chemMap.get(b.id)!;
+      const affinityRetention = Math.max(
+        0.5,
+        1 - calculatePairChemistryAffinity(a, b) / 50,
+      );
+      const decay = CHEMISTRY_DYNAMICS.separateActivityDecay * affinityRetention;
+      if ((chemA[b.id] ?? 0) > 0) {
+        chemA[b.id] = Math.max(
+          0,
+          (chemA[b.id] ?? 0) - decay,
+        );
+      }
+      if ((chemB[a.id] ?? 0) > 0) {
+        chemB[a.id] = Math.max(
+          0,
+          (chemB[a.id] ?? 0) - decay,
+        );
       }
     }
   }

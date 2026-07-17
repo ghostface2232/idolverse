@@ -107,7 +107,7 @@ describe("processWeek 골든 스냅샷", () => {
     const passed = processWeek(withAward, NO_DECISIONS);
     expect(
       passed.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 본상 이상"),
+        w.includes("연말 시상식 신인상 이상"),
       ),
     ).toBe(false);
 
@@ -119,7 +119,7 @@ describe("processWeek 골든 스냅샷", () => {
     const failed = processWeek(withoutAward, NO_DECISIONS);
     expect(
       failed.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 본상 이상"),
+        w.includes("연말 시상식 신인상 이상"),
       ),
     ).toBe(true);
   });
@@ -137,7 +137,7 @@ describe("processWeek 골든 스냅샷", () => {
     const result = processWeek(lateAward, NO_DECISIONS);
     expect(
       result.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 본상 이상"),
+        w.includes("연말 시상식 신인상 이상"),
       ),
     ).toBe(true);
   });
@@ -209,8 +209,8 @@ describe("processWeek 골든 스냅샷", () => {
     const teammate = result.newState.trainee.trainees.find(
       (trainee) => trainee.id === "t2",
     );
-    expect(target?.chemistry.t2).toBe(20);
-    expect(teammate?.chemistry.t1).toBe(20);
+    expect(target?.chemistry.t2).toBeLessThan(20);
+    expect(teammate?.chemistry.t1).toBeLessThan(20);
     expect(target?.currentActivity).toBe("training");
   });
 });

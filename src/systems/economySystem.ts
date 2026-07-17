@@ -136,15 +136,6 @@ export interface InvestorCheckResult {
   penalty?: string;
 }
 
-/**
- * 음악방송 1위와 광고 계약은 실측 시스템이 아직 없어(지표가 항상 0)
- * 평가하면 구조적으로 영구 실패한다. 실측이 연결될 때까지 평가에서 제외한다.
- */
-const UNMEASURED_METRICS: ReadonlySet<string> = new Set([
-  "musicShowWin",
-  "adContract",
-]);
-
 export function checkInvestorConditions(
   investor: InvestorCompany,
   metrics: InvestorMetrics,
@@ -153,7 +144,6 @@ export function checkInvestorConditions(
   const results: InvestorCheckResult[] = [];
 
   for (const condition of investor.conditions) {
-    if (UNMEASURED_METRICS.has(condition.metric)) continue;
     // deadlineWeeks는 게임 시작 기준 누적 주차다. 연도가 바뀌며 currentWeek가
     // 1로 랩되어도 마감이 다시 미래가 되지 않도록 누적 주차로 비교한다.
     if (cumulativeWeek < condition.deadlineWeeks) continue;
@@ -192,7 +182,7 @@ function evaluateCondition(
     case "quarterlyRevenue":
       return metrics.quarterlyRevenue > 0;
     case "payback":
-      return metrics.cumulativeRevenue >= 0;
+      return metrics.cumulativeRevenue >= (condition.target as number);
     case "visualAverage":
       return metrics.visualAverage >= (condition.target as number);
     case "adContract":
@@ -210,6 +200,7 @@ const AWARD_LEVEL_ORDER = ["popularity", "rookie", "bonsang", "daesang"];
 
 function meetsAwardLevel(actual: string, required: string): boolean {
   const normalized = required
+    .replace("신인상 이상", "rookie")
     .replace("본상 이상", "bonsang")
     .replace("대상 이상", "daesang")
     .replace("본상", "bonsang")

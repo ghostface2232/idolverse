@@ -74,12 +74,15 @@ import {
   GAME_BALANCE,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
+  EMERGENCY_FINANCING,
+  FIVE_YEAR_REVIEW,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
   MEMBER_CONTRACT,
   MEMBER_LEAVE,
   PRODUCTION_RISK,
   STAFF_GROWTH,
+  STRATEGIC_EXPANSION,
   TEMPERAMENT_PROFILES,
   VARIETY_OUTCOME,
 } from "@/data/balance";
@@ -87,6 +90,10 @@ import { createSeededRandom } from "@/lib/seededRandom";
 import { INVESTOR_COMPANIES } from "@/data/investors";
 import { DEBUT_PROJECT } from "@/data/debutProject";
 import { COMEBACK_PROJECT } from "@/data/comebackProject";
+import {
+  evaluateFiveYearVictoryRoutes,
+  FIVE_YEAR_VICTORY_ROUTE_LABELS,
+} from "@/systems/fiveYearReviewSystem";
 import {
   captureWeekDeltaState,
   diffWeekDeltaState,
@@ -97,6 +104,7 @@ import type {
   AlbumStoreState,
   AwardRecord,
   EffectMap,
+  EmergencyFinancingRecord,
   BackgroundGroup,
   CalendarStoreState,
   CompetitorGroup,
@@ -109,6 +117,7 @@ import type {
   GameStoreState,
   KPopNews,
   Notification,
+  ProjectInstance,
   Season,
   Staff,
   StaffStoreState,
@@ -205,6 +214,15 @@ export function processWeek(
   let money = snapshot.finance.money;
   let investorPenaltyActive = snapshot.game.investorPenaltyActive;
   let investorPressureWeeks = snapshot.game.investorPressureWeeks ?? 0;
+  let strategicExpansion = {
+    ...(snapshot.game.strategicExpansion ?? {
+      production: 0,
+      fandom: 0,
+      global: 0,
+    }),
+  };
+  let lastStrategicExpansionWeek =
+    snapshot.game.lastStrategicExpansionWeek ?? null;
   const staff = snapshot.staff.staff;
   const manager = staff.find((s) => s.role === "manager") ?? null;
   const upgrades = snapshot.finance.upgrades;
@@ -265,13 +283,23 @@ export function processWeek(
       firstRelease?.releaseWeek != null
         ? Math.floor((firstRelease.releaseWeek - 1) / GAME_BALANCE.weeksPerYear) + 1
         : null;
+    const awardWeek = toCumulativeWeek(
+      snapshot.game.currentYear,
+      snapshot.game.currentWeek,
+    );
+    const yearStartWeek = (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear + 1;
+    const playerYearReleases = snapshot.album.releasedAlbums.filter(
+      (released) =>
+        released.releaseWeek !== undefined &&
+        released.releaseWeek >= yearStartWeek &&
+        released.releaseWeek <= awardWeek,
+    );
     const latestQuality =
-      album?.quality ??
-      snapshot.album.releasedAlbums[snapshot.album.releasedAlbums.length - 1]
-        ?.quality ??
-      0;
+      playerYearReleases.length > 0
+        ? Math.max(...playerYearReleases.map((released) => released.quality))
+        : 0;
     const contenders = [
-      ...(playerDebutYear !== null
+      ...(playerDebutYear !== null && playerYearReleases.length > 0
         ? [
             buildContenderFromPlayer(
               "player",
@@ -338,6 +366,11 @@ export function processWeek(
 
   // ── 1. Apply player decisions
   let investorComplianceCount = snapshot.game.investorComplianceCount ?? 0;
+  let emergencyFinancing = [...(snapshot.game.emergencyFinancing ?? [])];
+  let financingIncomeThisWeek = 0;
+  let financingRepaymentThisWeek = 0;
+  let decisionIncomeThisWeek = 0;
+  let decisionExpenseThisWeek = 0;
   const investorConditionProgress = {
     ...(snapshot.game.investorConditionProgress ?? {}),
   };
@@ -347,8 +380,60 @@ export function processWeek(
   >();
   for (const d of decisions.resolvedDecisions) {
     const beforeDecision = captureWeekDeltaState(getDeltaState());
+    const decisionMoney = d.effects.money ?? 0;
+    const isFinancingIncome =
+      d.cardId === "financial-crisis" &&
+      (d.optionId === "emergency-loan" || d.optionId === "emergency-investment");
+    const isFinancingRepayment =
+      d.cardId.startsWith("financing-repayment:") && d.optionId === "repay";
+    if (decisionMoney > 0 && !isFinancingIncome) {
+      decisionIncomeThisWeek += decisionMoney;
+    } else if (decisionMoney < 0 && !isFinancingRepayment) {
+      decisionExpenseThisWeek += Math.abs(decisionMoney);
+    }
     if (d.cardId === "emergency-investor" && d.optionId === "comply") {
       investorComplianceCount += 1;
+    }
+    if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
+      const track = d.optionId.slice(
+        "strategic-".length,
+      ) as keyof typeof strategicExpansion;
+      if (
+        track in strategicExpansion &&
+        strategicExpansion[track] < STRATEGIC_EXPANSION.maxLevelPerTrack
+      ) {
+        strategicExpansion = {
+          ...strategicExpansion,
+          [track]: strategicExpansion[track] + 1,
+        };
+        lastStrategicExpansionWeek = cumulativeWeek;
+      }
+    }
+    if (
+      d.cardId === "financial-crisis" &&
+      (d.optionId === "emergency-loan" || d.optionId === "emergency-investment")
+    ) {
+      const kind = d.optionId === "emergency-loan" ? "loan" : "investment";
+      const terms = EMERGENCY_FINANCING[kind];
+      const record: EmergencyFinancingRecord = {
+        id: `${kind}-w${cumulativeWeek}`,
+        kind,
+        principal: terms.principal,
+        repaymentAmount: terms.repayment,
+        borrowedAtWeek: cumulativeWeek,
+        dueWeek: cumulativeWeek + EMERGENCY_FINANCING.termWeeks,
+        repaidAtWeek: null,
+      };
+      emergencyFinancing = [...emergencyFinancing, record];
+      financingIncomeThisWeek += terms.principal;
+    }
+    if (d.cardId.startsWith("financing-repayment:") && d.optionId === "repay") {
+      const financingId = d.cardId.slice("financing-repayment:".length);
+      emergencyFinancing = emergencyFinancing.map((record) => {
+        if (record.id !== financingId || record.repaidAtWeek !== null) return record;
+        financingRepaymentThisWeek += record.repaymentAmount;
+        return { ...record, repaidAtWeek: cumulativeWeek };
+      });
     }
     // 재계약(M5): 계약 상태는 EffectMap으로 표현할 수 없어 카드 id로 처리한다.
     if (d.cardId.startsWith("recontract:")) {
@@ -495,7 +580,16 @@ export function processWeek(
 
   // ── 4. Chemistry
   const beforeChemistry = captureWeekDeltaState(getDeltaState());
-  const chemResult = updateChemistry(trainees, false, seed + 1);
+  const performedStage = promotionOrders.some((order) =>
+    [
+      "musicShow",
+      "smallConcert",
+      "midConcert",
+      "largeConcert",
+      "domeConcert",
+    ].includes(order.activityId),
+  );
+  const chemResult = updateChemistry(trainees, performedStage, seed + 1);
   trainees = trainees.map((t) => {
     const update = chemResult.updates.find((u) => u.traineeId === t.id);
     return update ? { ...t, chemistry: update.chemistry } : t;
@@ -606,6 +700,15 @@ export function processWeek(
 
   // ── 6. Album progress
   if (album) {
+    const productionLevel = strategicExpansion.production;
+    if (productionLevel > 0) {
+      const progress = STRATEGIC_EXPANSION.tracks.production.weeklyAlbumProgress;
+      applyToState({
+        albumSong: progress.song * productionLevel,
+        albumVisual: progress.visual * productionLevel,
+        albumChoreography: progress.choreography * productionLevel,
+      });
+    }
     const beforeAlbum = captureWeekDeltaState(getDeltaState());
     album = progressAlbum(album, staff, trainees);
     recordTransition(
@@ -969,7 +1072,13 @@ export function processWeek(
         const investorNotes = investor
           ? checkInvestorConditions(
               investor,
-              buildInvestorMetrics(snapshot, fandomAxis, trainees, awardHistory),
+              buildInvestorMetrics(
+                snapshot,
+                fandomAxis,
+                trainees,
+                awardHistory,
+                activeProjects,
+              ),
               cumulativeWeek,
             ).map(
               (check) =>
@@ -1107,6 +1216,52 @@ export function processWeek(
   );
   report.finance.income = financeResult.income;
   report.finance.expenses = financeResult.expenses;
+  const strategicIncome =
+    fandomAxis.fandom *
+      STRATEGIC_EXPANSION.tracks.fandom.weeklyRevenuePerPoint *
+      strategicExpansion.fandom +
+    fandomAxis.global *
+      STRATEGIC_EXPANSION.tracks.global.weeklyRevenuePerPoint *
+      strategicExpansion.global;
+  const strategicUpkeep =
+    strategicExpansion.production *
+      STRATEGIC_EXPANSION.tracks.production.weeklyUpkeepPerLevel +
+    strategicExpansion.fandom *
+      STRATEGIC_EXPANSION.tracks.fandom.weeklyUpkeepPerLevel +
+    strategicExpansion.global *
+      STRATEGIC_EXPANSION.tracks.global.weeklyUpkeepPerLevel;
+  money += strategicIncome - strategicUpkeep;
+  if (strategicIncome > 0) {
+    report.finance.income.strategicExpansion = strategicIncome;
+  }
+  if (strategicUpkeep > 0) {
+    report.finance.expenses.strategicExpansion = strategicUpkeep;
+  }
+  if (financingIncomeThisWeek > 0) {
+    report.finance.income.emergencyFinancing = financingIncomeThisWeek;
+  }
+  if (decisionIncomeThisWeek > 0) {
+    report.finance.income.decisionSupport = decisionIncomeThisWeek;
+  }
+  if (decisionExpenseThisWeek > 0) {
+    report.finance.expenses.decisionCosts = decisionExpenseThisWeek;
+  }
+  const maturedFinancing = emergencyFinancing.filter(
+    (record) => record.repaidAtWeek === null && record.dueWeek <= cumulativeWeek,
+  );
+  for (const matured of maturedFinancing) {
+    money -= matured.repaymentAmount;
+    financingRepaymentThisWeek += matured.repaymentAmount;
+    emergencyFinancing = emergencyFinancing.map((record) =>
+      record.id === matured.id ? { ...record, repaidAtWeek: cumulativeWeek } : record,
+    );
+    report.warnings.push(
+      `${matured.kind === "loan" ? "긴급 대출" : "추가 투자금"} ${matured.repaymentAmount.toLocaleString("ko-KR")}원이 만기 상환됐습니다`,
+    );
+  }
+  if (financingRepaymentThisWeek > 0) {
+    report.finance.expenses.financingRepayment = financingRepaymentThisWeek;
+  }
   report.warnings.push(...financeResult.warnings);
 
   // ── 10.5 실패 판정: 지속 파산이면 투자사가 회수를 결정한다. 위기 카드와
@@ -1265,6 +1420,7 @@ export function processWeek(
       fandomAxis,
       trainees,
       awardHistory,
+      activeProjects,
     );
     const investorChecks = checkInvestorConditions(
       investor,
@@ -1275,14 +1431,23 @@ export function processWeek(
     let anyConditionFailing = false;
     let penaltyDueThisWeek = false;
     for (const check of investorChecks) {
+      const existingProgress = investorConditionProgress[check.conditionId];
+      if (existingProgress?.completedAtWeek !== undefined) continue;
+
       if (check.met) {
-        // 회복된 조건은 진행 상태를 지운다. 재실패하면 유예부터 다시 시작한다.
-        delete investorConditionProgress[check.conditionId];
+        investorConditionProgress[check.conditionId] = {
+          firstFailedWeek: existingProgress?.firstFailedWeek ?? cumulativeWeek,
+          penaltyApplied: existingProgress?.penaltyApplied ?? false,
+          completedAtWeek: cumulativeWeek,
+        };
         continue;
       }
 
-      anyConditionFailing = true;
       const progress = investorConditionProgress[check.conditionId];
+      // 1회성 계약 페널티가 집행된 뒤에는 같은 실패로 매주 경영 개입을 반복하지 않는다.
+      if (progress?.penaltyApplied) continue;
+
+      anyConditionFailing = true;
 
       if (!progress) {
         investorConditionProgress[check.conditionId] = {
@@ -1294,8 +1459,6 @@ export function processWeek(
         );
         continue;
       }
-
-      if (progress.penaltyApplied) continue;
 
       const failedWeeks = cumulativeWeek - progress.firstFailedWeek;
       if (failedWeeks < INVESTOR_PENALTY_GRACE_WEEKS) {
@@ -1353,6 +1516,40 @@ export function processWeek(
       : member.ability;
     return { ...member, ability, potentialCap };
   });
+
+  if (
+    campaignFailure === null &&
+    snapshot.game.currentYear === FIVE_YEAR_REVIEW.year &&
+    snapshot.game.currentWeek === FIVE_YEAR_REVIEW.week
+  ) {
+    const victoryRoutes = evaluateFiveYearVictoryRoutes({
+      albumQualities: releasedAlbums.map((released) => released.quality),
+      public: fandomAxis.public,
+      fandom: fandomAxis.fandom,
+      fandomLoyalty: fandomAxis.fandomLoyalty,
+      global: fandomAxis.global,
+      industry: fandomAxis.industry,
+      money,
+      awards: awardHistory.length,
+      strategicExpansion,
+    });
+    if (victoryRoutes.length === 0) {
+      campaignFailure = {
+        reason: "performance",
+        year: snapshot.game.currentYear,
+        week: snapshot.game.currentWeek,
+      };
+      report.warnings.push(
+        "5년 경영 평가에서 지속 가능한 성과 경로를 증명하지 못했습니다",
+      );
+    } else {
+      report.warnings.push(
+        `5년 경영 평가 통과: ${victoryRoutes
+          .map((route) => FIVE_YEAR_VICTORY_ROUTE_LABELS[route])
+          .join(", ")}`,
+      );
+    }
+  }
 
   // ── 13. Advance week
   let advancedGame = advanceWeekState(snapshot.game);
@@ -1509,6 +1706,10 @@ export function processWeek(
     fandomLoyalty: fandomAxis.fandomLoyalty,
     fandomDisappointment: fandomAxis.fandomDisappointment,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
+    emergencyFinancing,
+    releasedAlbumCount: releasedAlbums.length,
+    strategicExpansion,
+    lastStrategicExpansionWeek,
     competitorComebacks: compResult.comebacks,
     projectDeadlineWeeks: (() => {
       const nextCumulativeWeek = toCumulativeWeek(
@@ -1562,6 +1763,9 @@ export function processWeek(
       lastOpportunityWeek: opportunityOffered
         ? nextCumulativeWeek
         : snapshot.game.lastOpportunityWeek,
+      emergencyFinancing,
+      strategicExpansion,
+      lastStrategicExpansionWeek,
       awardHistory,
       milestonesAchieved,
       activeProjects,
@@ -1675,6 +1879,7 @@ function buildInvestorMetrics(
   fandomAxis: Fandom4Axis,
   trainees: readonly Trainee[],
   awardHistory: readonly AwardRecord[],
+  activeProjects: readonly ProjectInstance[],
 ): {
   snsFollowers: number;
   spotifyStreams: number;
@@ -1692,7 +1897,15 @@ function buildInvestorMetrics(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
-  const cumulativeRevenue = snapshot.finance.incomeHistory.reduce(
+  const last13Expenses = snapshot.finance.expenseHistory.slice(-13).reduce(
+    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
+    0,
+  );
+  const cumulativeIncome = snapshot.finance.incomeHistory.reduce(
+    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
+    0,
+  );
+  const cumulativeExpenses = snapshot.finance.expenseHistory.reduce(
     (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
     0,
   );
@@ -1706,12 +1919,17 @@ function buildInvestorMetrics(
       fandomAxis.global * 1000 + fandomAxis.public * 500,
     ),
     spotifyStreams: Math.round(fandomAxis.global * 10000),
-    musicShowWins: 0,
+    musicShowWins: activeProjects.reduce(
+      (sum, project) => sum + (project.evaluations.musicShow?.score ?? 0),
+      0,
+    ),
     awardHistory,
-    quarterlyRevenue,
-    cumulativeRevenue,
+    quarterlyRevenue: quarterlyRevenue - last13Expenses,
+    cumulativeRevenue: cumulativeIncome - cumulativeExpenses,
     visualAverage: visualAvg,
-    adContracts: 0,
+    adContracts: snapshot.finance.incomeHistory.filter(
+      (week) => (week.breakdown.promotions ?? 0) > 0,
+    ).length,
     trendFit: fandomAxis.industry,
     styleScore: visualAvg,
   };

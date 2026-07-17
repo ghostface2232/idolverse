@@ -1,19 +1,23 @@
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
   DECISION_TRIGGER_THRESHOLDS,
+  EMERGENCY_FINANCING,
   GAME_BALANCE,
   INVESTOR_COMPLY_SUPPORT_LIMIT,
   MEMBER_CONTRACT,
   OPPORTUNITY_PACING,
   SATISFACTION_WARNING_THRESHOLD,
+  STRATEGIC_EXPANSION,
   TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import { OPPORTUNITY_DEFINITIONS } from "@/data/opportunities";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
+  EmergencyFinancingRecord,
   GamePhase,
   MemberTemperament,
   Season,
+  StrategicExpansionLevels,
   Trainee,
   WeeklyDecision,
   WeeklyDecisionTrigger,
@@ -53,8 +57,12 @@ export interface DecisionCardContext {
   fandomLoyalty: number;
   fandomDisappointment: number;
   lastOpportunityWeek: number | null;
+  emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks: string[];
   projectDeadlineWeeks: number | null;
+  releasedAlbumCount?: number;
+  strategicExpansion?: StrategicExpansionLevels;
+  lastStrategicExpansionWeek?: number | null;
 }
 
 export interface DecisionContextState {
@@ -68,8 +76,12 @@ export interface DecisionContextState {
   fandomLoyalty: number;
   fandomDisappointment: number;
   lastOpportunityWeek?: number | null;
+  emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks?: readonly string[];
   projectDeadlineWeeks?: number | null;
+  releasedAlbumCount?: number;
+  strategicExpansion?: StrategicExpansionLevels;
+  lastStrategicExpansionWeek?: number | null;
 }
 
 interface PrioritizedCard {
@@ -126,8 +138,16 @@ export function buildDecisionCardContext(
     fandomLoyalty: state.fandomLoyalty,
     fandomDisappointment: state.fandomDisappointment,
     lastOpportunityWeek: state.lastOpportunityWeek ?? null,
+    emergencyFinancing: [...(state.emergencyFinancing ?? [])],
     competitorComebacks: [...(state.competitorComebacks ?? [])],
     projectDeadlineWeeks: state.projectDeadlineWeeks ?? null,
+    releasedAlbumCount: state.releasedAlbumCount ?? 0,
+    strategicExpansion: state.strategicExpansion ?? {
+      production: 0,
+      fandom: 0,
+      global: 0,
+    },
+    lastStrategicExpansionWeek: state.lastStrategicExpansionWeek ?? null,
   };
 }
 
@@ -163,7 +183,7 @@ export function generateWeeklyDecisionCards(
   if (renegotiationDue) {
     candidates.push({
       priority: 95,
-      card: buildRecontractCard(renegotiationDue, cumulativeWeek),
+      card: buildRecontractCard(renegotiationDue, cumulativeWeek, ctx.money),
     });
   }
 
@@ -189,14 +209,38 @@ export function generateWeeklyDecisionCards(
 
   const runwayWeeks =
     ctx.weeklyFixedTotal > 0 ? ctx.money / ctx.weeklyFixedTotal : Number.POSITIVE_INFINITY;
+  const financing = ctx.emergencyFinancing ?? [];
+  const outstandingFinancing = financing.filter((record) => record.repaidAtWeek === null);
+  const yearStartWeek = Math.floor((cumulativeWeek - 1) / GAME_BALANCE.weeksPerYear) * GAME_BALANCE.weeksPerYear + 1;
+  const originationsThisYear = financing.filter(
+    (record) => record.borrowedAtWeek >= yearStartWeek,
+  ).length;
+  const nextRepayment = [...outstandingFinancing].sort(
+    (left, right) => left.dueWeek - right.dueWeek,
+  )[0];
+  if (
+    nextRepayment &&
+    (nextRepayment.dueWeek - cumulativeWeek <= EMERGENCY_FINANCING.repaymentWarningWeeks ||
+      ctx.money >= nextRepayment.repaymentAmount + ctx.weeklyFixedTotal * 12)
+  ) {
+    candidates.push({
+      priority: nextRepayment.dueWeek - cumulativeWeek <= 4 ? 94 : 80,
+      card: buildFinancingRepaymentCard(nextRepayment, cumulativeWeek),
+    });
+  }
   if (
     ctx.money < 0 ||
     runwayWeeks <= DECISION_TRIGGER_THRESHOLDS.financialRunwayWeeks
   ) {
-    candidates.push({
-      priority: ctx.money < 0 ? 95 : 84,
-      card: buildFinancialCrisisCard(ctx.money, runwayWeeks),
-    });
+    const rescueAvailable =
+      outstandingFinancing.length < EMERGENCY_FINANCING.maxOutstanding &&
+      originationsThisYear < EMERGENCY_FINANCING.maxOriginationsPerYear;
+    if (rescueAvailable) {
+      candidates.push({
+        priority: ctx.money < 0 ? 95 : 84,
+        card: buildFinancialCrisisCard(ctx.money, runwayWeeks),
+      });
+    }
   }
 
   const conflict = ctx.conflicts[0];
@@ -216,6 +260,20 @@ export function generateWeeklyDecisionCards(
       priority: 78,
       card: buildFandomCrisisCard(ctx.fandomLoyalty, ctx.fandomDisappointment),
     });
+  }
+
+  const strategicReviewDue =
+    cumulativeWeek >= STRATEGIC_EXPANSION.unlockWeek &&
+    (ctx.releasedAlbumCount ?? 0) >= STRATEGIC_EXPANSION.minReleasedAlbums &&
+    (ctx.phase === "growth" || ctx.phase === "peak") &&
+    (ctx.lastStrategicExpansionWeek == null ||
+      cumulativeWeek - ctx.lastStrategicExpansionWeek >=
+        STRATEGIC_EXPANSION.reviewIntervalWeeks);
+  if (strategicReviewDue) {
+    const strategicCard = buildStrategicExpansionCard(
+      ctx.strategicExpansion ?? { production: 0, fandom: 0, global: 0 },
+    );
+    if (strategicCard) candidates.push({ priority: 81, card: strategicCard });
   }
 
   const overworked = [...ctx.members]
@@ -345,14 +403,25 @@ function buildOpportunityCard(
 function buildRecontractCard(
   member: DecisionMemberContext,
   cumulativeWeek: number,
+  availableMoney: number,
 ): WeeklyDecision {
   const temperament = member.temperament ?? "steady";
   const popularity = member.popularity ?? 0;
   const contractTier = member.contractTier ?? 1;
   const profile = TEMPERAMENT_PROFILES[temperament];
-  const signing =
+  const marketSigning =
     MEMBER_CONTRACT.signingBase +
     Math.round(popularity) * MEMBER_CONTRACT.signingPerPopularity;
+  const signing = Math.round(
+    Math.min(
+      marketSigning,
+      MEMBER_CONTRACT.signingCashCap,
+      Math.max(
+        MEMBER_CONTRACT.signingBase,
+        Math.max(0, availableMoney) * MEMBER_CONTRACT.signingLiquidityShare,
+      ),
+    ),
+  );
   const freezePenalty = Math.round(
     MEMBER_CONTRACT.freezeSatisfactionPenalty * profile.gapSensitivity,
   );
@@ -377,7 +446,7 @@ function buildRecontractCard(
         id: "raise",
         label: "조건 인상",
         description: `처우를 ${nextTier}등급으로 올리고 계약금을 지급한다.`,
-        tradeoff: `계약금 ${formatSigning(signing)}. 인기가 높을수록 몸값도 높다.`,
+        tradeoff: `즉시 계약금 ${formatSigning(signing)}. 인기와 회사의 지급 여력을 함께 반영한다.`,
         effects: { money: -signing, satisfaction: 12 },
         targetTraineeIds: [member.id],
       },
@@ -540,19 +609,27 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
     ),
     options: [
       {
-        id: "bridge-financing",
-        label: "브리지 자금 요청",
-        description: "투자사에 단기 운영 자금을 요청한다.",
-        tradeoff: "현금은 확보하지만 투자사 압박과 업계 불신이 커진다.",
-        effects: { money: 50000000, investorPressure: 4, industry: -3 },
+        id: "emergency-loan",
+        label: "긴급 대출",
+        description: "운영 자금을 빌려 급한 불을 끈다.",
+        tradeoff: `지금 ${EMERGENCY_FINANCING.loan.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.loan.repayment / 1_000_000}백만원을 갚아야 한다.`,
+        effects: {
+          money: EMERGENCY_FINANCING.loan.principal,
+          investorPressure: 4,
+          industry: -2,
+        },
       },
       {
-        id: "emergency-commercials",
-        label: "긴급 상업 일정 편성",
-        description: "단기 광고와 행사를 집중 수주한다.",
-        tradeoff: "수입은 생기지만 팬 실망과 멤버 피로가 늘어난다.",
-        effects: { money: 25000000, fandomDisappointment: 5, stress: 6 },
-        activityOverride: "entertainment",
+        id: "emergency-investment",
+        label: "긴급 추가 투자",
+        description: "투자사에 후속 운영 자금을 요청한다.",
+        tradeoff: `지금 ${EMERGENCY_FINANCING.investment.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.investment.repayment / 1_000_000}백만원을 우선 상환한다.`,
+        effects: {
+          money: EMERGENCY_FINANCING.investment.principal,
+          investorPressure: 8,
+          industry: -4,
+          satisfaction: -2,
+        },
       },
       {
         id: "austerity",
@@ -560,6 +637,42 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
         description: "일부 지원과 복지 예산을 현금화한다.",
         tradeoff: "소액을 확보하지만 멤버 만족도와 평판이 하락한다.",
         effects: { money: 10000000, satisfaction: -5, industry: -1 },
+      },
+    ],
+  };
+}
+
+function buildFinancingRepaymentCard(
+  financing: EmergencyFinancingRecord,
+  cumulativeWeek: number,
+): WeeklyDecision {
+  const remainingWeeks = Math.max(0, financing.dueWeek - cumulativeWeek);
+  return {
+    id: `financing-repayment:${financing.id}`,
+    lane: "crisis",
+    category: "경영",
+    title: financing.kind === "loan" ? "긴급 대출 상환" : "추가 투자금 상환",
+    summary: `상환액 ${Math.round(financing.repaymentAmount).toLocaleString("ko-KR")}원, 만기까지 ${remainingWeeks}주 남았다.`,
+    trigger: createTrigger(
+      "finance",
+      remainingWeeks <= 4 ? "critical" : "warning",
+      [],
+      `상환 만기 D-${remainingWeeks}주`,
+    ),
+    options: [
+      {
+        id: "repay",
+        label: "지금 상환",
+        description: "원금과 약정 비용을 상환해 긴급 조달 한도를 회복한다.",
+        tradeoff: "현금이 줄지만 미상환 슬롯 한 칸이 다시 열린다.",
+        effects: { money: -financing.repaymentAmount, industry: 2 },
+      },
+      {
+        id: "defer",
+        label: "만기까지 보류",
+        description: "현금을 지키고 상환을 뒤로 미룬다.",
+        tradeoff: "만기에는 자동 상환되며 투자사 압박이 이어진다.",
+        effects: { investorPressure: 2 },
       },
     ],
   };
@@ -605,6 +718,62 @@ function buildFandomCrisisCard(
         effects: { fandomDisappointment: 7, public: -2 },
       },
     ],
+  };
+}
+
+function buildStrategicExpansionCard(
+  levels: StrategicExpansionLevels,
+): WeeklyDecision | null {
+  const optionDefinitions = [
+    {
+      track: "production" as const,
+      label: "자체 제작 스튜디오 확장",
+      description: "곡, 안무, 비주얼 제작 역량을 회사 안에 축적합니다.",
+      effects: { albumSong: 6, albumVisual: 3, albumChoreography: 4, industry: 3 },
+    },
+    {
+      track: "fandom" as const,
+      label: "팬 커뮤니티 플랫폼 확장",
+      description: "팬과 꾸준히 소통하고 직접 수익을 만드는 기반을 넓힙니다.",
+      effects: { fandom: 8, fandomLoyalty: 8, fandomDisappointment: -10, public: 3 },
+    },
+    {
+      track: "global" as const,
+      label: "글로벌 투어 본부 확장",
+      description: "해외 공연과 현지 파트너 협상을 전담하는 기반을 만듭니다.",
+      effects: { global: 10, industry: 6, public: 2 },
+    },
+  ];
+  const options = optionDefinitions.flatMap((definition) => {
+    const currentLevel = levels[definition.track];
+    if (currentLevel >= STRATEGIC_EXPANSION.maxLevelPerTrack) return [];
+    const cost = STRATEGIC_EXPANSION.levelCosts[currentLevel];
+    return [
+      {
+        id: `strategic-${definition.track}`,
+        label: definition.label,
+        description: `${definition.description} ${currentLevel + 1}단계 투자금 ${Math.round(cost / 100_000_000)}억원이 필요합니다.`,
+        tradeoff: "성과가 커지는 대신 매주 운영비가 추가됩니다.",
+        effects: { ...definition.effects, money: -cost },
+      },
+    ];
+  });
+  if (options.length === 0) return null;
+
+  return {
+    id: "strategic-expansion",
+    lane: "crisis",
+    category: "장기 성장",
+    title: "다음 성장을 위한 회사 역량",
+    summary:
+      "지금의 성공만 반복해서는 성장세를 유지하기 어렵습니다. 다음 1년을 이끌 장기 역량을 선택해 투자해야 합니다.",
+    options,
+    trigger: {
+      kind: "strategy",
+      severity: "notice",
+      entityIds: [],
+      description: "성장 이후의 추가 과제",
+    },
   };
 }
 

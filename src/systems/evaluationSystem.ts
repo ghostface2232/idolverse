@@ -2,6 +2,7 @@ import {
   BACKGROUND_CHART_POWER_SCALE,
   PUBLIC_DECAY_RATE,
   RELEASE_MARKET_SWING,
+  SYNTHETIC_CHART_MARKET,
   TITLE_TRACK_TYPE_WEIGHTS,
 } from "@/data/balance";
 import { SEASON_MOOD_FIT } from "@/data/concepts";
@@ -164,8 +165,24 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
     });
   }
 
+  for (let index = 0; index < SYNTHETIC_CHART_MARKET.entryCount; index++) {
+    const position =
+      SYNTHETIC_CHART_MARKET.entryCount <= 1
+        ? 0
+        : index / (SYNTHETIC_CHART_MARKET.entryCount - 1);
+    chartPool.push({
+      name: `MARKET-${index + 1}`,
+      power:
+        SYNTHETIC_CHART_MARKET.minPower +
+        (1 - position) ** SYNTHETIC_CHART_MARKET.curve *
+          SYNTHETIC_CHART_MARKET.powerRange +
+        random() * SYNTHETIC_CHART_MARKET.noise,
+      isPlayer: false,
+    });
+  }
+
   chartPool.sort((a, b) => b.power - a.power);
-  const chartRank = chartPool.findIndex((e) => e.isPlayer) + 1;
+  const chartRank = Math.min(100, chartPool.findIndex((e) => e.isPlayer) + 1);
 
   const typeWeights = TITLE_TRACK_TYPE_WEIGHTS[titleTrack.type];
   const fandomMult = typeWeights.fandom;

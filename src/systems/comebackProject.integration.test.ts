@@ -144,7 +144,9 @@ describe("16주 컴백 프로젝트", () => {
     expect(project?.status).toBe("completed");
     expect(project?.currentStageId).toBe("settlement");
     expect(project?.releasedAlbumId).toBeDefined();
-    expect(project?.evaluations.musicShow).toBeDefined();
+    expect(
+      project?.evaluations.musicShow ?? project?.evaluations.musicShowMissed,
+    ).toBeDefined();
     expect(project?.evaluations.settlement).toBeDefined();
 
     // 발매: 두 번째 앨범이 차트 개봉 연출과 함께 커밋된다.
@@ -160,7 +162,11 @@ describe("16주 컴백 프로젝트", () => {
     const musicShowReports = result.reports.filter((report) =>
       report.events.some((event) => event.presentation?.kind === "music-show"),
     );
-    expect(musicShowReports.length).toBeGreaterThanOrEqual(1);
+    if (project?.evaluations.musicShow) {
+      expect(musicShowReports.length).toBeGreaterThanOrEqual(1);
+    } else {
+      expect(musicShowReports).toHaveLength(0);
+    }
 
     // 정산: 리포트가 격상되고 다음 사이클 훅을 제시한다.
     const settlementReport = result.reports.find(
@@ -170,7 +176,7 @@ describe("16주 컴백 프로젝트", () => {
       expect.objectContaining({
         projectId: project?.id,
         chartPeak: expect.any(Number),
-        musicShowWins: expect.any(Number),
+        musicShowWins: project?.evaluations.musicShow ? expect.any(Number) : null,
       }),
     );
     expect(settlementReport?.comebackSettlement?.nextHook).toContain("다음");

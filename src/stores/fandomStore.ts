@@ -43,7 +43,7 @@ export const fandomVanillaStore = createStore<FandomStore>()((set) => ({
     })),
   updateGlobal: (value) =>
     set(() => ({
-      global: Math.max(0, value),
+      global: clamp(value, 0, 100),
     })),
   updateIndustry: (value) =>
     set(() => ({

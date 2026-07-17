@@ -334,9 +334,12 @@ export const MEMBER_CONTRACT = {
   earlyTriggerPopularityMargin: 30,
   overworkTriggerStress: 70, // 과로 조기 트리거(인기 40+ 필요).
   overworkTriggerPopularity: 40,
-  earlyTriggerLeadWeeks: 8, // 조기 트리거 시 협상이 앞당겨지는 간격.
+  earlyTriggerLeadWeeks: 26, // 성공 직후에도 협상이 반년보다 자주 반복되지는 않는다.
   signingBase: 10_000_000, // 조건 인상 계약금 = base + 인기×perPopularity.
   signingPerPopularity: 1_500_000,
+  /** 성공세가 곧바로 파산세가 되지 않도록 현재 현금의 이 비율까지만 즉시 지급한다. */
+  signingLiquidityShare: 0.05,
+  signingCashCap: 50_000_000,
   gapTierThreshold: 2, // 팀 내 최고 처우와 이만큼 벌어지면 불만.
   gapPenalty: -2, // 주간 격차 불만(성격 배율 적용 전).
   freezeSatisfactionPenalty: -12,
@@ -412,6 +415,35 @@ export const INJURY_STRESS_FACTOR = 0.0008; // Stress is the clearest player-con
 export const CHEMISTRY_JOINT_TRAINING_GAIN = 2; // Shared practice should improve team feel slowly, not instantly.
 export const CHEMISTRY_CONFLICT_THRESHOLD = -50; // Below this, conflict is severe enough to justify explicit events.
 export const TEAM_CHEMISTRY_PERFORMANCE_WEIGHT = 0.15; // Team feel matters, but execution should still dominate stage outcomes.
+export const CHEMISTRY_DYNAMICS = {
+  baseRoutineTrainingCeiling: 25,
+  aboveCeilingWeeklyDecay: 0.35,
+  separateActivityDecay: 1.25,
+  sharedStageGain: 10,
+  frictionStressThreshold: 55,
+  maxWeeklyStressFriction: 0.75,
+} as const;
+
+export const CHEMISTRY_PAIR_SYNERGY = {
+  sameAge: 6,
+  nearAge: 3,
+  samePersonality: 8,
+  complementaryPersonality: 7,
+  dogCatVisual: 10,
+  sameAppearance: 4,
+  complementaryPosition: 6,
+  complementaryPersonalityPairs: [
+    ["energetic", "reserved"],
+    ["bubbly", "haughty"],
+  ],
+  complementaryPositionPairs: [
+    ["mainVocal", "mainDancer"],
+    ["leader", "center"],
+    ["visual", "variety"],
+    ["producing", "mainVocal"],
+    ["producing", "mainDancer"],
+  ],
+} as const;
 
 export const POSITION_TRIAL_SCORE_WEIGHTS = {
   fitness: 0.65,
@@ -598,14 +630,73 @@ export const STAFF_HIRING = {
   salaryNoiseSpan: 0.3,
 } as const;
 
+/** 실제 TOP 100처럼 저성과 앨범도 시장의 긴 꼬리와 경쟁한다. */
+export const SYNTHETIC_CHART_MARKET = {
+  entryCount: 90,
+  minPower: 10,
+  powerRange: 75,
+  curve: 1.4,
+  noise: 4,
+} as const;
+
+/** 긴급 조달은 연간/미상환 한도가 있고, 2년 안에 상환해야 한다. */
+export const EMERGENCY_FINANCING = {
+  maxOriginationsPerYear: 2,
+  maxOutstanding: 2,
+  termWeeks: 104,
+  repaymentWarningWeeks: 13,
+  loan: { principal: 80_000_000, repayment: 100_000_000 },
+  investment: { principal: 120_000_000, repayment: 150_000_000 },
+} as const;
+
+/** 성장기 이후에는 성공을 유지하기 위한 회사 차원의 장기 투자가 필요하다. */
+export const STRATEGIC_EXPANSION = {
+  unlockWeek: 105,
+  minReleasedAlbums: 5,
+  reviewIntervalWeeks: 52,
+  maxLevelPerTrack: 3,
+  levelCosts: [200_000_000, 350_000_000, 550_000_000],
+  tracks: {
+    production: {
+      weeklyUpkeepPerLevel: 1_200_000,
+      weeklyAlbumProgress: { song: 0.2, visual: 0.1, choreography: 0.15 },
+    },
+    fandom: {
+      weeklyUpkeepPerLevel: 1_000_000,
+      weeklyRevenuePerPoint: 10_000,
+    },
+    global: {
+      weeklyUpkeepPerLevel: 1_500_000,
+      weeklyRevenuePerPoint: 12_000,
+    },
+  },
+} as const;
+
+/** 5년 평가는 서로 다른 운영 철학으로 통과할 수 있도록 복수 경로를 둔다. */
+export const FIVE_YEAR_REVIEW = {
+  year: 5,
+  week: 52,
+  hitmaker: { minReleases: 10, minAverageQuality: 47, minBestQuality: 75 },
+  fandom: { minPublic: 80, minFandom: 85, minLoyalty: 75, minExpansionLevel: 1 },
+  global: { minGlobal: 85, minIndustry: 20, minExpansionLevel: 1 },
+  business: { minMoney: 1_000_000_000, minReleases: 8 },
+  awards: { minAwards: 15, minIndustry: 20 },
+} as const;
+
+/** 선택 시설은 설치비와 월 유지비를 구분한다. 모든 구매 경로가 이 값을 공유한다. */
+export const OPTIONAL_FACILITY_COSTS = {
+  healthcare: { upfront: 30_000_000, monthly: 700_000 },
+  security: { upfront: 20_000_000, monthly: 600_000 },
+} as const;
+
 export const AWARD_ELIGIBILITY_THRESHOLDS = {
   rookie: {
     minYear: 1, // Rookie awards are meant to matter in the first campaign year.
-    maxYear: 2, // A short window keeps the race tight and understandable.
+    maxYear: 1, // 신인상은 데뷔 연도 한 번만 경쟁한다.
   },
   bonsang: {
-    minDigitalIndex: 55, // Mid-tier chart traction should be enough to enter the conversation.
-    minAlbumSalesIndex: 40, // Sales matter, but not as much as broad relevance.
+    minDigitalIndex: 65,
+    minAlbumSalesIndex: 55,
   },
   daesang: {
     minDigitalIndex: 80, // Top awards should require undeniable mainstream impact.

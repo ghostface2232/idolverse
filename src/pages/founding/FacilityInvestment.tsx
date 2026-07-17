@@ -4,7 +4,7 @@ import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { checkTileClasses } from "@/components/common/selectionTokens";
 import { FacilityTierSelector } from "@/components/founding/FacilityTierSelector";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
-import { FOUNDING_FACILITY_MAX_LEVEL } from "@/data/balance";
+import { FOUNDING_FACILITY_MAX_LEVEL, OPTIONAL_FACILITY_COSTS } from "@/data/balance";
 import { FOUNDING_FACILITY_TIERS, FOUNDING_ONETIME_UPGRADES } from "@/data/founding";
 
 // 신생 기획사의 창단 시장에는 상위 시설이 매물로 나오지 않는다.
@@ -53,12 +53,12 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
 
     if (sel.hasHealthcare && !upgrades.hasHealthcare) {
       financeVanillaStore.getState().subtractMoney(FOUNDING_ONETIME_UPGRADES.healthcare.cost);
-      financeVanillaStore.getState().updateFixedCosts({ healthcare: 700_000 });
+      financeVanillaStore.getState().updateFixedCosts({ healthcare: OPTIONAL_FACILITY_COSTS.healthcare.monthly });
       upgrades.hasHealthcare = true;
     }
     if (sel.hasSecurity && !upgrades.hasSecurity) {
       financeVanillaStore.getState().subtractMoney(FOUNDING_ONETIME_UPGRADES.security.cost);
-      financeVanillaStore.getState().updateFixedCosts({ security: 600_000 });
+      financeVanillaStore.getState().updateFixedCosts({ security: OPTIONAL_FACILITY_COSTS.security.monthly });
       upgrades.hasSecurity = true;
     }
 

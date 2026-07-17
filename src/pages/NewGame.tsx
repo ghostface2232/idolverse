@@ -194,6 +194,9 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
         investorPressureWeeks: 0,
         investorComplianceCount: 0,
         lastOpportunityWeek: null,
+        emergencyFinancing: [],
+        strategicExpansion: { production: 0, fandom: 0, global: 0 },
+        lastStrategicExpansionWeek: null,
         weeklyDecisions: [],
         notifications: [
           {

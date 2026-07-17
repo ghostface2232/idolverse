@@ -283,6 +283,13 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
     campaignFailure: rest.campaignFailure ?? null,
     lastOpportunityWeek: rest.lastOpportunityWeek ?? null,
+    emergencyFinancing: rest.emergencyFinancing ?? [],
+    strategicExpansion: rest.strategicExpansion ?? {
+      production: 0,
+      fandom: 0,
+      global: 0,
+    },
+    lastStrategicExpansionWeek: rest.lastStrategicExpansionWeek ?? null,
     awardHistory: rest.awardHistory ?? [],
     milestonesAchieved: rest.milestonesAchieved ?? [],
     activeProjects:

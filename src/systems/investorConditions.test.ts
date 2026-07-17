@@ -41,7 +41,7 @@ describe("투자사 조건 체크 (P0-3)", () => {
     // 다음 주에는 재집행하지 않는다 (1회성)
     const next = processWeek(state, NO_DECISIONS);
     expect(countPenaltyWarnings(next.weekReport.warnings)).toBe(0);
-    expect(next.newState.game.investorPenaltyActive).toBe(true);
+    expect(next.newState.game.investorPenaltyActive).toBe(false);
   });
 
   it("여러 조건의 유예가 같은 주에 끝나도 페널티 패키지는 1회만 집행한다", () => {
@@ -74,7 +74,7 @@ describe("투자사 조건 체크 (P0-3)", () => {
     ).toBe(true);
   });
 
-  it("조건이 회복되면 압박이 해제되고 진행 상태가 초기화된다", () => {
+  it("조건이 회복되면 압박이 해제되고 달성 상태가 고정된다", () => {
     let state: GameSnapshot = makeGameSnapshot({ week: 13, investorType: "vc" });
     state = processWeek(state, NO_DECISIONS).newState;
     expect(state.game.investorPenaltyActive).toBe(true);
@@ -86,7 +86,9 @@ describe("투자사 조건 체크 (P0-3)", () => {
     const { newState } = processWeek(state, NO_DECISIONS);
 
     expect(newState.game.investorPenaltyActive).toBe(false);
-    expect(newState.game.investorConditionProgress["summit-quarterly"]).toBeUndefined();
+    expect(
+      newState.game.investorConditionProgress["summit-quarterly"]?.completedAtWeek,
+    ).toBe(14);
     expect(
       newState.game.weeklyDecisions.some((c) => c.id === "emergency-investor"),
     ).toBe(false);

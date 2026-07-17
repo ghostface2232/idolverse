@@ -371,7 +371,25 @@ export interface InvestorCondition {
 export interface InvestorConditionProgress {
   firstFailedWeek: number;
   penaltyApplied: boolean;
+  /** 한 번 달성한 마감형 약속은 이후 지표 하락으로 다시 실패하지 않는다. */
+  completedAtWeek?: number;
 }
+
+export type EmergencyFinancingKind = "loan" | "investment";
+
+export interface EmergencyFinancingRecord {
+  id: string;
+  kind: EmergencyFinancingKind;
+  principal: number;
+  repaymentAmount: number;
+  borrowedAtWeek: number;
+  dueWeek: number;
+  repaidAtWeek: number | null;
+}
+
+export type StrategicExpansionTrack = "production" | "fandom" | "global";
+
+export type StrategicExpansionLevels = Record<StrategicExpansionTrack, number>;
 
 export interface InvestorEffect<TType extends string = string> {
   type: TType;
@@ -426,7 +444,8 @@ export type WeeklyDecisionTriggerKind =
   | "morale"
   | "overwork"
   | "opportunity"
-  | "contract";
+  | "contract"
+  | "strategy";
 
 export interface WeeklyDecisionTrigger {
   kind: WeeklyDecisionTriggerKind;
@@ -848,7 +867,7 @@ export interface WeeklyFlowSnapshot {
 
 /** 캠페인 실패 기록. FM의 경질에 해당하는 예고된 결말이다. */
 export interface CampaignFailure {
-  reason: "bankruptcy";
+  reason: "bankruptcy" | "performance";
   year: number;
   week: number;
 }
@@ -881,6 +900,12 @@ export interface GameStoreState {
   campaignFailure: CampaignFailure | null;
   /** 마지막 기회 카드가 제시된 누적 주차. 수락 여부와 무관하게 빈도를 제어한다. */
   lastOpportunityWeek: number | null;
+  /** 긴급 대출/추가 투자 채무. 상환된 건도 연간 신규 조달 한도 계산을 위해 보존한다. */
+  emergencyFinancing: EmergencyFinancingRecord[];
+  /** 성장기 이후 회사가 구축한 장기 역량. 한 경로에 몰거나 여러 경로를 조합할 수 있다. */
+  strategicExpansion: StrategicExpansionLevels;
+  /** 마지막 장기 확장 과제를 선택한 누적 주차. 다음 연간 검토 시점을 계산한다. */
+  lastStrategicExpansionWeek: number | null;
   /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */
   awardHistory: AwardRecord[];
   /** 달성한 이정표 기록. 해금 판정과 GoalStrip 표시의 근거가 된다. */

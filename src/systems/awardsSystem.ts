@@ -130,7 +130,7 @@ function isEligibleForCategory(
           AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry
       );
     case "popularity":
-      return true;
+      return contender.fanVotes >= 45;
     default:
       return false;
   }
@@ -144,6 +144,7 @@ export function evaluateAwards(
   const random = createSeededRandom(seed);
   const shows = Object.values(AWARD_SHOWS);
   const results: AwardShowResult[] = [];
+  const winnerCounts = new Map<string, number>();
 
   for (const show of shows) {
     const winners: AwardWinner[] = [];
@@ -158,7 +159,10 @@ export function evaluateAwards(
       const scored = eligible
         .map((c) => ({
           contender: c,
-          score: computeScore(c, show.weights) + random() * 3,
+          score:
+            computeScore(c, show.weights) +
+            random() * 3 -
+            (winnerCounts.get(c.id) ?? 0) * 10,
         }))
         .sort((a, b) => b.score - a.score);
 
@@ -170,6 +174,10 @@ export function evaluateAwards(
         score: winner.score,
         isPlayer: winner.contender.isPlayer,
       });
+      winnerCounts.set(
+        winner.contender.id,
+        (winnerCounts.get(winner.contender.id) ?? 0) + 1,
+      );
     }
 
     results.push({

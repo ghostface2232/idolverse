@@ -185,6 +185,43 @@ describe("상황 기반 주간 결정 생성", () => {
     ).toBe(true);
   });
 
+  it("긴급 자금 조정은 연 2회와 동시 미상환 2건 한도를 지킨다", () => {
+    const lowCash = healthyContext({
+      money: -10_000_000,
+      emergencyFinancing: [
+        {
+          id: "loan-w10",
+          kind: "loan",
+          principal: 80_000_000,
+          repaymentAmount: 100_000_000,
+          borrowedAtWeek: 10,
+          dueWeek: 114,
+          repaidAtWeek: null,
+        },
+        {
+          id: "investment-w20",
+          kind: "investment",
+          principal: 120_000_000,
+          repaymentAmount: 150_000_000,
+          borrowedAtWeek: 20,
+          dueWeek: 124,
+          repaidAtWeek: 30,
+        },
+      ],
+    });
+
+    expect(
+      generateWeeklyDecisionCards(35, "summer", lowCash).some(
+        (card) => card.id === "financial-crisis",
+      ),
+    ).toBe(false);
+    expect(
+      generateWeeklyDecisionCards(53, "spring", lowCash).some(
+        (card) => card.id === "financial-crisis",
+      ),
+    ).toBe(true);
+  });
+
   it("데뷔 준비기와 성장기에 서로 다른 phase 기회 풀을 사용한다", () => {
     const trainingCard = generateWeeklyDecisionCards(
       20,
@@ -262,5 +299,36 @@ describe("상황 기반 주간 결정 생성", () => {
 
     expect(card?.summary).toContain("평균 스트레스 60");
     expect(card?.summary).toContain("마감 D-1");
+  });
+
+  it("성장 3년차부터 연 1회 서로 다른 장기 확장 경로를 제시한다", () => {
+    const context = healthyContext({
+      phase: "growth",
+      releasedAlbumCount: 5,
+      strategicExpansion: { production: 0, fandom: 0, global: 0 },
+      lastStrategicExpansionWeek: null,
+    });
+
+    const card = generateWeeklyDecisionCards(105, "spring", context).find(
+      (candidate) => candidate.id === "strategic-expansion",
+    );
+
+    expect(card?.options.map((option) => option.id)).toEqual([
+      "strategic-production",
+      "strategic-fandom",
+      "strategic-global",
+    ]);
+    expect(
+      generateWeeklyDecisionCards(156, "winter", {
+        ...context,
+        lastStrategicExpansionWeek: 105,
+      }).some((candidate) => candidate.id === "strategic-expansion"),
+    ).toBe(false);
+    expect(
+      generateWeeklyDecisionCards(157, "spring", {
+        ...context,
+        lastStrategicExpansionWeek: 105,
+      }).some((candidate) => candidate.id === "strategic-expansion"),
+    ).toBe(true);
   });
 });

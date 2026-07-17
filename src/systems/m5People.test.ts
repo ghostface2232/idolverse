@@ -28,6 +28,22 @@ describe("M5 사람 — 인기·계약·이탈", () => {
     ]);
   });
 
+  it("인기가 높아도 즉시 계약금은 회사 현금의 5%와 절대 상한을 넘지 않는다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.finance.money = 300_000_000;
+    snapshot.trainee.trainees[0].popularity = 100;
+    snapshot.trainee.trainees[0].contract = { tier: 1, nextRenegotiationWeek: 6 };
+
+    const result = processWeek(snapshot, NO_DECISIONS);
+    const card = result.newState.game.weeklyDecisions.find((decision) =>
+      decision.id.startsWith("recontract:t1"),
+    );
+
+    const signing = card?.options.find((option) => option.id === "raise")?.effects.money;
+    expect(signing).toBeLessThanOrEqual(-MEMBER_CONTRACT.signingBase);
+    expect(Math.abs(signing ?? 0)).toBeLessThanOrEqual(15_000_000);
+  });
+
   it("조건 인상은 처우 등급과 다음 협상 주를 갱신한다", () => {
     const snapshot = makeGameSnapshot({ week: 5 });
     snapshot.trainee.trainees[0].contract = { tier: 1, nextRenegotiationWeek: 5 };

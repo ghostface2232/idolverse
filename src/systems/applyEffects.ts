@@ -138,10 +138,10 @@ export function applyEffects(
         money += value;
         break;
       case "public":
-        fandom.public = clamp(fandom.public + value, 0, 100);
+        fandom.public = applyDiminishedAudienceEffect(fandom.public, value);
         break;
       case "fandom":
-        fandom.fandom = Math.max(0, fandom.fandom + value);
+        fandom.fandom = applyDiminishedAudienceEffect(fandom.fandom, value);
         break;
       case "fandomLoyalty":
         fandom.fandomLoyalty = clamp(fandom.fandomLoyalty + value, 0, 100);
@@ -154,7 +154,7 @@ export function applyEffects(
         );
         break;
       case "global":
-        fandom.global = Math.max(0, fandom.global + value);
+        fandom.global = applyDiminishedAudienceEffect(fandom.global, value);
         break;
       case "industry":
         fandom.industry = clamp(fandom.industry + value, 0, 100);
@@ -274,4 +274,12 @@ function withAlbumProgress(
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function applyDiminishedAudienceEffect(current: number, delta: number): number {
+  const adjusted =
+    delta > 0 && current > 75
+      ? delta * clamp((95 - current) / 20, 0, 1)
+      : delta;
+  return clamp(current + adjusted, 0, 100);
 }
