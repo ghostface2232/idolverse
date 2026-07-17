@@ -2,6 +2,7 @@ import { DEBUT_REQUIREMENTS } from "@/data/balance";
 import type { ProjectDefinition } from "@/types/game";
 
 export const DEBUT_PROJECT_ID = "debut-project";
+export const TITLE_TRACK_SELECTION_DECISION_ID = "titleTrackSelection";
 
 /**
  * 첫 데뷔를 20주짜리 여섯 미니 시즌으로 편집한다. 이벤트는 스테이지
@@ -50,6 +51,9 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       title: "쇼케이스 리허설",
       summary: "보컬·준비도·팀워크를 공개 무대 수준으로 끌어올린다",
       weekWindow: [14, 17],
+      entryRequirements: [
+        { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
+      ],
       eventIds: ["debut-showcase-rehearsal"],
       unlocks: "데뷔 프로모션",
     },
@@ -60,6 +64,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       weekWindow: [18, DEBUT_REQUIREMENTS.projectWeeks],
       entryRequirements: [
         { metric: "showcasePassed", target: 1, label: "쇼케이스 통과" },
+        { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
       eventIds: ["debut-promotion-launch"],
       unlocks: "앨범 발매 · 차트 공개",

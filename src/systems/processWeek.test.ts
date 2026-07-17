@@ -141,4 +141,31 @@ describe("processWeek 골든 스냅샷", () => {
     expect(target.currentActivity).toBe("training");
     expect(teammate.stats.vocal).toBeGreaterThan(beforeTeammateVocal);
   });
+
+  it("기회 활동 전환은 케미 계산까지 유지되어 합동 훈련 기회를 잃는다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+
+    const result = processWeek(snapshot, {
+      trainingSchedule: { intensity: "normal", restDay: false },
+      resolvedDecisions: [
+        {
+          cardId: "opportunity:test:w5",
+          optionId: "send-unit",
+          effects: {},
+          targetTraineeIds: ["t1"],
+          activityOverride: "individual",
+        },
+      ],
+    });
+
+    const target = result.newState.trainee.trainees.find(
+      (trainee) => trainee.id === "t1",
+    );
+    const teammate = result.newState.trainee.trainees.find(
+      (trainee) => trainee.id === "t2",
+    );
+    expect(target?.chemistry.t2).toBe(20);
+    expect(teammate?.chemistry.t1).toBe(20);
+    expect(target?.currentActivity).toBe("training");
+  });
 });

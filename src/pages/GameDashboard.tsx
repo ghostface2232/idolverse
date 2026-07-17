@@ -5,6 +5,7 @@ import { Button } from "@/components/common/Button";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
+import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
@@ -18,6 +19,7 @@ import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
+import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
 import {
   acknowledgeWeeklyReportAndSave,
@@ -25,6 +27,7 @@ import {
   applyEventChoiceAndSave,
   completeChartRevealAndSave,
   completePositionReviewAndSave,
+  completeTitleTrackSelectionAndSave,
   runWeekAndSave,
 } from "@/lib/weekRunner";
 import { Training } from "@/pages/Training";
@@ -71,6 +74,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
   const [isPositionReviewSaving, setIsPositionReviewSaving] = useState(false);
+  const [isTitleTrackSaving, setIsTitleTrackSaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const isAdvancingRef = useRef(false);
 
@@ -110,6 +114,10 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       : null;
   const positionReviewProject = activeProjects.find(
     (project) => project.decisionStatuses.positionReview === "available",
+  );
+  const titleTrackProject = activeProjects.find(
+    (project) =>
+      project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] === "available",
   );
   const displayedWeekReport =
     weeklyFlow.state === "report_ready" && !isAdvancing
@@ -252,6 +260,25 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       setWorkflowError("포지션 재조정을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setIsPositionReviewSaving(false);
+    }
+  };
+
+  const handleCompleteTitleTrackSelection = async (trackId: string) => {
+    if (!titleTrackProject || !currentAlbum || isTitleTrackSaving) return;
+    setIsTitleTrackSaving(true);
+    setWorkflowError(null);
+    try {
+      await completeTitleTrackSelectionAndSave(
+        titleTrackProject.id,
+        trackId,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
+    } catch (error) {
+      console.error("Title track selection save failed.", error);
+      setWorkflowError("타이틀곡 결정을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsTitleTrackSaving(false);
     }
   };
 
@@ -422,6 +449,19 @@ export function GameDashboard({ userId }: GameDashboardProps) {
           trainees={trainees}
           isSaving={isPositionReviewSaving}
           onConfirm={handleCompletePositionReview}
+        />
+      ) : null}
+
+      {weeklyFlow.state === "planning_ready" &&
+      !positionReviewProject &&
+      titleTrackProject &&
+      currentAlbum ? (
+        <TitleTrackSelectionModal
+          albumTitle={currentAlbum.title}
+          candidates={currentAlbum.titleTrackCandidates}
+          isSaving={isTitleTrackSaving}
+          errorMessage={workflowError}
+          onConfirm={handleCompleteTitleTrackSelection}
         />
       ) : null}
     </>

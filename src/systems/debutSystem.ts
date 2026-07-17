@@ -1,5 +1,8 @@
 import { DEBUT_REQUIREMENTS } from "@/data/balance";
-import { DEBUT_PROJECT } from "@/data/debutProject";
+import {
+  DEBUT_PROJECT,
+  TITLE_TRACK_SELECTION_DECISION_ID,
+} from "@/data/debutProject";
 import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
 import { calculateAlbumQuality } from "@/systems/albumSystem";
 import { evaluateRelease, type ReleaseResult } from "@/systems/evaluationSystem";
@@ -137,16 +140,6 @@ function toProjectMetrics(
   };
 }
 
-function autoSelectTitleTrack(album: Album | null): Album | null {
-  if (!album || album.titleTrack) return album;
-  const best = album.titleTrackCandidates.reduce<Album["titleTrack"]>(
-    (selected, candidate) =>
-      !selected || candidate.quality > selected.quality ? candidate : selected,
-    null,
-  );
-  return { ...album, titleTrack: best };
-}
-
 function buildProjectEvent(
   eventId: string,
   cumulativeWeek: number,
@@ -280,7 +273,17 @@ export function processDebutProjectWeek(
     relativeWeek >= 10 ||
     advanced.enteredStages.some((stage) => stage.id === "title-decision")
   ) {
-    album = autoSelectTitleTrack(album);
+    if (album) {
+      project = {
+        ...project,
+        decisionStatuses: {
+          ...project.decisionStatuses,
+          [TITLE_TRACK_SELECTION_DECISION_ID]: album.titleTrack
+            ? "completed"
+            : "available",
+        },
+      };
+    }
   }
 
   const directedBeats = directDebutPacing(
@@ -323,10 +326,8 @@ export function processDebutProjectWeek(
   let releasedAlbum: Album | null = null;
   let releaseResult: ReleaseResult | null = null;
   if (project.status === "completed" && album) {
-    const selectedAlbum = autoSelectTitleTrack(album);
-    album = selectedAlbum;
-    if (selectedAlbum?.titleTrack) {
-      const released = releaseDebutAlbum(input, selectedAlbum);
+    if (album.titleTrack) {
+      const released = releaseDebutAlbum(input, album);
       releasedAlbum = released.album;
       releaseResult = released.releaseResult;
       events.push({

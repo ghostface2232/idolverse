@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { DEBUT_PROJECT } from "@/data/debutProject";
+import {
+  DEBUT_PROJECT,
+  TITLE_TRACK_SELECTION_DECISION_ID,
+} from "@/data/debutProject";
 import { initialAlbumState } from "@/stores/albumStore";
 import { createProjectInstance } from "@/systems/projectSystem";
 import {
@@ -26,7 +29,7 @@ function makeDebutSnapshot(): GameSnapshot {
   return snapshot;
 }
 
-function playDebut() {
+function playDebut(selectTitleTrack = true) {
   let snapshot = makeDebutSnapshot();
   const eventWeeks = new Map<string, number>();
   let releaseReport: ReturnType<typeof processWeek>["weekReport"] | null = null;
@@ -44,6 +47,42 @@ function playDebut() {
       releaseReport = result.weekReport;
     }
     snapshot = result.newState;
+    const project = snapshot.game.activeProjects[0];
+    if (
+      selectTitleTrack &&
+      project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] ===
+        "available" &&
+      snapshot.album.currentAlbum
+    ) {
+      const selectedTrack = snapshot.album.currentAlbum.titleTrackCandidates.find(
+        (track) => track.id === "track-safe",
+      );
+      if (!selectedTrack) throw new Error("Missing safe title track candidate.");
+      snapshot = {
+        ...snapshot,
+        game: {
+          ...snapshot.game,
+          activeProjects: snapshot.game.activeProjects.map((candidate) =>
+            candidate.id === project.id
+              ? {
+                  ...candidate,
+                  decisionStatuses: {
+                    ...candidate.decisionStatuses,
+                    [TITLE_TRACK_SELECTION_DECISION_ID]: "completed",
+                  },
+                }
+              : candidate,
+          ),
+        },
+        album: {
+          ...snapshot.album,
+          currentAlbum: {
+            ...snapshot.album.currentAlbum,
+            titleTrack: { ...selectedTrack },
+          },
+        },
+      };
+    }
   }
   return { snapshot, eventWeeks, releaseReport };
 }
@@ -58,6 +97,9 @@ describe("20주 데뷔 프로젝트", () => {
     expect(result.snapshot.game.currentPhase).toBe("debut");
     expect(result.snapshot.album.currentAlbum).toBeNull();
     expect(result.snapshot.album.releasedAlbums).toHaveLength(1);
+    expect(result.snapshot.album.releasedAlbums[0].titleTrack?.id).toBe(
+      "track-safe",
+    );
     expect(result.snapshot.album.releasedAlbums[0].quality).toBeGreaterThan(0);
     expect(result.snapshot.fandom.chartPositions.melon).toBeGreaterThan(0);
     expect(
@@ -65,6 +107,20 @@ describe("20주 데뷔 프로젝트", () => {
         (event) => event.presentation?.kind === "chart-reveal",
       ),
     ).toBe(true);
+  });
+
+  it("타이틀곡을 고르지 않으면 자동 선택하지 않고 프로젝트 진행을 막는다", () => {
+    const result = playDebut(false);
+    const project = result.snapshot.game.activeProjects[0];
+
+    expect(project.currentStageId).toBe("title-decision");
+    expect(project.status).toBe("blocked");
+    expect(project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID]).toBe(
+      "available",
+    );
+    expect(result.snapshot.album.currentAlbum?.titleTrack).toBeNull();
+    expect(result.snapshot.album.releasedAlbums).toHaveLength(0);
+    expect(result.releaseReport).toBeNull();
   });
 
   it("보장 사건이 창을 넘지 않고 같은 입력의 20주 리플레이가 동일하다", () => {

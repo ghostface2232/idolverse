@@ -17,8 +17,15 @@ import {
 import {
   applyEventChoiceAndSave,
   completeChartRevealAndSave,
+  completeTitleTrackSelectionAndSave,
   runWeekAndSave,
 } from "@/lib/weekRunner";
+import {
+  DEBUT_PROJECT,
+  TITLE_TRACK_SELECTION_DECISION_ID,
+} from "@/data/debutProject";
+import { initialAlbumState } from "@/stores/albumStore";
+import { createProjectInstance } from "@/systems/projectSystem";
 import { makeGameSnapshot, toGameStateSnapshot } from "@/test/gameStateFixture";
 import type { GameEvent } from "@/types/game";
 
@@ -128,6 +135,60 @@ describe("durable weekly workflow", () => {
     expect(captureGameState().gameStore.weeklyFlow.state).toBe("report_ready");
     expect(captureGameState().gameStore.currentWeek).toBe(6);
     expect(captureGameState().gameStore.saveRevision).toBe(1);
+  });
+
+  it("선택한 타이틀곡 전략을 자동 교체하지 않고 프로젝트와 함께 저장한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const project = createProjectInstance(DEBUT_PROJECT, 1);
+    snapshot.game.activeProjects = [
+      {
+        ...project,
+        currentStageId: "title-decision",
+        decisionStatuses: { [TITLE_TRACK_SELECTION_DECISION_ID]: "available" },
+      },
+    ];
+    snapshot.album = structuredClone(initialAlbumState);
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    await completeTitleTrackSelectionAndSave(
+      project.id,
+      "track-safe",
+      "user",
+      1,
+    );
+
+    const committed = captureGameState();
+    expect(committed.albumStore.currentAlbum?.titleTrack?.id).toBe("track-safe");
+    expect(
+      committed.gameStore.activeProjects[0].decisionStatuses[
+        TITLE_TRACK_SELECTION_DECISION_ID
+      ],
+    ).toBe("completed");
+    expect(saveGameMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("현재 후보가 아닌 타이틀곡은 저장 전에 거부한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const project = createProjectInstance(DEBUT_PROJECT, 1);
+    snapshot.game.activeProjects = [
+      {
+        ...project,
+        currentStageId: "title-decision",
+        decisionStatuses: { [TITLE_TRACK_SELECTION_DECISION_ID]: "available" },
+      },
+    ];
+    snapshot.album = structuredClone(initialAlbumState);
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    await expect(
+      completeTitleTrackSelectionAndSave(project.id, "missing", "user", 1),
+    ).rejects.toThrow("not a current candidate");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
   });
 });
 

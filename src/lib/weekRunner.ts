@@ -14,6 +14,7 @@ import {
 } from "@/systems/weekDelta";
 import type { EffectMap, GameEvent, Position } from "@/types/game";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
+import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 
 export class WeeklyResolutionConflictError extends Error {
   constructor(message: string) {
@@ -425,6 +426,66 @@ export async function completePositionReviewAndSave(
       ),
     },
     trainee: { trainees },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+export async function completeTitleTrackSelectionAndSave(
+  projectId: string,
+  trackId: string,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  const project = snapshot.game.activeProjects.find(
+    (candidate) => candidate.id === projectId,
+  );
+  if (
+    project?.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] !== "available"
+  ) {
+    throw new WeeklyResolutionConflictError(
+      "Title track selection is not available.",
+    );
+  }
+
+  const album = snapshot.album.currentAlbum;
+  const selectedTrack = album?.titleTrackCandidates.find(
+    (candidate) => candidate.id === trackId,
+  );
+  if (!album || !selectedTrack) {
+    throw new WeeklyResolutionConflictError(
+      "The selected title track is not a current candidate.",
+    );
+  }
+
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: snapshot.game.activeProjects.map((candidate) =>
+        candidate.id === projectId
+          ? {
+              ...candidate,
+              decisionStatuses: {
+                ...candidate.decisionStatuses,
+                [TITLE_TRACK_SELECTION_DECISION_ID]: "completed",
+              },
+            }
+          : candidate,
+      ),
+    },
+    album: {
+      ...snapshot.album,
+      currentAlbum: {
+        ...album,
+        titleTrack: { ...selectedTrack },
+      },
+    },
   };
   const saved = await saveGame(
     userId,

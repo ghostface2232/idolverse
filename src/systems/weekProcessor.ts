@@ -426,11 +426,6 @@ export function processWeek(
     { kind: "training", id: "weekly-training", label: "주간 훈련" },
     3,
   );
-  trainees = trainees.map((trainee) =>
-    decisionActivityOverrides.get(trainee.id) === trainee.currentActivity
-      ? { ...trainee, currentActivity: "training" }
-      : trainee,
-  );
   report.injuries = trainingResult.injuries;
   if (trainingResult.injuries.length > 0) {
     report.warnings.push(
@@ -1048,6 +1043,14 @@ export function processWeek(
       marketTrend: newTrend,
     };
   }
+
+  // 결정 카드의 활동 전환은 케미·이벤트·팬덤까지 이번 주 전체 계산에 유지한다.
+  // 모든 파생 결과가 끝난 뒤에만 해제해 다음 주 훈련 상태로 복귀시킨다.
+  trainees = trainees.map((trainee) =>
+    decisionActivityOverrides.get(trainee.id) === trainee.currentActivity
+      ? { ...trainee, currentActivity: "training" }
+      : trainee,
+  );
 
   // ── 14. Generate next week's decision cards
   const decisionTrainees = trainees.map((trainee) => ({
