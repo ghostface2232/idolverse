@@ -24,8 +24,11 @@ import {
   type ReleaseResult,
 } from "@/systems/evaluationSystem";
 import {
+  getRookieDebutWeeks,
+  retireFadedRivals,
   simulateCompetitorWeek,
   spawnEventCompetitor,
+  spawnRookieGroup,
 } from "@/systems/competitorSystem";
 import {
   rollRandomEvents,
@@ -642,6 +645,51 @@ export function processWeek(
   );
   report.competitorComebacks = compResult.comebacks;
 
+  // 세계는 늙는다(F6): 2년차부터 매년 신인 그룹이 데뷔해 신인상 코호트가
+  // 갱신되고, 로스터가 넘치면 존재감을 잃은 오래된 그룹이 해체한다.
+  let permanentRivals = compResult.competitors;
+  const worldNews: KPopNews[] = [];
+  if (snapshot.game.currentYear >= 2) {
+    getRookieDebutWeeks(snapshot.game.currentYear, campaignSeed).forEach(
+      (debutWeek, cohortIndex) => {
+        if (debutWeek !== snapshot.game.currentWeek) return;
+        const usedNames = new Set([
+          ...permanentRivals.map((rival) => rival.name),
+          ...compResult.backgroundGroups.map((group) => group.name),
+        ]);
+        const rookie = spawnRookieGroup(
+          snapshot.game.currentYear,
+          cohortIndex,
+          snapshot.game.groupGender,
+          campaignSeed,
+          usedNames,
+        );
+        permanentRivals = [...permanentRivals, rookie];
+        worldNews.push({
+          id: `news-rookie-${rookie.id}`,
+          week: snapshot.game.currentWeek,
+          headline: `신인 그룹 ${rookie.name} 데뷔`,
+          detail: `${rookie.agency}의 새 그룹 ${rookie.name}이(가) 데뷔했습니다. 올해 신인상 경쟁에 합류합니다.`,
+          type: "industry",
+        });
+      },
+    );
+    const retirement = retireFadedRivals(
+      permanentRivals,
+      snapshot.game.currentYear,
+    );
+    permanentRivals = retirement.rivals;
+    for (const gone of retirement.disbanded) {
+      worldNews.push({
+        id: `news-disband-${gone.id}-y${snapshot.game.currentYear}w${snapshot.game.currentWeek}`,
+        week: snapshot.game.currentWeek,
+        headline: `${gone.name} 활동 종료`,
+        detail: `${gone.agency}가 ${gone.name}의 활동 종료를 발표했습니다. 한 세대가 저물었습니다.`,
+        type: "industry",
+      });
+    }
+  }
+
   const eventRival = spawnEventCompetitor(
     snapshot.game.currentSeason,
     fandomAxis.public,
@@ -1016,10 +1064,10 @@ export function processWeek(
   const newsItems = generateWeeklyNews(
     snapshot.game.currentWeek,
     snapshot.game.currentSeason,
-    compResult.competitors,
+    permanentRivals,
     seed + 4,
   );
-  report.news = newsItems;
+  report.news = [...worldNews, ...newsItems];
 
   // ── 10. Finance (using economySystem)
   const weeksAfterRelease =
@@ -1521,7 +1569,7 @@ export function processWeek(
     },
     competitor: {
       ...snapshot.competitor,
-      permanentRivals: compResult.competitors,
+      permanentRivals,
       eventRivals,
       backgroundGroups: compResult.backgroundGroups,
     },
@@ -1540,7 +1588,10 @@ export function processWeek(
     calendar: {
       ...updatedCalendar,
       currentSeason: advancedGame.currentSeason,
-      kpopNews: [...newsItems, ...snapshot.calendar.kpopNews].slice(0, 8),
+      kpopNews: [...worldNews, ...newsItems, ...snapshot.calendar.kpopNews].slice(
+        0,
+        8,
+      ),
       upcomingCompetitorComebacks: compResult.comebacks.map((name) => ({
         week: advancedGame.currentWeek,
         competitorId: `rival-${name}`,

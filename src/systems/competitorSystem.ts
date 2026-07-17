@@ -1,6 +1,7 @@
 import {
   COMPETITOR_SCALING_FACTOR,
   EVENT_COMPETITOR_SPAWN_CHANCE,
+  ROOKIE_COHORT,
 } from "@/data/balance";
 import {
   COMPETITOR_ARCHETYPES,
@@ -174,6 +175,130 @@ export function simulateCompetitorWeek(
   });
 
   return { competitors: updated, backgroundGroups: updatedBg, comebacks };
+}
+
+/**
+ * 그 해 신인들이 데뷔하는 주. 연도·회차 시드만의 함수라 상태 없이
+ * 결정론이 성립한다 — 상반기 1팀, 하반기 1팀으로 자연히 흩어진다.
+ */
+export function getRookieDebutWeeks(year: number, campaignSeed: number): number[] {
+  const random = createSeededRandom(year * 389 + campaignSeed);
+  return [8 + Math.floor(random() * 20), 28 + Math.floor(random() * 19)].slice(
+    0,
+    ROOKIE_COHORT.groupsPerYear,
+  );
+}
+
+/**
+ * 연차별 신인 그룹 스폰(F6). 기성 라이벌보다 얕은 기반으로 시작해
+ * 주간 시뮬로 성장한다 — 데뷔 연도가 신인상 코호트를 정한다.
+ */
+export function spawnRookieGroup(
+  year: number,
+  cohortIndex: number,
+  playerGender: GroupGender,
+  campaignSeed: number,
+  usedNames: ReadonlySet<string>,
+): CompetitorGroup {
+  const random = createSeededRandom(
+    year * 389 + campaignSeed + cohortIndex * 17 + 5,
+  );
+
+  // 아키타입을 고르되, 이름 풀이 이미 소진됐으면 다음 아키타입으로 넘어간다.
+  const startIndex = Math.floor(random() * COMPETITOR_ARCHETYPES.length);
+  let arch = COMPETITOR_ARCHETYPES[startIndex];
+  let name: string | null = null;
+  for (let offset = 0; offset < COMPETITOR_ARCHETYPES.length; offset++) {
+    const candidate =
+      COMPETITOR_ARCHETYPES[(startIndex + offset) % COMPETITOR_ARCHETYPES.length];
+    const available = candidate.groupNamePool[playerGender].filter(
+      (poolName) => !usedNames.has(poolName),
+    );
+    if (available.length > 0) {
+      arch = candidate;
+      name = available[Math.floor(random() * available.length)];
+      break;
+    }
+  }
+  name = name ?? `${arch.groupNamePool[playerGender][0]} ${year}`;
+  const agency = arch.agencyPool[Math.floor(random() * arch.agencyPool.length)];
+
+  const scale = ROOKIE_COHORT.statScale;
+  return {
+    id: `rookie-y${year}-${cohortIndex}-${arch.id}`,
+    name,
+    agency,
+    gender: playerGender,
+    type: arch.type,
+    stats: {
+      vocal: randIntBetween(
+        (arch.statRanges.vocal?.min ?? 40) * scale,
+        (arch.statRanges.vocal?.max ?? 70) * scale,
+        random,
+      ),
+      dance: randIntBetween(
+        (arch.statRanges.dance?.min ?? 40) * scale,
+        (arch.statRanges.dance?.max ?? 70) * scale,
+        random,
+      ),
+      visual: randIntBetween(
+        (arch.statRanges.visual?.min ?? 50) * scale,
+        (arch.statRanges.visual?.max ?? 80) * scale,
+        random,
+      ),
+      marketing: randIntBetween(
+        (arch.statRanges.marketing?.min ?? 40) * scale,
+        (arch.statRanges.marketing?.max ?? 75) * scale,
+        random,
+      ),
+    },
+    fandom: Math.round(
+      randIntBetween(arch.fandomRange.min * 100, arch.fandomRange.max * 100, random) *
+        ROOKIE_COHORT.fandomScale,
+    ),
+    public: Math.round(
+      randIntBetween(arch.publicRange.min, arch.publicRange.max, random) *
+        ROOKIE_COHORT.fandomScale,
+    ),
+    global: Math.round(
+      randIntBetween(arch.globalRange.min * 50, arch.globalRange.max * 50, random) *
+        ROOKIE_COHORT.fandomScale,
+    ),
+    industry: Math.round(
+      randIntBetween(arch.industryRange.min, arch.industryRange.max, random) *
+        ROOKIE_COHORT.industryScale,
+    ),
+    activeWeeks: 0,
+    debutYear: year,
+    strengths: [...arch.strengths],
+    weaknesses: [...arch.weaknesses],
+  };
+}
+
+/**
+ * 로스터 상한 초과 시 오래 활동했고 존재감이 낮은 그룹부터 해체한다.
+ * 최소 연차 미만은 건드리지 않으므로 상한은 소프트 캡이다.
+ */
+export function retireFadedRivals(
+  rivals: readonly CompetitorGroup[],
+  currentYear: number,
+): { rivals: CompetitorGroup[]; disbanded: CompetitorGroup[] } {
+  const excess = rivals.length - ROOKIE_COHORT.maxRoster;
+  if (excess <= 0) return { rivals: [...rivals], disbanded: [] };
+
+  const relevance = (rival: CompetitorGroup) => rival.fandom / 100 + rival.public;
+  const disbanded = rivals
+    .filter(
+      (rival) =>
+        currentYear - rival.debutYear + 1 >= ROOKIE_COHORT.disbandMinYears,
+    )
+    .sort((a, b) => relevance(a) - relevance(b))
+    .slice(0, excess);
+  const disbandedIds = new Set(disbanded.map((rival) => rival.id));
+  return {
+    rivals: rivals.filter((rival) => !disbandedIds.has(rival.id)),
+    disbanded,
+  };
 }
 
 export function competitorComeback(
