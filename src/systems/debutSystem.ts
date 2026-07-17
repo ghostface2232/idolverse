@@ -1,6 +1,7 @@
 import { DEBUT_REQUIREMENTS } from "@/data/balance";
 import {
   DEBUT_PROJECT,
+  DEBUT_POSITION_TRIAL_WEEK,
   TITLE_TRACK_SELECTION_DECISION_ID,
 } from "@/data/debutProject";
 import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
@@ -260,7 +261,10 @@ export function processDebutProjectWeek(
   );
   project = advanced.project;
 
-  if (advanced.enteredStages.some((stage) => stage.id === "position-evaluation")) {
+  if (
+    relativeWeek >= DEBUT_POSITION_TRIAL_WEEK &&
+    project.decisionStatuses.positionReview !== "completed"
+  ) {
     project = {
       ...project,
       decisionStatuses: {

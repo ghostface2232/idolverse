@@ -5,18 +5,24 @@ import type { Position } from "@/types/game";
 interface PositionSlotProps {
   position: Position;
   assignedName: string | null;
-  fitness: number | null;
+  fitnessRating: number | null;
   required: boolean;
   onTap: () => void;
 }
 
-function fitnessColor(fitness: number): string {
-  if (fitness >= 70) return "text-emerald-300";
-  if (fitness >= 40) return "text-amber-300";
+function fitnessColor(fitnessRating: number): string {
+  if (fitnessRating >= 4) return "text-emerald-300";
+  if (fitnessRating >= 3) return "text-amber-300";
   return "text-red-300";
 }
 
-export function PositionSlot({ position, assignedName, fitness, required, onTap }: PositionSlotProps) {
+export function PositionSlot({
+  position,
+  assignedName,
+  fitnessRating,
+  required,
+  onTap,
+}: PositionSlotProps) {
   return (
     <button
       type="button"
@@ -46,9 +52,11 @@ export function PositionSlot({ position, assignedName, fitness, required, onTap 
             <PixelText className="text-base text-slate-50 [text-shadow:none]">
               {assignedName}
             </PixelText>
-            {fitness !== null && (
-              <span className={["text-xs", fitnessColor(fitness)].join(" ")}>
-                {fitness}%
+            {fitnessRating !== null && (
+              <span
+                className={["text-xs", fitnessColor(fitnessRating)].join(" ")}
+              >
+                적합 {fitnessRating}/5
               </span>
             )}
           </>

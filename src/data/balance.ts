@@ -77,6 +77,15 @@ export const CHEMISTRY_JOINT_TRAINING_GAIN = 2; // Shared practice should improv
 export const CHEMISTRY_CONFLICT_THRESHOLD = -50; // Below this, conflict is severe enough to justify explicit events.
 export const TEAM_CHEMISTRY_PERFORMANCE_WEIGHT = 0.15; // Team feel matters, but execution should still dominate stage outcomes.
 
+export const POSITION_TRIAL_SCORE_WEIGHTS = {
+  fitness: 0.65,
+  condition: 0.15,
+  chemistry: 0.15,
+  stageForm: 0.05,
+} as const;
+export const POSITION_TRIAL_INJURY_PENALTY_PER_WEEK = 12;
+export const POSITION_TRIAL_MAX_INJURY_PENALTY = 30;
+
 export const SATISFACTION_CONCEPT_MISMATCH_PENALTY = -5; // Repeating the wrong concept must become dangerous within a comeback cycle.
 export const SATISFACTION_OVERWORK_PENALTY = -3; // Overwork should chip away steadily rather than trigger instant collapse.
 export const SATISFACTION_WARNING_THRESHOLD = 30; // At this point, the player should feel urgent retention pressure.

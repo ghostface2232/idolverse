@@ -6,6 +6,8 @@ import { radioTileClasses } from "@/components/common/selectionTokens";
 import { FoundingTitleBar } from "@/components/founding/FoundingTitleBar";
 import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
+  ALL_POSITIONS,
+  calculatePositionFitnessRating,
   isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
@@ -16,16 +18,6 @@ import { gameVanillaStore } from "@/stores/gameStore";
 import { DEBUT_PROJECT } from "@/data/debutProject";
 import { createProjectInstance } from "@/systems/projectSystem";
 import type { Position, Trainee } from "@/types/game";
-
-const ALL_POSITIONS: Position[] = [
-  "leader",
-  "mainVocal",
-  "mainDancer",
-  "center",
-  "visual",
-  "variety",
-  "producing",
-];
 
 const OPTIONAL_POSITIONS = ALL_POSITIONS.filter(
   (position) => !REQUIRED_POSITIONS.includes(position),
@@ -98,7 +90,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
     gameVanillaStore.getState().addNotification({
       type: "success",
       title: "그룹 창단 완료",
-      message: "포지션이 가배정되었습니다. 평가전 뒤 한 번 재조정할 수 있습니다.",
+      message: "포지션이 가배정되었습니다. 훈련 뒤 선발전 결과를 보고 최종 확정합니다.",
       week: 1,
     });
     onComplete();
@@ -194,14 +186,16 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {REQUIRED_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitness = null;
+                  const fitnessRating = assigned
+                    ? calculatePositionFitnessRating(assigned.stats, position)
+                    : null;
 
                   return (
                     <PositionSlot
                       key={position}
                       position={position}
                       assignedName={assigned?.name ?? null}
-                      fitness={fitness}
+                      fitnessRating={fitnessRating}
                       required
                       onTap={() => setSelectingPosition(position)}
                     />
@@ -238,14 +232,16 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               <div className="space-y-2">
                 {OPTIONAL_POSITIONS.map((position) => {
                   const assigned = assignedMap.get(position);
-                  const fitness = null;
+                  const fitnessRating = assigned
+                    ? calculatePositionFitnessRating(assigned.stats, position)
+                    : null;
 
                   return (
                     <PositionSlot
                       key={position}
                       position={position}
                       assignedName={assigned?.name ?? null}
-                      fitness={fitness}
+                      fitnessRating={fitnessRating}
                       required={false}
                       onTap={() => setSelectingPosition(position)}
                     />
@@ -275,6 +271,10 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
             {trainees.map((trainee) => {
               const heldPositions = getTraineePositions(trainee.id, assignments);
               const isHere = heldPositions.includes(selectingPosition);
+              const fitnessRating = calculatePositionFitnessRating(
+                trainee.stats,
+                selectingPosition,
+              );
 
               return (
                 <button
@@ -299,10 +299,16 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-slate-400">평가전에서 공개</span>
+                  <span className="whitespace-nowrap text-xs font-medium text-brand-cyan">
+                    기초 적합도 {fitnessRating}/5
+                  </span>
                 </button>
               );
             })}
+            <p className="px-1 pt-1 text-[11px] leading-5 text-slate-400">
+              기초 적합도는 현재 능력치 기준 예상치입니다. 최종 배정은 훈련 뒤
+              포지션 선발전 결과를 보고 확정합니다.
+            </p>
             <button
               type="button"
               className="w-full rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-center text-xs text-slate-400 transition duration-150 ease-out hover:border-red-400/50 active:scale-[0.96]"

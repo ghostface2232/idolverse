@@ -14,7 +14,7 @@ const toneClasses: Record<NonNullable<ButtonProps["tone"]>, string> = {
   primary:
     "border-action-primary bg-action-primary text-white shadow-[0_4px_0_#9d174d,0_12px_26px_rgba(236,72,153,0.22)] hover:bg-pink-400",
   secondary:
-    "border-action-secondary/70 bg-action-secondary/12 text-cyan-100 shadow-[var(--shadow-surface)] hover:bg-action-secondary/20",
+    "border-[#164267] bg-[#183d5d] text-slate-50 shadow-[0_4px_0_#0d2947,var(--shadow-surface)] hover:bg-[#1c4568]",
   ghost:
     "border-transparent bg-white/[0.04] text-text-secondary shadow-[0_4px_0_#0b1220,var(--shadow-surface)] hover:bg-white/[0.08]",
   danger:

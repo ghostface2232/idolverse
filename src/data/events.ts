@@ -14,8 +14,8 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "debut-position-evaluation",
     type: "neutral",
-    title: "첫 포지션 평가전",
-    description: "가배정했던 역할의 실제 적합도가 공개됐다. 이번 프로젝트에서 단 한 번 포지션을 다시 조정할 수 있다.",
+    title: "첫 포지션 선발전 예고",
+    description: "6주차에 포지션 선발전을 연다. 가배정 역할에 맞춰 훈련하고 컨디션과 팀워크를 준비하자.",
     probability: 0,
     conditions: { phase: "training" },
     effects: {},

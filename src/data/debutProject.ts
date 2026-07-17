@@ -3,6 +3,7 @@ import type { ProjectDefinition } from "@/types/game";
 
 export const DEBUT_PROJECT_ID = "debut-project";
 export const TITLE_TRACK_SELECTION_DECISION_ID = "titleTrackSelection";
+export const DEBUT_POSITION_TRIAL_WEEK = 6;
 
 /**
  * 첫 데뷔를 20주짜리 여섯 미니 시즌으로 편집한다. 이벤트는 스테이지
@@ -20,15 +21,15 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       summary: "각 멤버의 강점과 팀 안에서의 역할을 찾는 기간",
       weekWindow: [1, 3],
       eventIds: [],
-      unlocks: "포지션 평가전",
+      unlocks: "포지션 선발전",
     },
     {
       id: "position-evaluation",
-      title: "포지션 평가전 · 곡 후보",
-      summary: "가배정 포지션의 적합도를 공개하고 데뷔곡 후보를 좁힌다",
+      title: "포지션 선발전 준비 · 곡 후보",
+      summary: "가배정 역할을 집중 훈련하고 선발전과 데뷔곡 후보를 준비한다",
       weekWindow: [4, 6],
       eventIds: ["debut-position-evaluation", "debut-song-candidates"],
-      unlocks: "포지션 1회 재조정",
+      unlocks: "포지션 최종 확정",
     },
     {
       id: "concept-test",

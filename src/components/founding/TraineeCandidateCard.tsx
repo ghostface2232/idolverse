@@ -3,7 +3,14 @@ import { Card } from "@/components/common/Card";
 import { PixelText } from "@/components/common/PixelText";
 import { StatBar } from "@/components/common/StatBar";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
-import { NATIONALITY_FLAGS, potentialToStars } from "@/data/founding";
+import {
+  ALL_POSITIONS,
+  NATIONALITY_FLAGS,
+  POSITION_LABELS,
+  calculatePositionFitness,
+  positionFitnessToRating,
+  potentialToStars,
+} from "@/data/founding";
 import type { Trainee, TraineeStatKey } from "@/types/game";
 
 interface TraineeCandidateCardProps {
@@ -39,6 +46,16 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
   const topAffinities = Object.entries(trainee.conceptAffinity)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3);
+  const recommendedPositions = ALL_POSITIONS.map((position) => {
+    const fitness = calculatePositionFitness(trainee.stats, position);
+    return {
+      position,
+      fitness,
+      rating: positionFitnessToRating(fitness),
+    };
+  })
+    .sort((a, b) => b.fitness - a.fitness)
+    .slice(0, 2);
   const isForeign = trainee.nationality !== "korean";
   const flag = NATIONALITY_FLAGS[trainee.nationality];
 
@@ -82,6 +99,18 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
               value={trainee.stats[key]}
               emphasized={topStatKeys.includes(key)}
             />
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-400">추천 포지션</span>
+          {recommendedPositions.map(({ position, rating }) => (
+            <span
+              key={position}
+              className="rounded-full bg-cyan-500/10 px-2 py-1 text-[11px] text-cyan-200 ring-1 ring-inset ring-brand-cyan/25"
+            >
+              {POSITION_LABELS[position]} · 적합 {rating}/5
+            </span>
           ))}
         </div>
 

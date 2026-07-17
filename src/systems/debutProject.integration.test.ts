@@ -33,6 +33,7 @@ function playDebut(selectTitleTrack = true) {
   let snapshot = makeDebutSnapshot();
   const eventWeeks = new Map<string, number>();
   let releaseReport: ReturnType<typeof processWeek>["weekReport"] | null = null;
+  let positionReviewAvailableWeek: number | null = null;
 
   for (let relativeWeek = 1; relativeWeek <= 20; relativeWeek++) {
     const result = processWeek(snapshot, NO_DECISIONS);
@@ -48,6 +49,12 @@ function playDebut(selectTitleTrack = true) {
     }
     snapshot = result.newState;
     const project = snapshot.game.activeProjects[0];
+    if (
+      positionReviewAvailableWeek === null &&
+      project.decisionStatuses.positionReview === "available"
+    ) {
+      positionReviewAvailableWeek = relativeWeek;
+    }
     if (
       selectTitleTrack &&
       project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] ===
@@ -84,7 +91,7 @@ function playDebut(selectTitleTrack = true) {
       };
     }
   }
-  return { snapshot, eventWeeks, releaseReport };
+  return { snapshot, eventWeeks, releaseReport, positionReviewAvailableWeek };
 }
 
 describe("20주 데뷔 프로젝트", () => {
@@ -121,6 +128,15 @@ describe("20주 데뷔 프로젝트", () => {
     expect(result.snapshot.album.currentAlbum?.titleTrack).toBeNull();
     expect(result.snapshot.album.releasedAlbums).toHaveLength(0);
     expect(result.releaseReport).toBeNull();
+  });
+
+  it("4주차에 선발전을 예고하고 6주차에 최종 배정을 연다", () => {
+    const result = playDebut();
+
+    expect(result.eventWeeks.get("project-event:debut-position-evaluation")).toBe(
+      4,
+    );
+    expect(result.positionReviewAvailableWeek).toBe(6);
   });
 
   it("보장 사건이 창을 넘지 않고 같은 입력의 20주 리플레이가 동일하다", () => {

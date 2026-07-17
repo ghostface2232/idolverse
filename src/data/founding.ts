@@ -222,6 +222,16 @@ export const POSITION_LABELS: Record<Position, string> = {
   producing: "프로듀싱",
 };
 
+export const ALL_POSITIONS: Position[] = [
+  "leader",
+  "mainVocal",
+  "mainDancer",
+  "center",
+  "visual",
+  "variety",
+  "producing",
+];
+
 export const REQUIRED_POSITIONS: Position[] = ["leader", "mainVocal", "mainDancer", "center"];
 export const OPTIONAL_POSITIONS: Position[] = ["visual", "variety", "producing"];
 
@@ -262,6 +272,21 @@ export function calculatePositionFitness(
     fitness += (stats[stat as TraineeStatKey] ?? 0) * (weight ?? 0);
   }
   return Math.round(fitness);
+}
+
+export function positionFitnessToRating(fitness: number): 1 | 2 | 3 | 4 | 5 {
+  if (fitness >= 85) return 5;
+  if (fitness >= 70) return 4;
+  if (fitness >= 55) return 3;
+  if (fitness >= 40) return 2;
+  return 1;
+}
+
+export function calculatePositionFitnessRating(
+  stats: Record<TraineeStatKey, number>,
+  position: Position,
+): 1 | 2 | 3 | 4 | 5 {
+  return positionFitnessToRating(calculatePositionFitness(stats, position));
 }
 
 export function potentialToStars(potential: number): number {

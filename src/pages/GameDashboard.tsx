@@ -447,6 +447,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       {weeklyFlow.state === "planning_ready" && positionReviewProject ? (
         <PositionReviewModal
           trainees={trainees}
+          trialSeed={positionReviewProject.startedAtWeek * 997 + 41}
           isSaving={isPositionReviewSaving}
           onConfirm={handleCompletePositionReview}
         />
