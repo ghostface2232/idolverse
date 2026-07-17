@@ -66,7 +66,7 @@ function pickRandom(items: string[]) {
 
 function describePlaystyle(investor: InvestorCompany) {
   const descriptions: Record<InvestorType, string> = {
-    it: "디지털 KPI와 바이럴 성장",
+    it: "스트리밍과 SNS 성장",
     entertainment: "무대 성과와 시상식 경쟁",
     vc: "수익 회수와 빠른 성장",
     cosmetic: "비주얼 완성도와 광고 적합도",

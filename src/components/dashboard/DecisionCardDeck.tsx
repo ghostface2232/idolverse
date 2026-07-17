@@ -236,7 +236,7 @@ export function DecisionCardDeck({
         <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
           <p className="text-xs font-semibold text-action-secondary">매니저 운영안</p>
           <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            직접 정하지 않은 훈련, 휴식, 내부 업무는 매니저가 팀 컨디션과 투자사 KPI에 맞춰 배정했습니다.
+            직접 정하지 않은 훈련, 휴식, 내부 업무는 매니저가 팀 컨디션과 투자사에 약속한 목표를 살펴 배정했습니다.
           </p>
         </article>
 

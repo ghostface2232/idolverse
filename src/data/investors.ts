@@ -282,7 +282,7 @@ export const INVESTOR_PROFILES: Record<
 > = {
   it: {
     label: DEFAULT_INVESTOR_BY_TYPE.it.name,
-    focus: "디지털 KPI, 바이럴 지표, 플랫폼 성장",
+    focus: "스트리밍, SNS 반응, 플랫폼 성장",
     description: DEFAULT_INVESTOR_BY_TYPE.it.description,
   },
   entertainment: {

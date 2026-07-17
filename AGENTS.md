@@ -23,7 +23,7 @@ Core gameplay: Strategic choices based on trade-offs. Results are determined by 
 - Each member pair has a chemistry value (-100 to +100) that affects team efficiency
 - Each member has a concept affinity; repeatedly using an unsuitable concept accumulates dissatisfaction -> defection
 - Fans/fame is divided into 4 categories: public recognition, core fandom, overseas fandom, and industry reputation
-- Investor type dictates the overall gameplay style (IT = Digital KPIs, Entertainment = Stage/Awards, VC = ROI, Cosmetics = Visuals, Fashion = Style/Trend alignment)
+- Investor type dictates the overall gameplay style (IT = Streaming/SNS growth, Entertainment = Stage/Awards, VC = Investment returns, Cosmetics = Visuals, Fashion = Style/Trend alignment)
 - Competitive groups: 3–5 teams (5 types) at any given time + event-based pop-up groups
 - 52-week seasonal cycle (Spring/Summer/Fall/Winter) influences concept demand and the market
 
@@ -34,7 +34,7 @@ Core gameplay: Strategic choices based on trade-offs. Results are determined by 
 - Touch area minimum 44px
 - Pixel fonts only within the game view; system fonts for UI panels
 - Player-facing copy must treat members, staff, content, and company operations as real people and work. Use "manager," not "manager AI," and prefer human actions such as planning, assigning, reporting, and negotiating over implementation terms such as automation, processing, logic, or system.
-- Keep real industry language such as KPI when it fits the speaker and context. In Korean player-facing copy, avoid em dashes and en dashes; use short sentences, commas, parentheses, or `~` for ranges.
+- Prefer plain player-facing language over business shorthand. Describe performance as concrete goals such as streaming growth, SNS response, or promises made to investors. In Korean player-facing copy, avoid em dashes and en dashes; use short sentences, commas, parentheses, or `~` for ranges.
 
 ## Asset Loading
 - All static images (under `public/images/` in dev) are referenced via `assetUrl()` from `src/utils/assets.ts`

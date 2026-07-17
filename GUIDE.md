@@ -134,7 +134,7 @@ Contract Penalties from Investors:
 
 Choosing an investor isn’t just a starting point—it determines the strategic direction of the entire game:
 
-- Investing in an IT company: Strong pressure to meet digital KPIs (streaming, social media, YouTube). Viral/online-focused strategies are advantageous.
+- Investing in an IT company: Strong pressure to meet digital growth goals across streaming, social media, and YouTube. Viral and online-focused strategies are advantageous.
 - Investing in an entertainment company: Stage performance quality and award show results are key metrics. You must invest in performance training and music quality.
 - VC/Fund Investment: Relentlessly focuses on growth rates and ROI. Quarterly revenue reporting events occur. Pressure for rapid monetization.
 - Cosmetics Company: Strong emphasis on visuals and advertising appeal. Members with high visual scores are prioritized.

@@ -113,7 +113,7 @@ K-POP 실제 관습은 7년이지만 게임 페이싱에는 너무 길다. **기
 - 중간 공개: `data/events.ts`에 스테이지 이벤트(녹음 사고, 안무 시안 선택, 티저 반응). 사전 반응 스테이지에서 `calculateFandomExpectation`을 **플레이어에게 미리 보여주는** 용도로 노출 — 이미 있는 계산을 정보 콘텐츠로 전환.
 - 개봉 연출 재사용: M2의 chart-reveal + 음악방송 1위 후보 대결(evaluationSystem 차트풀 + competitorSystem 컴백 시뮬이 상대를 공급).
 - 중첩 대기: 활동기 후반에 다음 앨범 "컨셉 조사" 스테이지 개방(projectSystem 복수 인스턴스). GoalStrip 프로젝트 레인이 D-day 카운트로 전환.
-- 정산·회고: WeekReport 격상에 컴백 정산 뷰 — 투자자 KPI 대비, 팬덤 4축 변화, 다음 사이클 훅.
+- 정산·회고: WeekReport 격상에 컴백 정산 뷰 — 투자사 목표 대비, 팬덤 4축 변화, 다음 사이클 훅.
 - phase 전이 완성: debut→growth(첫 컴백 정산), growth→peak(수상·글로벌 이정표 게이트).
 
 ### 플레이 검증 기준
