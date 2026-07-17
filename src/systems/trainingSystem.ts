@@ -5,6 +5,8 @@ import {
   INJURY_PROBABILITY_BASE,
   INJURY_STAMINA_FACTOR,
   INJURY_STRESS_FACTOR,
+  POTENTIAL_STAT_CAP,
+  POTENTIAL_TAPER_WINDOW,
   REST_DAY_GROWTH_MULT,
   STRESS_DECREASE_RATE,
   STRESS_INCREASE_RATE,
@@ -42,6 +44,23 @@ const TRAINABLE_STATS: TraineeStatKey[] = [
 
 function clampStat(value: number): number {
   return Math.max(0, Math.min(GAME_BALANCE.maxStatValue, value));
+}
+
+/** 잠재력이 정하는 성장 상한. FM 유스식: 신인의 완성은 상한이 미리 정한다. */
+export function getPotentialStatCap(potential: number): number {
+  return Math.min(
+    GAME_BALANCE.maxStatValue,
+    POTENTIAL_STAT_CAP.base + potential * POTENTIAL_STAT_CAP.perPotential,
+  );
+}
+
+/**
+ * 상한에 다가갈수록 성장이 잦아든다. 훈련·개인레슨이 모두 이 배율을 거치므로
+ * "데뷔 전에 만렙"은 불가능하고, 저잠재 멤버는 60~70대에서 정체가 온다.
+ */
+export function potentialTaper(stat: number, potential: number): number {
+  const cap = getPotentialStatCap(potential);
+  return Math.max(0, Math.min(1, (cap - stat) / POTENTIAL_TAPER_WINDOW));
 }
 
 function clamp01(value: number): number {
@@ -202,7 +221,10 @@ export function previewTraineeWeek(
     // 팀 합동 훈련에서 빠지므로 케미 성장 기회를 잃는 것이 대가다.
     const lessonStat = schedule.focus ?? findStrongestStat(trainee);
     const growth =
-      INDIVIDUAL_LESSON_GROWTH * trainee.potential * studioTrainingMult;
+      INDIVIDUAL_LESSON_GROWTH *
+      trainee.potential *
+      studioTrainingMult *
+      potentialTaper(trainee.stats[lessonStat], trainee.potential);
     return {
       mode: "individual",
       statGrowth: { [lessonStat]: growth },
@@ -255,7 +277,8 @@ export function previewTraineeWeek(
       conceptBonus *
       allocation[stat] *
       studioTrainingMult *
-      restDayMult;
+      restDayMult *
+      potentialTaper(trainee.stats[stat], trainee.potential);
   }
 
   let stressDelta = STRESS_INCREASE_RATE[schedule.intensity];

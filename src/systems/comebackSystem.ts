@@ -1,4 +1,11 @@
-import { COMEBACK_REQUIREMENTS, MUSIC_SHOW_OUTCOME } from "@/data/balance";
+import {
+  COMEBACK_BUDGET_TIERS,
+  COMEBACK_BUDGET_TIERS_BY_ID,
+  MUSIC_SHOW_OUTCOME,
+  MUSIC_SHOW_SCORE,
+  BACKGROUND_CHART_POWER_SCALE,
+  type ComebackBudgetTierId,
+} from "@/data/balance";
 import {
   COMEBACK_PROJECT,
   MOOD_ALBUM_TITLES,
@@ -103,13 +110,14 @@ export function canStartComebackProject(
 
 export interface ComebackPlanInput {
   concept: { genre: Genre; mood: ConceptMood };
+  budgetTierId: ComebackBudgetTierId;
   startedAtWeek: number;
   season: Season;
   trainees: readonly Trainee[];
   conceptHistory: readonly ConceptMood[];
 }
 
-/** 컨셉 확정과 함께 컴백 프로젝트 인스턴스와 제작 앨범을 만든다. */
+/** 컨셉·예산 확정과 함께 컴백 프로젝트 인스턴스와 제작 앨범을 만든다. */
 export function createComebackPlan(input: ComebackPlanInput): {
   project: ProjectInstance;
   album: Album;
@@ -128,7 +136,10 @@ export function createComebackPlan(input: ComebackPlanInput): {
     input.conceptHistory,
     concept.mood,
   );
-  const base = COMEBACK_REQUIREMENTS.baseProgress;
+  const budgetTier =
+    COMEBACK_BUDGET_TIERS_BY_ID.get(input.budgetTierId) ??
+    COMEBACK_BUDGET_TIERS[1];
+  const base = budgetTier.baseProgress;
 
   return {
     project: createProjectInstance(COMEBACK_PROJECT, startedAtWeek),
@@ -205,7 +216,7 @@ function toProjectMetrics(
     averageVocal:
       trainees.reduce((sum, trainee) => sum + trainee.stats.vocal, 0) /
       Math.max(1, trainees.length),
-    showcasePassed: 1,
+    launchReady: 1,
     titleTrackSelected: released || album?.titleTrack ? 1 : 0,
     albumReleased: released ? 1 : 0,
   };
@@ -255,20 +266,39 @@ interface MusicShowBattle {
   rivalScore: number;
 }
 
+interface MusicShowContender {
+  name: string;
+  power: number;
+  fanVote: number;
+}
+
+export interface MusicShowInput {
+  playerPower: number;
+  /** 0~100. 팬덤·충성도의 가중 합 — 차트에서 밀려도 투표로 다툴 수 있다. */
+  playerFanVote: number;
+  competitors: readonly CompetitorGroup[];
+  eventRivals: readonly EventCompetitor[];
+  backgroundGroups: readonly BackgroundGroup[];
+  seed: number;
+}
+
+function clampVote(value: number): number {
+  return Math.max(0, Math.min(100, value));
+}
+
 /**
- * 발매 주의 차트풀과 같은 산식으로 이번 주 1위 후보를 세워 대결한다.
+ * 이번 주 1위 후보 대결. 음원 파워와 팬덤 투표의 합산 무대라서 활동 중인
+ * 라이벌(실제 팬덤)이 가장 위협적이고, 배경 그룹은 시장 기준선으로만 선다.
  * competitorSystem의 컴백 시뮬이 상대를 공급하므로 라이벌이 "보이게" 된다.
  */
-export function evaluateMusicShow(
-  playerPower: number,
-  competitors: readonly CompetitorGroup[],
-  eventRivals: readonly EventCompetitor[],
-  backgroundGroups: readonly BackgroundGroup[],
-  seed: number,
-): MusicShowBattle {
-  const random = createSeededRandom(seed);
-  const rivalPool = [
-    ...competitors
+export function evaluateMusicShow(input: MusicShowInput): MusicShowBattle {
+  const random = createSeededRandom(input.seed);
+  const composite = (contender: { power: number; fanVote: number }) =>
+    contender.power * MUSIC_SHOW_SCORE.powerWeight +
+    contender.fanVote * MUSIC_SHOW_SCORE.fanVoteWeight;
+
+  const rivalPool: MusicShowContender[] = [
+    ...input.competitors
       .filter((competitor) => competitor.currentAlbum)
       .map((competitor) => ({
         name: competitor.name,
@@ -278,28 +308,38 @@ export function evaluateMusicShow(
           (competitor.fandom / 100) * 0.15 +
           competitor.industry * 0.1 +
           (competitor.global / 100) * 0.1,
+        fanVote: clampVote(competitor.fandom / 100),
       })),
-    ...eventRivals.map((rival) => ({
+    ...input.eventRivals.map((rival) => ({
       name: rival.name,
       power:
         rival.intensity * 0.5 +
         rival.public * 0.25 +
         (rival.fandom / 100) * 0.15 +
         rival.industry * 0.1,
+      fanVote: clampVote(rival.fandom / 100),
     })),
-    ...backgroundGroups.map((group) => ({
+    ...input.backgroundGroups.map((group) => ({
       name: group.name,
-      power: group.chartScore,
+      power: group.chartScore * BACKGROUND_CHART_POWER_SCALE,
+      fanVote: MUSIC_SHOW_SCORE.marketBaselineFanVote,
     })),
-  ].sort((a, b) => b.power - a.power);
+  ].sort((a, b) => composite(b) - composite(a));
 
   const rival = rivalPool[0] ?? {
     name: "차트 상위권 그룹",
-    power: playerPower * 0.9,
+    power: input.playerPower * 0.9,
+    fanVote: MUSIC_SHOW_SCORE.marketBaselineFanVote,
   };
-  const roll = () => 0.92 + random() * 0.16;
-  const playerScore = Math.round(playerPower * roll() * 85);
-  const rivalScore = Math.round(rival.power * roll() * 85);
+  // 넓은 분산이 성장 곡선의 절벽을 완만하게 만든다 — 추격자는 가끔 이기고,
+  // 정상권도 가끔 진다.
+  const roll = () => 0.85 + random() * 0.3;
+  const playerScore = Math.round(
+    composite({ power: input.playerPower, fanVote: input.playerFanVote }) *
+      roll() *
+      85,
+  );
+  const rivalScore = Math.round(composite(rival) * roll() * 85);
 
   return {
     won: playerScore >= rivalScore,
@@ -466,13 +506,15 @@ export function processComebackProjectWeek(
     const released = input.releasedAlbums.find(
       (candidate) => candidate.id === project.releasedAlbumId,
     );
-    const battle = evaluateMusicShow(
-      released?.performance?.chartPower ?? 0,
-      input.competitors,
-      input.eventRivals,
-      input.backgroundGroups,
-      input.cumulativeWeek * 577 + project.startedAtWeek,
-    );
+    const battle = evaluateMusicShow({
+      playerPower: released?.performance?.chartPower ?? 0,
+      playerFanVote:
+        input.fandom.fandom * 0.6 + input.fandom.fandomLoyalty * 0.4,
+      competitors: input.competitors,
+      eventRivals: input.eventRivals,
+      backgroundGroups: input.backgroundGroups,
+      seed: input.cumulativeWeek * 577 + project.startedAtWeek,
+    });
     project = {
       ...project,
       evaluations: {

@@ -10,7 +10,7 @@ const READY: ProjectMetrics = {
   elapsedWeeks: 20,
   readiness: 90,
   averageVocal: 65,
-  showcasePassed: 1,
+  launchReady: 1,
   titleTrackSelected: 1,
   albumReleased: 1,
 };
@@ -31,18 +31,17 @@ describe("projectSystem", () => {
     expect(replay.spawnedEventIds).toHaveLength(0);
   });
 
-  it("쇼케이스 게이트를 통과하기 전에는 프로모션 단계에 진입하지 않는다", () => {
+  it("데뷔 일정이 도래하기 전에는 프로모션 단계에 진입하지 않는다", () => {
     const initial = createProjectInstance(DEBUT_PROJECT, 1);
     const blocked = advanceProject(DEBUT_PROJECT, initial, 20, {
       ...READY,
-      showcasePassed: 0,
+      launchReady: 0,
     });
     expect(blocked.project.currentStageId).toBe("showcase-rehearsal");
     expect(blocked.project.status).toBe("blocked");
 
-    const passed = advanceProject(DEBUT_PROJECT, blocked.project, 20, READY);
-    expect(passed.project.currentStageId).toBe("debut-promotion");
-    expect(passed.project.status).toBe("completed");
+    const ready = advanceProject(DEBUT_PROJECT, blocked.project, 20, READY);
+    expect(ready.project.currentStageId).toBe("debut-promotion");
   });
 
   it("복수 프로젝트 인스턴스는 시작 주와 이벤트 기록을 독립적으로 가진다", () => {

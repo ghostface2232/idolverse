@@ -1,4 +1,5 @@
 import {
+  BACKGROUND_CHART_POWER_SCALE,
   PUBLIC_DECAY_RATE,
   TITLE_TRACK_TYPE_WEIGHTS,
 } from "@/data/balance";
@@ -56,7 +57,15 @@ function computeChartPower(
   market: MarketContext,
   titleTrack: TitleTrack,
 ): number {
-  const base = albumQuality * 0.4 + publicStat * 0.25 + (fandom / 100) * 0.15 + industry * 0.1 + (global / 100) * 0.1;
+  // 플레이어 팬덤·글로벌은 0~100 스케일이다. /100으로 나누면 만렙이어도
+  // 합계 0.25점 기여라 "팬덤을 키워 이긴다"가 산식에서 사라진다 —
+  // 성장 축이 차트 경쟁력에 그대로 반영되어야 성장으로 이기는 구조가 성립한다.
+  const base =
+    albumQuality * 0.4 +
+    publicStat * 0.25 +
+    fandom * 0.15 +
+    industry * 0.1 +
+    global * 0.1;
 
   const typeWeights = TITLE_TRACK_TYPE_WEIGHTS[titleTrack.type];
   const publicMult = "public" in typeWeights ? typeWeights.public : 1.0;
@@ -110,7 +119,11 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   }
 
   for (const bg of backgroundGroups) {
-    chartPool.push({ name: bg.name, power: bg.chartScore, isPlayer: false });
+    chartPool.push({
+      name: bg.name,
+      power: bg.chartScore * BACKGROUND_CHART_POWER_SCALE,
+      isPlayer: false,
+    });
   }
 
   chartPool.sort((a, b) => b.power - a.power);

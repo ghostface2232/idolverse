@@ -37,8 +37,17 @@ const STAT_DISPLAY_ORDER: TraineeStatKey[] = [
   "mental",
 ];
 
+const POTENTIAL_TIER_LABELS: Record<number, { label: string; tone: string }> = {
+  5: { label: "세대급 재능", tone: "text-amber-300" },
+  4: { label: "특급 유망주", tone: "text-amber-200" },
+  3: { label: "주목할 재능", tone: "text-cyan-200" },
+  2: { label: "성실형", tone: "text-slate-300" },
+  1: { label: "미지수", tone: "text-slate-400" },
+};
+
 export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCandidateCardProps) {
   const stars = potentialToStars(trainee.potential);
+  const potentialTier = POTENTIAL_TIER_LABELS[stars] ?? POTENTIAL_TIER_LABELS[1];
   // 후보 비교 시 강점이 한눈에 보이도록 상위 2개 능력치를 강조한다.
   const topStatKeys = [...STAT_DISPLAY_ORDER]
     .sort((a, b) => trainee.stats[b] - trainee.stats[a])
@@ -91,6 +100,22 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
           </div>
         </div>
 
+        {/* 잠재력이 계약의 이유다 — 현재 능력치가 아니라 도달할 높이를 먼저 보인다. */}
+        <div className="flex items-center justify-between rounded-xl bg-slate-950/50 px-3 py-2">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+              잠재력
+            </p>
+            <p className={`text-sm font-semibold ${potentialTier.tone}`}>
+              {potentialTier.label}
+            </p>
+          </div>
+          <span className="text-base tracking-[0.1em] text-amber-300">
+            {"★".repeat(stars)}
+            <span className="text-slate-600">{"★".repeat(5 - stars)}</span>
+          </span>
+        </div>
+
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
           {STAT_DISPLAY_ORDER.map((key) => (
             <StatBar
@@ -115,9 +140,6 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400">
-            잠재력 {"★".repeat(stars)}{"☆".repeat(5 - stars)}
-          </span>
           {topAffinities.map(([mood]) => (
             <span
               key={mood}

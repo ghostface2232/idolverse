@@ -16,8 +16,12 @@ import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import { traineeVanillaStore, useTraineeStore } from "@/stores/traineeStore";
 import { gameVanillaStore } from "@/stores/gameStore";
 import { DEBUT_PROJECT } from "@/data/debutProject";
+import {
+  DEBUT_SCHEDULE_TIERS,
+  DEFAULT_DEBUT_SCHEDULE_ID,
+} from "@/data/balance";
 import { createProjectInstance } from "@/systems/projectSystem";
-import type { Position, Trainee } from "@/types/game";
+import type { DebutScheduleTierId, Position, Trainee } from "@/types/game";
 
 const OPTIONAL_POSITIONS = ALL_POSITIONS.filter(
   (position) => !REQUIRED_POSITIONS.includes(position),
@@ -37,6 +41,9 @@ function getTraineePositions(
 
 export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentProps) {
   const [selectingPosition, setSelectingPosition] = useState<Position | null>(null);
+  const [scheduleTierId, setScheduleTierId] = useState<DebutScheduleTierId>(
+    DEFAULT_DEBUT_SCHEDULE_ID,
+  );
 
   const trainees = useTraineeStore((s) => s.trainees);
   const assignments = useFoundingStore((s) => s.positionAssignments);
@@ -83,7 +90,9 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
     gameVanillaStore.setState(
       {
         currentPhase: "training",
-        activeProjects: [createProjectInstance(DEBUT_PROJECT, 1)],
+        activeProjects: [
+          { ...createProjectInstance(DEBUT_PROJECT, 1), scheduleTierId },
+        ],
       },
       false,
     );
@@ -249,6 +258,30 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                 })}
               </div>
             </section>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm text-slate-200">데뷔 일정</p>
+          <div className="grid grid-cols-3 gap-2">
+            {DEBUT_SCHEDULE_TIERS.map((tier) => (
+              <button
+                key={tier.id}
+                type="button"
+                className={[
+                  "rounded-2xl border-2 p-3 text-center transition duration-150 ease-out active:scale-[0.96] [word-break:keep-all]",
+                  radioTileClasses(scheduleTierId === tier.id, true),
+                ].join(" ")}
+                onClick={() => setScheduleTierId(tier.id)}
+              >
+                <p className="text-sm text-slate-50">{tier.label}</p>
+                <p className="mt-0.5 text-xs tabular-nums text-brand-cyan">
+                  {tier.debutWeek}주차 데뷔
+                </p>
+                <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                  {tier.summary}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
       </div>

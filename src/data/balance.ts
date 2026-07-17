@@ -1,5 +1,6 @@
 import type {
   ConceptSynergyGrade,
+  EffectMap,
   Season,
   TrainingIntensity,
 } from "@/types/game";
@@ -20,24 +21,136 @@ export const WEEKS_PER_MONTH = GAME_BALANCE.weeksPerYear / 12; // Fixed costs ar
 // 만료 전 재계약 협상이 후반 멤버 운영 컨텐츠의 축이 된다.
 export const CONTRACT_TERM_WEEKS = GAME_BALANCE.weeksPerYear * 3;
 
-/** 데뷔 프로젝트의 공개 게이트. UI·쇼케이스 판정·테스트가 같은 값을 쓴다. */
+/**
+ * 데뷔의 "완성형" 기준선. 게이트가 아니다 — 발매는 일정대로 이뤄지고
+ * (Game Dev Story 원칙: 퀄리티가 낮다고 출시를 막지 않는다), 이 기준 대비
+ * 완성도가 쇼케이스 평가와 차트 결과로 나타날 뿐이다.
+ */
 export const DEBUT_REQUIREMENTS = {
   readiness: 80,
   averageVocal: 55,
-  minimumWeeks: 14,
-  projectWeeks: 20,
+  projectWeeks: 24, // 가장 긴 일정 기준의 프로젝트 상한.
 } as const;
 
 /**
- * 컴백 프로젝트의 공개 게이트·페이싱. 데뷔보다 짧은 14주 사이클로,
- * 발매 전 준비도 게이트와 D-day 표시·테스트가 같은 값을 쓴다.
+ * 창단 시 정하는 데뷔 일정. 짧으면 시장의 첫 주목을 받는 대신 완성도가
+ * 낮고, 길면 완성도가 오르는 대신 경쟁 신인 데뷔에 가려질 수 있다.
+ */
+export const DEBUT_SCHEDULE_TIERS = [
+  {
+    id: "fast",
+    label: "속전속결",
+    debutWeek: 16,
+    attentionMult: 1.2, // 첫 신인 프리미엄 — 발매 주 대중·팬덤 반응 배율.
+    rivalDebutChance: 0.15, // 같은 주 경쟁 신인 데뷔로 가려질 확률.
+    summary: "시장의 첫 주목을 독차지하지만 완성도와 평가가 낮을 수 있습니다",
+  },
+  {
+    id: "standard",
+    label: "정석",
+    debutWeek: 20,
+    attentionMult: 1.0,
+    rivalDebutChance: 0.35,
+    summary: "준비와 주목도의 균형을 잡는 표준 일정입니다",
+  },
+  {
+    id: "long",
+    label: "완성형",
+    debutWeek: 24,
+    attentionMult: 0.85,
+    rivalDebutChance: 0.6,
+    summary: "완성도를 끌어올리지만 그 사이 경쟁 신인들에게 가려질 수 있습니다",
+  },
+] as const;
+
+export type DebutScheduleTier = (typeof DEBUT_SCHEDULE_TIERS)[number];
+
+export const DEBUT_SCHEDULE_TIERS_BY_ID = new Map(
+  DEBUT_SCHEDULE_TIERS.map((tier) => [tier.id, tier]),
+);
+
+/** 스케줄 미기록 구버전 세이브가 따르는 기본 일정. */
+export const DEFAULT_DEBUT_SCHEDULE_ID = "standard";
+
+/** 데뷔 프로모션(티저~쇼케이스)이 발매보다 앞서 시작되는 주 수. */
+export const DEBUT_PROMOTION_LEAD_WEEKS = 2;
+
+/**
+ * 쇼케이스는 합격/불합격 게이트가 아니라 평가다. 점수 구간이 데뷔 주의
+ * 업계·팬덤 반응을 소폭 가감한다 — 낮은 완성도는 출시를 막는 게 아니라
+ * 결과로 말한다.
+ */
+export const DEBUT_SHOWCASE_GRADES: readonly {
+  min: number;
+  label: string;
+  summary: string;
+  effects: EffectMap;
+}[] = [
+  {
+    min: 75,
+    label: "완성형 데뷔",
+    summary: "무대 완성도가 기준선을 넘어 업계와 팬덤의 신뢰를 얻었다",
+    effects: { industry: 3, fandom: 2 },
+  },
+  {
+    min: 55,
+    label: "무난한 출발",
+    summary: "신인다운 무대 — 성장 서사의 출발점으로는 충분하다",
+    effects: {},
+  },
+  {
+    min: 0,
+    label: "미완의 데뷔",
+    summary: "준비가 부족한 무대가 그대로 드러났다",
+    effects: { industry: -2, fandomDisappointment: 4 },
+  },
+];
+
+/**
+ * 컴백 프로젝트의 페이싱. readiness는 게이트가 아니라 권장 준비도 —
+ * 낮아도 발매되며 progressMult를 통해 품질·차트로 귀결된다.
  */
 export const COMEBACK_REQUIREMENTS = {
-  readiness: 65, // 발매 진입에 필요한 앨범 진행 4축 평균.
+  readiness: 65, // 권장 준비도. GoalLanes·기획 UI 표기 기준.
   releaseWeek: 12, // 발매 스테이지가 열리는 상대 주차. D-day 카운트의 기준.
   projectWeeks: 14, // 컨셉 조사부터 정산·회고까지의 표준 사이클 길이.
-  baseProgress: 20, // 기획 착수 시 사전 제작분. 데뷔 경험이 있는 팀의 출발선.
 } as const;
+
+/**
+ * 컴백 기획의 제작 예산. 착수 비용이 없으면 "정산 즉시 무조건 재컴백"이
+ * 지배 선택이 된다. 예산이 사전 제작분(출발 진행도)을 결정해, 절약 기획은
+ * 낮은 완성도 리스크를 스스로 감수하는 결정이 된다.
+ */
+export const COMEBACK_BUDGET_TIERS = [
+  {
+    id: "lean",
+    label: "절약",
+    cost: 30_000_000,
+    baseProgress: 12,
+    summary: "최소 예산. 완성도가 낮은 채로 발매될 위험을 감수합니다",
+  },
+  {
+    id: "standard",
+    label: "표준",
+    cost: 60_000_000,
+    baseProgress: 20,
+    summary: "무난한 사전 제작과 안정적인 일정",
+  },
+  {
+    id: "blockbuster",
+    label: "대형",
+    cost: 120_000_000,
+    baseProgress: 30,
+    summary: "높은 출발선 — 시설·스태프 투자와 자금을 경쟁합니다",
+  },
+] as const;
+
+export type ComebackBudgetTier = (typeof COMEBACK_BUDGET_TIERS)[number];
+export type ComebackBudgetTierId = ComebackBudgetTier["id"];
+
+export const COMEBACK_BUDGET_TIERS_BY_ID = new Map(
+  COMEBACK_BUDGET_TIERS.map((tier) => [tier.id, tier]),
+);
 
 // 음악방송 1위 대결의 보상. 승리는 활동기의 정점이어야 하고,
 // 패배는 다음 주 결정을 바꿀 만큼만 아프고 회복 불가능해서는 안 된다.
@@ -46,8 +159,72 @@ export const MUSIC_SHOW_OUTCOME = {
   lose: { fandomLoyalty: 2, stress: 3 },
 } as const;
 
+// 음악방송은 음원 파워만의 무대가 아니라 팬덤 화력이 결정력을 갖는 무대다.
+// 차트에서 밀려도 팬덤으로 1위를 다투는 순간이 이 가중치에서 나온다.
+export const MUSIC_SHOW_SCORE = {
+  powerWeight: 0.7,
+  fanVoteWeight: 0.3,
+  /** 배경 그룹(시장 기준선)의 팬덤 화력. 활동 라이벌은 실제 팬덤을 쓴다. */
+  marketBaselineFanVote: 45,
+} as const;
 
-export const TRAINING_BASE_GROWTH = 0.8; // A single week should matter, but not outscale album-level decisions.
+// 차트풀에서 배경 그룹(시장 전체)의 존재감. 1.0이면 최상위 배경 그룹이
+// 플레이어의 이론상 최대 파워 위에 있어 성장 곡선이 영원히 1위에 닿지 못한다
+// (전 구간 음악방송 승률 0% 측정). 기성 그룹 역전은 3~7년차의 목표이므로
+// 밴드를 플레이어 후반 곡선이 간신히 관통하는 높이까지만 누른다.
+export const BACKGROUND_CHART_POWER_SCALE = 0.8;
+
+// 프로듀서가 없거나 약하면 앨범 제작이 매주 사고 위험에 노출된다.
+// 스태프 고용은 속도(진행 계수)만이 아니라 안정성(사고 확률)을 산다.
+export const PRODUCTION_RISK = {
+  safeAbility: 55, // 이 능력치 이상의 프로듀서면 제작 사고가 나지 않는다.
+  noStaffChance: 0.25, // 프로듀서 부재 시 주간 사고 확률.
+  lowStaffChance: 0.12, // 능력 미달 프로듀서의 주간 사고 확률.
+  songProgressLoss: 6, // 사고 1회당 곡 작업 손실.
+} as const;
+
+// FM 유스식 육성: 신인은 낮은 능력치로 시작하고(상한 30~40대),
+// 예산은 능력치가 아니라 잠재력을 산다. 완성은 여러 앨범과 활동 이후다.
+export const RECRUIT_STAT_BANDS = {
+  min: 18, // 추가 예산 0 기준 하한.
+  max: 32, // 추가 예산 0 기준 상한.
+  budgetSpread: 8, // 최대 예산 시 하한·상한에 더해지는 폭.
+  scoutBonus: 4, // 스카우트 방식의 즉시 전력 보정.
+  hardCap: 45, // 어떤 조합으로도 넘지 못하는 신인 스탯 상한.
+} as const;
+
+export const RECRUIT_POTENTIAL = {
+  base: 0.75,
+  spread: 0.65, // 기본 롤 폭: 0.75~1.40.
+  budgetBonus: 0.25, // 최대 예산이 더하는 잠재력 — 예산은 잠재력을 산다.
+  scoutBonus: 0.1,
+  max: 1.7,
+} as const;
+
+// 잠재력이 성장 상한을 정한다: cap = base + potential × perPotential.
+// (0.8→67, 1.2→81, 1.5→92, 1.7→99) 상한 근처에서는 성장이 taper된다.
+export const POTENTIAL_STAT_CAP = { base: 38, perPotential: 36 } as const;
+export const POTENTIAL_TAPER_WINDOW = 18;
+
+// 창단 시장에는 검증된 인재가 오지 않는다. 상위 풀은 회사가 성장한 뒤
+// 재모집(M5)에서 열린다.
+export const FOUNDING_STAFF_ABILITY_CAP = 60;
+
+// 스태프도 잠재 상한이 있다. 실무로 조금씩 성장하지만(연 +3 수준) 본인의
+// 천장(채용 시 랜덤 결정)을 넘지 못한다 — 회사가 커지면 결국 새 인재
+// 채용(M5 재모집)이 필요해지는 구조의 근거다.
+export const STAFF_GROWTH = {
+  weeklyGrowth: 0.06, // 실무 주간 성장. 연 환산 약 +3.
+  capMarginMin: 5, // 잠재 상한 = 채용 시 능력 + [min, max] 랜덤 마진.
+  capMarginMax: 25,
+  legacyCapMargin: 10, // 상한 정보가 없는 구버전 세이브 스태프의 기본 헤드룸.
+} as const;
+
+
+// FM 유스식 페이싱: 포커스 스탯 기준 연 +20~25. 완성(캡 도달)은 고잠재
+// 멤버 기준 4~5년차다 — 한 시즌 만에 만렙이 되면 재계약·세대교체 컨텐츠가
+// 설 자리가 없다. (0.8이었을 때 1년차에 캡 도달을 프로브로 확인)
+export const TRAINING_BASE_GROWTH = 0.2;
 
 // 휴식일은 스트레스 완화 대가로 그 주 성장을 깎는다. 무비용이면 항상 켜는
 // 것이 지배 선택이 되므로, "언제 쉬게 할 것인가"가 실제 결정이 되게 한다.
@@ -55,7 +232,8 @@ export const REST_DAY_GROWTH_MULT = 0.85;
 
 // 개인 레슨은 한 스탯(포커스, 미지정 시 최고 스탯)에 집중 성장을 준다.
 // 대가는 그 주 팀 합동 훈련 제외(케미 성장 기회 상실)와 스트레스다.
-export const INDIVIDUAL_LESSON_GROWTH = 2.2;
+// 포커스 훈련의 약 3배 — 느린 기본 성장 위에서 유의미한 가속이 된다.
+export const INDIVIDUAL_LESSON_GROWTH = 1.4;
 
 // 예능 출연의 대중성 보상은 확정이 아니라 분산이 있어야 반복 최적해가 되지
 // 않는다. 바이럴이면 추가 보상, 무반응이면 이번 주 대중성 상승이 사라진다.

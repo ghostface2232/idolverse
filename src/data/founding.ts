@@ -1,3 +1,4 @@
+import { RECRUIT_STAT_BANDS } from "@/data/balance";
 import type { Nationality, Position, StaffRole, TraineeStatKey } from "@/types/game";
 
 export type FoundingStep = "staff" | "facility" | "audition" | "position";
@@ -158,6 +159,7 @@ export const RECRUITMENT_HEADCOUNT_MULTIPLIER: Record<5 | 7 | 9 | 12, number> = 
 
 export const RECRUITMENT_MAX_EXTRA_BUDGET = 100_000_000;
 
+/** recruitSystem의 실제 생성 밴드와 같은 상수를 쓴다 — 표시와 결과가 어긋나면 안 된다. */
 export function getRecruitmentStatRange(extraBudget: number): {
   min: number;
   max: number;
@@ -167,8 +169,8 @@ export function getRecruitmentStatRange(extraBudget: number): {
     Math.min(1, extraBudget / RECRUITMENT_MAX_EXTRA_BUDGET),
   );
   return {
-    min: Math.round(30 + ratio * 20),
-    max: Math.round(65 + ratio * 30),
+    min: Math.round(RECRUIT_STAT_BANDS.min + ratio * RECRUIT_STAT_BANDS.budgetSpread),
+    max: Math.round(RECRUIT_STAT_BANDS.max + ratio * RECRUIT_STAT_BANDS.budgetSpread),
   };
 }
 
@@ -192,9 +194,10 @@ export function getRecruitmentBudgetLabel(extraBudget: number): string {
 }
 
 export function getStatBandLabel(min: number, max: number): string {
+  // 신인 스케일(18~45) 기준의 상대 밴드. 완성형 능력치는 존재하지 않는다.
   const band = (v: number) => {
-    if (v < 40) return "낮음";
-    if (v < 70) return "중간";
+    if (v < 26) return "낮음";
+    if (v < 36) return "중간";
     return "높음";
   };
   const lo = band(min);

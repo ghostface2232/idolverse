@@ -1,4 +1,10 @@
-import { DEBUT_REQUIREMENTS } from "@/data/balance";
+import {
+  DEBUT_PROMOTION_LEAD_WEEKS,
+  DEBUT_SCHEDULE_TIERS_BY_ID,
+  DEBUT_SHOWCASE_GRADES,
+  DEFAULT_DEBUT_SCHEDULE_ID,
+  type DebutScheduleTier,
+} from "@/data/balance";
 import {
   DEBUT_PROJECT,
   DEBUT_POSITION_TRIAL_WEEK,
@@ -66,7 +72,16 @@ export interface DebutProjectWeekResult {
   enteredStageIds: string[];
   directedBeatKinds: PacingBeatKind[];
   readiness: DebutReadiness;
-  showcaseEvaluated: boolean;
+}
+
+export function getDebutSchedule(
+  project: Pick<ProjectInstance, "scheduleTierId">,
+): DebutScheduleTier {
+  return (
+    DEBUT_SCHEDULE_TIERS_BY_ID.get(
+      project.scheduleTierId ?? DEFAULT_DEBUT_SCHEDULE_ID,
+    ) ?? DEBUT_SCHEDULE_TIERS_BY_ID.get(DEFAULT_DEBUT_SCHEDULE_ID)!
+  );
 }
 
 export function calculateDebutReadiness(
@@ -102,6 +117,17 @@ export function calculateDebutReadiness(
   };
 }
 
+export function getShowcaseGrade(score: number) {
+  return (
+    DEBUT_SHOWCASE_GRADES.find((grade) => score >= grade.min) ??
+    DEBUT_SHOWCASE_GRADES[DEBUT_SHOWCASE_GRADES.length - 1]
+  );
+}
+
+/**
+ * 쇼케이스는 게이트가 아니라 평가다. 점수는 기준선(DEBUT_REQUIREMENTS) 대비
+ * 완성도를 말하고, 등급 효과가 데뷔 주의 업계·팬덤 반응을 소폭 가감한다.
+ */
 export function evaluateDebutShowcase(
   readiness: DebutReadiness,
   cumulativeWeek: number,
@@ -111,32 +137,27 @@ export function evaluateDebutShowcase(
       readiness.averageVocal * 0.3 +
       Math.max(0, Math.min(100, readiness.teamChemistry + 50)) * 0.15,
   );
-  const passed =
-    readiness.relativeWeek >= DEBUT_REQUIREMENTS.minimumWeeks &&
-    readiness.readiness >= DEBUT_REQUIREMENTS.readiness &&
-    readiness.averageVocal >= DEBUT_REQUIREMENTS.averageVocal;
+  const grade = getShowcaseGrade(score);
 
   return {
     id: "showcase",
     week: cumulativeWeek,
     score,
-    passed,
-    summary: passed
-      ? "무대 완성도와 라이브 기준을 충족해 데뷔 승인을 받았습니다."
-      : "쇼케이스 결과는 나왔지만 준비도 또는 평균 보컬 기준을 더 채워야 합니다.",
+    passed: score >= 55,
+    summary: `${grade.label} — ${grade.summary}.`,
   };
 }
 
 function toProjectMetrics(
   readiness: DebutReadiness,
   album: Album | null,
-  showcasePassed: boolean,
+  launchReady: boolean,
 ): ProjectMetrics {
   return {
     elapsedWeeks: readiness.relativeWeek,
     readiness: readiness.readiness,
     averageVocal: readiness.averageVocal,
-    showcasePassed: showcasePassed ? 1 : 0,
+    launchReady: launchReady ? 1 : 0,
     titleTrackSelected: album?.titleTrack ? 1 : 0,
     albumReleased: 0,
   };
@@ -170,19 +191,17 @@ function buildProjectEvent(
   };
 }
 
-function buildShowcaseEvent(
-  evaluation: ProjectEvaluationResult,
-  retry: boolean,
-): GameEvent {
+function buildShowcaseEvent(evaluation: ProjectEvaluationResult): GameEvent {
   return {
-    id: `project-event:debut-showcase-${retry ? "retry" : "result"}:w${evaluation.week}`,
+    id: `project-event:debut-showcase-result:w${evaluation.week}`,
     type: "training",
-    tone: evaluation.passed ? "positive" : "neutral",
-    title: retry
-      ? "쇼케이스 재평가 통과"
-      : evaluation.passed
-        ? "첫 쇼케이스, 데뷔 승인"
-        : "첫 쇼케이스, 보완 지시",
+    tone:
+      evaluation.score >= 75
+        ? "positive"
+        : evaluation.score >= 55
+          ? "neutral"
+          : "negative",
+    title: "데뷔 쇼케이스 반응",
     description: `${evaluation.summary} 종합 점수 ${evaluation.score}점.`,
     resolved: false,
   };
@@ -215,27 +234,15 @@ export function processDebutProjectWeek(
   let album = input.album;
   const relativeWeek = getProjectRelativeWeek(project, input.cumulativeWeek);
   const readiness = calculateDebutReadiness(album, input.trainees, relativeWeek);
+  const schedule = getDebutSchedule(project);
+  const launchReady =
+    relativeWeek >= schedule.debutWeek - DEBUT_PROMOTION_LEAD_WEEKS;
 
-  const priorShowcase = project.evaluations.showcase;
-  const shouldEvaluateShowcase =
-    relativeWeek >= 17 && (!priorShowcase || !priorShowcase.passed);
-  let showcaseEvaluated = false;
-  if (shouldEvaluateShowcase) {
-    const evaluation = evaluateDebutShowcase(readiness, input.cumulativeWeek);
-    const changed = !priorShowcase || (!priorShowcase.passed && evaluation.passed);
-    project = {
-      ...project,
-      evaluations: { ...project.evaluations, showcase: evaluation },
-    };
-    showcaseEvaluated = changed;
-  }
-
-  const showcasePassed = project.evaluations.showcase?.passed ?? false;
   const advanced = advanceProject(
     DEBUT_PROJECT,
     project,
     input.cumulativeWeek,
-    toProjectMetrics(readiness, album, showcasePassed),
+    toProjectMetrics(readiness, album, launchReady),
   );
   project = advanced.project;
 
@@ -291,51 +298,67 @@ export function processDebutProjectWeek(
     ),
   );
 
-  if (showcaseEvaluated) {
-    const retry = Boolean(priorShowcase && !priorShowcase.passed);
-    const showcaseEventId = retry
-      ? "debut-showcase-retry-passed"
-      : "debut-showcase-result";
-    if (!project.spawnedEventIds.includes(showcaseEventId)) {
-      project = appendProjectEvents(project, [showcaseEventId]);
-      events.push({
-        event: buildShowcaseEvent(project.evaluations.showcase, retry),
-        effects: {},
-      });
-    }
-  }
-
+  // 발매: 일정 주 도래 시 완성도와 무관하게 이뤄진다. 낮은 완성도는 출시를
+  // 막는 게 아니라 쇼케이스 등급·품질·차트 결과로 말한다. 타이틀 미확정만이
+  // 구조적으로 발매를 미룬다(프로모션 스테이지 게이트).
   let releasedAlbum: Album | null = null;
   let releaseResult: ReleaseResult | null = null;
-  if (project.status === "completed" && album) {
-    if (album.titleTrack) {
-      const released = releaseDebutAlbum(input, album);
-      releasedAlbum = released.album;
-      releaseResult = released.releaseResult;
-      project = { ...project, releasedAlbumId: released.album.id };
-      events.push({
-        event: {
-          id: `chart-reveal:${releasedAlbum.id}:w${input.cumulativeWeek}`,
-          type: "market",
-          tone: "positive",
-          title: "데뷔 차트 진입",
-          description: `${releasedAlbum.title}의 첫 차트 순위가 집계되었습니다.`,
-          resolved: false,
-          presentation: {
-            kind: "chart-reveal",
-            chartName: "멜론 TOP 100",
-            rank: releaseResult.chartRank,
-            albumTitle: releasedAlbum.title,
-            trackTitle: releasedAlbum.titleTrack?.name ?? "타이틀곡",
-            chartPower: releaseResult.chartPower,
-          },
+  if (
+    project.currentStageId === "debut-promotion" &&
+    relativeWeek >= schedule.debutWeek &&
+    !project.releasedAlbumId &&
+    album?.titleTrack
+  ) {
+    const showcase = evaluateDebutShowcase(readiness, input.cumulativeWeek);
+    const grade = getShowcaseGrade(showcase.score);
+    project = {
+      ...project,
+      evaluations: { ...project.evaluations, showcase },
+    };
+    events.push({
+      event: buildShowcaseEvent(showcase),
+      effects: { ...grade.effects } as Record<string, number>,
+    });
+
+    const released = releaseDebutAlbum(input, album);
+    // 일정 티어의 주목도 배율 — 빠른 데뷔는 첫 신인 프리미엄을 받고,
+    // 늦은 데뷔는 붐비는 시장에서 반응이 완만해진다.
+    releaseResult = {
+      ...released.releaseResult,
+      publicDelta: Math.round(
+        released.releaseResult.publicDelta * schedule.attentionMult,
+      ),
+      fandomDelta: Math.round(
+        released.releaseResult.fandomDelta * schedule.attentionMult,
+      ),
+    };
+    releasedAlbum = released.album;
+    project = {
+      ...project,
+      status: "completed",
+      completedAtWeek: input.cumulativeWeek,
+      releasedAlbumId: released.album.id,
+    };
+    events.push({
+      event: {
+        id: `chart-reveal:${releasedAlbum.id}:w${input.cumulativeWeek}`,
+        type: "market",
+        tone: "positive",
+        title: "데뷔 차트 진입",
+        description: `${releasedAlbum.title}의 첫 차트 순위가 집계되었습니다.`,
+        resolved: false,
+        presentation: {
+          kind: "chart-reveal",
+          chartName: "멜론 TOP 100",
+          rank: releaseResult.chartRank,
+          albumTitle: releasedAlbum.title,
+          trackTitle: releasedAlbum.titleTrack?.name ?? "타이틀곡",
+          chartPower: releaseResult.chartPower,
         },
-        effects: {},
-      });
-      album = null;
-    } else {
-      project = { ...project, status: "blocked", completedAtWeek: undefined };
-    }
+      },
+      effects: {},
+    });
+    album = null;
   }
 
   return {
@@ -347,6 +370,5 @@ export function processDebutProjectWeek(
     enteredStageIds: advanced.enteredStages.map((stage) => stage.id),
     directedBeatKinds: directedBeats.map((beat) => beat.kind),
     readiness,
-    showcaseEvaluated,
   };
 }

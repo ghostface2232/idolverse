@@ -15,7 +15,7 @@ import {
   type WeekContext as SatisfactionContext,
 } from "@/systems/satisfactionSystem";
 import { progressAlbum } from "@/systems/albumSystem";
-import { processDebutProjectWeek } from "@/systems/debutSystem";
+import { getDebutSchedule, processDebutProjectWeek } from "@/systems/debutSystem";
 import { processComebackProjectWeek } from "@/systems/comebackSystem";
 import {
   weeklyChartDecay,
@@ -68,9 +68,10 @@ import {
 import {
   GAME_BALANCE,
   COMEBACK_REQUIREMENTS,
-  DEBUT_REQUIREMENTS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
+  PRODUCTION_RISK,
+  STAFF_GROWTH,
   VARIETY_OUTCOME,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
@@ -244,32 +245,49 @@ export function processWeek(
   let awardHistory: AwardRecord[] = snapshot.game.awardHistory;
   let playerWonAward = false;
   if (snapshot.game.currentWeek === AWARDS_WEEK) {
+    // 데뷔(첫 발매) 전에는 시상 후보가 아니다. 데뷔 연차는 첫 발매 주에서
+    // 산출한다 — 신인상 자격(데뷔 1~2년차)이 실제 데뷔 시점을 따라야
+    // "같은 신인들 사이의 경쟁 → 이후 전체 경쟁" 아크가 성립한다.
+    const firstRelease = snapshot.album.releasedAlbums[0];
+    const playerDebutYear =
+      firstRelease?.releaseWeek != null
+        ? Math.floor((firstRelease.releaseWeek - 1) / GAME_BALANCE.weeksPerYear) + 1
+        : null;
+    const latestQuality =
+      album?.quality ??
+      snapshot.album.releasedAlbums[snapshot.album.releasedAlbums.length - 1]
+        ?.quality ??
+      0;
     const contenders = [
-      buildContenderFromPlayer(
-        "player",
-        snapshot.game.groupName,
-        {
-          digitalIndex:
-            fandomAxis.public * 0.6 +
-            (album?.quality ?? 0) * 0.4,
-          albumSalesIndex:
-            fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
-          fanVotes:
-            fandomAxis.fandom * 0.5 +
-            fandomAxis.fandomLoyalty * 0.3 +
-            fandomAxis.global * 0.2,
-          judgesScore:
-            fandomAxis.industry * 0.5 +
-            (album?.quality ?? 0) * 0.3 +
-            (trainees.reduce(
-              (s, t) => s + (t.stats.vocal + t.stats.dance + t.stats.visual) / 3,
-              0,
-            ) /
-              Math.max(trainees.length, 1)) *
-              0.2,
-        },
-        1,
-      ),
+      ...(playerDebutYear !== null
+        ? [
+            buildContenderFromPlayer(
+              "player",
+              snapshot.game.groupName,
+              {
+                digitalIndex:
+                  fandomAxis.public * 0.6 + latestQuality * 0.4,
+                albumSalesIndex:
+                  fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
+                fanVotes:
+                  fandomAxis.fandom * 0.5 +
+                  fandomAxis.fandomLoyalty * 0.3 +
+                  fandomAxis.global * 0.2,
+                judgesScore:
+                  fandomAxis.industry * 0.5 +
+                  latestQuality * 0.3 +
+                  (trainees.reduce(
+                    (s, t) =>
+                      s + (t.stats.vocal + t.stats.dance + t.stats.visual) / 3,
+                    0,
+                  ) /
+                    Math.max(trainees.length, 1)) *
+                    0.2,
+              },
+              playerDebutYear,
+            ),
+          ]
+        : []),
       ...snapshot.competitor.permanentRivals.map(buildContenderFromCompetitor),
       ...snapshot.competitor.eventRivals.map(buildContenderFromCompetitor),
     ];
@@ -501,6 +519,28 @@ export function processWeek(
       { kind: "album", id: album.id, label: album.title },
       5,
     );
+
+    // 프로듀서가 없거나 약하면 제작이 매주 사고 위험에 노출된다 —
+    // 스태프 고용은 진행 속도만이 아니라 안정성을 산다.
+    const producer = staff.find((member) => member.role === "producer");
+    const producerAbility = producer?.ability ?? 0;
+    if (producerAbility < PRODUCTION_RISK.safeAbility) {
+      const mishapChance = producer
+        ? PRODUCTION_RISK.lowStaffChance
+        : PRODUCTION_RISK.noStaffChance;
+      if (createSeededRandom(seed + 9)() < mishapChance) {
+        applyToState(
+          { albumSong: -PRODUCTION_RISK.songProgressLoss, stress: 2 },
+          { kind: "album", id: "production-mishap", label: "제작 차질" },
+          5,
+        );
+        report.warnings.push(
+          producer
+            ? "제작 차질: 프로듀서의 역량 부족으로 녹음 일정이 밀렸습니다"
+            : "제작 차질: 프로듀서 부재로 녹음본 관리에 구멍이 났습니다",
+        );
+      }
+    }
   }
 
   // ── 7. Competitor simulation
@@ -578,6 +618,34 @@ export function processWeek(
       project.definitionId === DEBUT_PROJECT.id && project.status !== "completed",
   );
   if (debutProjectIndex >= 0 && snapshot.game.currentPhase === "training") {
+    // 긴 일정의 대가: 데뷔(발매) 주에 경쟁 신인이 같은 시장에 데뷔해
+    // 첫 차트 진입이 가려질 수 있다. 확률은 일정 티어가 정한다.
+    const debutSchedule = getDebutSchedule(activeProjects[debutProjectIndex]);
+    const debutRelativeWeek = Math.max(
+      1,
+      cumulativeWeek - activeProjects[debutProjectIndex].startedAtWeek + 1,
+    );
+    if (
+      debutRelativeWeek >= debutSchedule.debutWeek &&
+      !activeProjects[debutProjectIndex].releasedAlbumId &&
+      album?.titleTrack &&
+      createSeededRandom(seed + 11)() < debutSchedule.rivalDebutChance
+    ) {
+      const rookieRival = spawnEventCompetitor(
+        snapshot.game.currentSeason,
+        fandomAxis.public,
+        snapshot.game.groupGender,
+        snapshot.game.currentWeek,
+        true,
+      );
+      if (rookieRival) {
+        eventRivals.push(rookieRival);
+        report.warnings.push(
+          `경쟁 신인 ${rookieRival.name}이(가) 같은 주에 데뷔합니다 — 시장의 시선이 갈립니다`,
+        );
+      }
+    }
+
     const debutResult = processDebutProjectWeek({
       project: activeProjects[debutProjectIndex],
       cumulativeWeek,
@@ -645,15 +713,6 @@ export function processWeek(
         },
         5,
         projectEvent.targetTraineeIds,
-      );
-    }
-
-    if (debutResult.showcaseEvaluated) {
-      const showcase = debutResult.project.evaluations.showcase;
-      report.warnings.push(
-        showcase.passed
-          ? `쇼케이스 통과: 종합 ${showcase.score}점. 데뷔를 확정했습니다`
-          : `쇼케이스 보완 필요: 종합 ${showcase.score}점. 준비도 ${Math.floor(debutResult.readiness.readiness)}/${DEBUT_REQUIREMENTS.readiness}, 평균 보컬 ${Math.floor(debutResult.readiness.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
       );
     }
 
@@ -1069,6 +1128,22 @@ export function processWeek(
     7,
   );
 
+  // ── 12.5 Staff on-the-job growth
+  // 스태프는 실무로만 조금씩 성장하고(매니저는 상시, 제작진은 앨범 제작 중),
+  // 채용 시 정해진 잠재 상한을 넘지 못한다. 상한에 닿은 스태프는 더 크지
+  // 않으므로 회사가 성장하면 결국 새 인재 채용이 필요해진다.
+  const hasActiveProduction = album !== null;
+  const grownStaff = staff.map((member) => {
+    const potentialCap =
+      member.potentialCap ??
+      Math.min(100, member.ability + STAFF_GROWTH.legacyCapMargin);
+    const isWorking = member.role === "manager" || hasActiveProduction;
+    const ability = isWorking
+      ? Math.min(potentialCap, member.ability + STAFF_GROWTH.weeklyGrowth)
+      : member.ability;
+    return { ...member, ability, potentialCap };
+  });
+
   // ── 13. Advance week
   let advancedGame = advanceWeekState(snapshot.game);
   report.deltas.push({
@@ -1216,7 +1291,9 @@ export function processWeek(
             nextCumulativeWeek - project.startedAtWeek + 1,
           );
           if (project.kind === "debut") {
-            return [Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - relativeWeek)];
+            return [
+              Math.max(0, getDebutSchedule(project).debutWeek - relativeWeek),
+            ];
           }
           if (project.kind === "comeback" && !project.releasedAlbumId) {
             return [Math.max(0, COMEBACK_REQUIREMENTS.releaseWeek - relativeWeek)];
@@ -1266,7 +1343,7 @@ export function processWeek(
       ],
     },
     trainee: { trainees },
-    staff: snapshot.staff,
+    staff: { staff: grownStaff },
     album: {
       ...snapshot.album,
       currentAlbum: album,

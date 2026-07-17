@@ -176,12 +176,15 @@ export type MilestoneMetricKey =
 export type ProjectKind = "debut" | "comeback" | "campaign";
 export type ProjectStatus = "active" | "blocked" | "completed";
 export type ProjectDecisionStatus = "locked" | "available" | "completed";
+/** 창단 시 정하는 데뷔 일정. 정의는 data/balance.ts의 DEBUT_SCHEDULE_TIERS. */
+export type DebutScheduleTierId = "fast" | "standard" | "long";
 
 export type ProjectMetricKey =
   | "elapsedWeeks"
   | "readiness"
   | "averageVocal"
-  | "showcasePassed"
+  /** 일정상 프로모션(티저~쇼케이스)에 들어갈 시점인가. 게이트가 아니라 시계다. */
+  | "launchReady"
   | "titleTrackSelected"
   | "albumReleased";
 
@@ -234,6 +237,8 @@ export interface ProjectInstance {
   completedAtWeek?: number;
   /** 이 프로젝트가 발매한 앨범. 음악방송·정산 단계가 발매 결과를 참조한다. */
   releasedAlbumId?: string;
+  /** 데뷔 프로젝트의 일정 선택. 없으면 표준(20주) 일정으로 본다. */
+  scheduleTierId?: DebutScheduleTierId;
 }
 
 export type MilestoneCategory =
@@ -438,6 +443,8 @@ export interface Staff {
   name: string;
   role: StaffRole;
   ability: number;
+  /** 실무 성장의 천장. 채용 시 랜덤 결정되며 이 이상은 오르지 않는다. */
+  potentialCap?: number;
   salary: number;
   specialty?: string;
   profileImagePath?: string;

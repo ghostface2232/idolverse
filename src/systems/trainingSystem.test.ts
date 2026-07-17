@@ -70,4 +70,52 @@ describe("trainingSystem 트레이드오프", () => {
     );
     expect(after.stress).toBeCloseTo(trainee.stress + preview.stressDelta);
   });
+
+  it("잠재력 소프트캡: 상한 근처에서 성장이 잦아들고 상한을 넘지 못한다", () => {
+    // potential 1.0 → 캡 74. 캡 위의 스탯은 성장 0, 캡 근처는 taper된다.
+    const nearCap = makeTrainee("t1", {
+      potential: 1.0,
+      stats: { visual: 50, vocal: 73, dance: 30, charm: 30, stamina: 60, mental: 60 },
+    });
+    const farFromCap = makeTrainee("t2", {
+      potential: 1.0,
+      stats: { visual: 50, vocal: 40, dance: 30, charm: 30, stamina: 60, mental: 60 },
+    });
+
+    const nearPreview = previewTraineeWeek(
+      nearCap, schedule({ focus: "vocal" }), MANAGER, null, FACILITIES,
+    );
+    const farPreview = previewTraineeWeek(
+      farFromCap, schedule({ focus: "vocal" }), MANAGER, null, FACILITIES,
+    );
+    expect(nearPreview.statGrowth.vocal ?? 0).toBeLessThan(
+      (farPreview.statGrowth.vocal ?? 0) * 0.2,
+    );
+
+    // 캡 도달 후에는 완전히 멈춘다 — 저잠재 멤버의 천장이 실재해야 한다.
+    const atCap = makeTrainee("t3", {
+      potential: 1.0,
+      stats: { visual: 50, vocal: 74, dance: 30, charm: 30, stamina: 60, mental: 60 },
+    });
+    const atCapPreview = previewTraineeWeek(
+      atCap, schedule({ focus: "vocal" }), MANAGER, null, FACILITIES,
+    );
+    expect(atCapPreview.statGrowth.vocal ?? 0).toBe(0);
+  });
+
+  it("고잠재 멤버는 같은 스탯에서 더 높은 천장과 성장을 갖는다", () => {
+    const stats = { visual: 50, vocal: 70, dance: 30, charm: 30, stamina: 60, mental: 60 };
+    const lowPotential = makeTrainee("low", { potential: 0.9, stats: { ...stats } });
+    const highPotential = makeTrainee("high", { potential: 1.6, stats: { ...stats } });
+
+    const lowPreview = previewTraineeWeek(
+      lowPotential, schedule({ focus: "vocal" }), MANAGER, null, FACILITIES,
+    );
+    const highPreview = previewTraineeWeek(
+      highPotential, schedule({ focus: "vocal" }), MANAGER, null, FACILITIES,
+    );
+    expect(highPreview.statGrowth.vocal ?? 0).toBeGreaterThan(
+      (lowPreview.statGrowth.vocal ?? 0) * 3,
+    );
+  });
 });

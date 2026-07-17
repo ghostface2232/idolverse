@@ -20,6 +20,10 @@ import type {
   Position,
 } from "@/types/game";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
+import {
+  COMEBACK_BUDGET_TIERS_BY_ID,
+  type ComebackBudgetTierId,
+} from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import {
   canStartComebackProject,
@@ -447,11 +451,12 @@ export async function completePositionReviewAndSave(
 }
 
 /**
- * 컨셉 확정과 함께 컴백 프로젝트와 제작 앨범을 만든다. 발매를 마친 이전
- * 사이클이 음악방송·정산을 도는 동안에도 시작할 수 있다(중첩 대기).
+ * 컨셉·제작 예산 확정과 함께 컴백 프로젝트와 제작 앨범을 만든다. 발매를
+ * 마친 이전 사이클이 음악방송·정산을 도는 동안에도 시작할 수 있다(중첩 대기).
  */
 export async function startComebackProjectAndSave(
   concept: { genre: Genre; mood: ConceptMood },
+  budgetTierId: ComebackBudgetTierId,
   userId: string,
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
@@ -472,9 +477,21 @@ export async function startComebackProjectAndSave(
       "A new comeback project is not available right now.",
     );
   }
+  const budgetTier = COMEBACK_BUDGET_TIERS_BY_ID.get(budgetTierId);
+  if (!budgetTier) {
+    throw new WeeklyResolutionConflictError(
+      `Unknown comeback budget tier: ${budgetTierId}.`,
+    );
+  }
+  if (snapshot.finance.money < budgetTier.cost) {
+    throw new WeeklyResolutionConflictError(
+      "Not enough money for the selected production budget.",
+    );
+  }
 
   const plan = createComebackPlan({
     concept,
+    budgetTierId,
     startedAtWeek: toCumulativeWeek(
       snapshot.game.currentYear,
       snapshot.game.currentWeek,
@@ -492,6 +509,10 @@ export async function startComebackProjectAndSave(
     album: {
       ...snapshot.album,
       currentAlbum: plan.album,
+    },
+    finance: {
+      ...snapshot.finance,
+      money: snapshot.finance.money - budgetTier.cost,
     },
   };
   const saved = await saveGame(

@@ -19,7 +19,9 @@ import {
   completePresentationEventAndSave,
   completeTitleTrackSelectionAndSave,
   runWeekAndSave,
+  startComebackProjectAndSave,
 } from "@/lib/weekRunner";
+import { COMEBACK_BUDGET_TIERS_BY_ID } from "@/data/balance";
 import {
   DEBUT_PROJECT,
   TITLE_TRACK_SELECTION_DECISION_ID,
@@ -168,6 +170,54 @@ describe("durable weekly workflow", () => {
       ],
     ).toBe("completed");
     expect(saveGameMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("컴백 기획은 제작 예산을 차감하고 프로젝트·앨범과 함께 저장한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 30 });
+    snapshot.game.currentPhase = "debut";
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    const moneyBefore = snapshot.finance.money;
+    await startComebackProjectAndSave(
+      { genre: "dancePop", mood: "y2k" },
+      "blockbuster",
+      "user",
+      1,
+    );
+
+    const committed = captureGameState();
+    const tier = COMEBACK_BUDGET_TIERS_BY_ID.get("blockbuster");
+    expect(committed.financeStore.money).toBe(moneyBefore - (tier?.cost ?? 0));
+    expect(committed.albumStore.currentAlbum?.progress.song).toBe(
+      tier?.baseProgress,
+    );
+    expect(
+      committed.gameStore.activeProjects.some(
+        (project) => project.kind === "comeback",
+      ),
+    ).toBe(true);
+  });
+
+  it("제작 예산이 부족하면 컴백 기획을 저장 전에 거부한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 30 });
+    snapshot.game.currentPhase = "debut";
+    snapshot.finance.money = 10_000_000;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    await expect(
+      startComebackProjectAndSave(
+        { genre: "dancePop", mood: "y2k" },
+        "lean",
+        "user",
+        1,
+      ),
+    ).rejects.toThrow("Not enough money");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
   });
 
   it("현재 후보가 아닌 타이틀곡은 저장 전에 거부한다", async () => {

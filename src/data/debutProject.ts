@@ -52,7 +52,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       id: "showcase-rehearsal",
       title: "쇼케이스 리허설",
       summary: "보컬·준비도·팀워크를 공개 무대 수준으로 끌어올린다",
-      weekWindow: [14, 17],
+      weekWindow: [13, 16],
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
@@ -60,13 +60,15 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       unlocks: "데뷔 프로모션",
     },
     {
+      // 일정(fast 16 / standard 20 / long 24)에 따라 진입 시점이 달라진다.
+      // launchReady는 게이트가 아니라 시계 — 발매 2주 전 프로모션이 시작된다.
       id: "debut-promotion",
       title: "데뷔 프로모션",
       summary: "티저와 쇼케이스를 공개하고 첫 차트 진입을 준비한다",
-      weekWindow: [18, DEBUT_REQUIREMENTS.projectWeeks],
+      weekWindow: [14, DEBUT_REQUIREMENTS.projectWeeks],
       entryRequirements: [
-        { metric: "showcasePassed", target: 1, label: "쇼케이스 통과" },
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
+        { metric: "launchReady", target: 1, label: "데뷔 일정 도래" },
       ],
       eventIds: ["debut-promotion-launch"],
       unlocks: "앨범 발매 · 차트 공개",

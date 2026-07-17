@@ -38,8 +38,26 @@ describe("processWeek 골든 스냅샷", () => {
   });
 
   it("시상식 수상은 awardHistory에 영속화된다", () => {
-    // 라이벌이 없는 픽스처에서는 플레이어가 인기상/신인상을 가져간다
-    const result = processWeek(makeGameSnapshot({ week: 50 }), NO_DECISIONS);
+    // 데뷔(첫 발매)한 팀만 시상 후보가 된다. 라이벌이 없는 픽스처에서는
+    // 플레이어가 인기상/신인상을 가져간다.
+    const snapshot = makeGameSnapshot({ week: 50 });
+    snapshot.album.releasedAlbums = [
+      {
+        id: "album-debut",
+        title: "First Light",
+        concept: { genre: "dancePop", mood: "refreshing" },
+        titleTrackCandidates: [],
+        titleTrack: null,
+        progress: { song: 100, visual: 100, choreography: 100, marketing: 100 },
+        memberConceptFit: 60,
+        seasonFit: 60,
+        fandomExpectationFit: 60,
+        externalCollaborators: {},
+        quality: 55,
+        releaseWeek: 20,
+      },
+    ];
+    const result = processWeek(snapshot, NO_DECISIONS);
     const wins = result.weekReport.awardResults
       ?.flatMap((r) => r.winners)
       .filter((w) => w.isPlayer);
@@ -49,6 +67,33 @@ describe("processWeek 골든 스냅샷", () => {
     expect(
       result.newState.game.awardHistory.every((r) => r.year === 1),
     ).toBe(true);
+  });
+
+  it("스태프는 실무로 성장하되 잠재 상한을 넘지 못한다", () => {
+    const growing = makeGameSnapshot({ week: 5 });
+    growing.staff.staff[0].potentialCap = 70;
+    const grown = processWeek(growing, NO_DECISIONS).newState.staff.staff[0];
+    expect(grown.ability).toBeGreaterThan(60);
+
+    const capped = makeGameSnapshot({ week: 5 });
+    capped.staff.staff[0].potentialCap = 60;
+    const stuck = processWeek(capped, NO_DECISIONS).newState.staff.staff[0];
+    expect(stuck.ability).toBe(60);
+
+    // 상한 정보가 없는 구버전 세이브는 기본 헤드룸을 한 번 부여받는다.
+    const legacy = makeGameSnapshot({ week: 5 });
+    const migrated = processWeek(legacy, NO_DECISIONS).newState.staff.staff[0];
+    expect(migrated.potentialCap).toBe(70);
+  });
+
+  it("데뷔(첫 발매) 전에는 시상 후보가 되지 않는다", () => {
+    const result = processWeek(makeGameSnapshot({ week: 50 }), NO_DECISIONS);
+    const playerWins =
+      result.weekReport.awardResults
+        ?.flatMap((show) => show.winners)
+        .filter((winner) => winner.isPlayer) ?? [];
+    expect(playerWins).toHaveLength(0);
+    expect(result.newState.game.awardHistory).toHaveLength(0);
   });
 
   it("영속화된 수상 기록으로 시상 주 이후의 투자사 awardLevel 조건이 통과된다", () => {

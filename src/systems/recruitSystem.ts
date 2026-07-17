@@ -1,4 +1,10 @@
-import { GAME_BALANCE, STAFF_SALARY_BANDS } from "@/data/balance";
+import {
+  GAME_BALANCE,
+  RECRUIT_POTENTIAL,
+  RECRUIT_STAT_BANDS,
+  STAFF_GROWTH,
+  STAFF_SALARY_BANDS,
+} from "@/data/balance";
 import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
 import {
   CHINESE_NAMES_BY_GENDER,
@@ -109,11 +115,18 @@ export function generateTraineeCandidates(
   const random = createSeededRandom(seed);
   const count = requestedCount ?? 3 + Math.floor(random() * 3);
 
+  // FM 유스식: 신인은 낮은 능력치로 시작하고(상한 30~40대),
+  // 추가 예산과 스카우트는 능력치가 아니라 잠재력을 산다.
   const budgetRatio = clamp(budget / 100_000_000, 0, 1);
-  const baseMin = 30 + budgetRatio * 20;
-  const baseMax = 65 + budgetRatio * 30;
+  const baseMin = RECRUIT_STAT_BANDS.min + budgetRatio * RECRUIT_STAT_BANDS.budgetSpread;
+  const baseMax = RECRUIT_STAT_BANDS.max + budgetRatio * RECRUIT_STAT_BANDS.budgetSpread;
 
-  const methodBonus = method.type === "scout" ? 8 : method.type === "trainee_transfer" ? 5 : 0;
+  const methodBonus =
+    method.type === "scout"
+      ? RECRUIT_STAT_BANDS.scoutBonus
+      : method.type === "trainee_transfer"
+        ? Math.round(RECRUIT_STAT_BANDS.scoutBonus / 2)
+        : 0;
 
   const candidates: Trainee[] = [];
 
@@ -126,21 +139,27 @@ export function generateTraineeCandidates(
       clamp(
         baseMin + Math.floor(random() * (baseMax - baseMin)) + methodBonus,
         1,
-        GAME_BALANCE.maxStatValue,
+        RECRUIT_STAT_BANDS.hardCap,
       );
 
-    const charmPenalty = isForeign ? Math.floor(random() * 15) : 0;
+    const charmPenalty = isForeign ? Math.floor(random() * 10) : 0;
 
     const stats = {
       visual: genStat(),
       vocal: genStat(),
       dance: genStat(),
-      charm: clamp(genStat() - charmPenalty, 1, GAME_BALANCE.maxStatValue),
+      charm: clamp(genStat() - charmPenalty, 1, RECRUIT_STAT_BANDS.hardCap),
       stamina: genStat(),
       mental: genStat(),
     };
 
-    const potential = 0.8 + random() * 0.9;
+    const potential = Math.min(
+      RECRUIT_POTENTIAL.max,
+      RECRUIT_POTENTIAL.base +
+        random() * RECRUIT_POTENTIAL.spread +
+        budgetRatio * RECRUIT_POTENTIAL.budgetBonus +
+        (method.type === "scout" ? RECRUIT_POTENTIAL.scoutBonus : 0),
+    );
 
     candidates.push({
       id: `recruit-${seed}-${i}`,
@@ -188,6 +207,9 @@ export function generateStaffCandidates(
   salaryRange: { min: number; max: number },
   seed: number,
   requestedCount?: number,
+  // 창단 시장에는 검증된 인재가 오지 않는다 — 상위 풀은 회사 성장 후
+  // 재모집(M5)에서 열린다. 기본값은 상한 없음.
+  maxAbility: number = STAFF_ABILITY_MAX,
 ): Staff[] {
   const random = createSeededRandom(seed);
   const count = requestedCount ?? 3 + Math.floor(random() * 2);
@@ -207,7 +229,18 @@ export function generateStaffCandidates(
     ability = clamp(
       ability + Math.floor((random() - 0.5) * 10),
       STAFF_ABILITY_MIN,
-      STAFF_ABILITY_MAX,
+      Math.min(maxAbility, STAFF_ABILITY_MAX),
+    );
+    // 실무 성장의 천장. 창단 풀 상한(60)과 무관하게 상한이 높은 원석이
+    // 섞여 있어 저능력 채용에도 장기 성장의 도박이 성립한다.
+    const potentialCap = clamp(
+      ability +
+        STAFF_GROWTH.capMarginMin +
+        Math.round(
+          random() * (STAFF_GROWTH.capMarginMax - STAFF_GROWTH.capMarginMin),
+        ),
+      ability,
+      100,
     );
 
     const specialties = STAFF_SPECIALTY_POOL[role];
@@ -231,6 +264,7 @@ export function generateStaffCandidates(
       name,
       role,
       ability,
+      potentialCap,
       salary: monthlySalary,
       specialty,
       ...profile,

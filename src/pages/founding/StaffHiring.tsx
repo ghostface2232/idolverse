@@ -11,7 +11,7 @@ import {
   STAFF_ROLE_ORDER,
 } from "@/data/founding";
 import { getStaffProfileByName } from "@/data/staffProfiles";
-import { STAFF_SALARY_BANDS } from "@/data/balance";
+import { FOUNDING_STAFF_ABILITY_CAP, STAFF_SALARY_BANDS } from "@/data/balance";
 import { generateStaffCandidates } from "@/systems/recruitSystem";
 import { useStaffStore } from "@/stores/staffStore";
 import { staffVanillaStore } from "@/stores/staffStore";
@@ -77,11 +77,13 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
 
   const generateRole = useCallback((targetRole: StaffRole, s: number) => {
     const roleOffset = STAFF_ROLE_ORDER.indexOf(targetRole);
+    // 창단 시장에는 검증된 인재가 오지 않는다 — 상위 풀은 회사 성장 후 재모집에서.
     const list = generateStaffCandidates(
       targetRole,
       salaryRange,
       s + roleOffset,
       STAFF_CANDIDATE_COUNT,
+      FOUNDING_STAFF_ABILITY_CAP,
     );
     foundingVanillaStore.getState().setStaffCandidates(targetRole, list);
   }, []);

@@ -24,6 +24,7 @@ import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
+import { GAME_BALANCE, type ComebackBudgetTierId } from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
@@ -106,6 +107,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const trainingSchedule = useGameStore((state) => state.trainingSchedule);
   const investorConditions = useGameStore((state) => state.investorConditions);
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
+  const awardHistory = useGameStore((state) => state.awardHistory);
   const activeProjects = useGameStore((state) => state.activeProjects);
   const trainees = useTraineeStore((state) => state.trainees);
   const fandomPublic = useFandomStore((state) => state.public);
@@ -270,15 +272,21 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     }
   };
 
-  const handleStartComeback = async (concept: {
+  const handleStartComeback = async (plan: {
     genre: Genre;
     mood: ConceptMood;
+    budgetTierId: ComebackBudgetTierId;
   }) => {
     if (isComebackSaving) return;
     setIsComebackSaving(true);
     setWorkflowError(null);
     try {
-      await startComebackProjectAndSave(concept, userId, DEFAULT_AUTO_SAVE_SLOT);
+      await startComebackProjectAndSave(
+        { genre: plan.genre, mood: plan.mood },
+        plan.budgetTierId,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
       setComebackPlanningOpen(false);
     } catch (error) {
       console.error("Comeback planning save failed.", error);
@@ -362,6 +370,14 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       currentAlbum,
       releasedAlbums,
     });
+    // 신인상 창: 데뷔(첫 발매) 연차 기준 2년차 말까지, 아직 못 받았을 때만.
+    const firstReleaseWeek = releasedAlbums[0]?.releaseWeek;
+    const rookieAwardDeadlineWeek =
+      firstReleaseWeek != null &&
+      !awardHistory.some((award) => award.category === "rookie")
+        ? (Math.floor((firstReleaseWeek - 1) / GAME_BALANCE.weeksPerYear) + 2) *
+          GAME_BALANCE.weeksPerYear
+        : null;
     return buildGoalLanes({
       phase: currentPhase,
       currentWeek,
@@ -371,6 +387,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
       weeklyDecisions,
       investorConditions,
       activeProjects,
+      rookieAwardDeadlineWeek,
     });
   }, [
     trainees,
@@ -386,6 +403,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
     currentWeek,
     currentYear,
     milestonesAchieved,
+    awardHistory,
     weeklyDecisions,
     investorConditions,
     activeProjects,
@@ -556,6 +574,7 @@ export function GameDashboard({ userId }: GameDashboardProps) {
         <ComebackPlanningModal
           conceptHistory={conceptHistory}
           marketTrend={marketTrend}
+          money={money}
           isSaving={isComebackSaving}
           errorMessage={workflowError}
           onConfirm={handleStartComeback}

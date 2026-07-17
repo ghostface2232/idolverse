@@ -41,9 +41,11 @@ export function progressAlbum(
   const designer = staff.find((s) => s.role === "designer");
   const marketer = staff.find((s) => s.role === "marketer");
 
-  const producerAbility = producer?.ability ?? 30;
-  const designerAbility = designer?.ability ?? 30;
-  const marketerAbility = marketer?.ability ?? 30;
+  // 스태프가 없으면 그 축의 전문 작업이 실제로 멈춰야 한다 — "유령 능력치
+  // 30"이 기본 적용되면 고용이 공짜 대체재를 이길 수 없다.
+  const producerAbility = producer?.ability ?? 0;
+  const designerAbility = designer?.ability ?? 0;
+  const marketerAbility = marketer?.ability ?? 0;
 
   const avgVocal =
     trainees.reduce((s, t) => s + t.stats.vocal, 0) / Math.max(trainees.length, 1);
@@ -52,10 +54,10 @@ export function progressAlbum(
   const avgVisual =
     trainees.reduce((s, t) => s + t.stats.visual, 0) / Math.max(trainees.length, 1);
 
-  const songGain = 2 + producerAbility * 0.06 + avgVocal * 0.02;
-  const visualGain = 2 + designerAbility * 0.04 + avgVisual * 0.03;
+  const songGain = 1.5 + producerAbility * 0.075 + avgVocal * 0.015;
+  const visualGain = 1.5 + designerAbility * 0.055 + avgVisual * 0.02;
   const choreoGain = 2 + avgDance * 0.05;
-  const marketGain = 2 + marketerAbility * 0.05;
+  const marketGain = 1.5 + marketerAbility * 0.065;
 
   return {
     ...album,
@@ -75,7 +77,8 @@ export function generateTitleTrackCandidates(
   seed: number,
 ): TitleTrack[] {
   const random = createSeededRandom(seed);
-  const ability = producer?.ability ?? 30;
+  // 프로듀서 부재는 곧 후보곡 품질 밴드의 붕괴다(기본 30~45 수준).
+  const ability = producer?.ability ?? 0;
 
   const qualityBase = 30 + ability * 0.5;
   const qualityRange = 15;

@@ -11,6 +11,7 @@ import {
   type PlayerDecisions,
 } from "@/systems/weekProcessor";
 import { makeGameSnapshot } from "@/test/gameStateFixture";
+import type { DebutScheduleTierId } from "@/types/game";
 
 const NO_DECISIONS: PlayerDecisions = {
   trainingSchedule: { intensity: "normal", restDay: false },
@@ -158,5 +159,70 @@ describe("20주 데뷔 프로젝트", () => {
     const before = completed.fandom.chartPositions.melon;
     const next = processWeek(completed, NO_DECISIONS).newState;
     expect(next.fandom.chartPositions.melon).toBeGreaterThan(before);
+  });
+
+  it("데뷔 일정 티어가 발매 주와 완성도의 트레이드오프를 만든다", () => {
+    const playScheduled = (scheduleTierId: DebutScheduleTierId) => {
+      let snapshot = makeDebutSnapshot();
+      snapshot.game.activeProjects = [
+        { ...createProjectInstance(DEBUT_PROJECT, 1), scheduleTierId },
+      ];
+      for (let week = 1; week <= 26; week++) {
+        const project = snapshot.game.activeProjects[0];
+        if (
+          project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] ===
+            "available" &&
+          snapshot.album.currentAlbum
+        ) {
+          const track = snapshot.album.currentAlbum.titleTrackCandidates.find(
+            (candidate) => candidate.id === "track-safe",
+          );
+          if (!track) throw new Error("Missing safe title track candidate.");
+          snapshot = {
+            ...snapshot,
+            game: {
+              ...snapshot.game,
+              activeProjects: snapshot.game.activeProjects.map((candidate) =>
+                candidate.id === project.id
+                  ? {
+                      ...candidate,
+                      decisionStatuses: {
+                        ...candidate.decisionStatuses,
+                        [TITLE_TRACK_SELECTION_DECISION_ID]: "completed",
+                      },
+                    }
+                  : candidate,
+              ),
+            },
+            album: {
+              ...snapshot.album,
+              currentAlbum: {
+                ...snapshot.album.currentAlbum,
+                titleTrack: { ...track },
+              },
+            },
+          };
+        }
+        snapshot = processWeek(snapshot, NO_DECISIONS).newState;
+        if (snapshot.album.releasedAlbums.length > 0) break;
+      }
+      const released = snapshot.album.releasedAlbums[0];
+      return {
+        releaseWeek: released?.releaseWeek ?? null,
+        quality: released?.quality ?? 0,
+        showcaseScore:
+          snapshot.game.activeProjects[0].evaluations.showcase?.score ?? 0,
+      };
+    };
+
+    const fast = playScheduled("fast");
+    const long = playScheduled("long");
+
+    // 짧은 일정은 이르게(16주), 긴 일정은 늦게(24주) 발매된다 — 게이트 없이.
+    expect(fast.releaseWeek).toBe(16);
+    expect(long.releaseWeek).toBe(24);
+    // 긴 일정의 보상: 준비 기간이 완성도와 쇼케이스 평가로 돌아온다.
+    expect(long.quality).toBeGreaterThan(fast.quality);
+    expect(long.showcaseScore).toBeGreaterThan(fast.showcaseScore);
   });
 });

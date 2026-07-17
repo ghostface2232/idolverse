@@ -65,6 +65,7 @@ function startComeback(
 ): GameSnapshot {
   const plan = createComebackPlan({
     concept: { genre: "dancePop", mood: "y2k" },
+    budgetTierId: "standard",
     startedAtWeek,
     season: snapshot.game.currentSeason,
     trainees: snapshot.trainee.trainees,

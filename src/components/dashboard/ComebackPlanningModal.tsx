@@ -3,6 +3,11 @@ import { Flame, Snowflake } from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import {
+  COMEBACK_BUDGET_TIERS,
+  type ComebackBudgetTierId,
+} from "@/data/balance";
 import {
   CONCEPT_MOOD_DATA,
   CONCEPT_MOODS,
@@ -16,9 +21,14 @@ import type { CalendarStoreState, ConceptMood, Genre } from "@/types/game";
 interface ComebackPlanningModalProps {
   conceptHistory: readonly ConceptMood[];
   marketTrend: CalendarStoreState["marketTrend"];
+  money: number;
   isSaving: boolean;
   errorMessage?: string | null;
-  onConfirm: (concept: { genre: Genre; mood: ConceptMood }) => void | Promise<void>;
+  onConfirm: (plan: {
+    genre: Genre;
+    mood: ConceptMood;
+    budgetTierId: ComebackBudgetTierId;
+  }) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -53,6 +63,7 @@ const SYNERGY_TONE: Record<string, string> = {
 export function ComebackPlanningModal({
   conceptHistory,
   marketTrend,
+  money,
   isSaving,
   errorMessage,
   onConfirm,
@@ -60,12 +71,18 @@ export function ComebackPlanningModal({
 }: ComebackPlanningModalProps) {
   const [mood, setMood] = useState<ConceptMood | null>(null);
   const [genre, setGenre] = useState<Genre | null>(null);
+  const [budgetTierId, setBudgetTierId] =
+    useState<ComebackBudgetTierId>("standard");
 
   const selectedExpectation = useMemo(
     () => (mood ? calculateFandomExpectation(conceptHistory, mood) : null),
     [conceptHistory, mood],
   );
   const visibleGenres = GENRES.filter((candidate) => !GENRE_DATA[candidate].hidden);
+  const selectedBudget = COMEBACK_BUDGET_TIERS.find(
+    (tier) => tier.id === budgetTierId,
+  );
+  const canAfford = (selectedBudget?.cost ?? 0) <= money;
 
   return (
     <Modal
@@ -75,12 +92,16 @@ export function ComebackPlanningModal({
       footer={
         <Button
           className="w-full"
-          isDisabled={!mood || !genre || isSaving}
+          isDisabled={!mood || !genre || !canAfford || isSaving}
           onPress={() => {
-            if (mood && genre) void onConfirm({ genre, mood });
+            if (mood && genre) void onConfirm({ genre, mood, budgetTierId });
           }}
         >
-          {isSaving ? "저장 중…" : "이 컨셉으로 기획 시작"}
+          {isSaving
+            ? "저장 중…"
+            : canAfford
+              ? "이 기획으로 시작"
+              : "예산이 부족합니다"}
         </Button>
       }
     >
@@ -207,6 +228,49 @@ export function ComebackPlanningModal({
               {GENRE_DATA[marketTrend.coldGenre].label}
             </span>
           </p>
+        </section>
+
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
+            제작 예산
+          </h3>
+          <RadioGroup
+            aria-label="제작 예산"
+            value={budgetTierId}
+            onChange={(value) => setBudgetTierId(value as ComebackBudgetTierId)}
+            isDisabled={isSaving}
+            className="mt-2 grid grid-cols-3 gap-2"
+          >
+            {COMEBACK_BUDGET_TIERS.map((tier) => {
+              const affordable = tier.cost <= money;
+              return (
+                <Radio
+                  key={tier.id}
+                  value={tier.id}
+                  isDisabled={!affordable}
+                  className={({ isSelected, isPressed, isDisabled }) =>
+                    [
+                      "cursor-pointer rounded-2xl bg-surface-shell/72 p-3 text-center outline-none",
+                      "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
+                      isDisabled ? "cursor-not-allowed opacity-45" : "",
+                      isPressed ? "scale-[0.96]" : "scale-100",
+                      isSelected
+                        ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
+                        : "",
+                    ].join(" ")
+                  }
+                >
+                  <span className="block text-sm font-semibold text-text-primary">
+                    {tier.label}
+                  </span>
+                  <MoneyDisplay amount={tier.cost} size="sm" className="mt-1" />
+                  <span className="mt-1 block text-pretty text-[11px] leading-4 text-text-muted">
+                    {tier.summary}
+                  </span>
+                </Radio>
+              );
+            })}
+          </RadioGroup>
         </section>
 
         {errorMessage ? (

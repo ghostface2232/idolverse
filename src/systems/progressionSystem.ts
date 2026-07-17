@@ -6,6 +6,7 @@ import {
 } from "@/data/balance";
 import { MILESTONE_DEFINITIONS, PHASE_GATES } from "@/data/milestones";
 import { PROJECT_DEFINITIONS_BY_ID } from "@/data/debutProject";
+import { getDebutSchedule } from "@/systems/debutSystem";
 import type {
   Album,
   AchievedMilestone,
@@ -200,6 +201,8 @@ export interface GoalLanesInput {
   weeklyDecisions: readonly WeeklyDecision[];
   investorConditions: readonly InvestorCondition[];
   activeProjects?: readonly ProjectInstance[];
+  /** 신인상 자격 마감(누적 주차). 데뷔 후 2년차 말까지만 존재한다. */
+  rookieAwardDeadlineWeek?: number | null;
 }
 
 const PHASE_PROJECT_CATEGORIES: Record<
@@ -319,6 +322,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
         unlocks: stage.unlocks,
       };
     } else {
+      // 기준선(DEBUT_REQUIREMENTS)은 게이트가 아니라 "완성형 데뷔"의 눈금이다.
       const readinessRatio = Math.min(
         1,
         input.metrics.debutReadiness / DEBUT_REQUIREMENTS.readiness,
@@ -327,12 +331,13 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
         1,
         input.metrics.averageVocal / DEBUT_REQUIREMENTS.averageVocal,
       );
+      const debutWeek = getDebutSchedule(activeProject).debutWeek;
       project = {
         id: activeProject.id,
         title: stageLabel,
         progressLabel: `준비 ${Math.floor(input.metrics.debutReadiness)}/${DEBUT_REQUIREMENTS.readiness} · 보컬 ${Math.floor(input.metrics.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
         progressRatio: Math.min(readinessRatio, vocalRatio),
-        deadlineLabel: `데뷔 W-${Math.max(0, DEBUT_REQUIREMENTS.projectWeeks - elapsed)}`,
+        deadlineLabel: `데뷔 D-${Math.max(0, debutWeek - elapsed)}`,
         unlocks: stage.unlocks,
       };
     }
@@ -344,6 +349,17 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
     1;
 
   const longTerm: GoalLaneItem[] = [];
+  // 1~2년차의 캠페인 시계: 신인상은 이 창을 넘기면 영영 사라진다.
+  if (
+    input.rookieAwardDeadlineWeek != null &&
+    input.rookieAwardDeadlineWeek > elapsedWeeks
+  ) {
+    longTerm.push({
+      id: "rookie-award",
+      title: "신인상 도전 — 같은 신인들 사이에서 우위를 잡으세요",
+      deadlineLabel: `W-${input.rookieAwardDeadlineWeek - elapsedWeeks}`,
+    });
+  }
   const primaryCondition = input.investorConditions[0];
   if (primaryCondition) {
     longTerm.push({

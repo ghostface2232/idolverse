@@ -74,17 +74,14 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       unlocks: "발매",
     },
     {
+      // 준비도는 게이트가 아니다 — 낮아도 12주차에 발매되고, 완성도는
+      // progressMult를 통해 품질·차트·판매로 귀결된다.
       id: "release",
       title: "발매",
       summary: "앨범이 공개되고 첫 차트 순위가 집계된다",
       weekWindow: [COMEBACK_REQUIREMENTS.releaseWeek, COMEBACK_REQUIREMENTS.releaseWeek],
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
-        {
-          metric: "readiness",
-          target: COMEBACK_REQUIREMENTS.readiness,
-          label: "앨범 준비도",
-        },
       ],
       eventIds: [],
       unlocks: "음악방송 활동",

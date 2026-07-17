@@ -9,35 +9,39 @@ const initialAlbum: Album = {
     genre: "dancePop",
     mood: "refreshing",
   },
+  // 신인 세계관의 데모 밴드(50대). 완성곡급 후보는 성장한 프로듀서와
+  // 함께 컴백 사이클에서 온다.
   titleTrackCandidates: [
     {
       id: "track-safe",
       name: "Sparkline",
       type: "safe",
-      quality: 72,
+      quality: 56,
       description: "Reliable debut hook with broad appeal.",
     },
     {
       id: "track-bold",
       name: "Neon Current",
       type: "bold",
-      quality: 78,
+      quality: 63,
       description: "Sharper concept identity with higher execution risk.",
     },
     {
       id: "track-global",
       name: "Summer Dial",
       type: "global",
-      quality: 75,
+      quality: 59,
       description: "English-heavy topline built for global short-form clips.",
     },
   ],
   titleTrack: null,
+  // 데뷔 일정(16~24주)의 트레이드오프가 살려면 시작 진행도가 낮아야 한다 —
+  // 빠른 데뷔는 진행도가 덜 찬 채로, 긴 일정은 꽉 채운 채로 발매된다.
   progress: {
-    song: 48,
-    visual: 33,
-    choreography: 39,
-    marketing: 27,
+    song: 20,
+    visual: 12,
+    choreography: 16,
+    marketing: 8,
   },
   memberConceptFit: 71,
   seasonFit: 82,
