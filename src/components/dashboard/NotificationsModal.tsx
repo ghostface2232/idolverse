@@ -1,4 +1,5 @@
 import { Modal } from "@/components/common/Modal";
+import { NEWS_TYPE_LABELS } from "@/components/dashboard/MarketOverviewModal";
 import type { KPopNews, Notification } from "@/types/game";
 
 interface NotificationsModalProps {
@@ -44,7 +45,7 @@ export function NotificationsModal({
                   className="min-w-[240px] rounded-2xl border border-white/8 bg-slate-800/70 p-3"
                 >
                   <p className="text-[10px] uppercase tracking-[0.18em] text-brand-cyan">
-                    {item.type}
+                    {NEWS_TYPE_LABELS[item.type]}
                   </p>
                   <h3 className="mt-2 text-sm text-slate-100">
                     {item.headline}
@@ -79,7 +80,7 @@ export function NotificationsModal({
                       {notification.title}
                     </p>
                     <span className="text-[10px] text-slate-300">
-                      W{notification.week}
+                      {notification.week}주차
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-slate-200/90">

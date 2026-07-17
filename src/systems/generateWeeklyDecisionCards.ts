@@ -366,7 +366,7 @@ function buildOpportunityCard(
   }
   const warning =
     contextWarnings.length > 0
-      ? ` ${contextWarnings.join(" · ")}라 수락의 기회비용이 크다.`
+      ? ` ${contextWarnings.join(" · ")}라 수락의 기회비용이 큽니다.`
       : "";
 
   return {
@@ -434,7 +434,7 @@ function buildRecontractCard(
     lane: "crisis",
     category: "계약",
     title: `${member.name} 재계약 협상`,
-    summary: `${profile.label} ${member.name}의 처우 협상이 도래했다 (현재 ${contractTier}등급 · 개인 인기 ${Math.round(popularity)}). ${profile.description}.`,
+    summary: `${profile.label} ${member.name}의 처우 협상 시점이 왔습니다 (현재 ${contractTier}등급 · 개인 인기 ${Math.round(popularity)}). ${profile.description}.`,
     trigger: {
       kind: "contract",
       severity: temperament === "ambitious" ? "critical" : "warning",
@@ -445,24 +445,24 @@ function buildRecontractCard(
       {
         id: "raise",
         label: "조건 인상",
-        description: `처우를 ${nextTier}등급으로 올리고 계약금을 지급한다.`,
-        tradeoff: `즉시 계약금 ${formatSigning(signing)}. 인기와 회사의 지급 여력을 함께 반영한다.`,
+        description: `처우를 ${nextTier}등급으로 올리고 계약금을 지급합니다.`,
+        tradeoff: `계약금 ${formatSigning(signing)}이 즉시 나갑니다. 인기와 회사의 지급 여력을 함께 반영한 금액입니다.`,
         effects: { money: -signing, satisfaction: 12 },
         targetTraineeIds: [member.id],
       },
       {
         id: "bonus",
-        label: "보너스로 달랜다",
-        description: "등급은 유지하되 일시 보너스를 지급한다.",
-        tradeoff: "비용은 절반이지만 협상이 절반 주기로 다시 돌아온다.",
+        label: "보너스로 달래기",
+        description: "등급은 유지하되 일시 보너스를 지급합니다.",
+        tradeoff: "비용은 절반이지만 협상이 절반 주기로 다시 돌아옵니다.",
         effects: { money: -Math.round(signing / 2), satisfaction: 5 },
         targetTraineeIds: [member.id],
       },
       {
         id: "freeze",
         label: "동결",
-        description: "지금 조건을 유지하자고 설득한다.",
-        tradeoff: `만족도가 크게 떨어지고(${freezePenalty}) 협상이 반년 안에 다시 돌아온다.`,
+        description: "지금 조건을 유지하자고 설득합니다.",
+        tradeoff: "만족도가 크게 떨어지고, 협상이 반년 안에 다시 돌아옵니다.",
         effects: { satisfaction: freezePenalty },
         targetTraineeIds: [member.id],
       },
@@ -477,7 +477,7 @@ function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
     lane: "crisis",
     category: "부상",
     title: `${member.name} 부상 일정 조정`,
-    summary: `${member.name}의 부상이 ${member.injuryWeeks}주 남았다. 이번 주 활동 범위를 결정해야 한다.`,
+    summary: `${member.name}의 부상이 ${member.injuryWeeks}주 남았습니다. 이번 주 활동 범위를 결정해야 합니다.`,
     trigger: createTrigger(
       "injury",
       member.injuryWeeks >= 3 ? "critical" : "warning",
@@ -488,8 +488,8 @@ function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "full-rest",
         label: "완전 휴식",
-        description: "모든 일정을 취소하고 회복에 집중한다.",
-        tradeoff: "회복은 빠르지만 팀의 대중 노출이 줄어든다.",
+        description: "모든 일정을 취소하고 회복에 집중합니다.",
+        tradeoff: "회복은 빠르지만 팀의 대중 노출이 줄어듭니다.",
         effects: { injuryWeeks: -2, condition: 15, satisfaction: 5, public: -2 },
         targetTraineeIds,
         activityOverride: "vacation",
@@ -497,8 +497,8 @@ function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "partial-activity",
         label: "필수 일정만 참여",
-        description: "부담이 적은 일정만 제한적으로 소화한다.",
-        tradeoff: "공백은 줄지만 회복이 느리고 스트레스가 남는다.",
+        description: "부담이 적은 일정만 제한적으로 소화합니다.",
+        tradeoff: "공백은 줄지만 회복이 느리고 스트레스가 남습니다.",
         effects: { injuryWeeks: -1, condition: 5, stress: 3, public: -1 },
         targetTraineeIds,
         activityOverride: "rest",
@@ -514,27 +514,27 @@ function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
     lane: "crisis",
     category: "불화",
     title: `${conflict.memberAName}·${conflict.memberBName} 갈등 중재`,
-    summary: `두 멤버의 케미가 ${conflict.chemistry}까지 떨어졌다. 팀 효율이 더 악화되기 전에 개입해야 한다.`,
+    summary: "두 멤버의 사이가 심각하게 틀어졌습니다. 팀 분위기가 더 나빠지기 전에 개입이 필요합니다.",
     trigger: createTrigger(
       "conflict",
       conflict.chemistry <= -75 ? "critical" : "warning",
       targetTraineeIds,
-      `멤버 케미 ${conflict.chemistry}`,
+      "멤버 갈등 심화",
     ),
     options: [
       {
         id: "mediate",
         label: "전문 중재 진행",
-        description: "외부 코치와 함께 갈등의 원인을 조정한다.",
-        tradeoff: "비용이 들지만 관계를 가장 크게 회복한다.",
+        description: "외부 코치와 함께 갈등의 원인을 조정합니다.",
+        tradeoff: "비용이 들지만 관계를 가장 크게 회복합니다.",
         effects: { money: -12000000, chemistry: 15, satisfaction: 3 },
         targetTraineeIds,
       },
       {
         id: "separate-schedules",
         label: "일정 임시 분리",
-        description: "두 멤버의 동선을 나눠 충돌을 줄인다.",
-        tradeoff: "긴장은 완화되지만 팀 활동의 화제성이 줄어든다.",
+        description: "두 멤버의 동선을 나눠 충돌을 줄입니다.",
+        tradeoff: "긴장은 완화되지만 팀 활동의 화제성이 줄어듭니다.",
         effects: { chemistry: 6, condition: 3, public: -2 },
         targetTraineeIds,
         activityOverride: "individual",
@@ -542,8 +542,8 @@ function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
       {
         id: "ignore",
         label: "자율 해결에 맡기기",
-        description: "운영 일정을 그대로 유지한다.",
-        tradeoff: "비용은 없지만 갈등과 불만이 더 깊어질 수 있다.",
+        description: "운영 일정을 그대로 유지합니다.",
+        tradeoff: "비용은 없지만 갈등과 불만이 더 깊어질 수 있습니다.",
         effects: { chemistry: -8, satisfaction: -4 },
         targetTraineeIds,
       },
@@ -562,24 +562,24 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
     lane: "crisis",
     category: "투자사",
     title: "투자사 경영 개입",
-    summary: "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구한다.",
+    summary: "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구하고 있습니다.",
     trigger: createTrigger("investor", "critical", [], "투자사 압박 활성"),
     options: [
       {
         id: "comply",
         label: "요구 수용",
-        description: "상업 활동을 늘리고 투자사 지표를 우선한다.",
+        description: "상업 활동을 늘리고 투자사 지표를 우선합니다.",
         tradeoff: supportAvailable
-          ? "이번 한 번만 긴급 예산을 받는다. 대신 팬 신뢰와 멤버 상태가 크게 나빠진다."
-          : "추가 지원금 없이 팬 신뢰와 멤버 상태가 크게 나빠진다.",
+          ? "이번 한 번만 긴급 예산을 받습니다. 대신 팬 신뢰와 멤버 상태가 크게 나빠집니다."
+          : "추가 지원금 없이 팬 신뢰와 멤버 상태가 크게 나빠집니다.",
         effects: complyEffects,
         activityOverride: "entertainment",
       },
       {
         id: "negotiate",
         label: "조건 재협상",
-        description: "기한 연장과 평가 기준 완화를 요청한다.",
-        tradeoff: "유예 기간이 3주 늘어난다. 자문 비용과 업계 마찰을 감수해야 한다.",
+        description: "기한 연장과 평가 기준 완화를 요청합니다.",
+        tradeoff: "유예 기간이 3주 늘어납니다. 자문 비용과 업계 마찰을 감수해야 합니다.",
         effects: {
           money: -INVESTOR_INTERVENTION.negotiate.cost,
           industry: INVESTOR_INTERVENTION.negotiate.industry,
@@ -589,8 +589,8 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
       {
         id: "defy",
         label: "자체 방침 고수",
-        description: "지원 축소를 감수하고 팀의 방향성을 지킨다.",
-        tradeoff: "멤버와 팬은 안도한다. 대신 자체 예산을 투입하고 업계 관계가 크게 악화된다.",
+        description: "지원 축소를 감수하고 팀의 방향성을 지킵니다.",
+        tradeoff: "멤버와 팬은 안도합니다. 대신 자체 예산을 투입해야 하고 업계 관계가 크게 악화됩니다.",
         effects: {
           satisfaction: INVESTOR_INTERVENTION.defy.satisfaction,
           fandomLoyalty: INVESTOR_INTERVENTION.defy.fandomLoyalty,
@@ -611,7 +611,11 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
     lane: "crisis",
     category: "경영",
     title: "운영 자금 긴급 조정",
-    summary: `현재 자금 ${Math.round(money).toLocaleString("ko-KR")}원, 고정비 기준 런웨이 ${runwayLabel}다.`,
+    summary: `현재 자금은 ${Math.round(money).toLocaleString("ko-KR")}원입니다. ${
+      Number.isFinite(runwayWeeks)
+        ? `고정비 기준 ${Math.max(0, runwayWeeks).toFixed(1)}주 버틸 수 있습니다.`
+        : "고정비 기준 여유는 충분합니다."
+    }`,
     trigger: createTrigger(
       "finance",
       money < 0 ? "critical" : "warning",
@@ -622,8 +626,8 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
       {
         id: "emergency-loan",
         label: "긴급 대출",
-        description: "운영 자금을 빌려 급한 불을 끈다.",
-        tradeoff: `지금 ${EMERGENCY_FINANCING.loan.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.loan.repayment / 1_000_000}백만원을 갚아야 한다.`,
+        description: "운영 자금을 빌려 급한 불을 끕니다.",
+        tradeoff: `지금 ${EMERGENCY_FINANCING.loan.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.loan.repayment / 1_000_000}백만원을 갚아야 합니다.`,
         effects: {
           money: EMERGENCY_FINANCING.loan.principal,
           investorPressure: 4,
@@ -633,8 +637,8 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
       {
         id: "emergency-investment",
         label: "긴급 추가 투자",
-        description: "투자사에 후속 운영 자금을 요청한다.",
-        tradeoff: `지금 ${EMERGENCY_FINANCING.investment.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.investment.repayment / 1_000_000}백만원을 우선 상환한다.`,
+        description: "투자사에 후속 운영 자금을 요청합니다.",
+        tradeoff: `지금 ${EMERGENCY_FINANCING.investment.principal / 1_000_000}백만원을 받고 2년 안에 ${EMERGENCY_FINANCING.investment.repayment / 1_000_000}백만원을 우선 상환합니다.`,
         effects: {
           money: EMERGENCY_FINANCING.investment.principal,
           investorPressure: 8,
@@ -645,8 +649,8 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
       {
         id: "austerity",
         label: "운영비 긴축",
-        description: "일부 지원과 복지 예산을 현금화한다.",
-        tradeoff: "소액을 확보하지만 멤버 만족도와 평판이 하락한다.",
+        description: "일부 지원과 복지 예산을 현금화합니다.",
+        tradeoff: "소액을 확보하지만 멤버 만족도와 평판이 하락합니다.",
         effects: { money: 10000000, satisfaction: -5, industry: -1 },
       },
     ],
@@ -663,7 +667,7 @@ function buildFinancingRepaymentCard(
     lane: "crisis",
     category: "경영",
     title: financing.kind === "loan" ? "긴급 대출 상환" : "추가 투자금 상환",
-    summary: `상환액 ${Math.round(financing.repaymentAmount).toLocaleString("ko-KR")}원, 만기까지 ${remainingWeeks}주 남았다.`,
+    summary: `상환액 ${Math.round(financing.repaymentAmount).toLocaleString("ko-KR")}원, 만기까지 ${remainingWeeks}주 남았습니다.`,
     trigger: createTrigger(
       "finance",
       remainingWeeks <= 4 ? "critical" : "warning",
@@ -674,15 +678,15 @@ function buildFinancingRepaymentCard(
       {
         id: "repay",
         label: "지금 상환",
-        description: "원금과 약정 비용을 상환해 긴급 조달 한도를 회복한다.",
-        tradeoff: "현금이 줄지만 미상환 슬롯 한 칸이 다시 열린다.",
+        description: "원금과 약정 비용을 상환해 긴급 조달 한도를 회복합니다.",
+        tradeoff: "현금이 줄지만 미상환 슬롯 한 칸이 다시 열립니다.",
         effects: { money: -financing.repaymentAmount, industry: 2 },
       },
       {
         id: "defer",
         label: "만기까지 보류",
-        description: "현금을 지키고 상환을 뒤로 미룬다.",
-        tradeoff: "만기에는 자동 상환되며 투자사 압박이 이어진다.",
+        description: "현금을 지키고 상환을 뒤로 미룹니다.",
+        tradeoff: "만기에는 자동 상환되며 투자사 압박이 이어집니다.",
         effects: { investorPressure: 2 },
       },
     ],
@@ -698,34 +702,34 @@ function buildFandomCrisisCard(
     lane: "crisis",
     category: "팬덤",
     title: "팬덤 신뢰 회복",
-    summary: `팬덤 충성도 ${fandomLoyalty}, 실망도 ${fandomDisappointment}. 이탈이 커지기 전에 대응해야 한다.`,
+    summary: "팬심이 눈에 띄게 식고 실망이 쌓이고 있습니다. 이탈이 커지기 전에 대응이 필요합니다.",
     trigger: createTrigger(
       "fandom",
       fandomDisappointment >= 70 ? "critical" : "warning",
       [],
-      `충성도 ${fandomLoyalty} · 실망도 ${fandomDisappointment}`,
+      "팬덤 이탈 조짐",
     ),
     options: [
       {
         id: "apology",
         label: "공식 소통과 보상",
-        description: "입장문과 팬 보상 프로그램을 즉시 진행한다.",
-        tradeoff: "비용이 들지만 실망도를 가장 직접적으로 낮춘다.",
+        description: "입장문과 팬 보상 프로그램을 즉시 진행합니다.",
+        tradeoff: "비용이 들지만 실망도를 가장 직접적으로 낮춥니다.",
         effects: { money: -15000000, fandomDisappointment: -12, fandomLoyalty: 4 },
       },
       {
         id: "fan-event",
         label: "팬 소통 행사",
-        description: "멤버 전원이 참여하는 소규모 행사를 연다.",
-        tradeoff: "팬덤은 회복되지만 비용과 컨디션을 소모한다.",
+        description: "멤버 전원이 참여하는 소규모 행사를 엽니다.",
+        tradeoff: "팬덤은 회복되지만 비용과 컨디션을 소모합니다.",
         effects: { money: -25000000, fandom: 5, fandomLoyalty: 8, condition: -4 },
         activityOverride: "entertainment",
       },
       {
         id: "wait",
         label: "활동으로 만회",
-        description: "별도 대응 없이 다음 결과물에 집중한다.",
-        tradeoff: "돈은 지키지만 당장의 팬 실망이 더 커진다.",
+        description: "별도 대응 없이 다음 결과물에 집중합니다.",
+        tradeoff: "돈은 지키지만 당장의 팬 실망이 더 커집니다.",
         effects: { fandomDisappointment: 7, public: -2 },
       },
     ],
@@ -795,19 +799,19 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
     lane: "crisis",
     category: "멤버",
     title: `${member.name} 이탈 위험`,
-    summary: `${member.name}의 만족도가 ${member.satisfaction}까지 떨어졌다. 불만을 방치하면 이탈로 이어질 수 있다.`,
+    summary: `${member.name}의 만족도가 위험한 수준까지 떨어졌습니다. 불만을 방치하면 이탈로 이어질 수 있습니다.`,
     trigger: createTrigger(
       "morale",
       member.satisfaction <= 15 ? "critical" : "warning",
       targetTraineeIds,
-      `${member.name} 만족도 ${member.satisfaction}`,
+      `${member.name} 만족도 급락`,
     ),
     options: [
       {
         id: "private-meeting",
         label: "개별 면담과 일정 조정",
-        description: "불만의 원인을 듣고 이번 주 부담을 낮춘다.",
-        tradeoff: "팀 일정 일부를 포기하지만 만족도와 스트레스가 회복된다.",
+        description: "불만의 원인을 듣고 이번 주 부담을 낮춥니다.",
+        tradeoff: "팀 일정 일부를 포기하지만 만족도와 스트레스가 회복됩니다.",
         effects: { satisfaction: 10, stress: -6, chemistry: 3, public: -1 },
         targetTraineeIds,
         activityOverride: "rest",
@@ -815,8 +819,8 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "reward",
         label: "보너스와 특별 휴식",
-        description: "즉시 체감할 수 있는 보상과 휴식을 제공한다.",
-        tradeoff: "바로 숨을 돌릴 수 있지만 운영 자금이 줄어든다.",
+        description: "즉시 체감할 수 있는 보상과 휴식을 제공합니다.",
+        tradeoff: "바로 숨을 돌릴 수 있지만 운영 자금이 줄어듭니다.",
         effects: { satisfaction: 8, condition: 6, money: -10000000 },
         targetTraineeIds,
         activityOverride: "vacation",
@@ -824,8 +828,8 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "pressure",
         label: "프로 의식 강조",
-        description: "계약과 팀 책임을 근거로 일정 준수를 요구한다.",
-        tradeoff: "일정은 지키지만 이탈 위험과 스트레스가 커진다.",
+        description: "계약과 팀 책임을 근거로 일정 준수를 요구합니다.",
+        tradeoff: "일정은 지키지만 이탈 위험과 스트레스가 커집니다.",
         effects: { satisfaction: -6, stress: 8, public: 2 },
         targetTraineeIds,
       },
@@ -840,19 +844,19 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
     lane: "crisis",
     category: "과로",
     title: `${member.name} 과로 경고`,
-    summary: `${member.name}의 스트레스가 ${member.stress}다. 부상이나 만족도 하락 전에 일정을 조정해야 한다.`,
+    summary: `${member.name}의 스트레스가 한계에 가깝습니다. 부상이나 만족도 하락으로 번지기 전에 일정 조정이 필요합니다.`,
     trigger: createTrigger(
       "overwork",
       member.stress >= 90 ? "critical" : "warning",
       targetTraineeIds,
-      `${member.name} 스트레스 ${member.stress}`,
+      `${member.name} 과로 신호`,
     ),
     options: [
       {
         id: "cancel-schedule",
         label: "이번 주 일정 취소",
-        description: "개인 일정을 모두 비우고 회복시킨다.",
-        tradeoff: "충분히 회복할 수 있지만 이번 주 대중 노출을 포기한다.",
+        description: "개인 일정을 모두 비우고 회복시킵니다.",
+        tradeoff: "충분히 회복할 수 있지만 이번 주 대중 노출을 포기합니다.",
         effects: { stress: -18, condition: 10, satisfaction: 4, public: -2 },
         targetTraineeIds,
         activityOverride: "vacation",
@@ -860,8 +864,8 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "medical-support",
         label: "의료·컨디셔닝 지원",
-        description: "전문 인력을 투입해 일정을 유지하며 회복을 돕는다.",
-        tradeoff: "비용이 들지만 활동 공백을 줄인다.",
+        description: "전문 인력을 투입해 일정을 유지하며 회복을 돕습니다.",
+        tradeoff: "비용이 들지만 활동 공백을 줄입니다.",
         effects: { money: -8000000, stress: -10, condition: 5 },
         targetTraineeIds,
         activityOverride: "rest",
@@ -869,8 +873,8 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
       {
         id: "push-through",
         label: "핵심 일정 강행",
-        description: "현재 관심이 식기 전에 일정을 소화한다.",
-        tradeoff: "인지도는 오르지만 부상 위험과 불만이 커진다.",
+        description: "현재 관심이 식기 전에 일정을 소화합니다.",
+        tradeoff: "인지도는 오르지만 부상 위험과 불만이 커집니다.",
         effects: { public: 3, stress: 8, condition: -6, satisfaction: -5 },
         targetTraineeIds,
         activityOverride: "individual",

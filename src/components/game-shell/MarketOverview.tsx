@@ -25,7 +25,7 @@ export function MarketOverview() {
   return (
     <section className="h-full overflow-y-auto p-4">
       <header className="mb-4">
-        <p className="text-xs font-semibold text-action-secondary">MARKET</p>
+        <p className="text-xs font-semibold text-action-secondary">시장</p>
         <h1 className="mt-1 text-xl font-semibold text-text-primary">시장 브리핑</h1>
         <p className="mt-1 text-sm text-text-muted">팬덤 4축과 최근 업계 변화를 봅니다.</p>
       </header>
@@ -54,7 +54,7 @@ export function MarketOverview() {
           {news.slice(0, 4).map((item) => (
             <li key={item.id} className="py-3 first:pt-0 last:pb-0">
               <p className="text-sm text-text-secondary">{item.headline}</p>
-              <p className="mt-1 text-xs tabular-nums text-text-muted">W{item.week}</p>
+              <p className="mt-1 text-xs tabular-nums text-text-muted">{item.week}주차</p>
             </li>
           ))}
         </ul>

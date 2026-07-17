@@ -24,7 +24,7 @@ export function MoreOverview({
   return (
     <section className="h-full overflow-y-auto p-4">
       <header className="mb-4">
-        <p className="text-xs font-semibold text-action-secondary">COMPANY</p>
+        <p className="text-xs font-semibold text-action-secondary">회사</p>
         <h1 className="mt-1 text-xl font-semibold text-text-primary">더보기</h1>
         <p className="mt-1 text-sm text-text-muted">회사 운영과 기록을 확인합니다.</p>
       </header>

@@ -5,19 +5,39 @@ import type { PromotionActivity, PromotionActivityId } from "@/types/game";
 const PROMOTION_COST_UNIT = 10000;
 
 const EFFECT_LABELS: Record<string, string> = {
-  public: "대중",
-  fandom: "팬덤",
-  fandomLoyalty: "충성",
-  fandomDisappointment: "실망",
-  global: "글로벌",
-  industry: "업계",
+  public: "대중 인지도",
+  fandom: "코어 팬덤",
+  fandomLoyalty: "팬덤 충성도",
+  fandomDisappointment: "팬덤 민심",
+  global: "해외 반응",
+  industry: "업계 평판",
 };
 
+// 효과 수치는 사전 공개하지 않는다 — 어느 쪽에 도움이 되는지만 전한다.
 function summarizeEffects(effects: PromotionActivity["effects"]): string {
-  return Object.entries(effects)
-    .filter(([key]) => EFFECT_LABELS[key])
-    .map(([key, value]) => `${EFFECT_LABELS[key]} ${value > 0 ? "+" : ""}${value}`)
-    .join(" · ");
+  const benefits: string[] = [];
+  const drawbacks: string[] = [];
+  let strongest = 0;
+  for (const [key, value] of Object.entries(effects)) {
+    const label = EFFECT_LABELS[key];
+    if (!label || !value) continue;
+    const goodness = key === "fandomDisappointment" ? -value : value;
+    if (goodness > 0) {
+      benefits.push(label);
+      strongest = Math.max(strongest, Math.abs(value));
+    } else {
+      drawbacks.push(label);
+    }
+  }
+  const parts: string[] = [];
+  if (benefits.length > 0) {
+    const adverb = strongest >= 5 ? "크게 " : strongest >= 3 ? "" : "조금씩 ";
+    parts.push(`${benefits.join("·")}에 ${adverb}보탬이 됩니다`);
+  }
+  if (drawbacks.length > 0) {
+    parts.push(`${drawbacks.join("·")} 쪽은 손해를 감수해야 합니다`);
+  }
+  return parts.join(" · ");
 }
 
 interface ActivityPromotionPanelProps {
@@ -51,7 +71,7 @@ export function ActivityPromotionPanel({
           활동기 프로모션
         </h3>
         <span className="text-[11px] tabular-nums text-text-muted">
-          활동 종료까지 W-{activityWeeksLeft} · 주당 1건
+          활동 종료까지 {activityWeeksLeft}주 · 주당 1건
         </span>
       </div>
 

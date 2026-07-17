@@ -1,6 +1,7 @@
 import { DEFAULT_MARKET_TRENDS, SEASONAL_NEWS_POOL } from "@/data/kpopCalendar";
 import { SEASON_MOOD_FIT } from "@/data/concepts";
 import { createSeededRandom, pickUniqueItems } from "@/lib/seededRandom";
+import { withJosa } from "@/utils/josa";
 import type {
   CompetitorGroup,
   ConceptMood,
@@ -32,7 +33,7 @@ export function generateWeeklyNews(
     .slice(0, 2)
     .map((c) => ({
       headline: `${c.name}, '${c.currentAlbum!.title}' 활동 중`,
-      detail: `${c.agency} 소속 ${c.name}이(가) 차트에서 선전하고 있다.`,
+      detail: `${c.agency} 소속 ${withJosa(c.name, "이/가")} 차트에서 선전하고 있습니다.`,
       type: "competitor" as const,
     }));
 

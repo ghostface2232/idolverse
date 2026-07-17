@@ -9,6 +9,7 @@ import {
 import { CONCEPT_SYNERGY_TABLE, SEASON_MOOD_FIT } from "@/data/concepts";
 import { traitComboBonus } from "@/data/memberTraits";
 import { createSeededRandom } from "@/lib/seededRandom";
+import { withJosa } from "@/utils/josa";
 import {
   evaluateRelease,
   type MarketContext,
@@ -284,10 +285,10 @@ export function describeCenterFit(
     (center.conceptAffinity[mood] ?? 50) +
     traitComboBonus(center.traits ?? [], mood);
   if (fit >= 75) {
-    return ` 센터 ${center.name}의 분위기가 이번 컨셉과 맞아떨어졌다는 반응이 뜨겁다.`;
+    return ` 센터 ${center.name}의 분위기가 이번 컨셉과 맞아떨어졌다는 반응이 뜨겁습니다.`;
   }
   if (fit < 40) {
-    return ` 센터 ${center.name}과(와) 컨셉이 어딘가 어긋난다는 반응이 눈에 띈다.`;
+    return ` 센터 ${withJosa(center.name, "과/와")} 컨셉이 어딘가 어긋난다는 반응이 눈에 띕니다.`;
   }
   return "";
 }
@@ -310,7 +311,7 @@ export function calculateFandomExpectation(
       fandomPenalty: 0,
       publicBonus: 0,
       publicBonusChance: 0,
-      description: "첫 앨범이라 팬덤 기대치 기준 없음",
+      description: "첫 앨범이라 아직 쌓인 기대가 없습니다. 어떤 색이든 백지에서 시작합니다.",
     };
   }
 

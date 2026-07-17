@@ -33,7 +33,7 @@ export function GameWorldHost({ active }: GameWorldHostProps) {
 
       <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-xl bg-slate-950/88 px-2.5 py-1.5 text-[10px] font-semibold text-text-secondary shadow-[var(--shadow-surface)]">
         <span className="size-1.5 rounded-full bg-state-success" aria-hidden="true" />
-        LIVE · 멤버 {projection.entities.length}명
+        연습실 현황 · 멤버 {projection.entities.length}명
       </div>
 
       {externalCount > 0 ? (

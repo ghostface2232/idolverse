@@ -76,8 +76,8 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
             {command.chartName}
           </p>
           <div key={displayedRank} className="chart-rank-sweep mt-7">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-text-muted">
-              New Entry
+            <p className="text-[11px] tracking-[0.2em] text-text-muted">
+              신규 진입
             </p>
             <p className="mt-1 text-8xl font-black leading-none tabular-nums text-white">
               {displayedRank}

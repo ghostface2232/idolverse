@@ -1,5 +1,7 @@
+import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { advanceWeekState } from "@/systems/advanceWeek";
 import { applyEffects } from "@/systems/applyEffects";
+import { withJosa } from "@/utils/josa";
 import {
   buildDecisionCardContext,
   generateWeeklyDecisionCards,
@@ -493,7 +495,7 @@ export function processWeek(
     applyToState(d.effects, undefined, 1, d.targetTraineeIds);
     recordTransition(
       beforeDecision,
-      { kind: "decision", id: `${d.cardId}:${d.optionId}`, label: d.cardId },
+      { kind: "decision", id: `${d.cardId}:${d.optionId}`, label: "주간 결정" },
       1,
     );
   }
@@ -539,7 +541,10 @@ export function processWeek(
       {
         kind: "promotion",
         id: promotionOrders[i].activityId,
-        label: promotionOrders[i].activityId,
+        label:
+          PROMOTION_ACTIVITIES.find(
+            (activity) => activity.id === promotionOrders[i].activityId,
+          )?.name ?? "프로모션",
       },
       2,
     );
@@ -702,10 +707,10 @@ export function processWeek(
       type: "member",
       tone: "negative",
       title: `${member.name} 탈퇴`,
-      description: `${member.name}이(가) 낮은 처우와 지친 마음을 견디지 못하고 팀을 떠났다. 팬덤이 흔들린다.`,
+      description: `${withJosa(member.name, "이/가")} 낮은 처우와 지친 마음을 견디지 못하고 팀을 떠났습니다. 팬덤이 흔들리고 있습니다.`,
       resolved: false,
     });
-    report.warnings.push(`${member.name}이(가) 팀을 떠났습니다`);
+    report.warnings.push(`${withJosa(member.name, "이/가")} 팀을 떠났습니다`);
   }
 
   // ── 6. Album progress
@@ -783,7 +788,7 @@ export function processWeek(
           id: `news-rookie-${rookie.id}`,
           week: snapshot.game.currentWeek,
           headline: `신인 그룹 ${rookie.name} 데뷔`,
-          detail: `${rookie.agency}의 새 그룹 ${rookie.name}이(가) 데뷔했습니다. 올해 신인상 경쟁에 합류합니다.`,
+          detail: `${rookie.agency}의 새 그룹 ${withJosa(rookie.name, "이/가")} 데뷔했습니다. 올해 신인상 경쟁에 합류합니다.`,
           type: "industry",
         });
       },
@@ -798,7 +803,7 @@ export function processWeek(
         id: `news-disband-${gone.id}-y${snapshot.game.currentYear}w${snapshot.game.currentWeek}`,
         week: snapshot.game.currentWeek,
         headline: `${gone.name} 활동 종료`,
-        detail: `${gone.agency}가 ${gone.name}의 활동 종료를 발표했습니다. 한 세대가 저물었습니다.`,
+        detail: `${withJosa(gone.agency, "이/가")} ${gone.name}의 활동 종료를 발표했습니다. 한 세대가 저물었습니다.`,
         type: "industry",
       });
     }
@@ -897,7 +902,7 @@ export function processWeek(
       if (rookieRival) {
         eventRivals.push(rookieRival);
         report.warnings.push(
-          `경쟁 신인 ${rookieRival.name}이(가) 같은 주에 데뷔합니다. 시장의 시선이 갈립니다`,
+          `경쟁 신인 ${withJosa(rookieRival.name, "이/가")} 같은 주에 데뷔합니다. 시장의 시선이 갈립니다`,
         );
       }
     }
@@ -1718,7 +1723,7 @@ export function processWeek(
     report.warnings.push(
       popularityDemand
         ? `${trainee.name}의 인기가 처우를 앞질렀습니다. 재계약 협상이 앞당겨집니다`
-        : `지친 ${trainee.name}이(가) 처우 재논의를 원합니다. 재계약 협상이 앞당겨집니다`,
+        : `지친 ${withJosa(trainee.name, "이/가")} 처우 재논의를 원합니다. 재계약 협상이 앞당겨집니다`,
     );
     return {
       ...trainee,
@@ -1901,10 +1906,17 @@ export function processWeek(
           delta.target.field === "stress" ||
           delta.target.field === "satisfaction"),
     )
-    .map(
-      (delta) =>
-        `${delta.target.label}: ${String(delta.before)} → ${String(delta.after)} (${delta.source.label})`,
-    );
+    .flatMap((delta) => {
+      // 보고서에는 정수 단위 변화만 올린다 — 반올림 후 같은 값이면 생략.
+      const before =
+        typeof delta.before === "number" ? Math.round(delta.before) : delta.before;
+      const after =
+        typeof delta.after === "number" ? Math.round(delta.after) : delta.after;
+      if (before === after) return [];
+      return [
+        `${delta.target.label}: ${String(before)} → ${String(after)} (${delta.source.label})`,
+      ];
+    });
 
   return { newState, weekReport: report };
 }

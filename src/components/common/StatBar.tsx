@@ -14,7 +14,7 @@ function valueClass(value: number): string {
 }
 
 export function StatBar({ label, value, tone, emphasized = false }: StatBarProps) {
-  const clampedValue = Math.max(0, Math.min(value, 100));
+  const clampedValue = Math.round(Math.max(0, Math.min(value, 100)));
   const isElite = tone === undefined && clampedValue >= 90;
   const barClass =
     tone === "pink"

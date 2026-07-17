@@ -4,10 +4,13 @@ import { traitLabels } from "@/data/memberTraits";
 import {
   calculatePositionFitness,
   POSITION_LABELS,
+  positionFitnessToRating,
+  potentialToStars,
 } from "@/data/founding";
 import { getEffectiveSatisfaction } from "@/systems/satisfactionSystem";
 import { CHEMISTRY_CONFLICT_THRESHOLD } from "@/data/balance";
 import type { Position, Trainee, TraineeStatKey } from "@/types/game";
+import { withJosa } from "@/utils/josa";
 
 interface TraineeDetailProps {
   trainee: Trainee;
@@ -77,13 +80,21 @@ function chemistryTone(value: number): string {
   return "text-red-300";
 }
 
+// 케미 내부 수치는 노출하지 않는다 — 관계의 온도만 전한다.
+function chemistryLabel(value: number): string {
+  if (value >= 30) return "합이 잘 맞습니다";
+  if (value > 0) return "원만합니다";
+  if (value > CHEMISTRY_CONFLICT_THRESHOLD) return "데면데면합니다";
+  return "사이가 좋지 않습니다";
+}
+
 function pickComment(
   trainee: Trainee,
   effectiveSatisfaction: number,
   conflictPartner: string | null,
 ): string {
   if (conflictPartner) {
-    return `${conflictPartner}랑 좀 힘들어요…`;
+    return `${withJosa(conflictPartner, "이랑/랑")} 좀 힘들어요…`;
   }
   if (trainee.injuryWeeks > 0) {
     return "빨리 복귀할게요…";
@@ -172,7 +183,10 @@ export function TraineeDetail({
               ? POSITION_LABELS[trainee.position]
               : "포지션 미배정"}
           </span>
-          <span>잠재력 ×{trainee.potential.toFixed(2)}</span>
+          <span title="트레이너들이 가늠한 잠재력입니다">
+            잠재력 {"★".repeat(potentialToStars(trainee.potential))}
+            {"☆".repeat(5 - potentialToStars(trainee.potential))}
+          </span>
         </div>
 
         <section className="space-y-2">
@@ -236,7 +250,7 @@ export function TraineeDetail({
                     textAnchor="middle"
                     dominantBaseline="middle"
                   >
-                    {STAT_LABELS[key]} {trainee.stats[key]}
+                    {STAT_LABELS[key]} {Math.round(trainee.stats[key])}
                   </text>
                 );
               })}
@@ -260,7 +274,9 @@ export function TraineeDetail({
                   ].join(" ")}
                 >
                   <span>{POSITION_LABELS[pos]}</span>
-                  <span className="font-medium">{fitness}%</span>
+                  <span className="font-medium">
+                    {"★".repeat(positionFitnessToRating(fitness))}
+                  </span>
                 </div>
               );
             })}
@@ -303,8 +319,7 @@ export function TraineeDetail({
                 >
                   <span className="text-slate-200">{entry.name}</span>
                   <span className={chemistryTone(entry.value)}>
-                    {entry.value > 0 ? "+" : ""}
-                    {entry.value}
+                    {chemistryLabel(entry.value)}
                   </span>
                 </div>
               ))}
@@ -321,7 +336,7 @@ export function TraineeDetail({
               {
                 label: "만족도",
                 value: effectiveSatisfaction,
-                hint: `기본 ${trainee.satisfaction}`,
+                hint: `기본 ${Math.round(trainee.satisfaction)}`,
               },
               { label: "컨디션", value: trainee.condition, hint: null },
               { label: "스트레스", value: trainee.stress, hint: null },

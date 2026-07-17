@@ -1,3 +1,4 @@
+import { withJosa } from "@/utils/josa";
 import {
   COMEBACK_BUDGET_TIERS,
   COMEBACK_BUDGET_TIERS_BY_ID,
@@ -248,15 +249,23 @@ function buildComebackEvent(
     );
     const lines = [expectation.description];
     if (expectation.fandomPenalty < 0) {
-      lines.push(`팬덤 이탈 위험 ${expectation.fandomPenalty}`);
+      lines.push("일부 팬덤이 이탈할 위험이 있습니다");
     }
     if (expectation.publicBonusChance > 0) {
+      // 내부 확률 수치는 노출하지 않는다 — 기대의 크기만 어조로 전한다.
       lines.push(
-        `대중 반향 확률 ${Math.round(expectation.publicBonusChance * 100)}% (성공 시 대중성 +${expectation.publicBonus})`,
+        expectation.publicBonusChance >= 0.6
+          ? "새로운 시도에 대중이 반응할 가능성이 높아 보입니다"
+          : expectation.publicBonusChance >= 0.3
+            ? "새로운 시도가 대중의 반향을 얻을 수도 있습니다"
+            : "대중의 반향까지는 쉽지 않겠지만 가능성은 있습니다",
       );
     }
     return {
-      event: { ...event, description: lines.join(" · ") },
+      event: {
+        ...event,
+        description: `${lines.map((line) => line.replace(/\.+$/, "")).join(". ")}.`,
+      },
       effects: template.effects,
     };
   }
@@ -535,8 +544,8 @@ export function processComebackProjectWeek(
             score: wins,
             passed: wins > 0,
             summary: battle.won
-              ? `${MUSIC_SHOW_NAME} 1위. ${battle.rivalName}을(를) ${battle.playerScore - battle.rivalScore}점 차로 눌렀습니다.`
-              : `${MUSIC_SHOW_NAME} 1위 후보에 올랐지만 ${battle.rivalName}에게 ${battle.rivalScore - battle.playerScore}점 차로 밀렸습니다.`,
+              ? `${MUSIC_SHOW_NAME} 1위입니다. ${withJosa(battle.rivalName, "을/를")} ${Math.round(battle.playerScore - battle.rivalScore)}점 차로 눌렀습니다.`
+              : `${MUSIC_SHOW_NAME} 1위 후보에 올랐지만 ${battle.rivalName}에게 ${Math.round(battle.rivalScore - battle.playerScore)}점 차로 밀렸습니다.`,
           },
         },
       };
@@ -581,7 +590,7 @@ export function processComebackProjectWeek(
             week: input.cumulativeWeek,
             score: melonRank,
             passed: false,
-            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"}. 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했다.`,
+            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"}. 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했습니다.`,
           },
         },
       };
@@ -591,7 +600,7 @@ export function processComebackProjectWeek(
           type: "market",
           tone: "neutral",
           title: "음악방송 무대",
-          description: `${MUSIC_SHOW_NAME} 무대에 올랐지만 아직 1위 후보권 밖이다. 후보에 서려면 차트 ${MUSIC_SHOW_CANDIDACY.maxChartRank}위 안에 들어야 한다.`,
+          description: `${MUSIC_SHOW_NAME} 무대에 올랐지만 아직 1위 후보권 밖입니다. 후보에 서려면 차트 ${MUSIC_SHOW_CANDIDACY.maxChartRank}위 안에 들어야 합니다.`,
           resolved: false,
         },
         effects: { public: 1 },

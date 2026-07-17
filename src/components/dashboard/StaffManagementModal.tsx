@@ -71,9 +71,8 @@ export function StaffManagementModal({
     <Modal title="인사 관리" onClose={onClose} isCloseDisabled={isSaving}>
       <div className="space-y-4 text-sm">
         <p className="text-pretty text-xs leading-5 text-text-muted">
-          이번 주 시장 풀 상한 {poolCap}. 업계 신뢰가 오르면 더 좋은 인재가
-          찾아옵니다. 후보는 매주 바뀌고, 함께해 온 스태프의 교체는 멤버들의
-          만족도({STAFF_MARKET.replaceTeamSatisfactionPenalty})로 돌아옵니다.
+          업계 신뢰가 오르면 더 좋은 인재가 찾아옵니다. 후보는 매주 바뀌고,
+          함께해 온 스태프를 내보내면 멤버들의 만족도가 눈에 띄게 떨어집니다.
         </p>
 
         {candidatesByRole.map(({ role, candidates }) => {
@@ -110,7 +109,7 @@ export function StaffManagementModal({
                     </Button>
                   </div>
                 ) : (
-                  <span className="text-xs text-rose-300">공석. 전문 작업이 멈춰 있습니다</span>
+                  <span className="text-xs text-rose-300">공석입니다. 담당 업무가 멈춰 있습니다.</span>
                 )}
               </div>
 
@@ -152,7 +151,9 @@ export function StaffManagementModal({
                               setTrainingFeedback(
                                 result.abilityGain < 0.05
                                   ? `${current.name}에게 큰 변화는 없었습니다.`
-                                  : `${current.name}의 능력이 ${result.abilityGain.toFixed(1)} 올랐습니다.`,
+                                  : result.abilityGain >= 1
+                                    ? `${current.name}의 실력이 눈에 띄게 늘었습니다.`
+                                    : `${current.name}의 실력이 조금 늘었습니다.`,
                               );
                             }}
                           >
@@ -185,7 +186,7 @@ export function StaffManagementModal({
                           {candidate.name}
                         </span>
                         <span className="ml-2 tabular-nums text-text-muted">
-                          능력 {candidate.ability}
+                          능력 {Math.floor(candidate.ability)}
                         </span>
                         <StaffPotentialStars
                           staff={candidate}

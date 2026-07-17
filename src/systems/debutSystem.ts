@@ -11,6 +11,7 @@ import {
   TITLE_TRACK_SELECTION_DECISION_ID,
 } from "@/data/debutProject";
 import { PROJECT_EVENT_TEMPLATES_BY_ID } from "@/data/events";
+import { withJosa } from "@/utils/josa";
 import { describeCenterFit, finalizeAlbumRelease } from "@/systems/albumSystem";
 import type { ReleaseResult } from "@/systems/evaluationSystem";
 import { instantiateEvent } from "@/systems/eventSystem";
@@ -183,7 +184,7 @@ function buildProjectEvent(
     event: target
       ? {
           ...event,
-          description: `${target.name}이 늦은 밤까지 남아 약했던 파트를 자기 방식으로 풀어내며 숨은 강점을 증명했다.`,
+          description: `${withJosa(target.name, "이/가")} 늦은 밤까지 남아 약했던 파트를 자기 방식으로 풀어내며 숨은 강점을 증명했습니다.`,
         }
       : event,
     effects: template.effects,

@@ -6,6 +6,7 @@ import type {
   ComebackSettlementReport,
   WeeklyReportSnapshot,
 } from "@/types/game";
+import { withJosa } from "@/utils/josa";
 
 interface WeekReportProps {
   report: WeeklyReportSnapshot;
@@ -48,23 +49,25 @@ export function WeekReport({
           <ComebackSettlementSection settlement={report.comebackSettlement} />
         ) : null}
 
-        <ReportSection title="멤버 성장" empty="뚜렷한 변화 없음">
+        <ReportSection title="멤버 성장" empty="이번 주는 뚜렷한 변화가 없었습니다.">
           {report.statChanges.map((change) => (
             <li key={change}>{change}</li>
           ))}
         </ReportSection>
 
-        <ReportSection title="부상 발생" empty="부상 없음">
+        <ReportSection title="부상 발생" empty="부상자는 없습니다.">
           {report.injuries.map((injury) => (
-            <li key={injury.traineeId}>{injury.traineeName} 부상 발생</li>
+            <li key={injury.traineeId}>
+              {withJosa(injury.traineeName, "이/가")} 부상을 입었습니다.
+            </li>
           ))}
         </ReportSection>
 
-        <ReportSection title="멤버 관계" empty="갈등 없음">
+        <ReportSection title="멤버 관계" empty="눈에 띄는 갈등은 없습니다.">
           {report.conflicts.map((conflict) => (
             <li key={`${conflict.a}-${conflict.b}`}>
-              {conflict.a} / {conflict.b} 갈등
-              {conflict.resolved ? " 해소" : " 발생"}
+              {withJosa(conflict.a, "과/와")} {conflict.b} 사이의 갈등이
+              {conflict.resolved ? " 풀렸습니다." : " 불거졌습니다."}
             </li>
           ))}
         </ReportSection>
@@ -79,25 +82,27 @@ export function WeekReport({
           </div>
         </section>
 
-        <ReportSection title="이번 주 주요 소식" empty="주요 소식 없음">
+        <ReportSection title="이번 주 주요 소식" empty="따로 보고드릴 소식은 없습니다.">
           {report.events.map((event) => (
             <li key={event.id}>{event.title}</li>
           ))}
         </ReportSection>
 
-        <ReportSection title="K-POP 뉴스" empty="뉴스 없음">
+        <ReportSection title="K-POP 뉴스" empty="특별한 업계 소식은 없습니다.">
           {report.news.map((news) => (
             <li key={news.id}>{news.headline}</li>
           ))}
         </ReportSection>
 
-        <ReportSection title="경쟁 그룹 동향" empty="컴백 소식 없음">
+        <ReportSection title="경쟁 그룹 동향" empty="경쟁 그룹의 컴백 소식은 없습니다.">
           {report.competitorComebacks.map((comeback) => (
-            <li key={comeback}>{comeback} 컴백</li>
+            <li key={comeback}>
+              {withJosa(comeback, "이/가")} 컴백 활동을 시작했습니다.
+            </li>
           ))}
         </ReportSection>
 
-        <ReportSection title="확인할 문제" empty="확인할 문제 없음">
+        <ReportSection title="확인할 문제" empty="확인하실 문제는 없습니다.">
           {report.warnings.map((warning) => (
             <li key={warning}>{warning}</li>
           ))}
@@ -142,7 +147,7 @@ function ComebackSettlementSection({
       </div>
       {settlement.fanGrowth > 0 ? (
         <p className="mt-2 text-xs text-emerald-200">
-          이번 활동으로 팬덤 +{settlement.fanGrowth}
+          이번 활동으로 팬덤이 {Math.round(settlement.fanGrowth)}만큼 늘었습니다.
         </p>
       ) : null}
       {settlement.investorNotes.length > 0 ? (

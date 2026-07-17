@@ -25,8 +25,8 @@ export function CampaignOverScreen({
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/92 px-6 backdrop-blur-sm">
       <div className="w-full max-w-sm space-y-5 text-center [word-break:keep-all] [overflow-wrap:break-word]">
-        <p className="text-xs uppercase tracking-[0.3em] text-rose-300">
-          Campaign Over
+        <p className="text-xs tracking-[0.3em] text-rose-300">
+          여정의 끝
         </p>
         <h1 className="text-xl font-bold text-slate-50">
           투자사가 자금 회수를 결정했습니다

@@ -11,7 +11,6 @@ import {
 import {
   CONCEPT_MOOD_DATA,
   CONCEPT_MOODS,
-  CONCEPT_SYNERGY_TABLE,
   GENRE_DATA,
   GENRES,
 } from "@/data/concepts";
@@ -23,6 +22,7 @@ import type {
   Genre,
   Trainee,
 } from "@/types/game";
+import { josa } from "@/utils/josa";
 
 interface ComebackPlanningModalProps {
   conceptHistory: readonly ConceptMood[];
@@ -60,14 +60,6 @@ function expectationBadge(
   }
   return { label: "안정", tone: "bg-emerald-400/12 text-emerald-200" };
 }
-
-const SYNERGY_TONE: Record<string, string> = {
-  S: "bg-amber-400/15 text-amber-200",
-  A: "bg-emerald-400/12 text-emerald-200",
-  B: "bg-slate-400/12 text-slate-200",
-  C: "bg-orange-400/12 text-orange-200",
-  D: "bg-rose-400/12 text-rose-200",
-};
 
 export function ComebackPlanningModal({
   conceptHistory,
@@ -198,9 +190,6 @@ export function ComebackPlanningModal({
             className="mt-2 flex flex-wrap gap-2"
           >
             {visibleGenres.map((candidate) => {
-              const synergy = mood
-                ? CONCEPT_SYNERGY_TABLE[candidate][mood]
-                : null;
               return (
                 <Radio
                   key={candidate}
@@ -219,26 +208,21 @@ export function ComebackPlanningModal({
                   <span className="text-xs font-semibold text-text-primary">
                     {GENRE_DATA[candidate].label}
                   </span>
-                  {synergy ? (
-                    <span
-                      className={`rounded-md px-1 py-0.5 text-[10px] font-bold ${SYNERGY_TONE[synergy]}`}
-                    >
-                      {synergy}
-                    </span>
-                  ) : null}
                 </Radio>
               );
             })}
           </RadioGroup>
           <p className="mt-2 text-[11px] leading-5 text-text-muted">
-            등급은 무드와 장르의 시너지입니다. 시장 강세{" "}
+            무드와 장르가 얼마나 맞아떨어졌는지는 발매 반응이 말해줍니다. 요즘
+            시장에서는{" "}
             <span className="font-semibold text-text-secondary">
               {GENRE_DATA[marketTrend.hotGenre].label}
             </span>
-            {" · "}약세{" "}
+            {`${josa(GENRE_DATA[marketTrend.hotGenre].label, "이/가")} 강세, `}
             <span className="font-semibold text-text-secondary">
               {GENRE_DATA[marketTrend.coldGenre].label}
             </span>
+            {`${josa(GENRE_DATA[marketTrend.coldGenre].label, "은/는")} 약세입니다.`}
           </p>
         </section>
 

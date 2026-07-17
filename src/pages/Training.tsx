@@ -24,6 +24,7 @@ import type {
   TraineeStatKey,
   TrainingIntensity,
 } from "@/types/game";
+import { withJosa } from "@/utils/josa";
 
 const STAT_KEYS: TraineeStatKey[] = [
   "visual",
@@ -106,54 +107,70 @@ function statBarColor(value: number): string {
   return "bg-red-400";
 }
 
-function statusIcon(label: "mood" | "stress" | "condition", value: number) {
-  if (label === "stress") {
-    if (value >= 70) return { icon: "X", tone: "text-red-300", title: "스트레스 높음" };
-    if (value >= 40) return { icon: "~", tone: "text-amber-300", title: "스트레스 보통" };
-    return { icon: "♪", tone: "text-emerald-300", title: "스트레스 낮음" };
+function statusIcon(kind: "mood" | "stress" | "condition", value: number) {
+  const noun =
+    kind === "mood" ? "만족도" : kind === "stress" ? "스트레스" : "컨디션";
+  if (kind === "stress") {
+    if (value >= 70) return { icon: "X", tone: "text-red-300", title: "스트레스가 높습니다" };
+    if (value >= 40) return { icon: "~", tone: "text-amber-300", title: "스트레스가 쌓이고 있습니다" };
+    return { icon: "♪", tone: "text-emerald-300", title: "스트레스는 걱정 없는 수준입니다" };
   }
-  if (value >= 70) return { icon: "♥", tone: "text-emerald-300", title: `${label} 좋음` };
-  if (value >= 40) return { icon: "~", tone: "text-amber-300", title: `${label} 보통` };
-  return { icon: "X", tone: "text-red-300", title: `${label} 나쁨` };
+  if (value >= 70) return { icon: "♥", tone: "text-emerald-300", title: `${withJosa(noun, "이/가")} 좋습니다` };
+  if (value >= 40) return { icon: "~", tone: "text-amber-300", title: `${withJosa(noun, "은/는")} 무난한 편입니다` };
+  return { icon: "X", tone: "text-red-300", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
 }
 
 function injuryRiskLabel(probability: number): string | null {
   // 확률 수치를 그대로 노출하지 않고 트레이너의 어조로 옮긴다.
   if (probability <= 0) return null;
   if (probability < INJURY_RISK_WARNING_THRESHOLD) return null;
-  if (probability < INJURY_RISK_CRITICAL_THRESHOLD) return "몸에 무리가 갈 수 있음";
-  return "부상이 걱정되는 상태";
+  if (probability < INJURY_RISK_CRITICAL_THRESHOLD) return "몸에 무리가 갈 수 있어 보입니다";
+  return "이대로면 부상이 걱정됩니다";
 }
 
+// 정확한 성장/델타 수치는 사전 공개하지 않는다(결과로만 힌트). 매니저의
+// 어조로 이번 주 흐름만 전달한다.
 function formatPreview(preview: TraineeWeekPreview): string {
   const parts: string[] = [];
   const growthEntries = Object.entries(preview.statGrowth).filter(
     ([, value]) => (value ?? 0) > 0,
   );
   const totalGrowth = growthEntries.reduce((sum, [, v]) => sum + (v ?? 0), 0);
-  if (preview.mode === "individual" && growthEntries.length === 1) {
-    const [stat, value] = growthEntries[0];
-    parts.push(`${STAT_LABELS[stat as TraineeStatKey]} +${(value ?? 0).toFixed(1)}`);
-  } else if (totalGrowth > 0) {
-    parts.push(`성장 +${totalGrowth.toFixed(1)}`);
+  if (preview.mode === "injured") {
+    parts.push("이번 주는 치료와 회복에 전념시키겠습니다");
+  } else if (preview.mode === "entertainment") {
+    parts.push("이번 주는 방송 스케줄을 소화합니다");
+  } else if (preview.mode === "individual" && growthEntries.length === 1) {
+    const [stat] = growthEntries[0];
+    parts.push(
+      `${STAT_LABELS[stat as TraineeStatKey]} 실력이 눈에 띄게 붙을 것으로 보입니다`,
+    );
   } else if (preview.mode === "rest") {
-    parts.push("재충전");
+    parts.push("푹 쉬면서 재충전합니다");
+  } else if (totalGrowth >= 0.5) {
+    parts.push("훈련 성과가 잘 나올 것 같습니다");
+  } else if (totalGrowth > 0) {
+    parts.push("성장세는 완만할 것으로 보입니다");
   } else {
-    parts.push("연습 없음");
+    parts.push("이번 주는 연습 진도가 없습니다");
   }
-  const stress = Math.round(preview.stressDelta);
-  if (stress !== 0) {
-    parts.push(`스트레스 ${stress > 0 ? "+" : ""}${stress}`);
+  if (preview.stressDelta >= 10) {
+    parts.push("피로가 상당히 쌓일 겁니다");
+  } else if (preview.stressDelta >= 5) {
+    parts.push("피로가 눈에 띄게 쌓이겠습니다");
+  } else if (preview.stressDelta <= -15) {
+    parts.push("스트레스가 크게 풀리겠습니다");
+  } else if (preview.stressDelta <= -5) {
+    parts.push("스트레스가 한결 풀리겠습니다");
   }
-  const condition = Math.round(preview.conditionDelta);
-  if (condition !== 0) {
-    parts.push(`컨디션 ${condition > 0 ? "+" : ""}${condition}`);
+  if (preview.conditionDelta >= 5) {
+    parts.push("컨디션도 회복될 겁니다");
   }
   const risk = injuryRiskLabel(preview.injuryProbability);
   if (risk) {
     parts.push(risk);
   }
-  return parts.join(" · ");
+  return `${parts.join(". ")}.`;
 }
 
 function bestAndWorstChemistry(trainee: Trainee, others: readonly Trainee[]) {
@@ -357,14 +374,14 @@ export function Training({ onBack }: TrainingProps) {
             const activityWarning = ACTIVITY_OPTIONS.find(
               (opt) => opt.key === activity,
             )?.warning;
-            const moodIcon = statusIcon("mood", trainee.mood);
-            const stressIcon = statusIcon("stress", trainee.stress);
-            const conditionIcon = statusIcon("condition", trainee.condition);
             const effectiveSatisfaction = getEffectiveSatisfaction(
               trainee.satisfaction,
               upgrades.dormLevel,
               upgrades.livingExpenseLevel,
             );
+            const moodIcon = statusIcon("mood", effectiveSatisfaction);
+            const stressIcon = statusIcon("stress", trainee.stress);
+            const conditionIcon = statusIcon("condition", trainee.condition);
 
             return (
               <Card key={trainee.id} className="space-y-3">
@@ -400,7 +417,7 @@ export function Training({ onBack }: TrainingProps) {
 
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   {STAT_KEYS.map((key) => {
-                    const value = trainee.stats[key];
+                    const value = Math.round(trainee.stats[key]);
                     return (
                       <div key={key} className="text-[10px] text-slate-300">
                         <div className="flex items-center justify-between">
@@ -422,24 +439,29 @@ export function Training({ onBack }: TrainingProps) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-[10px]">
-                  <span className={moodIcon.tone} title={`만족도 ${Math.round(effectiveSatisfaction)}`}>
+                  <span className={moodIcon.tone} title={moodIcon.title}>
                     {moodIcon.icon} 만족
                   </span>
-                  <span className={stressIcon.tone} title={`스트레스 ${trainee.stress}`}>
+                  <span className={stressIcon.tone} title={stressIcon.title}>
                     {stressIcon.icon} 스트레스
                   </span>
-                  <span className={conditionIcon.tone} title={`컨디션 ${trainee.condition}`}>
+                  <span className={conditionIcon.tone} title={conditionIcon.title}>
                     {conditionIcon.icon} 컨디션
                   </span>
-                  {best && best.value > 0 && (
-                    <span className="text-pink-200">
-                      ♥ {best.name} ({best.value > 0 ? "+" : ""}
-                      {best.value})
+                  {best && best.value >= 30 && (
+                    <span
+                      className="text-pink-200"
+                      title={`${withJosa(best.name, "과/와")} 합이 잘 맞습니다`}
+                    >
+                      ♥ {best.name}
                     </span>
                   )}
                   {conflict && (
-                    <span className="text-red-300">
-                      ⚡ {conflict.name} ({conflict.value})
+                    <span
+                      className="text-red-300"
+                      title={`${withJosa(conflict.name, "과/와")} 사이가 좋지 않습니다`}
+                    >
+                      ⚡ {conflict.name}
                     </span>
                   )}
                 </div>
@@ -468,7 +490,7 @@ export function Training({ onBack }: TrainingProps) {
                     })}
                   </div>
                   <p className="text-[10px] text-slate-400">
-                    이번 주 예상: {formatPreview(preview)}
+                    {formatPreview(preview)}
                   </p>
                   {!injured && activityWarning && (
                     <p className="text-[10px] text-pink-200">⚠ {activityWarning}</p>

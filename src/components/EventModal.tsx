@@ -191,7 +191,7 @@ function EffectList({ effects }: { effects: EffectMap }) {
   const entries = Object.entries(effects);
 
   if (entries.length === 0) {
-    return <p className="mt-3 text-xs text-slate-500">추가 변화 없음</p>;
+    return <p className="mt-3 text-xs text-slate-500">추가 변화는 없습니다.</p>;
   }
 
   return (

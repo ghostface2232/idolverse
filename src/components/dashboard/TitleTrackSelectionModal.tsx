@@ -136,7 +136,7 @@ export function TitleTrackSelectionModal({
                           {track.name}
                         </span>
                         <span className="text-xs font-semibold tabular-nums text-cyan-100">
-                          완성도 {track.quality}
+                          완성도 {Math.round(track.quality)}
                         </span>
                       </span>
                       <span className="mt-1 block text-pretty text-xs leading-5 text-text-muted">

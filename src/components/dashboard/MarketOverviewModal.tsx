@@ -27,7 +27,7 @@ const COMPETITOR_TYPE_LABELS: Record<CompetitorType, string> = {
   survival: "서바이벌",
 };
 
-const NEWS_TYPE_LABELS: Record<KPopNewsType, string> = {
+export const NEWS_TYPE_LABELS: Record<KPopNewsType, string> = {
   competitor: "경쟁 그룹",
   trend: "트렌드",
   event: "업계 일정",
@@ -134,17 +134,17 @@ export function MarketOverviewModal({ onClose }: MarketOverviewModalProps) {
                     <div className="shrink-0 text-right">
                       <p className="text-xs text-text-muted">대중 인지도</p>
                       <p className="mt-0.5 font-semibold tabular-nums text-text-primary">
-                        {rival.public}
+                        {Math.round(rival.public)}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-secondary">
-                    <span className="tabular-nums">해외 {rival.global.toLocaleString("ko-KR")}</span>
-                    <span className="tabular-nums">업계 {rival.industry}</span>
+                    <span className="tabular-nums">해외 {Math.round(rival.global).toLocaleString("ko-KR")}</span>
+                    <span className="tabular-nums">업계 {Math.round(rival.industry)}</span>
                     <span className="inline-flex items-center gap-1 text-text-muted">
                       <CalendarClock className="size-3" aria-hidden="true" />
                       {comeback
-                        ? `W${comeback.week} 컴백 예정`
+                        ? `${comeback.week}주차 컴백 예정`
                         : rival.currentAlbum
                           ? `${rival.currentAlbum.title} 활동 중`
                           : `활동 ${rival.activeWeeks}주차`}
@@ -209,7 +209,7 @@ export function MarketOverviewModal({ onClose }: MarketOverviewModalProps) {
                       {group.name}
                     </span>
                     <span className="shrink-0 text-xs tabular-nums text-text-muted">
-                      지수 {group.chartScore}
+                      지수 {Math.round(group.chartScore)}
                     </span>
                   </li>
                 ))}
@@ -233,7 +233,7 @@ export function MarketOverviewModal({ onClose }: MarketOverviewModalProps) {
               <li key={item.id} className="py-3.5 first:pt-3 last:pb-3">
                 <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
                   <span>{NEWS_TYPE_LABELS[item.type]}</span>
-                  <span className="tabular-nums">W{item.week}</span>
+                  <span className="tabular-nums">{item.week}주차</span>
                 </div>
                 <p className="mt-1.5 text-sm font-medium leading-relaxed text-text-primary">
                   {item.headline}

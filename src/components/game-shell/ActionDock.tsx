@@ -30,7 +30,7 @@ export function ActionDock({
           <p className="text-sm font-semibold text-text-primary">
             {totalDecisions === 0
               ? "매니저가 일정을 짰습니다"
-              : `이번 주 결정 ${completed}/${totalDecisions}`}
+              : `결재할 안건 ${totalDecisions}건 중 ${completed}건을 처리했습니다`}
           </p>
           <p className="mt-0.5 truncate text-xs text-text-muted">
             {riskLabel ?? "세부 일정은 매니저가 맡습니다."}
@@ -39,9 +39,9 @@ export function ActionDock({
         <span className="shrink-0 rounded-lg bg-white/[0.05] px-2 py-1 text-[10px] font-medium text-text-secondary">
           {isReviewReady
             ? remainingDecisions > 0
-              ? `기회 ${remainingDecisions}건 선택`
-              : "검토 가능"
-            : `${remainingDecisions}건 남음`}
+              ? `검토할 기회 ${remainingDecisions}건`
+              : "검토 준비 완료"
+            : `${remainingDecisions}건 남았습니다`}
         </span>
       </div>
       <Button
