@@ -254,17 +254,12 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
 
               <div className="absolute inset-x-0 bottom-0 space-y-6 p-4 pb-6">
                 <button
-                  className="w-full whitespace-normal break-keep px-2 py-1 text-center text-lg leading-10 text-slate-50 transition [overflow-wrap:anywhere] [text-shadow:0_2px_0_#0f172a,0_0_14px_rgba(15,23,42,0.95)] hover:text-cyan-100"
+                  className="w-full whitespace-normal break-keep px-2 py-1 text-center text-base leading-7 text-slate-50 transition [overflow-wrap:anywhere] [text-shadow:0_2px_0_#0f172a,0_0_14px_rgba(15,23,42,0.95)] hover:text-cyan-100"
                   onClick={() => setVisibleLength(PROLOGUE_TEXT.length)}
                 >
                   <span className={isPrologueComplete ? "" : "typing-caret"}>
                     {displayedText}
                   </span>
-                  {!isPrologueComplete && (
-                    <span className="mt-2 block text-xs leading-5 text-slate-400">
-                      탭하면 전체 문장이 표시됩니다
-                    </span>
-                  )}
                 </button>
 
                 <Button

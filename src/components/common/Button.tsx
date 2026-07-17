@@ -16,7 +16,7 @@ const toneClasses: Record<NonNullable<ButtonProps["tone"]>, string> = {
   secondary:
     "border-action-secondary/70 bg-action-secondary/12 text-cyan-100 shadow-[var(--shadow-surface)] hover:bg-action-secondary/20",
   ghost:
-    "border-transparent bg-white/[0.04] text-text-secondary shadow-[var(--shadow-surface)] hover:bg-white/[0.08]",
+    "border-transparent bg-white/[0.04] text-text-secondary shadow-[0_4px_0_#0b1220,var(--shadow-surface)] hover:bg-white/[0.08]",
   danger:
     "border-state-danger bg-state-danger text-slate-950 shadow-[0_4px_0_#9f1239] hover:bg-rose-300",
   success:
@@ -39,7 +39,7 @@ export function Button({
       isDisabled={isDisabled ?? disabled}
       className={({ isDisabled, isFocusVisible, isPressed }) =>
         [
-          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold tracking-[-0.01em]",
+          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-base font-normal tracking-[-0.01em] [font-family:'DungGeunMo',monospace]",
           "transition-[scale,background-color,color,box-shadow,opacity] duration-[var(--motion-press)] ease-out",
           isFocusVisible ? "outline-none ring-2 ring-action-secondary ring-offset-2 ring-offset-surface-shell" : "outline-none",
           isDisabled ? "cursor-not-allowed opacity-45" : "",
