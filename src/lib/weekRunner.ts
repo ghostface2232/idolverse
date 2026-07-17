@@ -762,6 +762,12 @@ function applySnapshotEffects(
 }
 
 function assertWeekCanResolve(snapshot: GameSnapshot, resolutionId: string) {
+  // 캠페인이 끝난 세이브는 더 진행되지 않는다 — 종료 화면만 남는다.
+  if (snapshot.game.campaignFailure !== null) {
+    throw new WeeklyResolutionConflictError(
+      "Campaign is over. No further weeks can be resolved.",
+    );
+  }
   const flow = snapshot.game.weeklyFlow;
   if (
     flow.state === "resolving" ||

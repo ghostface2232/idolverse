@@ -7,6 +7,7 @@ import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
 import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal";
 import { ActivityPromotionPanel } from "@/components/dashboard/ActivityPromotionPanel";
+import { CampaignOverScreen } from "@/components/dashboard/CampaignOverScreen";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
 import { FacilityUpgradeModal } from "@/components/dashboard/FacilityUpgradeModal";
@@ -95,9 +96,10 @@ type OverviewModal = "goals" | "contracts" | "market" | null;
 
 interface GameDashboardProps {
   userId: string;
+  onExit: () => void;
 }
 
-export function GameDashboard({ userId }: GameDashboardProps) {
+export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const [activeSection, setActiveSection] = useState<GameSection>("company");
   const [weekView, setWeekView] = useState<"decisions" | "training">("decisions");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -130,6 +132,8 @@ export function GameDashboard({ userId }: GameDashboardProps) {
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
   const awardHistory = useGameStore((state) => state.awardHistory);
   const campaignSeed = useGameStore((state) => state.campaignSeed);
+  const campaignFailure = useGameStore((state) => state.campaignFailure);
+  const groupName = useGameStore((state) => state.groupName);
   const staff = useStaffStore((state) => state.staff);
   const facilityUpgrades = useFinanceStore((state) => state.upgrades);
   const activeProjects = useGameStore((state) => state.activeProjects);
@@ -736,6 +740,17 @@ export function GameDashboard({ userId }: GameDashboardProps) {
           isSaving={isTitleTrackSaving}
           errorMessage={workflowError}
           onConfirm={handleCompleteTitleTrackSelection}
+        />
+      ) : null}
+
+      {campaignFailure ? (
+        <CampaignOverScreen
+          failure={campaignFailure}
+          groupName={groupName}
+          releasedAlbumCount={releasedAlbums.length}
+          awardCount={awardHistory.length}
+          fandom={fandomCore}
+          onExit={onExit}
         />
       ) : null}
     </>

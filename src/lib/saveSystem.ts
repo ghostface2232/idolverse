@@ -280,6 +280,8 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorConditionProgress: rest.investorConditionProgress ?? {},
     investorPressureWeeks: rest.investorPressureWeeks ?? 0,
     investorComplianceCount: rest.investorComplianceCount ?? 0,
+    insolvencyWeeks: rest.insolvencyWeeks ?? 0,
+    campaignFailure: rest.campaignFailure ?? null,
     lastOpportunityWeek: rest.lastOpportunityWeek ?? null,
     awardHistory: rest.awardHistory ?? [],
     milestonesAchieved: rest.milestonesAchieved ?? [],

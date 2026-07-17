@@ -39,7 +39,7 @@ export default function App() {
         if (screen === "game") {
           return (
             <Suspense fallback={<GameLoadingScreen />}>
-              <GameDashboard userId={user.id} />
+              <GameDashboard userId={user.id} onExit={() => setScreen("menu")} />
             </Suspense>
           );
         }

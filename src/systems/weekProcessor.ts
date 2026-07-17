@@ -72,6 +72,7 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
@@ -1106,6 +1107,29 @@ export function processWeek(
   report.finance.expenses = financeResult.expenses;
   report.warnings.push(...financeResult.warnings);
 
+  // ── 10.5 실패 판정: 지속 파산이면 투자사가 회수를 결정한다. 위기 카드와
+  // 매주의 카운트다운이 먼저 오므로 기습이 아니라 예고된 결말이다.
+  const insolvencyWeeks =
+    money < 0 ? snapshot.game.insolvencyWeeks + 1 : 0;
+  let campaignFailure = snapshot.game.campaignFailure;
+  if (campaignFailure === null && insolvencyWeeks > 0) {
+    const remaining = CAMPAIGN_FAILURE.insolvencyLimitWeeks - insolvencyWeeks;
+    if (remaining > 0) {
+      report.warnings.push(
+        `자금이 ${insolvencyWeeks}주째 마이너스입니다. ${remaining}주 안에 회복하지 못하면 투자사가 정리 절차에 들어갑니다`,
+      );
+    } else {
+      campaignFailure = {
+        reason: "bankruptcy",
+        year: snapshot.game.currentYear,
+        week: snapshot.game.currentWeek,
+      };
+      report.warnings.push(
+        "투자사가 자금 회수를 결정했습니다. 회사가 정리 절차에 들어갑니다",
+      );
+    }
+  }
+
   // ── 11. Fandom 4-axis
   // 예능 출연의 대중성 보상은 확정이 아니라 분산이 있어야 한다.
   // 바이럴이면 추가 보상, 무반응이면 이번 주 대중성 상승이 사라진다.
@@ -1531,6 +1555,8 @@ export function processWeek(
       investorConditionProgress,
       investorPressureWeeks,
       investorComplianceCount,
+      insolvencyWeeks,
+      campaignFailure,
       lastOpportunityWeek: opportunityOffered
         ? nextCumulativeWeek
         : snapshot.game.lastOpportunityWeek,

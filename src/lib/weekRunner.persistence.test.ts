@@ -140,6 +140,24 @@ describe("durable weekly workflow", () => {
     expect(captureGameState().gameStore.saveRevision).toBe(1);
   });
 
+  it("캠페인이 끝난 세이브는 주간 진행을 저장 전에 거부한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.game.campaignFailure = { reason: "bankruptcy", year: 2, week: 4 };
+    hydrateGameState(toGameStateSnapshot(snapshot));
+
+    await expect(
+      runWeekAndSave(
+        {
+          trainingSchedule: { intensity: "normal", restDay: false },
+          resolvedDecisions: [],
+        },
+        "user",
+        1,
+      ),
+    ).rejects.toThrow("Campaign is over");
+    expect(saveGameMock).not.toHaveBeenCalled();
+  });
+
   it("선택한 타이틀곡 전략을 자동 교체하지 않고 프로젝트와 함께 저장한다", async () => {
     const snapshot = makeGameSnapshot({ week: 10 });
     const project = createProjectInstance(DEBUT_PROJECT, 1);

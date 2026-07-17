@@ -452,6 +452,15 @@ export const OPPORTUNITY_PACING = {
   fatigueWarningStress: 50,
 } as const;
 
+/**
+ * 실패 정의: FM의 경질에 해당한다. 자금 마이너스가 이어지면 투자사가
+ * 회수를 결정하고 캠페인이 끝난다. 위기 카드·런웨이 경고·주차 카운트다운이
+ * 먼저 오므로 기습이 아니라 예고된 결말이다.
+ */
+export const CAMPAIGN_FAILURE = {
+  insolvencyLimitWeeks: 8,
+} as const;
+
 export const INVESTOR_PENALTY_GRACE_WEEKS = 4; // A failed condition warns first so the player can react before being punished.
 export const INVESTOR_COMPLY_SUPPORT_LIMIT = 3; // The investor bails the player out only a few times; unlimited cash would invert the incentive to meet conditions.
 export const INVESTOR_NEGOTIATION_EXTENSION_WEEKS = 2; // 재협상은 기존 미달 조건의 페널티 유예를 실제로 두 주 연장한다.

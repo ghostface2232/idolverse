@@ -836,6 +836,13 @@ export interface WeeklyFlowSnapshot {
   report: WeeklyReportSnapshot | null;
 }
 
+/** 캠페인 실패 기록. FM의 경질에 해당하는 예고된 결말이다. */
+export interface CampaignFailure {
+  reason: "bankruptcy";
+  year: number;
+  week: number;
+}
+
 export interface GameStoreState {
   /** 서버가 stale save를 거부하기 위한 단조 증가 persistence revision. */
   saveRevision: number;
@@ -858,6 +865,10 @@ export interface GameStoreState {
   /** 이벤트/카드의 investorPressure 효과로 걸린 압박의 남은 주 수. 매주 1씩 감소한다. */
   investorPressureWeeks: number;
   investorComplianceCount: number;
+  /** 자금이 마이너스로 이어진 주 수. 한 주라도 회복하면 0으로 돌아간다. */
+  insolvencyWeeks: number;
+  /** 캠페인 종료 기록. null이 아니면 게임이 끝났고 주간 진행이 잠긴다. */
+  campaignFailure: CampaignFailure | null;
   /** 마지막 기회 카드가 제시된 누적 주차. 수락 여부와 무관하게 빈도를 제어한다. */
   lastOpportunityWeek: number | null;
   /** 역대 수상 기록. 투자사 awardLevel 조건은 시상 주가 아닌 이 기록으로 평가한다. */
