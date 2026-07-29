@@ -50,8 +50,8 @@ export const initialGameState: GameStoreState = {
     {
       id: "noti-welcome",
       type: "info",
-      title: "Studio Opened",
-      message: "Founding week is live. Decisions will appear when an issue needs you.",
+      title: "회사 설립",
+      message: "창립 첫 주 업무가 시작됐습니다. 결정이 필요한 사안이 생기면 바로 보고드리겠습니다.",
       week: 1,
     },
   ],
@@ -83,8 +83,8 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
               {
                 id: `noti-year-${nextYear}`,
                 type: "success",
-                title: `Year ${nextYear} Started`,
-                message: "A new annual cycle begins. Seasonal pressure resets.",
+                title: `${nextYear}년 차 시작`,
+                message: "새해 첫 주입니다. 시즌 흐름이 처음부터 다시 시작되니 연간 활동 계획을 새로 잡아야 합니다.",
                 week: nextWeek,
               },
             ]

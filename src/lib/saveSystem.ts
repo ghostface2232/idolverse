@@ -88,7 +88,7 @@ function serializeGameState(gameState: GameStateSnapshot) {
 
 function deserializeGameState(value: unknown): GameStateSnapshot {
   if (!isRecord(value)) {
-    throw new Error("Save data is malformed.");
+    throw new Error("저장 데이터가 손상되어 불러올 수 없습니다.");
   }
 
   const requiredStores: Array<keyof GameStateSnapshot> = [
@@ -105,7 +105,7 @@ function deserializeGameState(value: unknown): GameStateSnapshot {
 
   for (const storeKey of requiredStores) {
     if (!isRecord(value[storeKey])) {
-      throw new Error(`Save data is missing ${storeKey}.`);
+      throw new Error(`저장 데이터에서 ${storeKey} 정보를 찾지 못했습니다.`);
     }
   }
 

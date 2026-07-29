@@ -7,19 +7,19 @@ export const initialEventState: EventStoreState = {
     {
       id: "event-debut-rush",
       type: "training",
-      title: "Debut Preparation Crunch",
-      description: "The team is behind on choreography and morale is slipping.",
+      title: "데뷔 준비 비상",
+      description: "안무 진도가 계획보다 밀려 있습니다. 연습실 분위기도 눈에 띄게 가라앉았습니다.",
       choices: [
         {
-          label: "Extend rehearsal hours",
-          description: "Push through the delay with overtime.",
-          tradeoff: "Condition drops and stress spikes.",
+          label: "연습 시간 연장",
+          description: "야간 연습을 붙여서라도 밀린 진도를 따라잡습니다.",
+          tradeoff: "멤버들 컨디션이 떨어지고 스트레스가 급격히 쌓입니다.",
           effects: { albumChoreography: 6, stress: 5, condition: -4 },
         },
         {
-          label: "Delay the milestone",
-          description: "Protect the team, but lose some momentum.",
-          tradeoff: "Public attention softens and investors get nervous.",
+          label: "일정 조정",
+          description: "멤버들을 보호하는 대신 데뷔 준비 흐름을 한 박자 늦춥니다.",
+          tradeoff: "대중의 관심이 식고 투자자들이 불안해합니다.",
           effects: { condition: 5, public: -3, investorPressure: 2 },
         },
       ],
