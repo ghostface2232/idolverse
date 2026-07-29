@@ -46,10 +46,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-variant-numeric: tabular-nums;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
   --motion-press: 120ms;
   --motion-state: 180ms;
   --motion-panel: 240ms;
