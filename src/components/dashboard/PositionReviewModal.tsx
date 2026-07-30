@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import {
   ALL_POSITIONS,
   isRequiredPosition,
@@ -35,7 +37,7 @@ function currentAssignments(
 function scoreTone(result: PositionTrialCandidateResult): string {
   if (result.rank === 1) return "text-emerald-300";
   if (result.rank <= 3) return "text-amber-300";
-  return "text-slate-300";
+  return "text-text-secondary";
 }
 
 export function PositionReviewModal({
@@ -71,7 +73,10 @@ export function PositionReviewModal({
     setEditing(null);
   };
 
-  const editingResults = editing ? trialResults[editing] : [];
+  const requiredPositions = ALL_POSITIONS.filter(isRequiredPosition);
+  const requiredAssigned = requiredPositions.filter(
+    (position) => assignments[position],
+  ).length;
 
   return (
     <Modal
@@ -79,153 +84,170 @@ export function PositionReviewModal({
       onClose={() => undefined}
       isCloseDisabled
       footer={
-        <Button
-          className="w-full transition-transform active:scale-[0.96]"
-          isDisabled={isSaving}
-          onPress={() => onConfirm(assignments)}
-        >
-          {isSaving ? "저장 중…" : "이 배정으로 최종 확정"}
-        </Button>
+        <div className="space-y-2">
+          <p className="text-center text-xs tabular-nums text-text-muted">
+            필수 포지션 {requiredAssigned}/{requiredPositions.length} 배정됨
+          </p>
+          <Button
+            className="w-full transition-transform active:scale-[0.96]"
+            isDisabled={isSaving}
+            onPress={() => onConfirm(assignments)}
+          >
+            {isSaving ? "저장 중…" : "이 배정으로 최종 확정"}
+          </Button>
+        </div>
       }
     >
       <div className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-sm leading-6 text-text-secondary">
-            기초 적합도에 컨디션, 팀 케미, 부상과 당일 무대를 반영한 실제
-            경쟁 결과입니다.
-          </p>
-          <p className="text-xs leading-5 text-text-muted">
-            1위가 항상 정답은 아닙니다. 결과를 비교하고 최종 역할을 직접
-            확정하세요.
-          </p>
-        </div>
+        <p className="text-sm leading-6 text-text-secondary [word-break:keep-all]">
+          컨디션, 케미, 당일 무대까지 반영한 경쟁 결과입니다. 포지션을 누르면
+          그 자리에서 후보를 고를 수 있습니다.
+        </p>
 
         <div className="space-y-2">
           {ALL_POSITIONS.map((position) => {
+            const expanded = editing === position;
             const assigned = trainees.find(
               (trainee) => trainee.id === assignments[position],
             );
             const result = trialResults[position].find(
               (candidate) => candidate.traineeId === assigned?.id,
             );
+
             return (
-              <button
+              <div
                 key={position}
-                type="button"
-                className="flex min-h-12 w-full items-center justify-between rounded-2xl bg-slate-950/60 px-4 py-3 text-left shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[transform,box-shadow] active:scale-[0.96]"
-                onClick={() => setEditing(position)}
+                className={
+                  expanded
+                    ? "rounded-2xl bg-surface-raised p-2 shadow-[var(--shadow-surface)]"
+                    : undefined
+                }
               >
-                <span>
-                  <span className="block text-xs text-text-muted">
-                    {POSITION_LABELS[position]}
-                    {isRequiredPosition(position) ? " · 필수" : " · 선택"}
-                  </span>
-                  <span className="mt-0.5 block text-sm font-semibold text-text-primary">
-                    {assigned?.name ?? "미배정"}
-                  </span>
-                </span>
-                {result ? (
-                  <span className={["text-right", scoreTone(result)].join(" ")}>
-                    <span className="block text-xs font-medium">#{result.rank}</span>
-                    <span className="block text-sm font-bold tabular-nums">
-                      {result.score}점
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  className={[
+                    "flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-[transform,box-shadow]",
+                    expanded
+                      ? "bg-surface-shell/70 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
+                      : "bg-surface-shell/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] active:scale-[0.98]",
+                  ].join(" ")}
+                  onClick={() => setEditing(expanded ? null : position)}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-xs text-text-muted">
+                      {POSITION_LABELS[position]}
+                      {isRequiredPosition(position) ? " · 필수" : " · 선택"}
+                    </span>
+                    <span className="mt-0.5 block truncate text-sm font-semibold text-text-primary">
+                      {assigned?.name ?? "미배정"}
                     </span>
                   </span>
-                ) : (
-                  <span className="text-xs text-text-muted">결과 보기</span>
-                )}
-              </button>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {result ? (
+                      <span className={["text-right", scoreTone(result)].join(" ")}>
+                        <span className="block text-xs font-medium">
+                          #{result.rank}
+                        </span>
+                        <span className="block text-sm font-bold tabular-nums">
+                          {result.score}점
+                        </span>
+                      </span>
+                    ) : null}
+                    <ChevronDown
+                      className={[
+                        "size-4 text-text-muted transition-transform",
+                        expanded ? "rotate-180" : "",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+                  </span>
+                </button>
+
+                {expanded ? (
+                  <div className="mt-2 space-y-2">
+                    <p className="px-2 text-[11px] text-text-muted">
+                      후보를 누르면 이 포지션에 배정됩니다.
+                    </p>
+                    {trialResults[position].map((candidateResult) => {
+                      const trainee = trainees.find(
+                        (candidate) => candidate.id === candidateResult.traineeId,
+                      );
+                      if (!trainee) return null;
+                      const selected = assignments[position] === trainee.id;
+                      const breakdown = candidateResult.breakdown;
+
+                      return (
+                        <button
+                          key={trainee.id}
+                          type="button"
+                          className={[
+                            "w-full rounded-2xl border px-3 py-3 text-left transition-transform active:scale-[0.98]",
+                            radioTileClasses(selected, Boolean(assignments[position])),
+                          ].join(" ")}
+                          onClick={() => assign(position, trainee.id)}
+                        >
+                          <span className="flex items-start justify-between gap-3">
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className={[
+                                    "text-sm font-bold tabular-nums",
+                                    scoreTone(candidateResult),
+                                  ].join(" ")}
+                                >
+                                  #{candidateResult.rank}
+                                </span>
+                                <span className="truncate text-sm font-semibold text-text-primary">
+                                  {trainee.name}
+                                </span>
+                                {selected ? (
+                                  <span className="rounded-full bg-brand-cyan/15 px-2 py-0.5 text-[10px] text-cyan-200">
+                                    현재 배정
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="mt-1 block text-xs text-text-muted">
+                                기초 적합도 {candidateResult.baseRating}/5
+                              </span>
+                            </span>
+                            <span
+                              className={[
+                                "whitespace-nowrap text-lg font-bold tabular-nums",
+                                scoreTone(candidateResult),
+                              ].join(" ")}
+                            >
+                              {candidateResult.score}점
+                            </span>
+                          </span>
+                          <span className="mt-2 flex flex-wrap gap-1.5 text-[11px] tabular-nums text-text-secondary">
+                            <span className="rounded-full bg-white/[0.06] px-2 py-1">
+                              기량 +{breakdown.fitness}
+                            </span>
+                            <span className="rounded-full bg-white/[0.06] px-2 py-1">
+                              컨디션 +{breakdown.condition}
+                            </span>
+                            <span className="rounded-full bg-white/[0.06] px-2 py-1">
+                              케미 +{breakdown.chemistry}
+                            </span>
+                            <span className="rounded-full bg-white/[0.06] px-2 py-1">
+                              당일 무대 +{breakdown.stageForm}
+                            </span>
+                            {breakdown.injuryPenalty > 0 ? (
+                              <span className="rounded-full bg-state-danger/10 px-2 py-1 text-red-300">
+                                부상 -{breakdown.injuryPenalty}
+                              </span>
+                            ) : null}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
         </div>
-
-        {editing ? (
-          <section className="rounded-3xl bg-surface-raised p-3 shadow-[var(--shadow-surface)]">
-            <div className="flex items-center justify-between gap-2 px-1">
-              <h3 className="text-sm font-semibold text-text-primary">
-                {POSITION_LABELS[editing]} 경쟁 순위
-              </h3>
-              <span className="text-[11px] text-text-muted">탭하여 배정</span>
-            </div>
-            <div className="mt-2 space-y-2">
-              {editingResults.map((result) => {
-                const trainee = trainees.find(
-                  (candidate) => candidate.id === result.traineeId,
-                );
-                if (!trainee) return null;
-                const selected = assignments[editing] === trainee.id;
-                const breakdown = result.breakdown;
-
-                return (
-                  <button
-                    key={trainee.id}
-                    type="button"
-                    className={[
-                      "w-full rounded-2xl px-3 py-3 text-left transition-transform active:scale-[0.96]",
-                      selected
-                        ? "bg-cyan-500/10 shadow-[inset_0_0_0_2px_rgba(6,182,212,0.45)]"
-                        : "bg-slate-950/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]",
-                    ].join(" ")}
-                    onClick={() => assign(editing, trainee.id)}
-                  >
-                    <span className="flex items-start justify-between gap-3">
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={[
-                              "text-sm font-bold tabular-nums",
-                              scoreTone(result),
-                            ].join(" ")}
-                          >
-                            #{result.rank}
-                          </span>
-                          <span className="truncate text-sm font-semibold text-text-primary">
-                            {trainee.name}
-                          </span>
-                          {selected ? (
-                            <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[10px] text-cyan-200">
-                              현재 배정
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="mt-1 block text-xs text-text-muted">
-                          기초 적합도 {result.baseRating}/5
-                        </span>
-                      </span>
-                      <span
-                        className={[
-                          "whitespace-nowrap text-lg font-bold tabular-nums",
-                          scoreTone(result),
-                        ].join(" ")}
-                      >
-                        {result.score}점
-                      </span>
-                    </span>
-                    <span className="mt-2 flex flex-wrap gap-1.5 text-[10px] tabular-nums text-slate-300">
-                      <span className="rounded-full bg-slate-800 px-2 py-1">
-                        기량 +{breakdown.fitness}
-                      </span>
-                      <span className="rounded-full bg-slate-800 px-2 py-1">
-                        컨디션 +{breakdown.condition}
-                      </span>
-                      <span className="rounded-full bg-slate-800 px-2 py-1">
-                        케미 +{breakdown.chemistry}
-                      </span>
-                      <span className="rounded-full bg-slate-800 px-2 py-1">
-                        당일 무대 +{breakdown.stageForm}
-                      </span>
-                      {breakdown.injuryPenalty > 0 ? (
-                        <span className="rounded-full bg-red-500/10 px-2 py-1 text-red-300">
-                          부상 -{breakdown.injuryPenalty}
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
       </div>
     </Modal>
   );

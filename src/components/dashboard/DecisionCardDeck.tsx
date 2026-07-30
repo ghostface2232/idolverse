@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { POSITION_LABELS } from "@/data/founding";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
@@ -126,7 +127,7 @@ export function DecisionCardDeck({
 
   if (showReview) {
     return (
-      <section className="space-y-4" aria-labelledby="weekly-review-title">
+      <section className="space-y-4 [word-break:keep-all]" aria-labelledby="weekly-review-title">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
             매니저 브리핑
@@ -135,7 +136,7 @@ export function DecisionCardDeck({
             이번 주 일정 검토
           </h2>
           <p className="mt-1 text-pretty text-sm text-text-muted">
-            확정하면 선택한 방침과 매니저가 짠 세부 일정대로 한 주가 시작됩니다.
+            확정하면 이 일정대로 한 주가 시작됩니다.
           </p>
         </header>
 
@@ -143,7 +144,7 @@ export function DecisionCardDeck({
           <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
             <p className="text-sm font-semibold text-cyan-100">직접 결정할 일 없음</p>
             <p className="mt-2 text-pretty text-sm leading-6 text-text-muted">
-              이번 주에는 직접 챙길 긴급 사안이 없습니다. 매니저가 현재 방침에 맞춰 훈련과 운영 일정을 정리했습니다.
+              이번 주는 직접 챙길 긴급 사안이 없습니다.
             </p>
           </article>
         ) : (
@@ -189,7 +190,7 @@ export function DecisionCardDeck({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <p className="text-xs text-text-muted">{card.title}</p>
-                        <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${LANE_CLASSES[card.lane]}`}>
+                        <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${LANE_CLASSES[card.lane]}`}>
                           {LANE_LABELS[card.lane]}
                         </span>
                       </div>
@@ -236,12 +237,12 @@ export function DecisionCardDeck({
         <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
           <p className="text-xs font-semibold text-action-secondary">매니저 운영안</p>
           <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            직접 정하지 않은 훈련, 휴식, 내부 업무는 매니저가 팀 컨디션과 투자사에 약속한 목표를 살펴 배정했습니다.
+            남은 훈련과 휴식, 내부 업무는 팀 상황에 맞춰 배정해 뒀습니다.
           </p>
         </article>
 
         <Button
-          className="w-full gap-2 [font-family:'DungGeunMo',monospace]"
+          className="w-full gap-2"
           isDisabled={!canResolveWeek || isRunning}
           onPress={onConfirm}
         >
@@ -255,7 +256,7 @@ export function DecisionCardDeck({
   if (!activeCard) return null;
 
   return (
-    <section className="space-y-4" aria-labelledby={`decision-${activeCard.id}`}>
+    <section className="space-y-4 [word-break:keep-all]" aria-labelledby={`decision-${activeCard.id}`}>
       <header>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
@@ -291,7 +292,7 @@ export function DecisionCardDeck({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
                 {activeCard.category}
               </p>
-              <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold ${LANE_CLASSES[activeCard.lane]}`}>
+              <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold ${LANE_CLASSES[activeCard.lane]}`}>
                 {activeCard.lane === "opportunity" ? (
                   <Sparkles className="size-3" aria-hidden="true" />
                 ) : (
@@ -309,7 +310,7 @@ export function DecisionCardDeck({
           </div>
           {activeCard.trigger ? (
             <span
-              className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}
+              className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-semibold ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}
             >
               {activeCard.lane === "opportunity"
                 ? "이번 주 한정"
@@ -332,7 +333,7 @@ export function DecisionCardDeck({
           aria-label={`${activeCard.title} 선택지`}
           value={selectedOptionId}
           onChange={handleSelect}
-          className="mt-4 grid gap-2.5"
+          className="mt-4 grid gap-2"
         >
           {activeCard.options.map((option) => (
             <Radio
@@ -340,29 +341,30 @@ export function DecisionCardDeck({
               value={option.id}
               className={({ isFocusVisible, isPressed, isSelected }) =>
                 [
-                  "group min-h-16 rounded-2xl bg-surface-shell/78 px-3 py-3 outline-none shadow-[var(--shadow-surface)]",
-                  "transition-[scale,background-color,box-shadow] duration-[var(--motion-state)] ease-out",
-                  isSelected
-                    ? "bg-action-primary/12 shadow-[0_0_0_2px_var(--color-action-primary)]"
-                    : "hover:bg-white/[0.05] hover:shadow-[var(--shadow-surface-hover)]",
+                  "group min-h-16 rounded-2xl border-2 px-3 py-3",
+                  "transition-[scale,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-out",
+                  radioTileClasses(isSelected, Boolean(selectedOptionId)),
                   isPressed ? "scale-[0.96]" : "scale-100",
-                  isFocusVisible ? "ring-2 ring-action-secondary ring-offset-2 ring-offset-surface-raised" : "",
+                  isFocusVisible
+                    ? "outline-2 outline-offset-2 outline-action-secondary"
+                    : "outline-none",
                 ].join(" ")
               }
             >
               {({ isSelected }) => (
                 <div className="flex items-start gap-3">
                   <span
-                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full shadow-[var(--shadow-surface)] ${
-                      isSelected ? "bg-action-primary text-white" : "bg-white/[0.04] text-transparent"
+                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${
+                      isSelected ? "bg-brand-cyan text-slate-950" : "bg-white/[0.06] text-transparent"
                     }`}
                     aria-hidden="true"
                   >
                     <Check className="size-3" strokeWidth={3} />
                   </span>
-                  <span className="min-w-0">
+                  <span className="min-w-0 space-y-1">
                     <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
-                    <span className="mt-1 block text-pretty text-xs leading-5 text-text-muted">{option.tradeoff}</span>
+                    <span className="block text-pretty text-xs leading-5 text-text-secondary">{option.description}</span>
+                    <span className="block text-pretty text-[11px] leading-4 text-text-muted">{option.tradeoff}</span>
                   </span>
                 </div>
               )}
@@ -404,18 +406,16 @@ export function DecisionCardDeck({
                     type="button"
                     disabled={atLimit}
                     aria-pressed={selected}
-                    className={`min-h-11 rounded-xl px-3 py-2 text-left transition-[transform,background-color,box-shadow] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
-                      selected
-                        ? "bg-action-secondary/18 text-cyan-50 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.55)]"
-                        : "bg-surface-shell/78 text-text-secondary shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                    }`}
+                    className={`min-h-11 rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
+                      selected ? "text-cyan-50" : "text-text-secondary"
+                    } ${radioTileClasses(selected, selectedTargets.length > 0)}`}
                     onClick={() => toggleTarget(trainee.id)}
                   >
                     <span className="flex items-center gap-2">
                       <span
                         className={`grid size-5 shrink-0 place-items-center rounded-full ${
                           selected
-                            ? "bg-action-secondary text-slate-950"
+                            ? "bg-brand-cyan text-slate-950"
                             : "bg-white/[0.06] text-transparent"
                         }`}
                         aria-hidden="true"
@@ -426,7 +426,7 @@ export function DecisionCardDeck({
                         <span className="block truncate text-sm font-semibold">
                           {trainee.name}
                         </span>
-                        <span className="block truncate text-[10px] text-text-muted">
+                        <span className="block truncate text-[11px] text-text-muted">
                           {trainee.position
                             ? POSITION_LABELS[trainee.position]
                             : "포지션 미정"}

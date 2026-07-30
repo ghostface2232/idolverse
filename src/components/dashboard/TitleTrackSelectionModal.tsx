@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Check, Music2 } from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
+import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import type { TitleTrack } from "@/types/game";
 
 const TRACK_STRATEGY: Record<
@@ -31,10 +33,20 @@ const TRACK_STRATEGY: Record<
   },
 };
 
+// 데뷔 앨범은 아직 팬덤이 없다. 같은 전략이라도 첫 무대 전제의 문구를 쓴다.
+const DEBUT_TRACK_SUMMARY: Record<TitleTrack["type"], string> = {
+  safe: "완성도가 고르게 나옵니다. 화제성은 낮은 편입니다.",
+  bold: "대중의 시선을 단번에 끌 수 있지만 결과 편차가 큽니다.",
+  fandom: "데뷔 후 코어 팬을 빠르게 모으는 곡입니다. 대중 확장은 느립니다.",
+  global: "해외 리스너에게 먼저 닿는 곡입니다. 국내 반응은 완만합니다.",
+};
+
 interface TitleTrackSelectionModalProps {
   albumTitle: string;
   candidates: readonly TitleTrack[];
   isSaving: boolean;
+  /** 데뷔 앨범이면 true. 아직 팬덤이 없는 전제의 전략 문구를 쓴다. */
+  isDebut?: boolean;
   errorMessage?: string | null;
   onConfirm: (trackId: string) => void | Promise<void>;
 }
@@ -43,6 +55,7 @@ export function TitleTrackSelectionModal({
   albumTitle,
   candidates,
   isSaving,
+  isDebut = false,
   errorMessage,
   onConfirm,
 }: TitleTrackSelectionModalProps) {
@@ -73,9 +86,10 @@ export function TitleTrackSelectionModal({
           <h2 className="mt-1 text-balance text-lg font-semibold text-text-primary">
             어떤 시장을 먼저 공략할까요?
           </h2>
-          <p className="mt-2 text-pretty text-sm leading-6 text-text-secondary">
-            곡의 완성도뿐 아니라 팬덤·대중·해외 성장 배율과 결과 변동성이 달라집니다.
-            선택 후에는 변경할 수 없습니다.
+          <p className="mt-2 text-pretty text-sm leading-6 text-text-secondary [word-break:keep-all]">
+            {isDebut
+              ? "데뷔곡 전략에 따라 첫 팬층과 대중 반응이 달라지고, 선택 후에는 되돌릴 수 없습니다."
+              : "전략에 따라 팬덤, 대중, 해외 성장과 결과 변동성이 달라지고, 선택 후에는 되돌릴 수 없습니다."}
           </p>
         </div>
 
@@ -94,13 +108,10 @@ export function TitleTrackSelectionModal({
                 value={track.id}
                 className={({ isDisabled, isSelected, isPressed }) =>
                   [
-                    "group min-h-11 cursor-pointer rounded-2xl bg-surface-shell/72 p-3 outline-none",
-                    "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[scale,background-color,box-shadow] duration-150 ease-out",
+                    "group min-h-11 cursor-pointer rounded-2xl border-2 p-3 outline-none transition duration-150 ease-out",
                     isDisabled ? "cursor-not-allowed opacity-45" : "",
                     isPressed ? "scale-[0.96]" : "scale-100",
-                    isSelected
-                      ? "bg-action-secondary/12 shadow-[inset_0_0_0_2px_rgba(34,211,238,0.5)]"
-                      : "",
+                    radioTileClasses(isSelected, selectedTrackId !== null),
                   ].join(" ")
                 }
               >
@@ -149,7 +160,9 @@ export function TitleTrackSelectionModal({
                           {strategy.label}
                         </span>
                         <span className="text-pretty text-[11px] leading-5 text-text-secondary">
-                          {strategy.summary}
+                          {isDebut
+                            ? DEBUT_TRACK_SUMMARY[track.type]
+                            : strategy.summary}
                         </span>
                       </span>
                     </span>
@@ -160,14 +173,7 @@ export function TitleTrackSelectionModal({
           })}
         </RadioGroup>
 
-        {errorMessage ? (
-          <p
-            role="alert"
-            className="rounded-xl bg-state-danger/12 px-3 py-2 text-pretty text-sm text-rose-200"
-          >
-            {errorMessage}
-          </p>
-        ) : null}
+        {errorMessage ? <Alert message={errorMessage} /> : null}
       </div>
     </Modal>
   );

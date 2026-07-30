@@ -1,4 +1,5 @@
 import { Lock } from "lucide-react";
+import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
@@ -126,11 +127,7 @@ export function FacilityUpgradeModal({
           ))}
         </section>
 
-        {errorMessage ? (
-          <p role="alert" className="rounded-xl bg-state-danger/12 px-3 py-2 text-rose-200">
-            {errorMessage}
-          </p>
-        ) : null}
+        {errorMessage ? <Alert message={errorMessage} /> : null}
       </div>
     </Modal>
   );

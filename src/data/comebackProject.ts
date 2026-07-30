@@ -4,7 +4,7 @@ import type { ConceptMood, ProjectDefinition } from "@/types/game";
 export const COMEBACK_PROJECT_ID = "comeback-project";
 
 /**
- * 컴백을 14주짜리 열 단계 사이클로 편집한다. 데뷔(M2)의 projectSystem
+ * 컴백을 16주짜리 열 단계 사이클로 편집한다. 데뷔(M2)의 projectSystem
  * 프레임을 그대로 사용하며, allowsOverlap으로 발매 이후 활동기에
  * 다음 앨범의 컨셉 조사가 중첩될 수 있다.
  */

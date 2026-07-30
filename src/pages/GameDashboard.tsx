@@ -296,12 +296,18 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     event: GameEvent,
     choiceIndex: number | null,
   ) => {
-    await applyEventChoiceAndSave(
-      event,
-      choiceIndex ?? -1,
-      userId,
-      DEFAULT_AUTO_SAVE_SLOT,
-    );
+    setWorkflowError(null);
+    try {
+      await applyEventChoiceAndSave(
+        event,
+        choiceIndex ?? -1,
+        userId,
+        DEFAULT_AUTO_SAVE_SLOT,
+      );
+    } catch (error) {
+      console.error("Event choice save failed.", error);
+      setWorkflowError("이벤트 결과를 저장하지 못했습니다. 다시 시도해 주세요.");
+    }
   };
 
   const handleCloseWeekReport = useCallback(async () => {
@@ -366,7 +372,13 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   ]);
 
   const handleCloseEvent = async () => {
-    await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+    setWorkflowError(null);
+    try {
+      await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+    } catch (error) {
+      console.error("Event advance save failed.", error);
+      setWorkflowError("이벤트 진행을 저장하지 못했습니다. 다시 시도해 주세요.");
+    }
   };
 
   const handleCompletePresentationEvent = async (eventId: string) => {
@@ -622,9 +634,8 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           <p className="mt-1 text-sm font-semibold text-text-primary">
             다음 컴백 기획 시작
           </p>
-          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            컨셉을 정하면 14주 사이클이 시작됩니다. 활동 정산 중에도 다음
-            기획을 겹쳐 진행할 수 있습니다.
+          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted [word-break:keep-all]">
+            컨셉을 정하면 16주 사이클이 시작됩니다.
           </p>
         </button>
       ) : null}

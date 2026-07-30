@@ -1,5 +1,6 @@
 import { Sparkle } from "lucide-react";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import type { PromotionActivity, PromotionActivityId } from "@/types/game";
 
 const PROMOTION_COST_UNIT = 10000;
@@ -13,7 +14,7 @@ const EFFECT_LABELS: Record<string, string> = {
   industry: "업계 평판",
 };
 
-// 효과 수치는 사전 공개하지 않는다 — 어느 쪽에 도움이 되는지만 전한다.
+// 효과 수치는 사전 공개하지 않는다. 어느 쪽에 도움이 되는지만 전한다.
 function summarizeEffects(effects: PromotionActivity["effects"]): string {
   const benefits: string[] = [];
   const drawbacks: string[] = [];
@@ -35,7 +36,7 @@ function summarizeEffects(effects: PromotionActivity["effects"]): string {
     parts.push(`${benefits.join("·")}에 ${adverb}보탬이 됩니다`);
   }
   if (drawbacks.length > 0) {
-    parts.push(`${drawbacks.join("·")} 쪽은 손해를 감수해야 합니다`);
+    parts.push(`${drawbacks.join("·")} 쪽은 손해입니다`);
   }
   return parts.join(" · ");
 }
@@ -50,7 +51,7 @@ interface ActivityPromotionPanelProps {
 }
 
 /**
- * 활동기(발매 후) 전용 프로모션 선택. 주당 1건 — 다시 누르면 해제된다.
+ * 활동기(발매 후) 전용 프로모션 선택. 주당 1건, 다시 누르면 해제된다.
  * 이정표가 해금한 활동(팬사인회·콘서트 등)이 실제로 여기서 열린다.
  */
 export function ActivityPromotionPanel({
@@ -87,11 +88,9 @@ export function ActivityPromotionPanel({
               type="button"
               disabled={disabled || !affordable}
               className={[
-                "w-full rounded-xl px-3 py-2 text-left transition-[scale,background-color,box-shadow] duration-150 ease-out active:scale-[0.98]",
+                "min-h-11 w-full rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.98] [word-break:keep-all]",
                 !affordable || disabled ? "cursor-not-allowed opacity-45" : "",
-                isSelected
-                  ? "bg-amber-400/12 shadow-[inset_0_0_0_2px_rgba(251,191,36,0.5)]"
-                  : "bg-surface-shell/72 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]",
+                radioTileClasses(isSelected, selectedId !== null),
               ].join(" ")}
               onClick={() => onSelect(isSelected ? null : activity.id)}
             >
@@ -108,7 +107,7 @@ export function ActivityPromotionPanel({
                   ) : null}
                 </span>
               </span>
-              <span className="mt-0.5 block text-[11px] leading-4 text-text-muted">
+              <span className="mt-0.5 block text-pretty text-[11px] leading-4 text-text-muted">
                 {summarizeEffects(activity.effects)}
                 {activity.sideEffect ? ` · ${activity.sideEffect}` : ""}
               </span>

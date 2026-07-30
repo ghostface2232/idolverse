@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/common/Card";
 import { TabPanel } from "@/components/common/TabPanel";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { TraineeDetail } from "@/components/TraineeDetail";
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
@@ -8,6 +9,7 @@ import {
   INJURY_RISK_WARNING_THRESHOLD,
 } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
+import { STAT_KEYS, STAT_LABELS } from "@/data/traineeStats";
 import { useAlbumStore } from "@/stores/albumStore";
 import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
@@ -26,32 +28,14 @@ import type {
 } from "@/types/game";
 import { withJosa } from "@/utils/josa";
 
-const STAT_KEYS: TraineeStatKey[] = [
-  "visual",
-  "vocal",
-  "dance",
-  "charm",
-  "stamina",
-  "mental",
-];
-
-const STAT_LABELS: Record<TraineeStatKey, string> = {
-  visual: "비주얼",
-  vocal: "보컬",
-  dance: "댄스",
-  charm: "끼",
-  stamina: "체력",
-  mental: "멘탈",
-};
-
 const INTENSITY_OPTIONS: {
   key: TrainingIntensity;
   label: string;
   description: string;
 }[] = [
-  { key: "normal", label: "보통", description: "무리 없는 페이스로 꾸준히 나아갑니다" },
-  { key: "hard", label: "강화", description: "빠르게 실력을 끌어올리지만 피로가 눈에 띄게 쌓입니다" },
-  { key: "extreme", label: "극한", description: "한계까지 몰아붙입니다. 성과는 크지만 몸과 마음이 버텨줘야 합니다" },
+  { key: "normal", label: "보통", description: "무리 없는 페이스로 꾸준히 갑니다" },
+  { key: "hard", label: "강화", description: "성장은 빠르지만 피로가 쌓입니다" },
+  { key: "extreme", label: "극한", description: "성과는 크지만 몸과 마음이 버텨줘야 합니다" },
 ];
 
 const FOCUS_OPTIONS: {
@@ -75,12 +59,12 @@ const ACTIVITY_OPTIONS: {
   {
     key: "entertainment",
     label: "예능",
-    warning: "이번 주는 연습 대신 방송에 나갑니다. 얼굴을 알릴 기회지만, 대중의 반응은 뚜껑을 열어봐야 압니다",
+    warning: "연습 대신 방송에 나갑니다. 반응은 열어봐야 압니다",
   },
   {
     key: "individual",
     label: "개인 레슨",
-    warning: "개인 역량을 키우지만, 대신 팀 결속과 멤버 간 케미가 정체됩니다",
+    warning: "개인 기량은 늘지만 팀 케미는 멈춥니다",
   },
   { key: "rest", label: "휴식" },
 ];
@@ -94,30 +78,24 @@ const ACTIVITY_LABEL: Record<Exclude<TraineeActivity, null>, string> = {
 };
 
 const ACTIVITY_TONE: Record<Exclude<TraineeActivity, null>, string> = {
-  training: "border-cyan-400/40 bg-cyan-400/10 text-cyan-200",
-  entertainment: "border-pink-400/40 bg-pink-400/10 text-pink-200",
-  individual: "border-purple-400/40 bg-purple-400/10 text-purple-200",
-  rest: "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
-  vacation: "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
+  training: "border-activity-training/40 bg-activity-training/10 text-activity-training",
+  entertainment: "border-action-primary/40 bg-action-primary/10 text-pink-200",
+  individual: "border-activity-office/40 bg-activity-office/10 text-activity-office",
+  rest: "border-activity-rest/40 bg-activity-rest/10 text-activity-rest",
+  vacation: "border-activity-rest/40 bg-activity-rest/10 text-activity-rest",
 };
-
-function statBarColor(value: number): string {
-  if (value >= 61) return "bg-emerald-400";
-  if (value >= 31) return "bg-amber-400";
-  return "bg-red-400";
-}
 
 function statusIcon(kind: "mood" | "stress" | "condition", value: number) {
   const noun =
     kind === "mood" ? "만족도" : kind === "stress" ? "스트레스" : "컨디션";
   if (kind === "stress") {
-    if (value >= 70) return { icon: "X", tone: "text-red-300", title: "스트레스가 높습니다" };
-    if (value >= 40) return { icon: "~", tone: "text-amber-300", title: "스트레스가 쌓이고 있습니다" };
-    return { icon: "♪", tone: "text-emerald-300", title: "스트레스는 걱정 없는 수준입니다" };
+    if (value >= 70) return { icon: "X", tone: "text-state-danger", title: "스트레스가 높습니다" };
+    if (value >= 40) return { icon: "~", tone: "text-state-warning", title: "스트레스가 쌓이고 있습니다" };
+    return { icon: "♪", tone: "text-state-success", title: "스트레스는 걱정 없는 수준입니다" };
   }
-  if (value >= 70) return { icon: "♥", tone: "text-emerald-300", title: `${withJosa(noun, "이/가")} 좋습니다` };
-  if (value >= 40) return { icon: "~", tone: "text-amber-300", title: `${withJosa(noun, "은/는")} 무난한 편입니다` };
-  return { icon: "X", tone: "text-red-300", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
+  if (value >= 70) return { icon: "♥", tone: "text-state-success", title: `${withJosa(noun, "이/가")} 좋습니다` };
+  if (value >= 40) return { icon: "~", tone: "text-state-warning", title: `${withJosa(noun, "은/는")} 무난한 편입니다` };
+  return { icon: "X", tone: "text-state-danger", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
 }
 
 function injuryRiskLabel(probability: number): string | null {
@@ -129,48 +107,50 @@ function injuryRiskLabel(probability: number): string | null {
 }
 
 // 정확한 성장/델타 수치는 사전 공개하지 않는다(결과로만 힌트). 매니저의
-// 어조로 이번 주 흐름만 전달한다.
+// 어조로 이번 주 흐름만 전달한다. 문장은 최대 2개: 모드 1 + 리스크/피로 1.
 function formatPreview(preview: TraineeWeekPreview): string {
-  const parts: string[] = [];
   const growthEntries = Object.entries(preview.statGrowth).filter(
     ([, value]) => (value ?? 0) > 0,
   );
   const totalGrowth = growthEntries.reduce((sum, [, v]) => sum + (v ?? 0), 0);
+
+  let modeSentence: string;
   if (preview.mode === "injured") {
-    parts.push("이번 주는 치료와 회복에 전념시키겠습니다");
+    modeSentence = "이번 주는 치료와 회복에 전념시키겠습니다";
   } else if (preview.mode === "entertainment") {
-    parts.push("이번 주는 방송 스케줄을 소화합니다");
+    modeSentence = "이번 주는 방송 스케줄을 소화합니다";
   } else if (preview.mode === "individual" && growthEntries.length === 1) {
     const [stat] = growthEntries[0];
-    parts.push(
-      `${STAT_LABELS[stat as TraineeStatKey]} 실력이 눈에 띄게 붙을 것으로 보입니다`,
-    );
+    modeSentence = `${STAT_LABELS[stat as TraineeStatKey]} 실력이 눈에 띄게 붙을 것으로 보입니다`;
   } else if (preview.mode === "rest") {
-    parts.push("푹 쉬면서 재충전합니다");
+    modeSentence = "푹 쉬면서 재충전합니다";
   } else if (totalGrowth >= 0.5) {
-    parts.push("훈련 성과가 잘 나올 것 같습니다");
+    modeSentence = "훈련 성과가 잘 나올 것 같습니다";
   } else if (totalGrowth > 0) {
-    parts.push("성장세는 완만할 것으로 보입니다");
+    modeSentence = "성장세는 완만할 것으로 보입니다";
   } else {
-    parts.push("이번 주는 연습 진도가 없습니다");
+    modeSentence = "이번 주는 연습 진도가 없습니다";
   }
-  if (preview.stressDelta >= 10) {
-    parts.push("피로가 상당히 쌓일 겁니다");
-  } else if (preview.stressDelta >= 5) {
-    parts.push("피로가 눈에 띄게 쌓이겠습니다");
-  } else if (preview.stressDelta <= -15) {
-    parts.push("스트레스가 크게 풀리겠습니다");
-  } else if (preview.stressDelta <= -5) {
-    parts.push("스트레스가 한결 풀리겠습니다");
+
+  // 부상 경고가 항상 최우선, 없으면 피로/회복 중 하나만 덧붙인다.
+  let secondSentence = injuryRiskLabel(preview.injuryProbability);
+  if (!secondSentence) {
+    if (preview.stressDelta >= 10) {
+      secondSentence = "피로가 상당히 쌓일 겁니다";
+    } else if (preview.stressDelta >= 5) {
+      secondSentence = "피로가 눈에 띄게 쌓이겠습니다";
+    } else if (preview.stressDelta <= -15) {
+      secondSentence = "스트레스가 크게 풀리겠습니다";
+    } else if (preview.stressDelta <= -5) {
+      secondSentence = "스트레스가 한결 풀리겠습니다";
+    } else if (preview.conditionDelta >= 5) {
+      secondSentence = "컨디션도 회복될 겁니다";
+    }
   }
-  if (preview.conditionDelta >= 5) {
-    parts.push("컨디션도 회복될 겁니다");
-  }
-  const risk = injuryRiskLabel(preview.injuryProbability);
-  if (risk) {
-    parts.push(risk);
-  }
-  return `${parts.join(". ")}.`;
+
+  return secondSentence
+    ? `${modeSentence}. ${secondSentence}.`
+    : `${modeSentence}.`;
 }
 
 function bestAndWorstChemistry(trainee: Trainee, others: readonly Trainee[]) {
@@ -189,6 +169,12 @@ function bestAndWorstChemistry(trainee: Trainee, others: readonly Trainee[]) {
     }
   }
   return { best, conflict };
+}
+
+function topStrengths(trainee: Trainee): TraineeStatKey[] {
+  return [...STAT_KEYS]
+    .sort((a, b) => trainee.stats[b] - trainee.stats[a])
+    .slice(0, 2);
 }
 
 interface ToggleGroupProps<T extends string | null> {
@@ -212,10 +198,9 @@ function ToggleGroup<T extends string | null>({
             type="button"
             onClick={() => onChange(opt.key)}
             className={[
-              "min-h-9 rounded-full border px-3 text-xs transition",
-              active
-                ? "border-brand-pink bg-brand-pink/20 text-pink-100"
-                : "border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500",
+              "flex min-h-11 items-center rounded-full border px-4 text-xs transition duration-150 ease-out active:scale-[0.96]",
+              active ? "text-text-primary" : "text-text-secondary",
+              radioTileClasses(active, true),
             ].join(" ")}
           >
             {opt.label}
@@ -270,9 +255,7 @@ export function Training({ onBack }: TrainingProps) {
       <div className="space-y-4">
       <Card className="space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-brand-pink">
-            훈련 강도
-          </p>
+          <p className="text-sm text-text-secondary">훈련 강도</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {INTENSITY_OPTIONS.map((opt) => {
               const active = trainingSchedule.intensity === opt.key;
@@ -282,24 +265,23 @@ export function Training({ onBack }: TrainingProps) {
                   type="button"
                   onClick={() => setIntensity(opt.key)}
                   className={[
-                    "flex min-h-12 flex-col items-center justify-center rounded-2xl border px-2 py-2 text-xs transition",
-                    active
-                      ? "border-brand-pink bg-brand-pink/20 text-pink-100"
-                      : "border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500",
+                    "flex min-h-11 items-center justify-center rounded-2xl border-2 px-2 py-2 text-sm transition duration-150 ease-out active:scale-[0.96]",
+                    active ? "text-text-primary" : "text-text-secondary",
+                    radioTileClasses(active, true),
                   ].join(" ")}
                 >
-                  <span className="text-sm">{opt.label}</span>
+                  {opt.label}
                 </button>
               );
             })}
           </div>
-          <p className="mt-2 text-[11px] text-slate-400">{intensityDescription}</p>
+          <p className="mt-2 text-[11px] text-text-muted [word-break:keep-all]">
+            {intensityDescription}
+          </p>
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-brand-pink">
-            훈련 포커스
-          </p>
+          <p className="text-sm text-text-secondary">훈련 포커스</p>
           <div className="mt-2">
             <ToggleGroup
               value={trainingSchedule.focus}
@@ -308,44 +290,49 @@ export function Training({ onBack }: TrainingProps) {
             />
           </div>
           {trainingSchedule.focus !== null && (
-            <p className="mt-2 text-[11px] text-slate-400">
+            <p className="mt-2 text-[11px] text-text-muted [word-break:keep-all]">
               이번 주 연습은 {STAT_LABELS[trainingSchedule.focus]} 위주로 진행합니다
             </p>
           )}
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-slate-700 bg-slate-900/40 px-3 py-3">
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-surface-shell/70 px-3 py-3">
           <div>
-            <p className="text-sm text-slate-100">휴식일</p>
-            <p className="text-[11px] text-slate-400">
-              일주일에 하루는 완전히 쉬어갑니다. 숨을 돌리는 대신 연습 진도는 조금 늦어집니다
+            <p className="text-sm text-text-primary">휴식일</p>
+            <p className="text-[11px] text-text-muted [word-break:keep-all]">
+              일주일에 하루는 완전히 쉬고, 연습 진도는 조금 늦춥니다
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={trainingSchedule.restDay}
+            aria-label="휴식일"
             onClick={() => setRestDay(!trainingSchedule.restDay)}
-            className={[
-              "relative h-7 w-12 rounded-full border transition",
-              trainingSchedule.restDay
-                ? "border-brand-pink bg-brand-pink/40"
-                : "border-slate-600 bg-slate-700",
-            ].join(" ")}
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center"
           >
             <span
               className={[
-                "absolute top-0.5 h-5 w-5 rounded-full bg-slate-100 transition-transform",
-                trainingSchedule.restDay ? "translate-x-5" : "translate-x-0.5",
+                "relative block h-7 w-12 rounded-full ring-1 ring-inset ring-white/10 transition-colors",
+                trainingSchedule.restDay
+                  ? "bg-action-primary/50"
+                  : "bg-surface-raised",
               ].join(" ")}
-            />
+            >
+              <span
+                className={[
+                  "absolute top-1 h-5 w-5 rounded-full bg-text-primary transition-transform",
+                  trainingSchedule.restDay ? "translate-x-6" : "translate-x-1",
+                ].join(" ")}
+              />
+            </span>
           </button>
         </div>
       </Card>
 
       <div className="space-y-3">
         {trainees.length === 0 ? (
-          <Card className="text-center text-xs text-slate-400">
+          <Card className="text-center text-xs text-text-muted">
             연습생이 없습니다.
           </Card>
         ) : (
@@ -382,17 +369,20 @@ export function Training({ onBack }: TrainingProps) {
             const moodIcon = statusIcon("mood", effectiveSatisfaction);
             const stressIcon = statusIcon("stress", trainee.stress);
             const conditionIcon = statusIcon("condition", trainee.condition);
+            const strengths = topStrengths(trainee);
 
             return (
               <Card key={trainee.id} className="space-y-3">
                 <button
                   type="button"
                   onClick={() => setOpenTraineeId(trainee.id)}
-                  className="flex w-full items-start justify-between gap-2 text-left"
+                  className="flex min-h-11 w-full items-start justify-between gap-2 text-left"
                 >
                   <div>
-                    <p className="text-sm text-slate-50">{trainee.name}</p>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-sm font-semibold text-text-primary">
+                      {trainee.name}
+                    </p>
+                    <p className="text-[11px] text-text-muted">
                       {trainee.position
                         ? POSITION_LABELS[trainee.position]
                         : "포지션 미배정"}
@@ -403,9 +393,9 @@ export function Training({ onBack }: TrainingProps) {
                   </div>
                   <span
                     className={[
-                      "shrink-0 rounded-full border px-2 py-0.5 text-[10px]",
+                      "shrink-0 rounded-full border px-2 py-0.5 text-[11px]",
                       injured
-                        ? "border-red-400/50 bg-red-400/10 text-red-200"
+                        ? "border-state-danger/50 bg-state-danger/10 text-state-danger"
                         : ACTIVITY_TONE[activity],
                     ].join(" ")}
                   >
@@ -415,30 +405,16 @@ export function Training({ onBack }: TrainingProps) {
                   </span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                  {STAT_KEYS.map((key) => {
-                    const value = Math.round(trainee.stats[key]);
-                    return (
-                      <div key={key} className="text-[10px] text-slate-300">
-                        <div className="flex items-center justify-between">
-                          <span>{STAT_LABELS[key]}</span>
-                          <span className="text-slate-400">{value}</span>
-                        </div>
-                        <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                          <div
-                            className={[
-                              "h-full rounded-full",
-                              statBarColor(value),
-                            ].join(" ")}
-                            style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 text-[10px]">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px]">
+                  {strengths.map((key) => (
+                    <span
+                      key={key}
+                      className="rounded-md bg-white/[0.05] px-1.5 py-0.5 tabular-nums text-text-secondary"
+                      title="팀에서 손꼽히는 강점입니다"
+                    >
+                      {STAT_LABELS[key]} {Math.round(trainee.stats[key])}
+                    </span>
+                  ))}
                   <span className={moodIcon.tone} title={moodIcon.title}>
                     {moodIcon.icon} 만족
                   </span>
@@ -458,7 +434,7 @@ export function Training({ onBack }: TrainingProps) {
                   )}
                   {conflict && (
                     <span
-                      className="text-red-300"
+                      className="text-state-danger"
                       title={`${withJosa(conflict.name, "과/와")} 사이가 좋지 않습니다`}
                     >
                       ⚡ {conflict.name}
@@ -477,11 +453,12 @@ export function Training({ onBack }: TrainingProps) {
                           disabled={injured}
                           onClick={() => handleActivityChange(trainee.id, opt.key)}
                           className={[
-                            "min-h-9 rounded-xl border px-1 py-1.5 text-[10px] transition",
-                            active
-                              ? "border-brand-cyan bg-brand-cyan/15 text-brand-cyan"
-                              : "border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500",
-                            injured ? "cursor-not-allowed opacity-40" : "",
+                            "min-h-11 rounded-xl border px-1 py-1.5 text-xs transition duration-150 ease-out [word-break:keep-all]",
+                            active ? "text-text-primary" : "text-text-secondary",
+                            radioTileClasses(active, !injured),
+                            injured
+                              ? "cursor-not-allowed opacity-40"
+                              : "active:scale-[0.96]",
                           ].join(" ")}
                         >
                           {opt.label}
@@ -489,11 +466,13 @@ export function Training({ onBack }: TrainingProps) {
                       );
                     })}
                   </div>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-text-muted [word-break:keep-all]">
                     {formatPreview(preview)}
                   </p>
                   {!injured && activityWarning && (
-                    <p className="text-[10px] text-pink-200">⚠ {activityWarning}</p>
+                    <p className="text-[11px] text-pink-200 [word-break:keep-all]">
+                      ⚠ {activityWarning}
+                    </p>
                   )}
                 </div>
               </Card>

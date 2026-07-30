@@ -116,9 +116,6 @@ export function GoalsOverviewModal({
             <p className="text-base font-semibold leading-relaxed text-text-primary">
               {lanes.weekly.title}
             </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-text-muted">
-              매니저가 정리한 일정과 직접 결정할 안건을 확인하세요.
-            </p>
           </div>
           {risk ? (
             <div
@@ -178,11 +175,10 @@ export function GoalsOverviewModal({
                 {lanes.fiveYearReview.deadlineLabel}
               </span>
             </div>
-            <p className="mb-3 text-sm leading-relaxed text-text-muted">
-              다섯 경로 중 달성한 성과가 5년차 마지막 주에 리더보드 기록으로
-              남습니다. 점수는 각 경로 달성도를 최대{" "}
-              {lanes.fiveYearReview.pointsPerRoute.toLocaleString("ko-KR")}점씩
-              합산합니다. 기준을 채우지 못해도 회사 운영은 계속됩니다.
+            <p className="mb-3 text-sm leading-relaxed text-text-muted [word-break:keep-all]">
+              다섯 경로의 달성도를 경로당 최대{" "}
+              {lanes.fiveYearReview.pointsPerRoute.toLocaleString("ko-KR")}점으로
+              합산해 5년차 마지막 주에 리더보드 기록으로 남깁니다.
             </p>
             <div className="space-y-3">
               {lanes.fiveYearReview.items.map((item) => (

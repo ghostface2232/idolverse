@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import type {
@@ -15,9 +16,9 @@ interface EventModalProps {
 }
 
 const TONE_CLASSES: Record<RandomEventTone, string> = {
-  positive: "border-emerald-400/70 bg-emerald-500/12 text-emerald-200",
-  negative: "border-red-400/70 bg-red-500/12 text-red-200",
-  neutral: "border-sky-400/70 bg-sky-500/12 text-sky-200",
+  positive: "border-state-success/60 bg-state-success/12 text-state-success",
+  negative: "border-state-danger/60 bg-state-danger/12 text-state-danger",
+  neutral: "border-state-info/60 bg-state-info/12 text-state-info",
 };
 
 const TONE_LABELS: Record<RandomEventTone, string> = {
@@ -114,7 +115,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
       isCloseDisabled={saving}
       footer={
         event.resolved || choices.length === 0 ? (
-          <Button className="w-full" disabled={saving} onPress={handleClose}>
+          <Button className="w-full" isDisabled={saving} onPress={handleClose}>
             {saving ? "저장 중…" : "확인"}
           </Button>
         ) : null
@@ -123,7 +124,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
       <div className="space-y-5">
         <div
           className={[
-            "rounded-2xl border px-3 py-2 text-xs",
+            "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
             TONE_CLASSES[tone],
           ].join(" ")}
         >
@@ -131,35 +132,33 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl text-slate-50">{event.title}</h2>
-          <p className="text-sm leading-6 text-slate-300">{event.description}</p>
+          <h2 className="text-2xl text-text-primary [word-break:keep-all]">
+            {event.title}
+          </h2>
+          <p className="text-sm leading-6 text-text-secondary [word-break:keep-all]">
+            {event.description}
+          </p>
         </div>
 
-        {errorMessage ? (
-          <p
-            role="alert"
-            className="rounded-xl bg-state-danger/12 px-3 py-2 text-sm text-rose-200"
-          >
-            {errorMessage}
-          </p>
-        ) : null}
+        {errorMessage ? <Alert message={errorMessage} /> : null}
 
         {choices.length > 0 && !event.resolved ? (
           <div className="space-y-3">
             {choices.map((choice, index) => (
               <button
                 key={choice.label}
+                type="button"
                 disabled={saving}
-                className="min-h-11 w-full rounded-2xl border border-white/8 bg-slate-950/70 px-4 py-3 text-left transition hover:border-brand-cyan/60"
+                className="min-h-11 w-full rounded-2xl border border-white/8 bg-surface-shell/70 px-4 py-3 text-left transition duration-[var(--motion-state)] hover:border-brand-cyan/60 hover:bg-surface-raised/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-secondary disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => handleSelect(index)}
               >
-                <span className="block text-sm text-slate-100">
+                <span className="block text-sm font-semibold text-text-primary [word-break:keep-all]">
                   {choice.label}
                 </span>
-                <span className="mt-1 block text-xs text-slate-400">
+                <span className="mt-1 block text-xs leading-5 text-text-muted [word-break:keep-all]">
                   {choice.description}
                 </span>
-                <span className="mt-2 block text-xs text-brand-cyan">
+                <span className="mt-2 block text-xs text-brand-cyan [word-break:keep-all]">
                   {choice.tradeoff}
                 </span>
               </button>
@@ -168,9 +167,11 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
         ) : null}
 
         {event.resolved && selectedChoice ? (
-          <div className="rounded-2xl bg-slate-950/60 p-4">
-            <p className="text-sm text-slate-100">{selectedChoice.label}</p>
-            <p className="mt-2 text-xs text-slate-400">
+          <div className="rounded-2xl bg-surface-shell/60 p-4">
+            <p className="text-sm font-semibold text-text-primary [word-break:keep-all]">
+              {selectedChoice.label}
+            </p>
+            <p className="mt-2 text-xs text-text-muted [word-break:keep-all]">
               {selectedChoice.tradeoff}
             </p>
             <EffectList effects={selectedChoice.effects} />
@@ -178,8 +179,8 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
         ) : null}
 
         {event.resolved && !selectedChoice ? (
-          <div className="rounded-2xl bg-slate-950/60 p-4">
-            <p className="text-sm text-slate-100">관련 조치를 마쳤습니다.</p>
+          <div className="rounded-2xl bg-surface-shell/60 p-4">
+            <p className="text-sm text-text-primary">관련 조치를 마쳤습니다.</p>
           </div>
         ) : null}
       </div>
@@ -191,7 +192,7 @@ function EffectList({ effects }: { effects: EffectMap }) {
   const entries = Object.entries(effects);
 
   if (entries.length === 0) {
-    return <p className="mt-3 text-xs text-slate-500">추가 변화는 없습니다.</p>;
+    return <p className="mt-3 text-xs text-text-muted">추가 변화는 없습니다.</p>;
   }
 
   return (
@@ -199,7 +200,7 @@ function EffectList({ effects }: { effects: EffectMap }) {
       {entries.map(([key, value]) => (
         <li
           key={key}
-          className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200"
+          className="rounded-full bg-surface-raised px-2.5 py-1 text-xs tabular-nums text-text-secondary"
         >
           {EFFECT_LABELS[key as EffectKey]}{" "}
           {formatEffectValue(key as EffectKey, value)}
