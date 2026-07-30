@@ -79,8 +79,11 @@ export function buildMilestoneMetrics(
 ): MilestoneMetrics {
   const latestReleased =
     input.releasedAlbums[input.releasedAlbums.length - 1] ?? null;
+  // 제작 중 앨범의 quality는 발매 확정 전까지 0이다 — ??로 이으면 컴백 기획을
+  // 여는 순간 digitalIndex가 0 기반으로 붕괴하므로, 0이면 최신 발매작 품질로
+  // 폴백한다.
   const albumQuality =
-    input.currentAlbum?.quality ?? latestReleased?.quality ?? 0;
+    input.currentAlbum?.quality || latestReleased?.quality || 0;
 
   return {
     averageVocal: averageStat(input.trainees, "vocal"),

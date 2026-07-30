@@ -1,6 +1,7 @@
 import {
   COMPETITOR_SCALING_FACTOR,
   EVENT_COMPETITOR_SPAWN_CHANCE,
+  GAME_BALANCE,
   ROOKIE_COHORT,
 } from "@/data/balance";
 import {
@@ -114,11 +115,13 @@ export interface CompetitorWeekResult {
 export function simulateCompetitorWeek(
   competitors: readonly CompetitorGroup[],
   backgroundGroups: readonly BackgroundGroup[],
-  week: number,
+  // 게임 시작 기준 누적 주차(toCumulativeWeek). 연내 주차(1~52)를 쓰면
+  // 연도가 바뀔 때 weeksOut이 음수가 되어 경쟁 앨범이 영구 잔존한다.
+  cumulativeWeek: number,
   // 회차별 세계 시드. 0이면(구버전 세이브) 기존과 동일하게 진화한다.
   campaignSeed = 0,
 ): CompetitorWeekResult {
-  const random = createSeededRandom(week * 137 + campaignSeed);
+  const random = createSeededRandom(cumulativeWeek * 137 + campaignSeed);
   const comebacks: string[] = [];
 
   const updated = competitors.map((c) => {
@@ -127,7 +130,7 @@ export function simulateCompetitorWeek(
 
     // 시상식 지표용 연간 기록. 연초에 리셋한다 — currentAlbum 스냅샷은
     // 4주 뒤 소멸해 시상 주의 지표를 붕괴시키기 때문에 별도로 든다.
-    if (week === 1) {
+    if ((cumulativeWeek - 1) % GAME_BALANCE.weeksPerYear === 0) {
       rival.seasonBestQuality = rival.currentAlbum?.quality ?? 0;
     }
 
@@ -138,7 +141,9 @@ export function simulateCompetitorWeek(
     rival.industry = Math.min(100, rival.industry + (random() < 0.2 ? 1 : 0));
 
     if (rival.currentAlbum) {
-      const weeksOut = week - rival.currentAlbum.releaseWeek;
+      // releaseWeek도 누적 주차로 기록되므로 연도를 넘어도 만료가 성립한다.
+      // (연내 주차로 기록된 구버전 세이브의 앨범은 즉시 만료 — 잔존보다 낫다.)
+      const weeksOut = cumulativeWeek - rival.currentAlbum.releaseWeek;
       if (weeksOut > 4) {
         rival.currentAlbum = undefined;
       }
@@ -153,7 +158,7 @@ export function simulateCompetitorWeek(
         rival.currentAlbum = {
           title: `${rival.name} 컴백`,
           quality,
-          releaseWeek: week,
+          releaseWeek: cumulativeWeek,
         };
         rival.seasonBestQuality = Math.max(
           rival.seasonBestQuality ?? 0,
@@ -329,8 +334,9 @@ function seasonLabel(season: Season): string {
   return map[season];
 }
 
+// 이벤트 라이벌 스폰은 시즌과 무관하게 주차·플레이어 시드만의 함수다.
+// (기존 season 파라미터는 어디에도 쓰이지 않아 제거했다.)
 export function spawnEventCompetitor(
-  season: Season,
   playerLevel: number,
   playerGender: GroupGender,
   week: number,

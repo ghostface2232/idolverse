@@ -759,7 +759,7 @@ function buildStrategicExpansionCard(
       effects: { global: 10, industry: 6, public: 2 },
     },
   ];
-  const options = optionDefinitions.flatMap((definition) => {
+  const options: WeeklyDecision["options"] = optionDefinitions.flatMap((definition) => {
     const currentLevel = levels[definition.track];
     if (currentLevel >= STRATEGIC_EXPANSION.maxLevelPerTrack) return [];
     const cost = STRATEGIC_EXPANSION.levelCosts[currentLevel];
@@ -774,6 +774,16 @@ function buildStrategicExpansionCard(
     ];
   });
   if (options.length === 0) return null;
+
+  // 자금이 부족한 시기에 강제 지출로 파산하지 않도록, 이번 검토를 미루는
+  // 선택지를 항상 함께 둔다. 다음 검토 주기에 같은 카드가 다시 올라온다.
+  options.push({
+    id: "strategic-defer",
+    label: "이번 검토는 보류",
+    description: "지금은 현금을 지키고, 확장 검토를 다음 분기로 미룹니다.",
+    tradeoff: "업계에서는 투자에 소극적이라는 평이 돌 수 있습니다.",
+    effects: { industry: -1 },
+  });
 
   return {
     id: "strategic-expansion",

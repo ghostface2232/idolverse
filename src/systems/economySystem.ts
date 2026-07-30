@@ -133,6 +133,8 @@ export interface InvestorMetrics {
 export interface InvestorCheckResult {
   conditionId: string;
   met: boolean;
+  /** 마감(deadlineWeeks) 도래 여부. 마감 전 미달은 실패가 아니라 진행 중이다. */
+  deadlinePassed: boolean;
   description: string;
   penalty?: string;
 }
@@ -145,14 +147,16 @@ export function checkInvestorConditions(
   const results: InvestorCheckResult[] = [];
 
   for (const condition of investor.conditions) {
+    // 마감 전에도 매주 평가해 조기 달성을 기록할 수 있게 한다. 미달의
+    // 페널티 절차는 호출부가 deadlinePassed일 때만 연다.
     // deadlineWeeks는 게임 시작 기준 누적 주차다. 연도가 바뀌며 currentWeek가
     // 1로 랩되어도 마감이 다시 미래가 되지 않도록 누적 주차로 비교한다.
-    if (cumulativeWeek < condition.deadlineWeeks) continue;
-
+    const deadlinePassed = cumulativeWeek >= condition.deadlineWeeks;
     const met = evaluateCondition(condition, metrics);
     results.push({
       conditionId: condition.id,
       met,
+      deadlinePassed,
       description: condition.description,
       penalty: met ? undefined : condition.penalty,
     });

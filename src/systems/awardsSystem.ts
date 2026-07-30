@@ -18,6 +18,8 @@ export interface AwardContender {
   albumSalesIndex: number;
   fanVotes: number;
   judgesScore: number;
+  /** 업계 신뢰(0~100). 대상(daesang) 자격의 장기 신뢰 축으로만 쓴다. */
+  industry: number;
 }
 
 export interface AwardWinner {
@@ -39,6 +41,7 @@ export interface PlayerYearMetrics {
   albumSalesIndex: number;
   fanVotes: number;
   judgesScore: number;
+  industry: number;
 }
 
 export function buildContenderFromPlayer(
@@ -85,6 +88,7 @@ export function buildContenderFromCompetitor(
     fanVotes:
       (competitor.fandom / 100) * 0.7 + (competitor.global / 100) * 0.3,
     judgesScore: competitor.industry * 0.5 + avgStats * 0.5,
+    industry: competitor.industry,
   };
 }
 
@@ -123,13 +127,14 @@ function isEligibleForCategory(
           AWARD_ELIGIBILITY_THRESHOLDS.bonsang.minJudgesScore
       );
     case "daesang":
+      // minIndustry는 업계 신뢰 지표와 비교한다 — 이정표(daesang-eligible)가
+      // "업계 신뢰 75"를 약속하므로 심사 점수(judgesScore)와 섞으면 안 된다.
       return (
         contender.digitalIndex >=
           AWARD_ELIGIBILITY_THRESHOLDS.daesang.minDigitalIndex &&
         contender.albumSalesIndex >=
           AWARD_ELIGIBILITY_THRESHOLDS.daesang.minAlbumSalesIndex &&
-        contender.judgesScore >=
-          AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry
+        contender.industry >= AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry
       );
     case "popularity":
       return contender.fanVotes >= 45;

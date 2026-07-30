@@ -179,6 +179,8 @@ export const COMEBACK_BUDGET_TIERS_BY_ID = new Map(
 
 // 음악방송 1위 대결의 보상. 승리는 활동기의 정점이어야 하고,
 // 패배는 다음 주 결정을 바꿀 만큼만 아프고 회복 불가능해서는 안 된다.
+// 승리의 만족도 보너스는 이 효과(satisfaction)가 유일한 경로다 — 주간 만족도
+// 갱신(5단계)은 1위 판정(7.6단계)보다 먼저 돌아 그쪽에서는 알 수 없다.
 export const MUSIC_SHOW_OUTCOME = {
   win: { fandom: 4, public: 5, industry: 3, satisfaction: 6 },
   lose: { fandomLoyalty: 2, stress: 3 },
@@ -480,9 +482,38 @@ export const AUDIENCE_QUALITY_RETENTION = {
 } as const;
 export const ALBUM_QUALITY_REPUTATION_THRESHOLD = 75;
 export const FANDOM_DISAPPOINTMENT_SCANDAL = 15; // Scandals need to be one of the fastest ways to damage loyalty.
-export const FANDOM_DISAPPOINTMENT_CONCEPT_BREAK = 10; // Hard pivots should hurt if not justified by quality.
 export const FANDOM_DISAPPOINTMENT_COMMERCIAL = 5; // Overt monetization should annoy fans, but less than scandals or betrayal.
 export const FANDOM_LEAVE_THRESHOLD = 80; // Churn should begin only after multiple ignored warning signs.
+
+/**
+ * 상업형 활동(팬사인회·유튜브·라이브)이 이 주 수 이상 연속되면 팬 실망이
+ * 쌓인다. 콘서트는 수익형 "공연"이므로 이 판정에서 제외한다 — 공연을
+ * 상업 남발로 세면 후반 콘서트 루프가 자기 페널티가 된다.
+ */
+export const EXCESSIVE_COMMERCIAL_STREAK_WEEKS = 3;
+
+/**
+ * 해외 팬덤 활동성 판정 문턱. global 지표는 0~100 클램프이므로 문턱도
+ * 같은 스케일이어야 한다 (1000/500이던 시절에는 영구 false였고,
+ * 비활동 감쇠만 상시 발동해 해외 축이 구조적으로 침몰했다).
+ */
+export const GLOBAL_ENGAGEMENT_THRESHOLDS = {
+  spotifyStreaming: 40, // 이 이상이면 해외 스트리밍 순환이 유지되는 것으로 본다.
+  youtubeActivity: 20, // 이 이상이면 유튜브발 해외 노출이 살아 있는 것으로 본다.
+} as const;
+
+/**
+ * 최신 발매작 품질이 직전 발매작보다 이만큼 떨어지면 업계 신뢰가 하락한다
+ * (fandomSystem qualityDecline). 발매 주에만 1회 판정한다.
+ */
+export const ALBUM_QUALITY_DECLINE_GAP = 10;
+
+/** 무한 성장 배열의 보존 상한. 넘치는 과거 기록은 오래된 것부터 버린다. */
+export const STATE_PRUNE_LIMITS = {
+  notifications: 60, // 주간 알림 로그.
+  financeHistoryWeeks: 52, // 수입·지출 주간 내역 — 분기(13주) 지표 계산에 충분한 1년치.
+  completedProjects: 4, // 완료된 프로젝트 인스턴스 — phase 게이트(정산 1회)와 회고에 충분.
+} as const;
 
 export const DECISION_TRIGGER_THRESHOLDS = {
   highStress: 70,
@@ -758,7 +789,9 @@ export const OPTIONAL_FACILITY_COSTS = {
 export const AWARD_ELIGIBILITY_THRESHOLDS = {
   rookie: {
     minYear: 1, // Rookie awards are meant to matter in the first campaign year.
-    maxYear: 1, // 신인상은 데뷔 연도 한 번만 경쟁한다.
+    // 데뷔 연도와 2년차까지 경쟁한다 — UI(GameDashboard의 신인상 창 표기)와
+    // GoalLanes가 "2년차 말까지"를 약속하므로 시스템도 같은 창을 쓴다.
+    maxYear: 2,
   },
   bonsang: {
     minDigitalIndex: 65,

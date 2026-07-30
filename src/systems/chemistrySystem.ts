@@ -162,14 +162,16 @@ export function updateChemistry(
       if (currentVal < CHEMISTRY_CONFLICT_THRESHOLD) {
         const seed = weekSeed * 100 + i * 13 + j * 7;
         const random = createSeededRandom(seed);
+        // 주간 보고서(WeekReport)가 a/b를 그대로 사람 이름으로 출력하므로
+        // 내부 id가 아니라 표시용 이름을 담는다.
         if (random() < 0.3) {
           chemA[b.id] = clampChemistry(currentVal + 10);
           chemB[a.id] = clampChemistry((chemB[a.id] ?? 0) + 10);
-          conflicts.push({ a: a.id, b: b.id, resolved: true });
+          conflicts.push({ a: a.name, b: b.name, resolved: true });
         } else {
           chemA[b.id] = clampChemistry(currentVal - 3);
           chemB[a.id] = clampChemistry((chemB[a.id] ?? 0) - 3);
-          conflicts.push({ a: a.id, b: b.id, resolved: false });
+          conflicts.push({ a: a.name, b: b.name, resolved: false });
         }
       } else {
         const pairAffinity = calculatePairChemistryAffinity(a, b);

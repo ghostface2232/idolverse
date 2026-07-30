@@ -43,6 +43,8 @@ export const initialFinanceState: FinanceStoreState = {
   weeklyFixedTotal: 0,
   incomeHistory: [],
   expenseHistory: [],
+  cumulativeIncome: 0,
+  cumulativeExpense: 0,
 };
 
 export const financeVanillaStore = createStore<FinanceStore>()((set) => ({

@@ -431,7 +431,8 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         label: "자금 투입하여 수습",
         description: "법무, 기사 관리, 현장 대응 인력을 총동원합니다.",
         tradeoff: "돈은 크게 빠지지만 팬 충격을 가장 줄입니다.",
-        effects: { money: -50000000, fandomDisappointment: 5, public: 1 },
+        // 수습 대응은 실망을 낮춰야 한다(+5는 설명과 정반대였다).
+        effects: { money: -50000000, fandomDisappointment: -5, public: 1 },
       },
       {
         label: "침묵한다",

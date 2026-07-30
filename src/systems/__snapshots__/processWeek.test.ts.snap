@@ -14,7 +14,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
         {
           "detail": "연말 무대 완성도와 업계 평판이 직접적인 변수로 작동한다.",
           "headline": "MMA/MAMA/골든디스크 시상식 일정 확정",
-          "id": "news-w50-0",
+          "id": "news-y1-w50-0",
           "type": "event",
           "week": 50,
         },
@@ -102,6 +102,8 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       },
     },
     "finance": {
+      "cumulativeExpense": 946154,
+      "cumulativeIncome": 0,
       "expenseHistory": [
         {
           "breakdown": {
@@ -142,6 +144,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "awardHistory": [],
       "campaignFailure": null,
       "campaignSeed": 0,
+      "commercialWeekStreak": 0,
       "companyName": "픽스처 엔터테인먼트",
       "currentPhase": "training",
       "currentSeason": "winter",
@@ -186,14 +189,14 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "milestonesAchieved": [],
       "notifications": [
         {
-          "id": "noti-w50-0",
+          "id": "noti-y1-w50-0",
           "message": "이벤트 경쟁 그룹 등장: 에클라",
           "title": "주간 알림",
           "type": "warning",
           "week": 50,
         },
         {
-          "id": "noti-w50-1",
+          "id": "noti-y1-w50-1",
           "message": "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
           "title": "주간 알림",
           "type": "warning",
@@ -818,7 +821,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       {
         "detail": "연말 무대 완성도와 업계 평판이 직접적인 변수로 작동한다.",
         "headline": "MMA/MAMA/골든디스크 시상식 일정 확정",
-        "id": "news-w50-0",
+        "id": "news-y1-w50-0",
         "type": "event",
         "week": 50,
       },
@@ -858,7 +861,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
         {
           "detail": "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
           "headline": "봄 시즌 청량 콘셉트 수요 급증",
-          "id": "news-w5-0",
+          "id": "news-y1-w5-0",
           "type": "trend",
           "week": 5,
         },
@@ -915,6 +918,8 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       },
     },
     "finance": {
+      "cumulativeExpense": 946154,
+      "cumulativeIncome": 0,
       "expenseHistory": [
         {
           "breakdown": {
@@ -955,6 +960,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       "awardHistory": [],
       "campaignFailure": null,
       "campaignSeed": 0,
+      "commercialWeekStreak": 0,
       "companyName": "픽스처 엔터테인먼트",
       "currentPhase": "training",
       "currentSeason": "spring",
@@ -1589,7 +1595,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       {
         "detail": "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
         "headline": "봄 시즌 청량 콘셉트 수요 급증",
-        "id": "news-w5-0",
+        "id": "news-y1-w5-0",
         "type": "trend",
         "week": 5,
       },
@@ -1626,7 +1632,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         {
           "detail": "팬 투표 비중이 높은 시상식일수록 코어 팬덤의 결속력이 중요하다.",
           "headline": "연말 시상식 투표 시작, 팬덤 총력전 돌입",
-          "id": "news-w36-0",
+          "id": "news-y1-w36-0",
           "type": "event",
           "week": 36,
         },
@@ -1683,6 +1689,8 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       },
     },
     "finance": {
+      "cumulativeExpense": 946154,
+      "cumulativeIncome": 0,
       "expenseHistory": [
         {
           "breakdown": {
@@ -1723,6 +1731,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "awardHistory": [],
       "campaignFailure": null,
       "campaignSeed": 0,
+      "commercialWeekStreak": 0,
       "companyName": "픽스처 엔터테인먼트",
       "currentPhase": "training",
       "currentSeason": "fall",
@@ -1767,7 +1776,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "milestonesAchieved": [],
       "notifications": [
         {
-          "id": "noti-w36-0",
+          "id": "noti-y1-w36-0",
           "message": "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
           "title": "주간 알림",
           "type": "warning",
@@ -2376,7 +2385,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       {
         "detail": "팬 투표 비중이 높은 시상식일수록 코어 팬덤의 결속력이 중요하다.",
         "headline": "연말 시상식 투표 시작, 팬덤 총력전 돌입",
-        "id": "news-w36-0",
+        "id": "news-y1-w36-0",
         "type": "event",
         "week": 36,
       },

@@ -1,4 +1,7 @@
-import { FANDOM_DISAPPOINTMENT_COMMERCIAL } from "@/data/balance";
+import {
+  EXCESSIVE_COMMERCIAL_STREAK_WEEKS,
+  FANDOM_DISAPPOINTMENT_COMMERCIAL,
+} from "@/data/balance";
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
@@ -204,19 +207,33 @@ export function executePromotion(
   };
 }
 
+// 과도 상업활동 판정 대상. 콘서트는 수익형 "공연"이므로 제외한다 —
+// 수입 내역(breakdown.promotions)에는 콘서트 수익이 섞여 들어가므로
+// 판정은 수입 키가 아니라 이 활동 유형 기록(commercialWeekStreak)으로 한다.
 const COMMERCIAL_ACTIVITY_IDS: Set<PromotionActivityId> = new Set([
   "fanSign",
   "youtubeContent",
   "liveBroadcast",
 ]);
 
+/** 이번 주 프로모션 주문에 상업형 활동이 포함되어 있는지. 주간 스트릭 갱신용. */
+export function hasCommercialPromotion(
+  orders: readonly PromotionOrder[],
+): boolean {
+  return orders.some((order) => COMMERCIAL_ACTIVITY_IDS.has(order.activityId));
+}
+
+/**
+ * 상업형 활동이 EXCESSIVE_COMMERCIAL_STREAK_WEEKS(3주) 이상 이어지면
+ * 팬 실망 페널티를 돌려준다. 이번 주에 상업 활동이 없으면 스트릭이 끊긴
+ * 것이므로 페널티도 없다.
+ */
 export function checkExcessiveCommercial(
-  recentWeeksHadCommercial: number,
+  previousCommercialStreakWeeks: number,
   currentOrders: readonly PromotionOrder[],
 ): number {
-  const hasCommercialThisWeek = currentOrders.some((o) =>
-    COMMERCIAL_ACTIVITY_IDS.has(o.activityId),
-  );
-  const total = recentWeeksHadCommercial + (hasCommercialThisWeek ? 1 : 0);
-  return total >= 3 ? FANDOM_DISAPPOINTMENT_COMMERCIAL : 0;
+  if (!hasCommercialPromotion(currentOrders)) return 0;
+  return previousCommercialStreakWeeks + 1 >= EXCESSIVE_COMMERCIAL_STREAK_WEEKS
+    ? FANDOM_DISAPPOINTMENT_COMMERCIAL
+    : 0;
 }

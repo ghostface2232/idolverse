@@ -928,6 +928,12 @@ export interface GameStoreState {
   lastInvestorDemandWeek: number | null;
   /** 실제 광고 제안을 수락해 체결한 누적 광고 계약 수. */
   adContractsSigned: number;
+  /**
+   * 상업형 활동(팬사인회·유튜브·라이브)이 이어진 연속 주 수.
+   * 과도 상업활동 판정은 수입 내역(콘서트 수익이 섞임)이 아니라
+   * 이 활동 유형 기록으로 한다.
+   */
+  commercialWeekStreak: number;
   /** 자금이 마이너스로 이어진 주 수. 한 주라도 회복하면 0으로 돌아간다. */
   insolvencyWeeks: number;
   /** 파산으로 인한 캠페인 종료 기록. null이 아니면 주간 진행이 잠긴다. */
@@ -1100,6 +1106,13 @@ export interface FinanceStoreState {
   weeklyFixedTotal: number;
   incomeHistory: { week: number; breakdown: Record<string, number> }[];
   expenseHistory: { week: number; breakdown: Record<string, number> }[];
+  /**
+   * 개업 이후 총수입·총지출 누계. 주간 내역(incomeHistory)은 최근 1년치만
+   * 남기고 프루닝하므로, 투자금 회수(payback) 같은 전 기간 지표는 이 누계로
+   * 판정한다. 값이 없는 구버전 세이브는 내역 합산으로 백필한다.
+   */
+  cumulativeIncome?: number;
+  cumulativeExpense?: number;
 }
 
 export interface FinanceStoreActions {

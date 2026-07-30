@@ -108,7 +108,6 @@ describe("M5 사람 — 인기·계약·이탈", () => {
       currentWeek: 30,
       debutDelayWeeks: 0,
       recentAward: false,
-      musicShowWin: false,
       goodFanReaction: false,
     });
 

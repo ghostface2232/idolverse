@@ -751,6 +751,16 @@ export async function upgradeFacilityAndSave(
       }
     }
   }
+  // 선택 시설(의료·보안)도 잔액이 있어야 설치할 수 있다 — financeStore.upgrade는
+  // 잔액 검사 없이 차감하므로 진입 지점인 여기서 막는다.
+  if (target === "hasHealthcare" || target === "hasSecurity") {
+    const alreadyOwned = financeVanillaStore.getState().upgrades[target];
+    if (!alreadyOwned && original.financeStore.money < UPGRADE_COSTS[target]) {
+      throw new WeeklyResolutionConflictError(
+        "Not enough money for the facility upgrade.",
+      );
+    }
+  }
   financeVanillaStore.getState().upgrade(target);
   try {
     const saved = await saveGame(userId, slotNumber, captureGameState());

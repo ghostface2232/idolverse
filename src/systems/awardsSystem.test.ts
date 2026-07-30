@@ -44,7 +44,13 @@ describe("buildContenderFromCompetitor 스케일", () => {
     const player = buildContenderFromPlayer(
       "player",
       "플레이어그룹",
-      { digitalIndex: 90, albumSalesIndex: 90, fanVotes: 90, judgesScore: 90 },
+      {
+        digitalIndex: 90,
+        albumSalesIndex: 90,
+        fanVotes: 90,
+        judgesScore: 90,
+        industry: 90,
+      },
       1,
     );
     const rival = buildContenderFromCompetitor(RIVAL);
@@ -59,13 +65,25 @@ describe("buildContenderFromCompetitor 스케일", () => {
     const reachOnly = buildContenderFromPlayer(
       "reach-only",
       "화제성그룹",
-      { digitalIndex: 90, albumSalesIndex: 90, fanVotes: 30, judgesScore: 44 },
+      {
+        digitalIndex: 90,
+        albumSalesIndex: 90,
+        fanVotes: 30,
+        judgesScore: 44,
+        industry: 50,
+      },
       1,
     );
     const complete = buildContenderFromPlayer(
       "complete",
       "완성도그룹",
-      { digitalIndex: 90, albumSalesIndex: 90, fanVotes: 30, judgesScore: 70 },
+      {
+        digitalIndex: 90,
+        albumSalesIndex: 90,
+        fanVotes: 30,
+        judgesScore: 70,
+        industry: 50,
+      },
       1,
     );
 

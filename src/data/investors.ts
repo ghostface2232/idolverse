@@ -179,7 +179,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         metric: "visualAverage",
         target: 70,
         deadlineWeeks: 52,
-        description: "1년 동안 멤버 비주얼 평균 70 이상 유지",
+        description: "1년 안에 멤버 비주얼 평균 70 달성",
         penalty: "브랜드 이미지 불일치로 협찬과 제작 지원이 축소된다.",
       },
       {
@@ -228,7 +228,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         metric: "trendFit",
         target: 75,
         deadlineWeeks: 39,
-        description: "패션 트렌드 적합도 75 이상 유지",
+        description: "패션 트렌드 적합도 75 달성",
         penalty: "메인 스타일리스트 지원과 쇼 초청 기회가 축소된다.",
       },
       {
@@ -236,7 +236,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         metric: "styleScore",
         target: 72,
         deadlineWeeks: 39,
-        description: "비주얼 및 스타일 점수 평균 72 이상 유지",
+        description: "비주얼과 스타일 점수 평균 72 달성",
         penalty: "프리미엄 스타일링 라인과 촬영 협업이 끊긴다.",
       },
     ],

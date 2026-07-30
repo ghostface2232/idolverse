@@ -282,6 +282,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     lastInvestorDemandWeek: rest.lastInvestorDemandWeek ?? null,
     adContractsSigned: rest.adContractsSigned ?? 0,
+    commercialWeekStreak: rest.commercialWeekStreak ?? 0,
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
     // 5년 성과 미달은 더 이상 캠페인 종료 조건이 아니다. 과거 버전에서
     // 잠긴 세이브도 불러오는 즉시 정상 진행 상태로 복구한다.
@@ -366,10 +367,26 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   fandomVanillaStore.setState(gameState.fandomStore, false);
   competitorVanillaStore.setState(gameState.competitorStore, false);
   // Older saves stored weeklyFixedTotal as the raw monthly sum — always rederive it from fixedCosts.
+  // 누계 필드가 없는 구버전 세이브는 (아직 프루닝 전이라 완전한) 주간 내역
+  // 합산으로 백필한다. setState는 merge라 직전 세이브 값이 새지 않게 명시한다.
+  const sumBreakdownHistory = (
+    history: readonly { week: number; breakdown: Record<string, number> }[],
+  ) =>
+    history.reduce(
+      (sum, entry) =>
+        sum + Object.values(entry.breakdown).reduce((a, b) => a + b, 0),
+      0,
+    );
   financeVanillaStore.setState(
     {
       ...gameState.financeStore,
       weeklyFixedTotal: calculateWeeklyFixedTotal(gameState.financeStore.fixedCosts),
+      cumulativeIncome:
+        gameState.financeStore.cumulativeIncome ??
+        sumBreakdownHistory(gameState.financeStore.incomeHistory),
+      cumulativeExpense:
+        gameState.financeStore.cumulativeExpense ??
+        sumBreakdownHistory(gameState.financeStore.expenseHistory),
     },
     false,
   );

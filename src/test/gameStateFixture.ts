@@ -88,6 +88,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       investorComplianceCount: 0,
       lastInvestorDemandWeek: null,
       adContractsSigned: 0,
+      commercialWeekStreak: 0,
       insolvencyWeeks: 0,
       campaignFailure: null,
       lastOpportunityWeek: null,
@@ -166,6 +167,8 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       }),
       incomeHistory: [],
       expenseHistory: [],
+      cumulativeIncome: 0,
+      cumulativeExpense: 0,
     },
     calendar: {
       currentSeason: getSeasonForWeek(week),

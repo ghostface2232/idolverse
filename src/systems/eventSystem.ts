@@ -12,6 +12,8 @@ import type {
 
 export interface EventContext {
   currentWeek: number;
+  /** 이벤트 id에 연도를 포함시키기 위한 현재 연차. 주차는 매년 1~52로 랩된다. */
+  currentYear: number;
   currentPhase: GamePhase;
   season: Season;
   public: number;
@@ -63,7 +65,8 @@ export function rollRandomEvents(
         template,
         gameEvent: instantiateEvent(
           template,
-          `event-${template.id}-w${ctx.currentWeek}`,
+          // 연도를 포함해야 2년차 이후 같은 주차의 이벤트와 id가 충돌하지 않는다.
+          `event-${template.id}-y${ctx.currentYear}-w${ctx.currentWeek}`,
         ),
       });
     }

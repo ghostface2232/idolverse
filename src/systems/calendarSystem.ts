@@ -18,6 +18,7 @@ export interface MarketTrend {
 }
 
 export function generateWeeklyNews(
+  year: number,
   week: number,
   season: Season,
   competitors: readonly CompetitorGroup[],
@@ -42,7 +43,8 @@ export function generateWeeklyNews(
 
   return picked.map((n, i) => ({
     ...n,
-    id: `news-w${week}-${i}`,
+    // 연도를 포함해야 2년차 이후 같은 주차의 뉴스와 id가 충돌하지 않는다.
+    id: `news-y${year}-w${week}-${i}`,
     week,
   }));
 }

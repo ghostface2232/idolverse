@@ -215,7 +215,10 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     weeklyFlow.state === "report_ready" && !isAdvancing
       ? weeklyFlow.report
       : null;
-  const totalAlerts = notifications.length + news.length;
+  // 벨 뱃지는 누적치가 아니라 "이번 주 새 소식"만 센다.
+  const totalAlerts =
+    notifications.filter((item) => item.week === currentWeek).length +
+    news.filter((item) => item.week === currentWeek).length;
   const primaryRisk = useMemo(
     () =>
       weeklyDecisions

@@ -1,7 +1,6 @@
 import {
   AUDIENCE_QUALITY_RETENTION,
   FANDOM_DISAPPOINTMENT_COMMERCIAL,
-  FANDOM_DISAPPOINTMENT_CONCEPT_BREAK,
   FANDOM_DISAPPOINTMENT_SCANDAL,
   FANDOM_LEAVE_THRESHOLD,
   PUBLIC_DECAY_RATE,
@@ -26,11 +25,12 @@ export interface WeeklyFandomContext {
   concertThisWeek: boolean;
   fanServiceThisWeek: boolean;
   scandalThisWeek: boolean;
-  conceptBreakThisWeek: boolean;
+  // 콘셉트 급변의 팬덤 대가는 발매 평가(albumSystem의 fandomExpectation)가
+  // 이미 치르게 한다 — 별도 conceptBreak 플래그는 이중 페널티라 제거했다.
   excessiveCommercial: boolean;
+  /** global 지표(0~100) 기준의 해외 활동성 — 문턱은 GLOBAL_ENGAGEMENT_THRESHOLDS. */
   spotifyStreaming: boolean;
   youtubeActivity: boolean;
-  overseasPromotion: boolean;
   foreignMembers: readonly Trainee[];
   latestAlbumQuality: number;
   musicQualityHigh: boolean;
@@ -75,21 +75,14 @@ export function updateFandom(
   if (ctx.fanServiceThisWeek) fDelta += 3;
 
   if (ctx.scandalThisWeek) dDelta += FANDOM_DISAPPOINTMENT_SCANDAL;
-  if (ctx.conceptBreakThisWeek) dDelta += FANDOM_DISAPPOINTMENT_CONCEPT_BREAK;
   if (ctx.excessiveCommercial) dDelta += FANDOM_DISAPPOINTMENT_COMMERCIAL;
 
   if (ctx.spotifyStreaming) gDelta += 2;
   if (ctx.youtubeActivity) gDelta += 2;
-  if (ctx.overseasPromotion) gDelta += 4;
 
   const foreignBonus = computeForeignMemberBonus(ctx.foreignMembers);
   gDelta += foreignBonus;
-  if (
-    !ctx.isActive &&
-    !ctx.spotifyStreaming &&
-    !ctx.youtubeActivity &&
-    !ctx.overseasPromotion
-  ) {
+  if (!ctx.isActive && !ctx.spotifyStreaming && !ctx.youtubeActivity) {
     gDelta -= 1;
   }
 
@@ -141,20 +134,15 @@ export function updateFandom(
         );
   const newDisappointment = clamp(cooledDisappointment + dDelta, 0, 100);
 
-  const disappointmentDrain =
-    newDisappointment > FANDOM_LEAVE_THRESHOLD ? Math.round((newDisappointment - FANDOM_LEAVE_THRESHOLD) * 0.3) : 0;
-  fDelta -= disappointmentDrain;
-
+  // 실망 임계 초과의 팬 이탈(팬덤·충성도 손실)은 여기서 빼지 않는다 —
+  // weekProcessor가 crisis 플래그를 보고 checkFandomCrisis의 손실을 1회
+  // 적용·기록한다. 여기서도 빼면 같은 위기가 이중으로 청구된다.
   const axis: Fandom4Axis = {
     public: clamp(current.public + pDelta, 0, 100),
     // 팬덤은 0~100 스케일 — 차트 파워·음악방송 화력·이정표가 전부 이
     // 스케일을 소비한다. 상한이 없으면 판매량·수익이 무한 성장한다.
     fandom: clamp(current.fandom + fDelta, 0, 100),
-    fandomLoyalty: clamp(
-      current.fandomLoyalty - disappointmentDrain * 0.5,
-      0,
-      100,
-    ),
+    fandomLoyalty: current.fandomLoyalty,
     fandomDisappointment: newDisappointment,
     global: clamp(current.global + gDelta, 0, 100),
     industry: clamp(current.industry + iDelta, 0, 100),

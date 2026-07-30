@@ -50,6 +50,7 @@ import {
 import {
   executePromotion,
   checkExcessiveCommercial,
+  hasCommercialPromotion,
   type PromotionOrder,
   type PromotionResult,
 } from "@/systems/promotionSystem";
@@ -74,11 +75,13 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  ALBUM_QUALITY_DECLINE_GAP,
   ALBUM_QUALITY_REPUTATION_THRESHOLD,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   EMERGENCY_FINANCING,
   FIVE_YEAR_REVIEW,
+  GLOBAL_ENGAGEMENT_THRESHOLDS,
   INVESTOR_PENALTY_GRACE_WEEKS,
   INVESTOR_INTERVENTION,
   INVESTOR_NEGOTIATION_EXTENSION_WEEKS,
@@ -86,6 +89,7 @@ import {
   MEMBER_LEAVE,
   PRODUCTION_RISK,
   STAFF_GROWTH,
+  STATE_PRUNE_LIMITS,
   STRATEGIC_EXPANSION,
   TEMPERAMENT_PROFILES,
   VARIETY_OUTCOME,
@@ -331,6 +335,7 @@ export function processWeek(
                   ) /
                     Math.max(trainees.length, 1)) *
                     0.2,
+                industry: fandomAxis.industry,
               },
               playerDebutYear,
             ),
@@ -550,23 +555,20 @@ export function processWeek(
     );
   }
 
+  // 과도 상업활동은 수입 내역(콘서트 수익이 promotions 키로 섞임)이 아니라
+  // 상업형 활동의 연속 주 수(commercialWeekStreak)로 판정한다. 실망 가산은
+  // 주간 팬덤 갱신(11단계)의 excessiveCommercial 경로 한 곳에서만 이뤄진다 —
+  // 여기서 또 더하면 같은 주에 이중 페널티가 된다.
+  const previousCommercialStreak = snapshot.game.commercialWeekStreak ?? 0;
   const excessiveCommercialPenalty = checkExcessiveCommercial(
-    countRecentCommercialWeeks(snapshot.finance.incomeHistory),
+    previousCommercialStreak,
     promotionOrders,
   );
+  const commercialWeekStreak = hasCommercialPromotion(promotionOrders)
+    ? previousCommercialStreak + 1
+    : 0;
   if (excessiveCommercialPenalty > 0) {
-    const beforePenalty = captureWeekDeltaState(getDeltaState());
-    fandomAxis.fandomDisappointment = clamp(
-      fandomAxis.fandomDisappointment + excessiveCommercialPenalty,
-      0,
-      100,
-    );
     report.warnings.push("과도한 상업 활동으로 팬 실망도 상승");
-    recordTransition(
-      beforePenalty,
-      { kind: "promotion", id: "excessive-commercial", label: "과도한 상업 활동" },
-      2,
-    );
   }
 
   // ── 3. Training
@@ -645,7 +647,9 @@ export function processWeek(
         ? Math.max(0, cumulativeWeek - promisedDebutWeek)
         : 0,
     recentAward: playerWonAward,
-    musicShowWin: false,
+    // 음악방송 1위는 이 단계(5) 뒤인 7.6에서 판정되므로 여기서는 알 수 없다.
+    // 1위 만족도 보너스는 판정 시점에 MUSIC_SHOW_OUTCOME.win.satisfaction
+    // 효과로 직접 적용·기록된다(satisfactionSystem WeekContext 주석 참조).
     goodFanReaction: fandomAxis.fandomLoyalty > 60,
   };
   const beforeSatisfaction = captureWeekDeltaState(getDeltaState());
@@ -756,10 +760,12 @@ export function processWeek(
   }
 
   // ── 7. Competitor simulation
+  // 누적 주차를 넘긴다 — 연내 주차(1~52)로는 연도가 바뀔 때 경쟁 앨범
+  // 만료(weeksOut)가 음수가 되어 영구 잔존한다.
   const compResult = simulateCompetitorWeek(
     snapshot.competitor.permanentRivals,
     snapshot.competitor.backgroundGroups,
-    snapshot.game.currentWeek,
+    cumulativeWeek,
     campaignSeed,
   );
   report.competitorComebacks = compResult.comebacks;
@@ -810,7 +816,6 @@ export function processWeek(
   }
 
   const eventRival = spawnEventCompetitor(
-    snapshot.game.currentSeason,
     fandomAxis.public,
     snapshot.game.groupGender,
     snapshot.game.currentWeek,
@@ -818,8 +823,14 @@ export function processWeek(
     campaignSeed,
   );
   let eventRivals = [...snapshot.competitor.eventRivals];
-  if (eventRival) {
-    eventRivals.push(eventRival);
+  // 같은 주에 spawnEventCompetitor가 동일 인자로 여러 번 호출되면 같은 id의
+  // 라이벌이 중복 push될 수 있으므로, 이미 있는 id는 스킵한다.
+  const pushEventRival = (rival: EventCompetitor): boolean => {
+    if (eventRivals.some((existing) => existing.id === rival.id)) return false;
+    eventRivals.push(rival);
+    return true;
+  };
+  if (eventRival && pushEventRival(eventRival)) {
     report.warnings.push(`이벤트 경쟁 그룹 등장: ${eventRival.name}`);
   }
   eventRivals = eventRivals
@@ -892,15 +903,13 @@ export function processWeek(
       createSeededRandom(seed + 11)() < debutSchedule.rivalDebutChance
     ) {
       const rookieRival = spawnEventCompetitor(
-        snapshot.game.currentSeason,
         fandomAxis.public,
         snapshot.game.groupGender,
         snapshot.game.currentWeek,
         true,
         campaignSeed,
       );
-      if (rookieRival) {
-        eventRivals.push(rookieRival);
+      if (rookieRival && pushEventRival(rookieRival)) {
         report.warnings.push(
           `경쟁 신인 ${withJosa(rookieRival.name, "이/가")} 같은 주에 데뷔합니다. 시장의 시선이 갈립니다`,
         );
@@ -951,15 +960,13 @@ export function processWeek(
       eventRivals.length === 0
     ) {
       const guaranteedRival = spawnEventCompetitor(
-        snapshot.game.currentSeason,
         fandomAxis.public,
         snapshot.game.groupGender,
         snapshot.game.currentWeek,
         true,
         campaignSeed,
       );
-      if (guaranteedRival) {
-        eventRivals.push(guaranteedRival);
+      if (guaranteedRival && pushEventRival(guaranteedRival)) {
         report.warnings.push(`데뷔 경쟁 팀 등장: ${guaranteedRival.name}`);
       }
     }
@@ -1097,10 +1104,19 @@ export function processWeek(
                 adContractsSigned,
               ),
               cumulativeWeek,
-            ).map(
-              (check) =>
-                `${check.met ? "달성" : "미달"} · ${check.description}`,
-            )
+            ).map((check) => {
+              // 이전 주에 이미 달성 고정된 약속은 지표가 내려갔어도 달성으로 알린다.
+              const achieved =
+                check.met ||
+                investorConditionProgress[check.conditionId]?.completedAtWeek !==
+                  undefined;
+              const status = achieved
+                ? "달성"
+                : check.deadlinePassed
+                  ? "미달"
+                  : "진행 중";
+              return `${status} · ${check.description}`;
+            })
           : [];
         report.comebackSettlement = {
           ...comebackResult.settlement,
@@ -1141,6 +1157,7 @@ export function processWeek(
   // ── 8. Random events
   const eventCtx: EventContext = {
     currentWeek: snapshot.game.currentWeek,
+    currentYear: snapshot.game.currentYear,
     currentPhase: snapshot.game.currentPhase,
     season: snapshot.game.currentSeason,
     public: fandomAxis.public,
@@ -1189,6 +1206,7 @@ export function processWeek(
 
   // ── 9. Calendar / news
   const newsItems = generateWeeklyNews(
+    snapshot.game.currentYear,
     snapshot.game.currentWeek,
     snapshot.game.currentSeason,
     permanentRivals,
@@ -1366,19 +1384,28 @@ export function processWeek(
     scandalThisWeek:
       vacationScandal !== null ||
       rolledEvents.some((e) => e.template.type === "negative"),
-    conceptBreakThisWeek: false,
     excessiveCommercial: excessiveCommercialPenalty > 0,
-    spotifyStreaming: fandomAxis.global > 1000,
-    youtubeActivity: fandomAxis.global > 500,
-    overseasPromotion: false,
+    // global은 0~100 클램프 지표 — 문턱도 같은 스케일이어야 한다.
+    spotifyStreaming:
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.spotifyStreaming,
+    youtubeActivity:
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.youtubeActivity,
     foreignMembers: trainees.filter((t) => t.nationality !== "korean"),
     latestAlbumQuality: latestReleasedAlbum?.quality ?? 0,
     musicQualityHigh:
       albumReleasedThisWeek &&
       (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
-    stageExcellent: false,
+    // 무대 탁월 판정 = 이번 주 음악방송 1위(7.6에서 확정된 값).
+    stageExcellent: musicShowWonThisWeek,
     awardWin: playerWonAward,
-    qualityDecline: false,
+    // 품질 하락은 발매 주에만 1회 판정: 직전 발매작보다 일정 폭 이상 낮으면
+    // 업계 신뢰가 하락한다.
+    qualityDecline:
+      albumReleasedThisWeek &&
+      releasedAlbums.length >= 2 &&
+      releasedAlbums[releasedAlbums.length - 2].quality -
+        (latestReleasedAlbum?.quality ?? 0) >=
+        ALBUM_QUALITY_DECLINE_GAP,
   };
   const beforeFandom = captureWeekDeltaState(getDeltaState());
   const fandomResult = updateFandom(fandomAxis, fandomCtx);
@@ -1392,6 +1419,16 @@ export function processWeek(
   if (fandomResult.crisis) {
     const crisis = checkFandomCrisis(fandomAxis);
     if (crisis) {
+      // 위기는 경고문만이 아니라 실제 이탈로 나타나야 한다 — 팬덤·충성도
+      // 손실을 적용하고 델타로 기록한다.
+      applyToState(
+        {
+          fandom: -crisis.fandomLoss,
+          fandomLoyalty: -crisis.loyaltyLoss,
+        },
+        { kind: "fandom", id: "fandom-crisis", label: "팬덤 위기" },
+        6,
+      );
       report.warnings.push(crisis.description);
     }
   }
@@ -1432,12 +1469,10 @@ export function processWeek(
     (c) => c.type === snapshot.game.investorType,
   );
   let anyConditionFailing = false;
-  // 투자사는 창업 직후 성과를 재촉하지 않는다. 발매 여부와 무관하게
-  // 최소 운영 기간이 지난 뒤부터 계약 지표를 평가한다.
-  if (
-    investor &&
-    cumulativeWeek >= INVESTOR_INTERVENTION.firstEvaluationWeek
-  ) {
+  // 조건은 마감 전에도 매주 평가한다 — 일찍 달성하면 그 주에 completedAtWeek로
+  // 고정되어 이후 지표가 내려가도 약속은 지킨 것으로 남는다. 다만 미달의
+  // 페널티 절차는 (1) 마감이 지났고 (2) 최소 운영 기간(36주)이 지난 뒤에만 연다.
+  if (investor) {
     const investorMetrics = buildInvestorMetrics(
       snapshot,
       fandomAxis,
@@ -1474,6 +1509,12 @@ export function processWeek(
         };
         continue;
       }
+
+      // 마감 전 미달은 실패가 아니라 진행 중 — 압박·경고를 열지 않는다.
+      if (!check.deadlinePassed) continue;
+      // 투자사는 창업 직후 성과를 재촉하지 않는다. 발매 여부와 무관하게
+      // 최소 운영 기간이 지난 뒤부터 실패 국면을 연다.
+      if (cumulativeWeek < INVESTOR_INTERVENTION.firstEvaluationWeek) continue;
 
       const progress = investorConditionProgress[check.conditionId];
       // 1회성 계약 페널티가 집행된 뒤에는 같은 실패로 매주 경영 개입을 반복하지 않는다.
@@ -1806,6 +1847,35 @@ export function processWeek(
   }
 
   // ── Assemble new state
+  // 무한 성장 배열 프루닝(STATE_PRUNE_LIMITS): 완료된 프로젝트는 최근 몇 건만
+  // 남긴다. phase 게이트(정산 1회)와 정산 회고가 필요로 하는 범위면 충분하고,
+  // 음악방송 승수·이정표 같은 장기 기록은 별도 필드에 이미 고정되어 있다.
+  const completedProjects = activeProjects.filter(
+    (project) => project.status === "completed",
+  );
+  const keptCompletedProjectIds = new Set(
+    completedProjects
+      .slice(-STATE_PRUNE_LIMITS.completedProjects)
+      .map((project) => project.id),
+  );
+  const prunedActiveProjects = activeProjects.filter(
+    (project) =>
+      project.status !== "completed" || keptCompletedProjectIds.has(project.id),
+  );
+  // 주간 수입·지출 내역은 최근 1년치만 남기고, 전 기간 지표(투자금 회수 등)를
+  // 위한 누계는 별도 필드로 이월한다. 누계가 없는 구버전 세이브는 프루닝 전
+  // 전체 내역 합산으로 백필한다.
+  const incomeTotalThisWeek = sumBreakdown(report.finance.income);
+  const expenseTotalThisWeek = sumBreakdown(report.finance.expenses);
+  const cumulativeIncome =
+    (snapshot.finance.cumulativeIncome ??
+      sumBreakdownHistory(snapshot.finance.incomeHistory)) +
+    incomeTotalThisWeek;
+  const cumulativeExpense =
+    (snapshot.finance.cumulativeExpense ??
+      sumBreakdownHistory(snapshot.finance.expenseHistory)) +
+    expenseTotalThisWeek;
+
   const newState: GameSnapshot = {
     game: {
       ...advancedGame,
@@ -1826,18 +1896,21 @@ export function processWeek(
       lastStrategicExpansionWeek,
       awardHistory,
       milestonesAchieved,
-      activeProjects,
+      activeProjects: prunedActiveProjects,
+      commercialWeekStreak,
       weeklyDecisions: nextDecisions,
+      // 알림 로그도 상한을 두고 오래된 것부터 버린다(STATE_PRUNE_LIMITS).
       notifications: [
         ...snapshot.game.notifications,
         ...report.warnings.map((msg, i) => ({
-          id: `noti-w${snapshot.game.currentWeek}-${i}`,
+          // 연도를 포함해야 2년차 이후 같은 주차의 알림과 id가 충돌하지 않는다.
+          id: `noti-y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${i}`,
           type: "warning" as const,
           title: "주간 알림",
           message: msg,
           week: snapshot.game.currentWeek,
         })),
-      ],
+      ].slice(-STATE_PRUNE_LIMITS.notifications),
     },
     trainee: { trainees },
     staff: { staff: grownStaff },
@@ -1869,11 +1942,13 @@ export function processWeek(
       incomeHistory: [
         ...snapshot.finance.incomeHistory,
         { week: snapshot.game.currentWeek, breakdown: report.finance.income },
-      ],
+      ].slice(-STATE_PRUNE_LIMITS.financeHistoryWeeks),
       expenseHistory: [
         ...snapshot.finance.expenseHistory,
         { week: snapshot.game.currentWeek, breakdown: report.finance.expenses },
-      ],
+      ].slice(-STATE_PRUNE_LIMITS.financeHistoryWeeks),
+      cumulativeIncome,
+      cumulativeExpense,
     },
     calendar: {
       ...updatedCalendar,
@@ -1931,12 +2006,14 @@ function categoryLabel(category: string): string {
   return labels[category] ?? category;
 }
 
-function countRecentCommercialWeeks(
-  incomeHistory: readonly { week: number; breakdown: Record<string, number> }[],
+function sumBreakdown(breakdown: Readonly<Record<string, number>>): number {
+  return Object.values(breakdown).reduce((sum, value) => sum + value, 0);
+}
+
+function sumBreakdownHistory(
+  history: readonly { week: number; breakdown: Record<string, number> }[],
 ): number {
-  const recent = incomeHistory.slice(-2);
-  return recent.filter((w) => w.breakdown.promotions && w.breakdown.promotions > 0)
-    .length;
+  return history.reduce((sum, entry) => sum + sumBreakdown(entry.breakdown), 0);
 }
 
 function buildInvestorMetrics(
@@ -1983,21 +2060,22 @@ function buildInvestorMetrics(
     : snapshot.finance.expenseHistory;
   const last13 = incomeHistory.slice(-13);
   const quarterlyRevenue = last13.reduce(
-    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
+    (s, w) => s + sumBreakdown(w.breakdown),
     0,
   );
-  const last13Expenses = expenseHistory.slice(-13).reduce(
-    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
-    0,
-  );
-  const cumulativeIncome = incomeHistory.reduce(
-    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
-    0,
-  );
-  const cumulativeExpenses = expenseHistory.reduce(
-    (s, w) => s + Object.values(w.breakdown).reduce((a, b) => a + b, 0),
-    0,
-  );
+  const last13Expenses = expenseHistory
+    .slice(-13)
+    .reduce((s, w) => s + sumBreakdown(w.breakdown), 0);
+  // 전 기간 누적 수입·지출. 주간 내역은 최근 1년치만 남기고 프루닝하므로
+  // 누계 필드를 우선 쓰고, 없는 구버전 세이브만 내역 합산으로 대신한다.
+  const cumulativeIncome =
+    (snapshot.finance.cumulativeIncome ??
+      sumBreakdownHistory(snapshot.finance.incomeHistory)) +
+    (currentFinance ? sumBreakdown(currentFinance.income) : 0);
+  const cumulativeExpenses =
+    (snapshot.finance.cumulativeExpense ??
+      sumBreakdownHistory(snapshot.finance.expenseHistory)) +
+    (currentFinance ? sumBreakdown(currentFinance.expenses) : 0);
   const visualAvg =
     trainees.length > 0
       ? trainees.reduce((s, t) => s + t.stats.visual, 0) / trainees.length

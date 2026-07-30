@@ -346,6 +346,8 @@ describe("상황 기반 주간 결정 생성", () => {
       "strategic-production",
       "strategic-fandom",
       "strategic-global",
+      // 자금 방어용 보류 선택지는 항상 함께 제시된다.
+      "strategic-defer",
     ]);
     expect(
       generateWeeklyDecisionCards(156, "winter", {

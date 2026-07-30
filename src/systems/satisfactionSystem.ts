@@ -35,7 +35,9 @@ export interface WeekContext {
    */
   debutDelayWeeks: number;
   recentAward: boolean;
-  musicShowWin: boolean;
+  // 음악방송 1위의 만족도 보너스는 여기서 다루지 않는다. 만족도 갱신(주간
+  // 파이프라인 5단계)은 1위 판정(7.6단계)보다 먼저 돌기 때문에, 보너스는
+  // 판정 시점에 MUSIC_SHOW_OUTCOME.win.satisfaction 효과로 직접 적용된다.
   goodFanReaction: boolean;
 }
 
@@ -164,11 +166,6 @@ function computeDelta(
   if (ctx.recentAward) {
     delta += 10;
     reasons.push("시상식 수상");
-  }
-
-  if (ctx.musicShowWin) {
-    delta += 8;
-    reasons.push("음악방송 1위");
   }
 
   if (ctx.goodFanReaction) {
