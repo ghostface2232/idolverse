@@ -137,7 +137,8 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
         label: "예산",
       },
     ],
-    unlocks: "해외 쇼케이스 투어",
+    // 전용 투어 시스템은 아직 없다. 기능을 약속하지 않는 체급 인정 문구를 쓴다.
+    unlocks: "해외 쇼케이스급 체급을 인정받습니다",
   },
   {
     id: "large-concert-open",
@@ -169,7 +170,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
         label: "업계 신뢰",
       },
     ],
-    unlocks: "지역 파트너십 계약",
+    unlocks: "해외 파트너십을 논할 체급이 됩니다",
   },
   {
     id: "daesang-eligible",
@@ -229,7 +230,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
         label: "예산",
       },
     ],
-    unlocks: "월드투어 프로젝트",
+    unlocks: "월드투어급 팀으로 인정받습니다",
   },
 ];
 
