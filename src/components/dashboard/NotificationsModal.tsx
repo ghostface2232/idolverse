@@ -1,5 +1,5 @@
 import { Modal } from "@/components/common/Modal";
-import { NEWS_TYPE_LABELS } from "@/components/dashboard/MarketOverviewModal";
+import { NEWS_TYPE_LABELS } from "@/data/kpopCalendar";
 import type { KPopNews, Notification } from "@/types/game";
 
 interface NotificationsModalProps {

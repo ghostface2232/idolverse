@@ -1,4 +1,4 @@
-import { PixelText } from "@/components/common/PixelText";
+import { ChevronLeft } from "lucide-react";
 
 interface PanelHeaderProps {
   title: string;
@@ -7,18 +7,16 @@ interface PanelHeaderProps {
 
 export function PanelHeader({ title, onBack }: PanelHeaderProps) {
   return (
-    <header className="flex items-center gap-3 border-b border-slate-700/60 bg-slate-900/85 px-4 py-2 backdrop-blur">
+    <header className="flex items-center gap-3 border-b border-white/8 bg-surface-panel/92 px-4 py-2 backdrop-blur">
       <button
         type="button"
-        className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/70 text-base text-slate-100 transition hover:bg-slate-700"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-white/[0.05] text-text-primary transition hover:bg-white/[0.09] active:scale-[0.96]"
         aria-label="뒤로 가기"
         onClick={onBack}
       >
-        ←
+        <ChevronLeft className="size-5" aria-hidden="true" />
       </button>
-      <PixelText as="h2" className="text-base text-slate-100">
-        {title}
-      </PixelText>
+      <h2 className="text-base font-semibold text-text-primary">{title}</h2>
     </header>
   );
 }

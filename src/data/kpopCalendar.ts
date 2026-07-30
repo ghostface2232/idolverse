@@ -1,4 +1,17 @@
-import type { ConceptMood, Genre, KPopNews, Season } from "@/types/game";
+import type {
+  ConceptMood,
+  Genre,
+  KPopNews,
+  KPopNewsType,
+  Season,
+} from "@/types/game";
+
+export const NEWS_TYPE_LABELS: Record<KPopNewsType, string> = {
+  competitor: "경쟁 그룹",
+  trend: "트렌드",
+  event: "업계 일정",
+  industry: "업계",
+};
 
 export const SEASONAL_NEWS_TEMPLATES: Record<Season, string[]> = {
   spring: [

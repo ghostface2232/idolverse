@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Dumbbell, FastForward } from "lucide-react";
-import { BottomSheet } from "@/components/common/BottomSheet";
-import { Button } from "@/components/common/Button";
+import { FastForward } from "lucide-react";
+import { Alert } from "@/components/common/Alert";
 import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverviewModal";
 import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
-import { MarketOverviewModal } from "@/components/dashboard/MarketOverviewModal";
 import { ActivityPromotionPanel } from "@/components/dashboard/ActivityPromotionPanel";
 import { CampaignOverScreen } from "@/components/dashboard/CampaignOverScreen";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
@@ -16,6 +14,7 @@ import { StaffManagementModal } from "@/components/dashboard/StaffManagementModa
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
+import { TrainingSummaryCard } from "@/components/dashboard/TrainingSummaryCard";
 import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
 import { GameShell } from "@/components/game-shell/GameShell";
@@ -26,6 +25,7 @@ import { MoreOverview } from "@/components/game-shell/MoreOverview";
 import { OverviewPills } from "@/components/game-shell/OverviewPills";
 import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
+import { TraineeDetail } from "@/components/TraineeDetail";
 import { WeekReport } from "@/components/WeekReport";
 import { presentationBus } from "@/game/EventBus";
 import {
@@ -36,6 +36,7 @@ import {
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
@@ -94,7 +95,7 @@ const RISK_PRIORITY: Record<WeeklyDecisionTrigger["severity"], number> = {
   critical: 3,
 };
 
-type OverviewModal = "goals" | "contracts" | "market" | null;
+type OverviewModal = "goals" | "contracts" | null;
 
 interface GameDashboardProps {
   userId: string;
@@ -104,8 +105,8 @@ interface GameDashboardProps {
 export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const [activeSection, setActiveSection] = useState<GameSection>("company");
   const [weekView, setWeekView] = useState<"decisions" | "training">("decisions");
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [overviewModal, setOverviewModal] = useState<OverviewModal>(null);
+  const [memberDetailId, setMemberDetailId] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
@@ -271,7 +272,8 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       );
 
       setPromotionId(null);
-      setSheetOpen(false);
+      // 주가 흐르는 모습(월드 연출)이 보이도록 회사 화면으로 돌아간다.
+      setActiveSection("company");
       presentationBus.emit("playWeekTimeline", {
         resolutionId: gameVanillaStore.getState().weeklyFlow.resolutionId,
       });
@@ -330,7 +332,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     companyModal === null &&
     overviewModal === null &&
     !notificationsOpen &&
-    !sheetOpen &&
+    memberDetailId === null &&
     workflowError === null;
   const quietReport =
     weeklyFlow.state === "report_ready" &&
@@ -592,16 +594,12 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     investorConditions,
     activeProjects,
   ]);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const memberDetailTrainee =
+    trainees.find((trainee) => trainee.id === memberDetailId) ?? null;
   const plan = (
     <div className="space-y-3">
-      {workflowError ? (
-        <p
-          role="alert"
-          className="rounded-xl bg-state-danger/12 px-3 py-2 text-sm text-rose-200"
-        >
-          {workflowError}
-        </p>
-      ) : null}
+      {workflowError ? <Alert message={workflowError} /> : null}
       {activityProject && weeklyFlow.state === "planning_ready" ? (
         <ActivityPromotionPanel
           activities={availablePromotions}
@@ -684,10 +682,12 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
             hasGoalRisk={Boolean(primaryRisk)}
             onOpenGoals={() => setOverviewModal("goals")}
             onOpenContracts={() => setOverviewModal("contracts")}
-            onOpenMarket={() => setOverviewModal("market")}
+            onOpenMarket={() => setActiveSection("market")}
           />
         }
-        commandPanel={activeSection === "company" ? plan : undefined}
+        commandPanel={
+          activeSection === "company" && isDesktop ? plan : undefined
+        }
         actionDock={
           activeSection === "company" ? (
             <ActionDock
@@ -696,7 +696,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               canResolveWeek={canResolveWeek}
               flowState={weeklyFlow.state}
               riskLabel={primaryRisk?.description}
-              onOpenPlan={() => setSheetOpen(true)}
+              onOpenPlan={() => setActiveSection("week")}
             />
           ) : undefined
         }
@@ -706,21 +706,16 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
             <Training onBack={() => setWeekView("decisions")} />
           ) : (
             <section className="h-full overflow-y-auto p-4 sm:p-5">
-              <div className="mx-auto max-w-xl">
-                <Button
-                  className="mb-4 w-full gap-2"
-                  tone="secondary"
-                  onPress={() => setWeekView("training")}
-                >
-                  <Dumbbell className="size-4" aria-hidden="true" />
-                  훈련·활동 배치
-                </Button>
+              <div className="mx-auto max-w-xl space-y-3">
+                <TrainingSummaryCard onOpen={() => setWeekView("training")} />
                 {plan}
               </div>
             </section>
           )
         ) : null}
-        {activeSection === "members" ? <MemberOverview /> : null}
+        {activeSection === "members" ? (
+          <MemberOverview onSelectTrainee={setMemberDetailId} />
+        ) : null}
         {activeSection === "market" ? <MarketOverview /> : null}
         {activeSection === "more" ? (
           <MoreOverview
@@ -730,14 +725,6 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           />
         ) : null}
       </GameShell>
-
-      <BottomSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title="이번 주 결정"
-      >
-        {plan}
-      </BottomSheet>
 
       {overviewModal === "goals" ? (
         <GoalsOverviewModal
@@ -756,8 +743,14 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         />
       ) : null}
 
-      {overviewModal === "market" ? (
-        <MarketOverviewModal onClose={() => setOverviewModal(null)} />
+      {memberDetailTrainee ? (
+        <TraineeDetail
+          trainee={memberDetailTrainee}
+          trainees={trainees}
+          dormLevel={facilityUpgrades.dormLevel}
+          livingExpenseLevel={facilityUpgrades.livingExpenseLevel}
+          onClose={() => setMemberDetailId(null)}
+        />
       ) : null}
 
       {companyModal === "staff" ? (
