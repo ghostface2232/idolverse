@@ -7,6 +7,7 @@ import {
   SATISFACTION_CONCEPT_MISMATCH_PENALTY,
   SATISFACTION_LEAVE_THRESHOLD,
   SATISFACTION_OVERWORK_PENALTY,
+  SATISFACTION_RECOVERY_BELOW_BASELINE,
   SATISFACTION_REGRESSION_RATE,
   SATISFACTION_WARNING_THRESHOLD,
   TEMPERAMENT_PROFILES,
@@ -181,6 +182,18 @@ function applyRegression(base: number): { value: number; regressed: boolean } {
     return {
       value: Math.max(SATISFACTION_BASELINE, base - SATISFACTION_REGRESSION_RATE),
       regressed: true,
+    };
+  }
+  // 기준점 아래도 느리게나마 아문다. 회복이 0이면 한 번의 붕괴가 하방
+  // 래칫이 되어 매주 위기 카드만 반복됐다 — 위(-1)보다 느린 회복(+0.5)이라
+  // 방치의 대가는 여전히 크지만, 잘 돌보면 언젠가 기준점으로 돌아온다.
+  if (base < SATISFACTION_BASELINE) {
+    return {
+      value: Math.min(
+        SATISFACTION_BASELINE,
+        base + SATISFACTION_RECOVERY_BELOW_BASELINE,
+      ),
+      regressed: false,
     };
   }
   return { value: base, regressed: false };

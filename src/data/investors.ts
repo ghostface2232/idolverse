@@ -21,20 +21,27 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       "숏폼 플랫폼과 자체 음원 스트리밍을 운영하는 디지털 중심 기업",
     fundAmount: 1200000000,
     conditions: [
+      // 지표 산식(weekProcessor.buildInvestorMetrics): snsFollowers =
+      // global×1000 + public×500, spotifyStreams = global×10000.
+      // global/public은 0~100 스케일이라 팔로워 10만은 이론상 최대치,
+      // 스트리밍 100만은 수학적으로 도달 불가였다(확정 페널티 이벤트).
+      // 40000은 "global 30 + public 20" 수준 — 1년차 해외 축을 실제로
+      // 키운 팀이 닿는 값이고, 120000은 global 12로 2년차 초까지
+      // 스트리밍 순환을 만든 팀이 닿는 값이다.
       {
         id: "nextbeat-followers",
         metric: "snsFollowers",
-        target: 100000,
-        deadlineWeeks: 36,
-        description: "첫 투자 검토까지 주요 SNS 합산 팔로워 10만 달성",
+        target: 40000,
+        deadlineWeeks: 52,
+        description: "1년 안에 주요 SNS 합산 팔로워 4만 달성",
         penalty: "디지털 마케팅 지원이 중단되고 다음 라운드 검토가 보류된다.",
       },
       {
         id: "nextbeat-streams",
         metric: "spotifyStreams",
-        target: 1000000,
-        deadlineWeeks: 36,
-        description: "첫 투자 검토까지 스포티파이 누적 100만 스트리밍 달성",
+        target: 120000,
+        deadlineWeeks: 78,
+        description: "1년 반 안에 스포티파이 누적 12만 스트리밍 달성",
         penalty: "자체 플레이리스트 편성이 끊기고 성과 추적 보고가 강화된다.",
       },
     ],
@@ -75,20 +82,23 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       "방송 네트워크와 선배 아티스트 IP를 보유한 대형 엔터테인먼트 그룹",
     fundAmount: 900000000,
     conditions: [
+      // 1위 후보권(차트 25위 이내) 진입이 2년차 컴백부터 현실적 목표이므로
+      // 1위 요구도 2년(104주) 창을 준다. 신인상 자격 창(2년차 말까지,
+      // AWARD_ELIGIBILITY_THRESHOLDS.rookie.maxYear)과 같은 시계다.
       {
         id: "crownmusic-win",
         metric: "musicShowWin",
         target: "1위 1회",
-        deadlineWeeks: 52,
-        description: "1년 안에 음악방송 1위 1회 달성",
+        deadlineWeeks: 104,
+        description: "2년 안에 음악방송 1위 1회 달성",
         penalty: "방송 편성 우대가 약화되고 협업 라인이 닫힌다.",
       },
       {
         id: "crownmusic-award",
         metric: "awardLevel",
         target: "신인상 이상",
-        deadlineWeeks: 52,
-        description: "1년 안에 연말 시상식 신인상 이상 수상",
+        deadlineWeeks: 104,
+        description: "2년차 연말까지 시상식 신인상 이상 수상",
         penalty: "연말 특별 무대와 외부 네트워크 협의 우선순위가 내려간다.",
       },
     ],
@@ -124,20 +134,24 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       "회수 기간과 수익 구조를 집요하게 추적하는 공격적 성장형 펀드",
     fundAmount: 1500000000,
     conditions: [
+      // 데뷔 전(표준 일정 20주)에는 수입이 구조적으로 0이라 36주 시점의
+      // 분기 흑자는 사실상 불가였다. 78주면 데뷔 후 두 번째 활동 사이클의
+      // 정산까지 본 뒤의 평가가 된다. payback도 5년 누적 흑자 규모에 맞춰
+      // 5억으로 낮추고 3년(156주) 창을 준다.
       {
         id: "summit-quarterly",
         metric: "quarterlyRevenue",
         target: 0,
-        deadlineWeeks: 36,
-        description: "첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성",
+        deadlineWeeks: 78,
+        description: "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
         penalty: "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
       },
       {
         id: "summit-payback",
         metric: "payback",
-        target: 1500000000,
-        deadlineWeeks: 104,
-        description: "2년 안에 초기 투자금 회수 수준의 누적 성과 달성",
+        target: 500000000,
+        deadlineWeeks: 156,
+        description: "3년 안에 누적 순수익 5억 달성",
         penalty: "지분 압박과 투자 회수 통보가 시작된다.",
       },
     ],
@@ -174,12 +188,15 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       "비주얼 브랜딩과 광고 전환률에 민감한 글로벌 뷰티 기업",
     fundAmount: 700000000,
     conditions: [
+      // 신인은 스탯 18~32에서 시작하고 포커스 성장이 연 +20~25 수준이라
+      // (TRAINING_BASE_GROWTH 주석) 1년 안에 비주얼 평균 70은 불가였다.
+      // 50은 비주얼에 훈련을 실제로 배분한 팀이 1년 반에 닿는 값이다.
       {
         id: "lumiere-visual",
         metric: "visualAverage",
-        target: 70,
-        deadlineWeeks: 52,
-        description: "1년 안에 멤버 비주얼 평균 70 달성",
+        target: 50,
+        deadlineWeeks: 78,
+        description: "1년 반 안에 멤버 비주얼 평균 50 달성",
         penalty: "브랜드 이미지 불일치로 협찬과 제작 지원이 축소된다.",
       },
       {
@@ -223,20 +240,26 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       "트렌드 적합도와 스타일 파급력을 중시하는 프리미엄 패션 하우스",
     fundAmount: 500000000,
     conditions: [
+      // trendFit은 최신 발매작의 트렌드 적중(기본 50, 적중 +25)으로만
+      // 오르므로 발매작이 없으면 0이다. 39주는 데뷔작 한 장으로 승부해야
+      // 하는 창이라 사실상 운이었다. 78주면 발매작이 2장 이상 쌓여
+      // "트렌드를 읽고 기획한다"는 선택이 성립한다. styleScore는
+      // visualAverage와 같은 산식(멤버 비주얼 평균)이므로 신인 성장
+      // 곡선에 맞춰 50으로 낮춘다.
       {
         id: "maison-trend",
         metric: "trendFit",
         target: 75,
-        deadlineWeeks: 39,
-        description: "패션 트렌드 적합도 75 달성",
+        deadlineWeeks: 78,
+        description: "1년 반 안에 패션 트렌드 적합도 75 달성",
         penalty: "메인 스타일리스트 지원과 쇼 초청 기회가 축소된다.",
       },
       {
         id: "maison-style",
         metric: "styleScore",
-        target: 72,
-        deadlineWeeks: 39,
-        description: "비주얼과 스타일 점수 평균 72 달성",
+        target: 50,
+        deadlineWeeks: 78,
+        description: "1년 반 안에 비주얼과 스타일 점수 평균 50 달성",
         penalty: "프리미엄 스타일링 라인과 촬영 협업이 끊긴다.",
       },
     ],

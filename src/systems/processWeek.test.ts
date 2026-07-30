@@ -25,12 +25,12 @@ describe("processWeek 골든 스냅샷", () => {
     expect(result).toMatchSnapshot();
   });
 
-  it("투자사 첫 평가 주간(VC 36주차)의 출력이 스냅샷과 일치한다", () => {
+  it("투자사 첫 평가 주간(VC 마감 78주차)의 출력이 스냅샷과 일치한다", () => {
     const result = processWeek(
-      makeGameSnapshot({ week: 36, investorType: "vc" }),
+      makeGameSnapshot({ week: 26, year: 2, investorType: "vc" }),
       NO_DECISIONS,
     );
-    // 최소 운영 기간 뒤 분기 수익 0 → 조건 첫 미달 → 유예 경고가 기록되어야 한다
+    // 마감 도달 시점에 분기 수익 0 → 조건 첫 미달 → 유예 경고가 기록되어야 한다
     expect(
       result.weekReport.warnings.some((w) => w.includes("투자사 조건 미달")),
     ).toBe(true);
@@ -97,8 +97,10 @@ describe("processWeek 골든 스냅샷", () => {
   });
 
   it("영속화된 수상 기록으로 시상 주 이후의 투자사 awardLevel 조건이 통과된다", () => {
+    // 크라운뮤직 수상 조건의 마감은 104주(2년차 말)다.
     const withAward = makeGameSnapshot({
       week: 52,
+      year: 2,
       investorType: "entertainment",
     });
     withAward.game.awardHistory = [
@@ -107,37 +109,38 @@ describe("processWeek 골든 스냅샷", () => {
     const passed = processWeek(withAward, NO_DECISIONS);
     expect(
       passed.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 신인상 이상"),
+        w.includes("시상식 신인상 이상"),
       ),
     ).toBe(false);
 
     // 대조군: 기록이 없으면 같은 주에 조건 미달 경고가 발생한다
     const withoutAward = makeGameSnapshot({
       week: 52,
+      year: 2,
       investorType: "entertainment",
     });
     const failed = processWeek(withoutAward, NO_DECISIONS);
     expect(
       failed.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 신인상 이상"),
+        w.includes("시상식 신인상 이상"),
       ),
     ).toBe(true);
   });
 
-  it("마감(52주) 이후에 딴 상은 실패한 1년차 마일스톤을 소급 충족시키지 않는다", () => {
-    // 2년차 시상식(누적 102주)에서 본상을 땄어도, 마감 52주짜리 조건은 계속 미달이다
+  it("마감(104주) 이후에 딴 상은 실패한 마일스톤을 소급 충족시키지 않는다", () => {
+    // 3년차 시상식(누적 154주)에서 본상을 땄어도, 마감 104주짜리 조건은 계속 미달이다
     const lateAward = makeGameSnapshot({
       week: 52,
-      year: 2,
+      year: 3,
       investorType: "entertainment",
     });
     lateAward.game.awardHistory = [
-      { year: 2, week: 102, showId: "mma", showName: "MMA", category: "bonsang" },
+      { year: 3, week: 154, showId: "mma", showName: "MMA", category: "bonsang" },
     ];
     const result = processWeek(lateAward, NO_DECISIONS);
     expect(
       result.weekReport.warnings.some((w) =>
-        w.includes("연말 시상식 신인상 이상"),
+        w.includes("시상식 신인상 이상"),
       ),
     ).toBe(true);
   });

@@ -44,6 +44,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     requirements: {
       phase: "training+",
     },
+    income: 800, // 광고 수익 몫. 제작비를 살짝 웃도는 소액이라 콘텐츠 남발의 이유는 못 된다.
   },
   {
     id: "fanSign",
@@ -58,6 +59,10 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       phase: "debut+",
       minFandom: 15, // 팬풀 없는 상태에서 팬사인회는 의미가 약하다.
     },
+    // 응모권이 붙은 음반 판매 몫. 콘서트 해금(growth) 전 유일한 유료
+    // 회수 수단이라 소폭 흑자를 보장하되, 남발은 상업 활동 연속
+    // 판정(EXCESSIVE_COMMERCIAL_STREAK_WEEKS)이 막는다.
+    income: 1600,
   },
   {
     id: "liveBroadcast",
@@ -95,12 +100,13 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       fandom: 8,
       fandomLoyalty: 6,
       public: 2,
+      condition: -4, // 공연은 전원의 체력을 쓴다. 무비용 반복을 막는 실질 대가.
     },
     requirements: {
       phase: "growth+",
       minFandom: 35, // 최소한의 티켓 수요가 필요하다.
     },
-    income: 26000, // 작지만 확실한 흑자를 보여주는 단계다.
+    income: 20000, // 작은 흑자 단계. 확정 대박이 아니라 팬덤 관리와 겸하는 수익원이다.
   },
   {
     id: "midConcert",
@@ -112,12 +118,13 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       fandomLoyalty: 8,
       public: 4,
       industry: 2,
+      condition: -6, // 규모가 커질수록 소모도 커진다. 연속 공연 루프의 제동 장치.
     },
     requirements: {
       phase: "growth+",
       minFandom: 50, // 중극장은 명확한 코어 팬덤을 요구한다.
     },
-    income: 72000, // 중형 공연은 자금 회수 체감이 있어야 한다.
+    income: 58000, // 자금 회수 체감은 남기되, 다른 활동을 밀어내는 확정 정답은 아니게 한다.
   },
   {
     id: "largeConcert",
@@ -129,13 +136,14 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       fandomLoyalty: 10,
       public: 6,
       industry: 5,
+      condition: -8, // 3주 준비 공연의 피로. 다음 활동 계획에 회복 주가 필요해진다.
     },
     requirements: {
       phase: "peak",
       minFandom: 70, // 대극장은 상위권 팬덤 규모를 전제로 한다.
       minIndustry: 50, // 운영 역량에 대한 업계 신뢰도도 요구한다.
     },
-    income: 190000, // 성공 시 큰 현금 흐름을 주어 도박할 이유를 만든다.
+    income: 152000, // 성공 시 큰 현금 흐름. 다만 컨디션 대가와 3주 구속을 상쇄할 만큼만.
   },
   {
     id: "domeConcert",
@@ -148,12 +156,13 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       public: 10,
       industry: 8,
       global: 6,
+      condition: -10, // 엔드게임 공연의 대가. 전원이 지친 채로 다음 사이클을 맞는다.
     },
     requirements: {
       phase: "peak",
       minFandom: 85, // 돔은 최상위 팬덤 체급일 때만 도전 가능해야 한다.
       minIndustry: 65, // 신뢰도 없는 돔 공연은 설득력이 떨어진다.
     },
-    income: 520000, // 리스크에 상응하는 대형 보상을 제공한다.
+    income: 400000, // 대형 보상은 유지하되 순이익 10억 단위의 유일 지배 전략은 되지 않게 한다.
   },
 ];

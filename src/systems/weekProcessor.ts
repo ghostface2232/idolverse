@@ -1456,8 +1456,13 @@ export function processWeek(
     inActivityPeriod: activityProject !== undefined,
     musicShowWon: musicShowWonThisWeek,
     viralMemberId,
-    promotionMemberIds: promotionOrders.flatMap(
-      (order) => order.assignedMemberIds ?? [],
+    // 멤버 미지정 프로모션은 전원이 참여한 것으로 본다 — 실행부
+    // (executePromotion)도 미지정 시 전체 멤버 스탯으로 성공률을 굴리므로
+    // 같은 해석이다. 빈 배열로 두면 promotionGain이 영구 사장된다.
+    promotionMemberIds: promotionOrders.flatMap((order) =>
+      order.assignedMemberIds && order.assignedMemberIds.length > 0
+        ? order.assignedMemberIds
+        : trainees.map((trainee) => trainee.id),
     ),
     albumCenterId: activityAlbum?.centerTraineeId ?? null,
   });

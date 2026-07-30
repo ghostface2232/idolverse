@@ -7,15 +7,24 @@ import type {
 } from "@/types/game";
 import { INVESTOR_INTERVENTION } from "@/data/balance";
 
-const STREAMING_FANDOM_RATE = 30000;
-const STREAMING_GLOBAL_RATE = 15000;
+// 스트리밍은 활동기의 일상 수입 축이다. 30000/15000이던 시절에는 주간
+// 상한이 ~450만원으로 고정비·컴백 예산 대비 너무 작아, 콘서트 없이는
+// 모든 런이 5년 내 우하향했다(2026-07 시뮬레이션: 무난한 런이 매년
+// 1~2억씩 순감). 2.5배 상향으로 "팬덤을 키우면 매주 버는 돈이 는다"가
+// 체감되게 한다 — 숙련 런 기준 주 1,000만원대, 연 5~6억 수준이다.
+const STREAMING_FANDOM_RATE = 75000;
+const STREAMING_GLOBAL_RATE = 40000;
 const CHART_RANK_BONUS_THRESHOLD = 100;
-const CHART_RANK_BONUS_PER_RANK = 20000;
+// 차트 상위권의 스트리밍 프리미엄. 1위면 주 +300만원 — 순위 경쟁의
+// 보상이 명성만이 아니라 현금으로도 돌아온다.
+const CHART_RANK_BONUS_PER_RANK = 30000;
 // 앨범 수익 = 초동 판매량 × 장당 마진(감쇠 주간에 걸쳐 분할). 판매량이
 // 품질×팬덤의 함수이므로 컴백 예산·스태프 투자가 실제로 회수되는 경로다 —
 // 팬덤 정률(×5만)이던 시절에는 사이클당 ~5M뿐이라 모든 예산 티어가
-// 구조적 적자였다(R6 프로브).
-const ALBUM_UNIT_MARGIN = 800;
+// 구조적 적자였다(R6 프로브). 마진 800은 컴백 예산(3천만~1.2억)을 초동
+// 5만 장 이하로는 회수하지 못하는 수준이라 1200으로 올린다 — 표준 예산
+// 컴백이 초동 5만 장이면 발매 5주 동안 6천만원을 돌려받는 계산이다.
+const ALBUM_UNIT_MARGIN = 1200;
 const ALBUM_DECAY_WEEKS = 4;
 /** 감쇠 가중치(1, 0.8, 0.6, 0.4, 0.2)의 합 — 총수익을 초동×마진으로 정규화한다. */
 const ALBUM_DECAY_WEIGHT_SUM = 3;

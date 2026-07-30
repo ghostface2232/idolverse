@@ -137,7 +137,9 @@ function isEligibleForCategory(
         contender.industry >= AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry
       );
     case "popularity":
-      return contender.fanVotes >= 45;
+      return (
+        contender.fanVotes >= AWARD_ELIGIBILITY_THRESHOLDS.popularity.minFanVotes
+      );
     default:
       return false;
   }

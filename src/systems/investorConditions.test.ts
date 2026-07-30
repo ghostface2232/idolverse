@@ -55,14 +55,15 @@ describe("투자사 조건 체크 (P0-3)", () => {
     ).toBe(false);
   });
 
-  it("36주가 지나면 첫 앨범 발매 여부와 무관하게 계약 평가를 시작한다", () => {
-    const state = makeGameSnapshot({ week: 36, investorType: "vc" });
+  it("마감(78주)이 지나면 첫 앨범 발매 여부와 무관하게 계약 평가를 시작한다", () => {
+    // VC 분기 흑자 조건의 마감은 78주다(데뷔 후 두 번째 사이클 정산까지).
+    const state = makeGameSnapshot({ week: 26, year: 2, investorType: "vc" });
     const result = processWeek(state, NO_DECISIONS);
 
     expect(result.newState.game.investorPenaltyActive).toBe(true);
     expect(
       result.newState.game.investorConditionProgress["summit-quarterly"],
-    ).toEqual({ firstFailedWeek: 36, penaltyApplied: false });
+    ).toEqual({ firstFailedWeek: 78, penaltyApplied: false });
     expect(
       result.newState.game.weeklyDecisions.some(
         (card) => card.id === "emergency-investor",
@@ -71,17 +72,18 @@ describe("투자사 조건 체크 (P0-3)", () => {
   });
 
   it("직전 개입 후 36주가 지나기 전에는 새 조건 실패 국면을 열지 않는다", () => {
+    // payback 마감은 156주다. 마감 직후여도 직전 개입 쿨다운이 우선한다.
     const coolingDown = makeGameSnapshot({
       week: 52,
-      year: 2,
+      year: 3,
       investorType: "vc",
     });
-    coolingDown.game.lastInvestorDemandWeek = 80;
+    coolingDown.game.lastInvestorDemandWeek = 132;
     coolingDown.game.investorConditionProgress = {
       "summit-quarterly": {
-        firstFailedWeek: 36,
+        firstFailedWeek: 78,
         penaltyApplied: false,
-        completedAtWeek: 40,
+        completedAtWeek: 82,
       },
     };
 
@@ -93,22 +95,22 @@ describe("투자사 조건 체크 (P0-3)", () => {
 
     const reviewDue = makeGameSnapshot({
       week: 11,
-      year: 3,
+      year: 4,
       investorType: "vc",
     });
-    reviewDue.game.lastInvestorDemandWeek = 80;
+    reviewDue.game.lastInvestorDemandWeek = 132;
     reviewDue.game.investorConditionProgress = {
       "summit-quarterly": {
-        firstFailedWeek: 36,
+        firstFailedWeek: 78,
         penaltyApplied: false,
-        completedAtWeek: 40,
+        completedAtWeek: 82,
       },
     };
 
     const opened = processWeek(reviewDue, NO_DECISIONS);
     expect(
       opened.newState.game.investorConditionProgress["summit-payback"],
-    ).toEqual({ firstFailedWeek: 115, penaltyApplied: false });
+    ).toEqual({ firstFailedWeek: 167, penaltyApplied: false });
     expect(
       opened.newState.game.weeklyDecisions.some(
         (card) => card.id === "emergency-investor",
@@ -118,13 +120,17 @@ describe("투자사 조건 체크 (P0-3)", () => {
 
   it("유예 기간 동안 경고만 하고, 종료 시 페널티를 1회만 집행한다", () => {
     const vc = INVESTOR_COMPANIES.find((c) => c.type === "vc")!;
-    // VC의 첫 투자 검토는 최소 운영 기간 뒤인 36주다.
-    let state: GameSnapshot = makeGameSnapshot({ week: 36, investorType: "vc" });
+    // VC 분기 흑자 조건의 마감은 78주(2년차 26주차)다.
+    let state: GameSnapshot = makeGameSnapshot({
+      week: 26,
+      year: 2,
+      investorType: "vc",
+    });
     let totalPenalties = 0;
     let interventionCards = 0;
     let conditionNotices = 0;
 
-    // 13주차(첫 미달) + 유예 기간에는 페널티가 없어야 한다
+    // 첫 미달 후 유예 기간에는 페널티가 없어야 한다
     for (let i = 0; i < INVESTOR_PENALTY_GRACE_WEEKS; i++) {
       const { newState, weekReport } = processWeek(state, NO_DECISIONS);
       totalPenalties += countPenaltyWarnings(weekReport.warnings);
@@ -158,9 +164,18 @@ describe("투자사 조건 체크 (P0-3)", () => {
   });
 
   it("여러 조건의 유예가 같은 주에 끝나도 페널티 패키지는 1회만 집행한다", () => {
-    const it_ = INVESTOR_COMPANIES.find((c) => c.type === "it")!;
-    // 넥스트비트: 팔로워/스트리밍 마감이 둘 다 26주 — 동시 미달·동시 유예 종료.
-    let state: GameSnapshot = makeGameSnapshot({ week: 36, investorType: "it" });
+    const fashion = INVESTOR_COMPANIES.find((c) => c.type === "fashion")!;
+    // 메종: 트렌드/스타일 마감이 둘 다 78주 — 동시 미달·동시 유예 종료.
+    let state: GameSnapshot = makeGameSnapshot({
+      week: 26,
+      year: 2,
+      investorType: "fashion",
+    });
+    // 픽스처 기본 비주얼(50)은 styleScore 목표를 이미 충족하므로 낮춰서
+    // 두 조건이 같은 주에 미달하는 상황을 만든다.
+    state.trainee.trainees.forEach((trainee) => {
+      trainee.stats.visual = 30;
+    });
 
     const first = processWeek(state, NO_DECISIONS);
     expect(
@@ -173,35 +188,39 @@ describe("투자사 조건 체크 (P0-3)", () => {
     }
 
     const exitWeek = processWeek(state, NO_DECISIONS);
-    // 조건 2건이 함께 유예를 벗어나도 투자사 단위 패키지(현금 회수 포함)는 1회
+    // 조건 2건이 함께 유예를 벗어나도 투자사 단위 패키지는 1회
     expect(countPenaltyWarnings(exitWeek.weekReport.warnings)).toBe(
-      it_.penaltyEffects.length,
+      fashion.penaltyEffects.length,
     );
     expect(
-      exitWeek.newState.game.investorConditionProgress["nextbeat-followers"]
+      exitWeek.newState.game.investorConditionProgress["maison-trend"]
         ?.penaltyApplied,
     ).toBe(true);
     expect(
-      exitWeek.newState.game.investorConditionProgress["nextbeat-streams"]
+      exitWeek.newState.game.investorConditionProgress["maison-style"]
         ?.penaltyApplied,
     ).toBe(true);
   });
 
   it("조건이 회복되면 압박이 해제되고 달성 상태가 고정된다", () => {
-    let state: GameSnapshot = makeGameSnapshot({ week: 36, investorType: "vc" });
+    let state: GameSnapshot = makeGameSnapshot({
+      week: 26,
+      year: 2,
+      investorType: "vc",
+    });
     state = processWeek(state, NO_DECISIONS).newState;
     expect(state.game.investorPenaltyActive).toBe(true);
 
     // 분기 수익 발생 → 조건 회복
     state.finance.incomeHistory = [
-      { week: 36, breakdown: { streaming: 50000000 } },
+      { week: 78, breakdown: { streaming: 50000000 } },
     ];
     const { newState } = processWeek(state, NO_DECISIONS);
 
     expect(newState.game.investorPenaltyActive).toBe(false);
     expect(
       newState.game.investorConditionProgress["summit-quarterly"]?.completedAtWeek,
-    ).toBe(37);
+    ).toBe(79);
     expect(
       newState.game.weeklyDecisions.some((c) => c.id === "emergency-investor"),
     ).toBe(false);

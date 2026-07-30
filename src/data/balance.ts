@@ -123,7 +123,10 @@ export const COMEBACK_REQUIREMENTS = {
 // 리포트만 받고, "첫 후보 진입" 자체가 이정표가 된다 — 지는 대결 연출의
 // 반복(1~2년차 승률 0~5%)을 긴장으로 바꾸는 장치다.
 export const MUSIC_SHOW_CANDIDACY = {
-  maxChartRank: 15, // 이 순위 안(멜론 기준)이어야 1위 후보에 선다.
+  // 데뷔작 차트 파워 ~35가 합성 시장에서 30위권에 놓이므로, 25위면
+  // "2년차 컴백부터 후보 진입"이 현실적 목표가 된다. 15였을 때는
+  // 몇 년간 후보권 자체가 닫혀 이정표가 아니라 벽이었다.
+  maxChartRank: 25, // 이 순위 안(멜론 기준)이어야 1위 후보에 선다.
 } as const;
 
 /**
@@ -262,9 +265,13 @@ export const STAFF_MARKET = {
 
 // 개인 인기도는 활동과 노출로 쌓인다. 팀이 쉬면 서서히 식는다 —
 // "가장 인기 있는 멤버"가 데이터로 구분되어 재계약 격차 서사의 근거가 된다.
+// 16주 컴백 사이클 기준 활동기(3~4주)에 벌고 나머지 주에 식는 구조라,
+// 감쇠 0.4·기본 0.8이었을 때는 사이클당 순 -1.0으로 인기가 구조적으로
+// 하락했다(재계약 조기 트리거 인기 45+가 절대 발생하지 않음). 현재 값은
+// 사이클당 순 +2~3으로, 꾸준한 활동이 3~4년차에 조기 트리거에 닿는 페이스다.
 export const MEMBER_POPULARITY = {
   /** 활동기 주간 기본 노출. */
-  activityWeekBase: 0.8,
+  activityWeekBase: 1.0,
   /** 포지션별 노출 가중 — 활동기에 더해진다. */
   positionExposure: {
     center: 0.6,
@@ -279,7 +286,7 @@ export const MEMBER_POPULARITY = {
   promotionGain: 1.2, // 프로모션 지정 참가 멤버.
   musicShowWinGain: 1.5, // 1위 무대는 전원에게 남는다.
   viralGain: 8, // 직캠 바이럴의 주인공.
-  weeklyDecay: 0.4, // 아무 노출이 없는 주의 감쇠.
+  weeklyDecay: 0.15, // 아무 노출이 없는 주의 감쇠. 활동기 수입을 넘지 않게 낮게 둔다.
 } as const;
 
 /** 성격이 재계약 요구 시점·조건 격차 반응·스트레스 민감도를 가른다. */
@@ -464,6 +471,13 @@ export const SATISFACTION_WARNING_THRESHOLD = 30; // At this point, the player s
 export const SATISFACTION_LEAVE_THRESHOLD = 10; // This is low enough that ignoring it is a clear strategic failure.
 export const SATISFACTION_BASELINE = 50; // Base satisfaction regresses toward this value so past bonuses fade over time.
 export const SATISFACTION_REGRESSION_RATE = 1; // Fixed weekly decay above the baseline keeps small bonuses ephemeral and big ones lasting.
+/**
+ * 기준점(50) 아래에서도 매주 이만큼 자연 회복한다. 회복이 전혀 없으면
+ * 한 번 무너진 만족도가 하방 래칫이 되어 매주 위기 카드가 뜨고 기회
+ * 카드가 영구 차단됐다 — 위는 빠르게 식고(주 -1) 아래는 느리게 아무는
+ * (주 +0.5) 비대칭으로, 방치의 대가는 남기되 회복 불능은 없앤다.
+ */
+export const SATISFACTION_RECOVERY_BELOW_BASELINE = 0.5;
 export const CONTRACT_SENTIMENT_SATISFIED_MIN = 65; // 계약 브리핑에서 확실한 만족으로 읽히는 구간. 기준점 근처의 일시적 호감과 구분한다.
 
 export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inactive week.
@@ -714,11 +728,17 @@ export const STAFF_HIRING = {
   salaryNoiseSpan: 0.3,
 } as const;
 
-/** 실제 TOP 100처럼 저성과 앨범도 시장의 긴 꼬리와 경쟁한다. */
+/**
+ * 실제 TOP 100처럼 저성과 앨범도 시장의 긴 꼬리와 경쟁한다.
+ * entryCount 90 · powerRange 75였을 때는 데뷔작(차트 파워 ~35)이
+ * 50~60위로 밀려 음악방송 후보권(25위)이 몇 년간 닫혔다. 60 · 60이면
+ * 데뷔작이 대략 30위권에 놓여, 2년차 컴백의 후보 진입이 성장으로
+ * 닿는 목표가 된다.
+ */
 export const SYNTHETIC_CHART_MARKET = {
-  entryCount: 90,
+  entryCount: 60,
   minPower: 10,
-  powerRange: 75,
+  powerRange: 60,
   curve: 1.4,
   noise: 4,
 } as const;
@@ -802,6 +822,12 @@ export const AWARD_ELIGIBILITY_THRESHOLDS = {
     minDigitalIndex: 80, // Top awards should require undeniable mainstream impact.
     minAlbumSalesIndex: 70, // Massive sales ensure the ceiling stays aspirational.
     minIndustry: 75, // Prestige awards should also reflect long-term credibility.
+  },
+  popularity: {
+    // 45였을 때는 팬덤 축을 조금만 키워도 매년 3개 시상식 인기상을
+    // 싹쓸이해 수상 루트(5년 평가 awards 경로)가 자동 달성됐다. 55는
+    // 코어+해외 팬덤을 의도적으로 키운 팀만 넘는 문턱이다.
+    minFanVotes: 55,
   },
 } as const;
 

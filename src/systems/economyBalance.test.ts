@@ -29,9 +29,9 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
       (sum, week) => sum + calculateAlbumRevenue(sales, week),
       0,
     );
-    // 총수익 = 초동 × 장당 마진(800). 반올림 오차만 허용한다.
-    expect(total).toBeGreaterThan(sales * 800 * 0.99);
-    expect(total).toBeLessThan(sales * 800 * 1.01);
+    // 총수익 = 초동 × 장당 마진(1200). 반올림 오차만 허용한다.
+    expect(total).toBeGreaterThan(sales * 1200 * 0.99);
+    expect(total).toBeLessThan(sales * 1200 * 1.01);
     // 판매량이 두 배면 수익도 두 배 — 품질·팬덤 투자가 회수되는 경로.
     expect(calculateAlbumRevenue(sales * 2, 0)).toBeCloseTo(
       calculateAlbumRevenue(sales, 0) * 2,

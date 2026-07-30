@@ -156,48 +156,36 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "groupName": "FIXTURE",
       "insolvencyWeeks": 0,
       "investorComplianceCount": 0,
-      "investorConditionProgress": {
-        "summit-quarterly": {
-          "firstFailedWeek": 50,
-          "penaltyApplied": false,
-        },
-      },
+      "investorConditionProgress": {},
       "investorConditions": [
         {
-          "deadlineWeeks": 36,
-          "description": "첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성",
+          "deadlineWeeks": 78,
+          "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
           "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
           "target": 0,
         },
         {
-          "deadlineWeeks": 104,
-          "description": "2년 안에 초기 투자금 회수 수준의 누적 성과 달성",
+          "deadlineWeeks": 156,
+          "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
           "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
-          "target": 1500000000,
+          "target": 500000000,
         },
       ],
-      "investorPenaltyActive": true,
+      "investorPenaltyActive": false,
       "investorPressureWeeks": 0,
       "investorType": "vc",
-      "lastInvestorDemandWeek": 51,
-      "lastOpportunityWeek": null,
+      "lastInvestorDemandWeek": null,
+      "lastOpportunityWeek": 51,
       "lastStrategicExpansionWeek": null,
       "milestonesAchieved": [],
       "notifications": [
         {
           "id": "noti-y1-w50-0",
           "message": "이벤트 경쟁 그룹 등장: 에클라",
-          "title": "주간 알림",
-          "type": "warning",
-          "week": 50,
-        },
-        {
-          "id": "noti-y1-w50-1",
-          "message": "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
           "title": "주간 알림",
           "type": "warning",
           "week": 50,
@@ -216,54 +204,49 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       },
       "weeklyDecisions": [
         {
-          "category": "투자사",
-          "id": "emergency-investor",
-          "lane": "crisis",
+          "category": "바이럴",
+          "expiresAtWeek": 51,
+          "id": "opportunity:viral-cover:w51",
+          "lane": "opportunity",
           "options": [
             {
               "activityOverride": "entertainment",
-              "description": "상업 활동을 늘리고 투자사 지표를 우선합니다.",
+              "description": "완성도보다 속도를 택해 알고리즘의 흐름을 이어 갑니다.",
               "effects": {
-                "fandomDisappointment": 10,
-                "money": 20000000,
-                "satisfaction": -8,
-                "stress": 10,
+                "condition": -3,
+                "global": 3,
+                "public": 5,
+                "stress": 5,
               },
-              "id": "comply",
-              "label": "요구 수용",
-              "tradeoff": "이번 한 번만 긴급 예산을 받습니다. 대신 팬 신뢰와 멤버 상태가 크게 나빠집니다.",
+              "id": "publish-follow-up",
+              "label": "48시간 안에 후속편 공개",
+              "tradeoff": "흐름을 타면 국내외에 얼굴을 알릴 수 있지만, 이번 주 팀 훈련을 걸러야 하는 강행군입니다.",
             },
             {
-              "description": "기한 연장과 평가 기준 완화를 요청합니다.",
+              "activityOverride": "individual",
+              "description": "확산 속도는 포기하고 팀 색이 보이는 버전으로 만듭니다.",
               "effects": {
-                "industry": -4,
-                "money": -20000000,
-                "satisfaction": 2,
+                "fandom": 2,
+                "public": 2,
+                "stress": 2,
               },
-              "id": "negotiate",
-              "label": "조건 재협상",
-              "tradeoff": "유예 기간이 3주 늘어납니다. 자문 비용과 업계 마찰을 감수해야 합니다.",
-            },
-            {
-              "description": "지원 축소를 감수하고 팀의 방향성을 지킵니다.",
-              "effects": {
-                "fandomLoyalty": 4,
-                "industry": -6,
-                "money": -30000000,
-                "satisfaction": 6,
+              "id": "polish-cover",
+              "label": "멤버 유닛으로 다듬는다",
+              "targetSelection": {
+                "label": "커버 유닛 멤버",
+                "max": 3,
+                "min": 2,
               },
-              "id": "defy",
-              "label": "자체 방침 고수",
-              "tradeoff": "멤버와 팬은 안도합니다. 대신 자체 예산을 투입해야 하고 업계 관계가 크게 악화됩니다.",
+              "tradeoff": "확산력은 덜해도 팀의 색을 기억하는 팬이 남습니다. 참여 멤버는 이번 주 개인 일정으로 움직입니다.",
             },
           ],
-          "summary": "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구하고 있습니다.",
-          "title": "투자사 경영 개입",
+          "summary": "연습실 클립의 반응이 커지고 있습니다. 관심이 식기 전에 후속 영상을 낼 수 있습니다.",
+          "title": "커버 영상이 알고리즘을 탔다",
           "trigger": {
-            "description": "투자사 압박 활성",
+            "description": "커버 영상의 비정상적인 조회 상승 감지",
             "entityIds": [],
-            "kind": "investor",
-            "severity": "critical",
+            "kind": "opportunity",
+            "severity": "notice",
           },
         },
       ],
@@ -840,7 +823,6 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
     ],
     "warnings": [
       "이벤트 경쟁 그룹 등장: 에클라",
-      "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
     ],
     "week": 50,
   },
@@ -975,20 +957,20 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       "investorConditionProgress": {},
       "investorConditions": [
         {
-          "deadlineWeeks": 36,
-          "description": "첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성",
+          "deadlineWeeks": 78,
+          "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
           "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
           "target": 0,
         },
         {
-          "deadlineWeeks": 104,
-          "description": "2년 안에 초기 투자금 회수 수준의 누적 성과 달성",
+          "deadlineWeeks": 156,
+          "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
           "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
-          "target": 1500000000,
+          "target": 500000000,
         },
       ],
       "investorPenaltyActive": false,
@@ -1618,7 +1600,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
 }
 `;
 
-exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)의 출력이 스냅샷과 일치한다 1`] = `
+exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78주차)의 출력이 스냅샷과 일치한다 1`] = `
 {
   "newState": {
     "album": {
@@ -1630,18 +1612,18 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "currentSeason": "fall",
       "kpopNews": [
         {
-          "detail": "팬 투표 비중이 높은 시상식일수록 코어 팬덤의 결속력이 중요하다.",
-          "headline": "연말 시상식 투표 시작, 팬덤 총력전 돌입",
-          "id": "news-y1-w36-0",
+          "detail": "페스티벌 출연은 신인 그룹에게도 대중 인지도 도약의 기회가 된다.",
+          "headline": "워터밤·뮤직페스티벌 티켓 전쟁 예고",
+          "id": "news-y2-w26-0",
           "type": "event",
-          "week": 36,
+          "week": 26,
         },
       ],
       "marketTrend": {
         "coldGenre": "trot",
-        "coldMood": "retro",
-        "hotGenre": "dancePop",
-        "hotMood": "refreshing",
+        "coldMood": "cute",
+        "hotGenre": "cityPop",
+        "hotMood": "retro",
       },
       "seasonConceptBonus": {
         "cute": 50,
@@ -1696,7 +1678,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
           "breakdown": {
             "fixedCosts": 946154,
           },
-          "week": 36,
+          "week": 26,
         },
       ],
       "fixedCosts": {
@@ -1711,7 +1693,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "incomeHistory": [
         {
           "breakdown": {},
-          "week": 36,
+          "week": 26,
         },
       ],
       "money": 999053846,
@@ -1735,8 +1717,8 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "companyName": "픽스처 엔터테인먼트",
       "currentPhase": "training",
       "currentSeason": "fall",
-      "currentWeek": 37,
-      "currentYear": 1,
+      "currentWeek": 27,
+      "currentYear": 2,
       "emergencyFinancing": [],
       "fiveYearReview": null,
       "groupGender": "female",
@@ -1745,42 +1727,42 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "investorComplianceCount": 0,
       "investorConditionProgress": {
         "summit-quarterly": {
-          "firstFailedWeek": 36,
+          "firstFailedWeek": 78,
           "penaltyApplied": false,
         },
       },
       "investorConditions": [
         {
-          "deadlineWeeks": 36,
-          "description": "첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성",
+          "deadlineWeeks": 78,
+          "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
           "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
           "target": 0,
         },
         {
-          "deadlineWeeks": 104,
-          "description": "2년 안에 초기 투자금 회수 수준의 누적 성과 달성",
+          "deadlineWeeks": 156,
+          "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
           "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
-          "target": 1500000000,
+          "target": 500000000,
         },
       ],
       "investorPenaltyActive": true,
       "investorPressureWeeks": 0,
       "investorType": "vc",
-      "lastInvestorDemandWeek": 37,
+      "lastInvestorDemandWeek": 79,
       "lastOpportunityWeek": null,
       "lastStrategicExpansionWeek": null,
       "milestonesAchieved": [],
       "notifications": [
         {
-          "id": "noti-y1-w36-0",
-          "message": "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
+          "id": "noti-y2-w26-0",
+          "message": "투자사 조건 미달: 1년 반 안에 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
           "title": "주간 알림",
           "type": "warning",
-          "week": 36,
+          "week": 26,
         },
       ],
       "saveRevision": 0,
@@ -1844,6 +1826,61 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
             "entityIds": [],
             "kind": "investor",
             "severity": "critical",
+          },
+        },
+        {
+          "category": "계약",
+          "id": "recontract:t1:w79",
+          "lane": "crisis",
+          "options": [
+            {
+              "description": "처우를 2등급으로 올리고 계약금을 지급합니다.",
+              "effects": {
+                "money": -10000000,
+                "satisfaction": 12,
+              },
+              "id": "raise",
+              "label": "조건 인상",
+              "targetTraineeIds": [
+                "t1",
+              ],
+              "tradeoff": "계약금 10백만이 즉시 나갑니다. 인기와 회사의 지급 여력을 함께 반영한 금액입니다.",
+            },
+            {
+              "description": "등급은 유지하되 일시 보너스를 지급합니다.",
+              "effects": {
+                "money": -5000000,
+                "satisfaction": 5,
+              },
+              "id": "bonus",
+              "label": "보너스로 달래기",
+              "targetTraineeIds": [
+                "t1",
+              ],
+              "tradeoff": "비용은 절반이지만 협상이 절반 주기로 다시 돌아옵니다.",
+            },
+            {
+              "description": "지금 조건을 유지하자고 설득합니다.",
+              "effects": {
+                "satisfaction": -12,
+              },
+              "id": "freeze",
+              "label": "동결",
+              "targetTraineeIds": [
+                "t1",
+              ],
+              "tradeoff": "만족도가 크게 떨어지고, 협상이 반년 안에 다시 돌아옵니다.",
+            },
+          ],
+          "summary": "안정형 트레이니-t1의 처우 협상 시점이 왔습니다 (현재 1등급 · 개인 인기 0). 감정의 진폭이 작고 예측 가능합니다.",
+          "title": "트레이니-t1 재계약 협상",
+          "trigger": {
+            "description": "트레이니-t1 재계약 협상 도래",
+            "entityIds": [
+              "t1",
+            ],
+            "kind": "contract",
+            "severity": "warning",
           },
         },
       ],
@@ -1980,7 +2017,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 79.46,
         "before": 80,
         "day": 3,
-        "id": "y1-w36-0",
+        "id": "y2-w26-0",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -1998,7 +2035,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 11.8,
         "before": 10,
         "day": 3,
-        "id": "y1-w36-1",
+        "id": "y2-w26-1",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2016,7 +2053,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-2",
+        "id": "y2-w26-2",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2034,7 +2071,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.768,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-3",
+        "id": "y2-w26-3",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2052,7 +2089,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-4",
+        "id": "y2-w26-4",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2070,7 +2107,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-5",
+        "id": "y2-w26-5",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2088,7 +2125,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 80.032,
         "before": 80,
         "day": 3,
-        "id": "y1-w36-6",
+        "id": "y2-w26-6",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2106,7 +2143,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 79.46,
         "before": 80,
         "day": 3,
-        "id": "y1-w36-7",
+        "id": "y2-w26-7",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2124,7 +2161,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 11.8,
         "before": 10,
         "day": 3,
-        "id": "y1-w36-8",
+        "id": "y2-w26-8",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2142,7 +2179,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-9",
+        "id": "y2-w26-9",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2160,7 +2197,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.768,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-10",
+        "id": "y2-w26-10",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2178,7 +2215,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-11",
+        "id": "y2-w26-11",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2196,7 +2233,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 50.48,
         "before": 50,
         "day": 3,
-        "id": "y1-w36-12",
+        "id": "y2-w26-12",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2214,7 +2251,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 80.032,
         "before": 80,
         "day": 3,
-        "id": "y1-w36-13",
+        "id": "y2-w26-13",
         "severity": "info",
         "source": {
           "id": "weekly-training",
@@ -2232,7 +2269,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 21.183673469387756,
         "before": 20,
         "day": 4,
-        "id": "y1-w36-14",
+        "id": "y2-w26-14",
         "severity": "info",
         "source": {
           "id": "weekly-chemistry",
@@ -2250,7 +2287,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 21.183673469387756,
         "before": 20,
         "day": 4,
-        "id": "y1-w36-15",
+        "id": "y2-w26-15",
         "severity": "info",
         "source": {
           "id": "weekly-chemistry",
@@ -2268,7 +2305,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 69,
         "before": 70,
         "day": 5,
-        "id": "y1-w36-16",
+        "id": "y2-w26-16",
         "severity": "info",
         "source": {
           "id": "weekly-satisfaction",
@@ -2286,7 +2323,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 69,
         "before": 70,
         "day": 5,
-        "id": "y1-w36-17",
+        "id": "y2-w26-17",
         "severity": "info",
         "source": {
           "id": "weekly-satisfaction",
@@ -2304,7 +2341,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 999053846,
         "before": 1000000000,
         "day": 6,
-        "id": "y1-w36-18",
+        "id": "y2-w26-18",
         "severity": "info",
         "source": {
           "id": "weekly-finance",
@@ -2322,7 +2359,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 8,
         "before": 10,
         "day": 6,
-        "id": "y1-w36-19",
+        "id": "y2-w26-19",
         "severity": "info",
         "source": {
           "id": "weekly-fandom",
@@ -2340,7 +2377,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         "after": 1,
         "before": 2,
         "day": 6,
-        "id": "y1-w36-20",
+        "id": "y2-w26-20",
         "severity": "info",
         "source": {
           "id": "weekly-fandom",
@@ -2355,10 +2392,10 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
         },
       },
       {
-        "after": 37,
-        "before": 36,
+        "after": 27,
+        "before": 26,
         "day": 7,
-        "id": "y1-w36-21",
+        "id": "y2-w26-21",
         "severity": "info",
         "source": {
           "id": "advance-week",
@@ -2383,15 +2420,15 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
     "injuries": [],
     "news": [
       {
-        "detail": "팬 투표 비중이 높은 시상식일수록 코어 팬덤의 결속력이 중요하다.",
-        "headline": "연말 시상식 투표 시작, 팬덤 총력전 돌입",
-        "id": "news-y1-w36-0",
+        "detail": "페스티벌 출연은 신인 그룹에게도 대중 인지도 도약의 기회가 된다.",
+        "headline": "워터밤·뮤직페스티벌 티켓 전쟁 예고",
+        "id": "news-y2-w26-0",
         "type": "event",
-        "week": 36,
+        "week": 26,
       },
     ],
     "promotionResults": [],
-    "season": "fall",
+    "season": "summer",
     "statChanges": [
       "트레이니-t1 컨디션: 80 → 79 (주간 훈련)",
       "트레이니-t1 스트레스: 10 → 12 (주간 훈련)",
@@ -2403,9 +2440,9 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 36주차)
       "트레이니-t2 만족도: 70 → 69 (멤버 만족도)",
     ],
     "warnings": [
-      "투자사 조건 미달: 첫 투자 검토에서 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
+      "투자사 조건 미달: 1년 반 안에 최근 분기 영업 현금흐름 흑자 달성. 6주 안에 회복하지 못하면 투자사가 조치에 나섭니다.",
     ],
-    "week": 36,
+    "week": 26,
   },
 }
 `;

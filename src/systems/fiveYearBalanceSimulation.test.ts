@@ -986,17 +986,20 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
               seed: run.seed,
               weeksPlayed: run.weeksPlayed,
               endingMoney: run.endingMoney,
+              minimumMoney: run.minimumMoney,
               releases: run.releases,
               fandom: run.fandom,
               averageAlbumQuality: run.averageAlbumQuality,
               averageChartRank: run.averageChartRank,
               awards: run.awards,
               decisionCostBreakdown: run.decisionCostBreakdown,
+              yearly: run.yearly,
             })),
             expertRuns: expert.map((run) => ({
               seed: run.seed,
               weeksPlayed: run.weeksPlayed,
               endingMoney: run.endingMoney,
+              minimumMoney: run.minimumMoney,
               releases: run.releases,
               fandom: run.fandom,
               averageAlbumQuality: run.averageAlbumQuality,
@@ -1004,17 +1007,20 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
               awards: run.awards,
               remainingMembers: run.remainingMembers,
               facilityLevelTotal: run.facilityLevelTotal,
+              yearly: run.yearly,
             })),
             intermediateRuns: intermediate.map((run) => ({
               seed: run.seed,
               weeksPlayed: run.weeksPlayed,
               endingMoney: run.endingMoney,
+              minimumMoney: run.minimumMoney,
               releases: run.releases,
               fandom: run.fandom,
               averageAlbumQuality: run.averageAlbumQuality,
               averageChartRank: run.averageChartRank,
               awards: run.awards,
               decisionCostBreakdown: run.decisionCostBreakdown,
+              yearly: run.yearly,
             })),
           },
           null,
@@ -1052,10 +1058,14 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
       median(expert, "averageAlbumQuality"),
     );
     // 높은 품질이 경제 외 결과에서도 눈에 띄는 보상으로 남아야 한다.
+    // 합성 차트 시장 완화(entryCount 90→60, powerRange 75→60) 이후 모든
+    // 순위가 위로 압축돼(숙련 ~3위, 중급 ~10위) 절대 격차 기준을 10에서
+    // 5로 내렸다 — 1위 밑으로는 내려갈 수 없어 상위권 격차는 구조적으로
+    // 좁아지고, 실력 분리는 아래의 top10·음악방송 승수 마진이 이어받는다.
     expect(
       median(intermediate, "averageChartRank") -
         median(expert, "averageChartRank"),
-    ).toBeGreaterThan(10);
+    ).toBeGreaterThan(5);
     expect(median(expert, "topTenAlbums")).toBeGreaterThanOrEqual(
       median(intermediate, "topTenAlbums") + 5,
     );

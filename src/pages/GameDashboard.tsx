@@ -861,6 +861,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         <TitleTrackSelectionModal
           albumTitle={currentAlbum.title}
           candidates={currentAlbum.titleTrackCandidates}
+          isDebut={releasedAlbums.length === 0}
           isSaving={isTitleTrackSaving}
           errorMessage={workflowError}
           onConfirm={handleCompleteTitleTrackSelection}
