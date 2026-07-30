@@ -61,7 +61,7 @@ function WorldLoadingPlaceholder() {
     <div className="pixel-grid-bg grid h-full place-items-center" role="status">
       <div className="rounded-2xl bg-surface-panel/90 px-4 py-3 text-center shadow-[var(--shadow-surface)]">
         <p className="text-xs font-semibold text-text-primary">사옥을 불러오는 중</p>
-        <p className="mt-1 text-[10px] text-text-muted">월드 아트는 임시 그래픽으로 표시됩니다.</p>
+        <p className="mt-1 text-[10px] text-text-muted">연습실 불을 켜고 있어요.</p>
       </div>
     </div>
   );

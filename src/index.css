@@ -113,9 +113,9 @@ select {
   font-size: 16px;
 }
 
+/* 캔버스는 3배 백킹스토어를 CSS로 축소 표시하므로 브라우저 기본 스무딩을 쓴다. */
 .phaser-container canvas {
   display: block;
-  image-rendering: pixelated;
 }
 
 @media (prefers-reduced-motion: reduce) {
