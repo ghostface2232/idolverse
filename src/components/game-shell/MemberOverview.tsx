@@ -31,6 +31,11 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
       <div className="mx-auto max-w-xl">
         <SectionHeader
           title="멤버"
+          description={
+            attentionCount > 0
+              ? `지금 관리가 필요한 멤버가 ${attentionCount}명 있습니다.`
+              : "팀 컨디션과 현재 활동을 한눈에 확인합니다."
+          }
         />
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-surface-panel px-3 py-2.5 shadow-[var(--shadow-surface)]">

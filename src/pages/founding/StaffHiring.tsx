@@ -18,6 +18,7 @@ import { staffVanillaStore } from "@/stores/staffStore";
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import type { Staff, StaffRole } from "@/types/game";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 const STAFF_CANDIDATE_COUNT = 4;
 
@@ -213,7 +214,11 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
           disabled={money < FOUNDING_RECRUITMENT_COSTS.staffRefresh}
           onClick={handleRefresh}
         >
-          후보 새로고침 (₩{(FOUNDING_RECRUITMENT_COSTS.staffRefresh / 10000).toLocaleString()}만)
+          후보 새로고침 (
+          {formatKoreanWon(FOUNDING_RECRUITMENT_COSTS.staffRefresh, {
+            symbol: true,
+          })}
+          )
         </Button>
       </div>
 
@@ -252,7 +257,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
               <span className="text-slate-50">{confirmTarget.name}</span>
               (월급{" "}
               <span className="text-emerald-300">
-                ₩{new Intl.NumberFormat("ko-KR").format(confirmTarget.salary)}
+                {formatKoreanWon(confirmTarget.salary, { symbol: true })}
               </span>
               )을 채용합니다. 변경에 추가 비용은 없습니다.
             </p>
@@ -260,7 +265,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
             <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
               <span className="text-slate-50">{confirmTarget.name}</span>의 월급{" "}
               <span className="text-emerald-300">
-                ₩{new Intl.NumberFormat("ko-KR").format(confirmTarget.salary)}
+                {formatKoreanWon(confirmTarget.salary, { symbol: true })}
               </span>
               이 고정비에 추가됩니다.
             </p>

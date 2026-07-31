@@ -1,4 +1,11 @@
-import { Bell, Building, Landmark, Users, WalletCards } from "lucide-react";
+import {
+  Bell,
+  Building,
+  ChevronRight,
+  Landmark,
+  Users,
+  WalletCards,
+} from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { INVESTOR_PROFILES } from "@/data/investors";
@@ -86,16 +93,55 @@ export function MoreOverview({
         </button>
       </div>
       <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">이번 주 경영 업무</h2>
-      <div className="grid grid-cols-2 gap-3">
-        <Button className="w-full gap-2" tone="secondary" onPress={onOpenStaff}>
-          <Users className="size-4" aria-hidden="true" /> 인사 관리
+      <div className="grid gap-2.5">
+        <Button
+          className="w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
+          tone="secondary"
+          onPress={onOpenStaff}
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-cyan-400/10 text-cyan-200">
+            <Users className="size-4.5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">스태프 관리</span>
+            <span className="mt-0.5 block text-xs font-normal text-text-muted">
+              채용과 교육 계획을 조정합니다.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
         </Button>
-        <Button className="w-full gap-2" tone="secondary" onPress={onOpenFacilities}>
-          <Building className="size-4" aria-hidden="true" /> 시설 투자
+        <Button
+          className="w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
+          tone="secondary"
+          onPress={onOpenFacilities}
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-pink-400/10 text-pink-200">
+            <Building className="size-4.5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">시설 투자</span>
+            <span className="mt-0.5 block text-xs font-normal text-text-muted">
+              연습실과 숙소 환경을 개선합니다.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
         </Button>
       </div>
-      <Button className="mt-3 w-full gap-2" tone="secondary" onPress={onOpenNotifications}>
-        <Bell className="size-4" aria-hidden="true" /> 알림
+      <Button
+        className="mt-2.5 w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
+        tone="ghost"
+        onPress={onOpenNotifications}
+      >
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-text-secondary">
+          <Bell className="size-4.5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">소식 기록</span>
+          <span className="mt-0.5 block text-xs font-normal text-text-muted">
+            지난 알림과 업계 소식을 다시 봅니다.
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
       </Button>
       </div>
     </section>

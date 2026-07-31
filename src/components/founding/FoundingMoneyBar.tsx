@@ -1,5 +1,6 @@
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { useFinanceStore } from "@/stores/financeStore";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 export function FoundingMoneyBar() {
   const money = useFinanceStore((s) => s.money);
@@ -15,7 +16,7 @@ export function FoundingMoneyBar() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400">주간 고정비</span>
           <span className="text-xs text-red-300">
-            ₩{new Intl.NumberFormat("ko-KR").format(weeklyFixedTotal)}
+            {formatKoreanWon(weeklyFixedTotal, { symbol: true })}
           </span>
         </div>
       )}

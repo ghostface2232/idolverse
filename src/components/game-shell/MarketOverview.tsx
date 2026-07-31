@@ -117,6 +117,7 @@ export function MarketOverview() {
       <div className="mx-auto max-w-xl space-y-5">
         <SectionHeader
           title="시장"
+          description="팬 반응과 컨셉 흐름, 라이벌의 움직임을 비교합니다."
         />
 
         <section aria-labelledby="fandom-heading">

@@ -13,6 +13,7 @@ import {
   type ContractSentiment,
 } from "@/systems/contractSystem";
 import type { ActiveCommercialContract, Trainee } from "@/types/game";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 interface ContractsOverviewModalProps {
   trainees: readonly Trainee[];
@@ -201,7 +202,7 @@ export function ContractsOverviewModal({
                       </p>
                     </div>
                     <span className="shrink-0 rounded-full bg-cyan-400/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-cyan-200">
-                      주 {contract.weeklyIncome.toLocaleString("ko-KR")}원
+                      주 {formatKoreanWon(contract.weeklyIncome)}
                     </span>
                   </div>
                 </article>

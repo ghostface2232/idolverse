@@ -17,6 +17,7 @@ import { traineeVanillaStore } from "@/stores/traineeStore";
 import { initializeRosterChemistry } from "@/systems/chemistrySystem";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import { useGameStore } from "@/stores/gameStore";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 interface AuditionProps {
   onNext: () => void;
@@ -26,17 +27,6 @@ interface AuditionProps {
 const HEADCOUNTS = [5, 7, 9, 12] as const;
 // 필수 포지션 4개(리더/메인보컬/메인댄서/센터)는 서로 겸직이 불가하므로 4명 미만이면 창단이 불가능하다.
 const MIN_SELECT_COUNT = 4;
-
-function formatKRW(amount: number): string {
-  if (amount >= 100_000_000) {
-    const eok = Math.floor(amount / 100_000_000);
-    const remainderMan = Math.floor((amount % 100_000_000) / 10_000);
-    return remainderMan > 0
-      ? `₩${eok}억 ${remainderMan.toLocaleString()}만`
-      : `₩${eok}억`;
-  }
-  return `₩${Math.floor(amount / 10_000).toLocaleString()}만`;
-}
 
 export function Audition({ onNext, onPrev }: AuditionProps) {
   const money = useFinanceStore((s) => s.money);
@@ -138,7 +128,9 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-sm text-slate-200">
                   추가 예산{" "}
-                  <span className="text-brand-cyan">+{formatKRW(extraBudget)}</span>
+                  <span className="text-brand-cyan">
+                    +{formatKoreanWon(extraBudget, { symbol: true })}
+                  </span>
                 </p>
                 <p className="text-xs text-brand-cyan">
                   {tierLabel} 풀 · 지원자 수준 {statBandLabel}
@@ -154,9 +146,9 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                 className="h-10 w-full cursor-pointer accent-brand-cyan"
               />
               <div className="flex justify-between text-xs text-slate-400">
-                <span>{formatKRW(0)}</span>
-                <span>{formatKRW(50_000_000)}</span>
-                <span>{formatKRW(100_000_000)}</span>
+                <span>{formatKoreanWon(0, { symbol: true })}</span>
+                <span>{formatKoreanWon(50_000_000, { symbol: true })}</span>
+                <span>{formatKoreanWon(100_000_000, { symbol: true })}</span>
               </div>
               <p className="text-[11px] text-slate-400">
                 예산을 들일수록 더 준비된 지원자들이 찾아옵니다.
@@ -183,7 +175,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
                     >
                       <span>{n}명</span>
                       <span className="text-[11px] text-slate-400">
-                        {formatKRW(cost)}
+                        {formatKoreanWon(cost, { symbol: true })}
                       </span>
                     </button>
                   );
@@ -194,7 +186,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
             <Card variant="panel" className="flex items-center justify-between text-sm">
               <span className="text-slate-300">총 비용</span>
               <span className={money < totalCost ? "text-red-300" : "text-brand-cyan"}>
-                {formatKRW(totalCost)}
+                {formatKoreanWon(totalCost, { symbol: true })}
                 {money < totalCost && (
                   <span className="ml-2 text-xs text-red-400">잔액 부족</span>
                 )}
@@ -239,7 +231,7 @@ export function Audition({ onNext, onPrev }: AuditionProps) {
           </Button>
         ) : (
           <Button disabled={money < totalCost} onClick={handleExecute}>
-            오디션 실행 ({formatKRW(totalCost)})
+            오디션 실행 ({formatKoreanWon(totalCost, { symbol: true })})
           </Button>
         )}
       </div>

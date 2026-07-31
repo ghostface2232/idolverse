@@ -725,8 +725,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         onSectionChange={setActiveSection}
         weekBadge={remainingDecisions}
         world={
-          <div className="relative h-full min-h-0">
-            <GameWorldHost active={activeSection === "company"} />
+          <div className="relative flex h-full min-h-0 flex-col">
             <HomeBriefing
               groupName={groupName}
               phase={currentPhase}
@@ -738,6 +737,9 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               remainingDecisions={remainingDecisions}
               riskSeverity={primaryRisk?.severity}
             />
+            <div className="min-h-0 flex-1">
+              <GameWorldHost active={activeSection === "company"} />
+            </div>
             {weekTickerActive && weeklyFlow.state === "report_ready" && weeklyFlow.report ? (
               <WeekTickerOverlay
                 report={weeklyFlow.report}

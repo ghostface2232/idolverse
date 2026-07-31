@@ -88,7 +88,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "팀 광고를 수락한다",
         description: "전원을 캠페인 얼굴로 내세워 현금과 인지도를 확보합니다.",
         tradeoff:
-          "계약금 3,000만 원이 바로 들어오지만, 이번 주 팀 훈련을 접어야 하고 잦은 상업 행보에 팬덤 일부가 실망할 수 있습니다.",
+          "계약금 3000만 원이 바로 들어오지만, 이번 주 팀 훈련을 접어야 하고 잦은 상업 행보에 팬덤 일부가 실망할 수 있습니다.",
         effects: { money: 30_000_000, public: 3, stress: 6, fandomDisappointment: 3 },
         activityOverride: "entertainment",
       },
@@ -97,7 +97,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "소수 멤버 계약으로 줄인다",
         description: "수익을 낮추는 대신 팀 전체 일정의 충격을 줄입니다.",
         tradeoff:
-          "계약금은 1,500만 원으로 줄지만 팀 일정은 지킵니다. 참여하지 못한 멤버들 사이에 서운함이 남을 수 있습니다.",
+          "계약금은 1500만 원으로 줄지만 팀 일정은 지킵니다. 참여하지 못한 멤버들 사이에 서운함이 남을 수 있습니다.",
         effects: { money: 15_000_000, public: 2, satisfaction: -2 },
         targetSelection: {
           label: "광고에 참여할 멤버",
@@ -158,7 +158,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "주말 팬사인회를 연다",
         description: "팬들과 직접 만나 결속과 판매 뒷심을 높입니다.",
         tradeoff:
-          "행사 수입 1,200만 원을 얻고 코어 팬덤이 단단해집니다. 이번 주 휴식 시간은 줄어듭니다.",
+          "행사 수입 1200만 원을 얻고 코어 팬덤이 단단해집니다. 이번 주 휴식 시간은 줄어듭니다.",
         effects: { money: 12_000_000, fandom: 3, stress: 3, condition: -2 },
         activityOverride: "entertainment",
       },
@@ -181,7 +181,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "OST를 녹음한다",
         description: "드라마 방영 동안 음원 수입과 새로운 대중 접점을 만듭니다.",
         tradeoff:
-          "계약금 1,500만 원과 12주간 매주 음원 수입 180만 원을 받습니다. 녹음 준비로 이번 주 팀 훈련을 거릅니다.",
+          "계약금 1500만 원과 12주간 매주 음원 수입 180만 원을 받습니다. 녹음 준비로 이번 주 팀 훈련을 거릅니다.",
         effects: { money: 15_000_000, public: 3, industry: 2, stress: 4 },
         contractOffer: {
           kind: "ost",
@@ -209,7 +209,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "멤버 한 명을 출연시킨다",
         description: "개인 활동으로 팀의 대중 접점을 넓힙니다.",
         tradeoff:
-          "출연료 2,000만 원과 10주간 매주 300만 원을 받습니다. 출연 멤버는 이번 주 팀 연습에서 빠집니다.",
+          "출연료 2000만 원과 10주간 매주 300만 원을 받습니다. 출연 멤버는 이번 주 팀 연습에서 빠집니다.",
         effects: { money: 20_000_000, public: 4, industry: 2, stress: 5 },
         contractOffer: {
           kind: "acting",
@@ -239,7 +239,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "연간 앰배서더가 된다",
         description: "브랜드 행사와 캠페인에 꾸준히 참여합니다.",
         tradeoff:
-          "계약금 5,000만 원과 52주간 매주 250만 원을 받습니다. 상업 일정이 늘어 팬들의 시선을 살펴야 합니다.",
+          "계약금 5000만 원과 52주간 매주 250만 원을 받습니다. 상업 일정이 늘어 팬들의 시선을 살펴야 합니다.",
         effects: { money: 50_000_000, public: 3, industry: 3, stress: 4, fandomDisappointment: 2 },
         contractOffer: {
           kind: "ambassador",
@@ -269,7 +269,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "브랜드의 얼굴이 된다",
         description: "대규모 캠페인과 연간 모델 활동을 맡습니다.",
         tradeoff:
-          "계약금 1억 5,000만 원과 52주간 매주 500만 원을 받습니다. 경쟁 브랜드 제안은 계약 기간 동안 받을 수 없습니다.",
+          "계약금 1억 5000만 원과 52주간 매주 500만 원을 받습니다. 경쟁 브랜드 제안은 계약 기간 동안 받을 수 없습니다.",
         effects: { money: 150_000_000, public: 4, industry: 5, stress: 6 },
         contractOffer: {
           kind: "brand-exclusive",
@@ -294,7 +294,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
         label: "협업 무대에 합류한다",
         description: "완성도보다 확장성을 택해 공동 무대를 준비합니다.",
         tradeoff:
-          "해외 반응과 업계 평판에 보탬이 되지만, 제작비 1,000만 원이 들고 이번 주 훈련을 걸러야 합니다.",
+          "해외 반응과 업계 평판에 보탬이 되지만, 제작비 1000만 원이 들고 이번 주 훈련을 걸러야 합니다.",
         effects: { global: 6, industry: 3, money: -10_000_000, stress: 5 },
         activityOverride: "entertainment",
       },

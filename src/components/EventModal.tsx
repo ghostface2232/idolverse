@@ -6,6 +6,7 @@ import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { sceneForEvent } from "@/utils/sceneMapping";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import type {
   EffectKey,
   EffectMap,
@@ -279,7 +280,7 @@ function EffectList({ effects }: { effects: EffectMap }) {
 function formatEffectValue(key: EffectKey, value: number) {
   if (key === "money") {
     const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-    return `${sign}₩${Math.abs(value).toLocaleString("ko-KR")}`;
+    return `${sign}${formatKoreanWon(Math.abs(value), { symbol: true })}`;
   }
 
   if (key === "investorPressure" && value <= 0) {

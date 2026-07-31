@@ -8,12 +8,11 @@ import {
   Play,
   ShieldAlert,
   Sparkles,
-  TrendingDown,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
+import { DecisionImpactChips } from "@/components/dashboard/DecisionImpactChips";
 import {
   checkTileClasses,
   radioTileClasses,
@@ -255,7 +254,7 @@ export function DecisionCardDeck({
                       </p>
                       {option ? (
                         <>
-                          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">{option.tradeoff}</p>
+                          <DecisionImpactChips option={option} className="mt-2" />
                           {targetNames.length > 0 ? (
                             <p className="mt-1 text-xs font-medium text-cyan-100">
                               참여 · {targetNames.join(" · ")}
@@ -417,25 +416,10 @@ export function DecisionCardDeck({
                   >
                     <Check className="size-3" strokeWidth={3} />
                   </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
-                      <span className="mt-2 grid gap-1.5">
-                        <span className="flex items-start gap-1.5 text-pretty text-xs leading-5">
-                          <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-cyan-300" aria-hidden="true" />
-                          <span className="min-w-0">
-                            <span className="sr-only">기대 효과: </span>
-                            <span className="text-text-secondary">{option.description}</span>
-                          </span>
-                        </span>
-                        <span className="flex items-start gap-1.5 text-pretty text-xs leading-5">
-                          <TrendingDown className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden="true" />
-                          <span className="min-w-0">
-                            <span className="sr-only">기회비용: </span>
-                            <span className="text-text-secondary">{option.tradeoff}</span>
-                          </span>
-                        </span>
-                      </span>
-                  </span>
+                      <DecisionImpactChips option={option} className="mt-2" />
+                    </span>
                 </div>
               )}
             </Radio>

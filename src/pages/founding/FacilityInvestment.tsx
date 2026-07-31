@@ -13,6 +13,7 @@ const foundingTiers = <T extends { level: number }>(tiers: readonly T[]) =>
   tiers.filter((tier) => tier.level <= FOUNDING_FACILITY_MAX_LEVEL);
 import { financeVanillaStore, useFinanceStore } from "@/stores/financeStore";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 interface FacilityInvestmentProps {
   onNext: () => void;
@@ -131,7 +132,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
                   <p className="text-sm text-slate-50">
                     {item.name}{" "}
                     <span className="text-xs text-emerald-300">
-                      ₩{(item.cost / 10000).toLocaleString()}만
+                      {formatKoreanWon(item.cost, { symbol: true })}
                     </span>
                   </p>
                   <p className="text-xs text-slate-400">{item.description}</p>
@@ -150,7 +151,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-400">일시 투자</span>
               <span className="text-sm text-red-300">
-                ₩{new Intl.NumberFormat("ko-KR").format(onetimeTotal)}
+                {formatKoreanWon(onetimeTotal, { symbol: true })}
               </span>
             </div>
           )}

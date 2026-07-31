@@ -874,7 +874,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     choices: [
       {
         label: "내려가서 무대에 선다",
-        description: "출연료 1,500만 원을 받고 현장 관객을 만납니다.",
+        description: "출연료 1500만 원을 받고 현장 관객을 만납니다.",
         tradeoff: "수입과 지역 팬을 얻지만 긴 이동으로 컨디션이 소모됩니다.",
         effects: { money: 15000000, public: 4, fandom: 2, condition: -3 },
       },
@@ -1068,7 +1068,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     choices: [
       {
         label: "새 장비를 들인다",
-        description: "2,000만 원을 들여 음향 장비를 교체합니다.",
+        description: "2000만 원을 들여 음향 장비를 교체합니다.",
         tradeoff: "지출이 생기지만 연습 환경이 눈에 띄게 좋아집니다.",
         effects: { money: -20000000, satisfaction: 3, condition: 2 },
       },

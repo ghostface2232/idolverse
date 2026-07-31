@@ -31,13 +31,13 @@ export function GameWorldHost({ active }: GameWorldHostProps) {
         <LazyPhaserGame active={active} />
       </Suspense>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-xl bg-slate-950/88 px-2.5 py-1.5 text-[10px] font-semibold text-text-secondary shadow-[var(--shadow-surface)]">
+      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-xl bg-slate-950/88 px-2.5 py-1.5 text-[11px] font-semibold text-text-secondary shadow-[var(--shadow-surface)]">
         <span className="size-1.5 rounded-full bg-state-success" aria-hidden="true" />
         연습실 · {projection.entities.length}명
       </div>
 
       {externalCount > 0 ? (
-        <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-1.5 rounded-xl bg-slate-950/88 px-2.5 py-1.5 text-[10px] text-pink-200 shadow-[var(--shadow-surface)]">
+        <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-1.5 rounded-xl bg-slate-950/88 px-2.5 py-1.5 text-[11px] text-pink-200 shadow-[var(--shadow-surface)]">
           <Radio className="size-3" aria-hidden="true" />
           외부 활동 {externalCount}명
         </div>
@@ -61,7 +61,7 @@ function WorldLoadingPlaceholder() {
     <div className="pixel-grid-bg grid h-full place-items-center" role="status">
       <div className="rounded-2xl bg-surface-panel/90 px-4 py-3 text-center shadow-[var(--shadow-surface)]">
         <p className="text-xs font-semibold text-text-primary">사옥을 불러오는 중</p>
-        <p className="mt-1 text-[10px] text-text-muted">연습실 불을 켜고 있어요.</p>
+        <p className="mt-1 text-[11px] text-text-muted">연습실 불을 켜고 있어요.</p>
       </div>
     </div>
   );

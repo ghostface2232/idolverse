@@ -1795,7 +1795,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "stress": 10,
               },
               "id": "comply",
-              "label": "요구 수용",
+              "label": "투자사 요구 수용하기",
               "tradeoff": "이번 한 번만 긴급 예산을 받습니다. 대신 팬 신뢰와 멤버 상태가 크게 나빠집니다.",
             },
             {
@@ -1806,7 +1806,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "satisfaction": 2,
               },
               "id": "negotiate",
-              "label": "조건 재협상",
+              "label": "조건 다시 협상하기",
               "tradeoff": "유예 기간이 3주 늘어납니다. 자문 비용과 업계 마찰을 감수해야 합니다.",
             },
             {
@@ -1818,7 +1818,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "satisfaction": 6,
               },
               "id": "defy",
-              "label": "자체 방침 고수",
+              "label": "회사의 기존 방침 유지하기",
               "tradeoff": "멤버와 팬은 안도합니다. 대신 자체 예산을 투입해야 하고 업계 관계가 크게 악화됩니다.",
             },
           ],
@@ -1843,11 +1843,11 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "satisfaction": 12,
               },
               "id": "raise",
-              "label": "조건 인상",
+              "label": "조건 인상하여 재계약하기",
               "targetTraineeIds": [
                 "t1",
               ],
-              "tradeoff": "계약금 10백만이 즉시 나갑니다. 인기와 회사의 지급 여력을 함께 반영한 금액입니다.",
+              "tradeoff": "계약금 1000만 원이 즉시 나갑니다. 인기와 회사의 지급 여력을 함께 반영한 금액입니다.",
             },
             {
               "description": "등급은 유지하되 일시 보너스를 지급합니다.",
@@ -1856,7 +1856,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "satisfaction": 5,
               },
               "id": "bonus",
-              "label": "보너스로 달래기",
+              "label": "일시 보너스로 달래기",
               "targetTraineeIds": [
                 "t1",
               ],
@@ -1868,7 +1868,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
                 "satisfaction": -12,
               },
               "id": "freeze",
-              "label": "동결",
+              "label": "현재 조건 동결 통보하기",
               "targetTraineeIds": [
                 "t1",
               ],
