@@ -263,6 +263,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
         "skippedDecisionIds": [],
         "state": "planning_ready",
       },
+      "yearChartPoints": 0,
     },
     "staff": {
       "staff": [
@@ -1056,6 +1057,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
         "skippedDecisionIds": [],
         "state": "planning_ready",
       },
+      "yearChartPoints": 0,
     },
     "staff": {
       "staff": [
@@ -1905,6 +1907,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
         "skippedDecisionIds": [],
         "state": "planning_ready",
       },
+      "yearChartPoints": 0,
     },
     "staff": {
       "staff": [

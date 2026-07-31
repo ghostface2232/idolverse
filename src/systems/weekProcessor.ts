@@ -82,6 +82,7 @@ import {
   ALBUM_QUALITY_REPUTATION_THRESHOLD,
   AWARD_DIGITAL_INDEX,
   CRISIS_CARD_COOLDOWN_WEEKS,
+  MEMBER_SETTLEMENT,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   EMERGENCY_FINANCING,
@@ -319,16 +320,14 @@ export function processWeek(
       playerYearReleases.length > 0
         ? Math.max(...playerYearReleases.map((released) => released.quality))
         : 0;
-    // 연중 최고 차트 순위 — 디지털 지표가 "그 해 음원 성적"을 실제로 읽는
-    // 축이다. 이 항이 없던 시절에는 연중 차트 1위 기록이 시상에 아무 영향이
-    // 없었고, 발매 타이밍 전략도 무의미했다.
-    const yearBestChartPeak = playerYearReleases.reduce<number | null>(
-      (best, released) => {
-        const peak = released.performance?.chartPeak;
-        if (peak == null || peak <= 0) return best;
-        return best === null ? peak : Math.min(best, peak);
-      },
-      null,
+    // 디지털 지표의 차트 축 = 올해 매주 쌓아 온 차트 점수의 누적(실제
+    // 연말 시상의 연간 집계 방식). 이 항이 없던 시절에는 연중 차트 1위
+    // 기록이 시상에 아무 영향이 없었고, 발매 타이밍 전략도 무의미했다.
+    const yearChartScore = Math.min(
+      100,
+      ((snapshot.game.yearChartPoints ?? 0) /
+        AWARD_DIGITAL_INDEX.fullScorePoints) *
+        100,
     );
     const contenders = [
       ...(playerDebutYear !== null && playerYearReleases.length > 0
@@ -340,8 +339,7 @@ export function processWeek(
                 digitalIndex:
                   fandomAxis.public * AWARD_DIGITAL_INDEX.publicWeight +
                   latestQuality * AWARD_DIGITAL_INDEX.qualityWeight +
-                  awardChartScore(yearBestChartPeak) *
-                    AWARD_DIGITAL_INDEX.chartWeight,
+                  yearChartScore * AWARD_DIGITAL_INDEX.chartWeight,
                 albumSalesIndex:
                   fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
                 fanVotes:
@@ -676,6 +674,25 @@ export function processWeek(
 
   // ── 3. Training
   const albumConcept = album?.concept.mood ?? null;
+  // 광고·OST 일정을 소화하는 멤버는 그 주 훈련을 온전히 못 한다 —
+  // 예능 출연이 훈련을 건너뛰는 것과 같은 기회비용이다.
+  const contractSlotsByTrainee: Record<string, number> = {};
+  for (const contract of activeCommercialContracts) {
+    if (
+      contract.signedAtWeek > cumulativeWeek ||
+      contract.endsAtWeek < cumulativeWeek
+    ) {
+      continue;
+    }
+    const targets =
+      contract.targetTraineeIds.length > 0
+        ? contract.targetTraineeIds
+        : trainees.map((t) => t.id);
+    for (const traineeId of targets) {
+      contractSlotsByTrainee[traineeId] =
+        (contractSlotsByTrainee[traineeId] ?? 0) + contract.scheduleSlots;
+    }
+  }
   const beforeTraining = captureWeekDeltaState(getDeltaState());
   const trainingResult = processTrainingWeek(
     trainees,
@@ -684,6 +701,7 @@ export function processWeek(
     albumConcept,
     seed,
     { dormLevel: upgrades.dormLevel, studioLevel: upgrades.studioLevel },
+    contractSlotsByTrainee,
   );
   trainees = trainingResult.trainees;
   recordTransition(
@@ -1262,6 +1280,17 @@ export function processWeek(
     };
   }
 
+  // ── 7.9 연간 차트 누적(연말 시상 디지털 지표의 차트 축).
+  // 이번 주 최고 순위를 점수로 환산해 쌓는다 — 상위권 런이 길수록,
+  // 그리고 그 런이 올해 안에 있을수록 시상에 실린다. 연초(1주차) 리셋.
+  const weeklyBestChartRank = (() => {
+    const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
+    return ranks.length > 0 ? Math.min(...ranks) : null;
+  })();
+  const yearChartPoints =
+    (snapshot.game.currentWeek === 1 ? 0 : (snapshot.game.yearChartPoints ?? 0)) +
+    awardChartScore(weeklyBestChartRank);
+
   // ── 8. Random events
   const eventCtx: EventContext = {
     currentWeek: snapshot.game.currentWeek,
@@ -1409,6 +1438,30 @@ export function processWeek(
   }
   if (decisionExpenseThisWeek > 0) {
     report.finance.expenses.decisionCosts = decisionExpenseThisWeek;
+  }
+
+  // ── 6.5 멤버 정산: 활동 수익의 일정 비율은 멤버 몫이다. 계약 등급이
+  // 높을수록 배분율이 커진다 — 재계약 인상이 장기 비용으로 돌아오는
+  // 경로이자, 수입이 커지면 회사 지출도 함께 커지는 구조. 긴급 조달과
+  // 투자사 지원금은 수익이 아니므로 정산하지 않는다.
+  const settlementBase = Object.entries(report.finance.income).reduce(
+    (sum, [key, value]) =>
+      key === "emergencyFinancing" || key === "decisionSupport"
+        ? sum
+        : sum + value,
+    0,
+  );
+  const settlementShare = trainees.reduce(
+    (sum, trainee) =>
+      sum +
+      MEMBER_SETTLEMENT.baseSharePerMember +
+      (trainee.contract?.tier ?? 1) * MEMBER_SETTLEMENT.sharePerContractTier,
+    0,
+  );
+  const memberSettlement = Math.round(settlementBase * settlementShare);
+  if (memberSettlement > 0) {
+    money -= memberSettlement;
+    report.finance.expenses.memberSettlement = memberSettlement;
   }
   const maturedFinancing = emergencyFinancing.filter(
     (record) => record.repaidAtWeek === null && record.dueWeek <= cumulativeWeek,
@@ -2063,6 +2116,7 @@ export function processWeek(
         ? nextCumulativeWeek
         : snapshot.game.lastOpportunityWeek,
       crisisCardCooldowns,
+      yearChartPoints,
       emergencyFinancing,
       strategicExpansion,
       fiveYearReview,

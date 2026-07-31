@@ -595,15 +595,27 @@ export const CRISIS_CARD_COOLDOWN_WEEKS: Readonly<Record<string, number>> = {
  * 시상식 디지털 지표의 구성. GUIDE의 "MMA 디지털 60% = 음원 성적"이
  * 실제로 그 해 차트 성과를 읽게 한다 — 이전에는 시상 주(50주차)의 public
  * 스냅샷과 그 해 최고 품질만 봐서 연중 차트 1위 기록이 시상에 아무
- * 영향도 없었다. chartScorePerRank는 순위→점수 환산 기울기(1위 100점,
- * 41위 0점)로, 플레이어(실제 차트 피크)와 경쟁자(차트 파워로 추정한
- * 순위)에 동일하게 적용된다.
+ * 영향도 없었다.
+ *
+ * 차트 축은 실제 연말 시상처럼 "연간 누적"이다: 매주 차트 순위를 점수로
+ * 환산해(chartScorePerRank: 1위 100점, 41위 0점) 1년 동안 쌓고, 누적점을
+ * fullScorePoints로 나눠 0~100 지표로 만든다. 늦은 발매의 차트 런은
+ * 자연스럽게 다음 해로 이월되므로 별도의 사각지대 규칙이 필요 없고,
+ * 발매 시점이 "올해 시상에 얼마나 실리는가"를 그대로 결정한다.
+ * 경쟁자는 컴백 시 추정 순위 × 표준 차트 런 주수로 같은 축을 쌓는다.
  */
 export const AWARD_DIGITAL_INDEX = {
   publicWeight: 0.35,
   qualityWeight: 0.25,
   chartWeight: 0.4,
   chartScorePerRank: 2.5,
+  // 연 3회 컴백이 모두 최상위권 런(회당 누적 ~450점)을 만들면 만점에
+  // 닿는 스케일 — 다작·저순위 런의 합산도 부분 점수를 얻는다.
+  fullScorePoints: 1300,
+  // 경쟁자 컴백 1회의 차트 런을 순위 점수 × 이 주수로 환산한다.
+  // 플레이어의 실제 런(피크 후 주간 감쇠 포함 6~8주 스코어링)과 대략
+  // 등가가 되는 값이다.
+  competitorRunWeeks: 5,
 } as const;
 
 /** 기회 카드는 평온한 주에 리듬을 만들되 위기 판단을 가리지 않아야 한다. */
@@ -622,6 +634,23 @@ export const COMMERCIAL_CONTRACTS = {
     scheduleSlots: 1,
     weeklyStress: 2,
   },
+  // 광고·OST 일정을 소화하는 멤버는 그 주 훈련을 온전히 못 한다 — 예능
+  // 출연이 훈련을 건너뛰는 것과 같은 기회비용 원칙. 슬롯당 훈련 성장
+  // 손실이며, 여러 계약이 겹치면 하한까지 누적된다.
+  trainingLossPerSlot: 0.25,
+  minTrainingMult: 0.5,
+} as const;
+
+/**
+ * 멤버 정산: 활동 수익(스트리밍·음반·행사·광고)의 일정 비율은 멤버 몫이다.
+ * 계약 등급이 오를수록 배분율이 커진다 — 재계약에서 조건을 올려 달래는
+ * 선택이 장기 비용으로 돌아오는 경로이자, 수입이 커질수록 회사 비용도
+ * 함께 커지는 자연스러운 구조다(긴급 조달·투자사 지원금은 수익이 아니므로
+ * 정산 대상이 아니다).
+ */
+export const MEMBER_SETTLEMENT = {
+  baseSharePerMember: 0.02,
+  sharePerContractTier: 0.01,
 } as const;
 
 /**

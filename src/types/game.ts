@@ -666,6 +666,11 @@ export interface CompetitorGroup {
    * 차트 성적을 반영하려면 경쟁자에게도 같은 축의 기록이 필요하다.
    */
   seasonBestChartRank?: number;
+  /**
+   * 올해 누적 차트 점수. 컴백 시 추정 순위 점수 × 표준 런 주수로 쌓고
+   * 연초에 리셋한다 — 플레이어의 주간 누적(yearChartPoints)과 같은 축이다.
+   */
+  seasonChartPoints?: number;
   activeWeeks: number;
   debutYear: number;
   strengths: string[];
@@ -1003,6 +1008,13 @@ export interface GameStoreState {
    * 쿨다운 기준 — critical로 악화되면 쿨다운을 무시하고 즉시 올라온다.
    */
   crisisCardCooldowns?: Record<string, number>;
+  /**
+   * 올해 누적 차트 점수(연말 시상 디지털 지표의 차트 축). 매주 최고 차트
+   * 순위를 점수로 환산해 쌓고 연초에 리셋한다. 발매가 늦으면 차트 런이
+   * 다음 해로 이월되므로, 발매 시점이 올해 시상 반영분을 자연스럽게
+   * 결정한다.
+   */
+  yearChartPoints?: number;
   /** 긴급 대출/추가 투자 채무. 상환된 건도 연간 신규 조달 한도 계산을 위해 보존한다. */
   emergencyFinancing: EmergencyFinancingRecord[];
   /** 성장기 이후 회사가 구축한 장기 역량. 한 경로에 몰거나 여러 경로를 조합할 수 있다. */

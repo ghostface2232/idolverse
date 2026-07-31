@@ -67,14 +67,15 @@ export function buildContenderFromPlayer(
 }
 
 /**
- * 연중 최고 차트 순위 → 시상 디지털 점수(1위 100점, 41위 0점). 플레이어의
- * 실제 chartPeak와 경쟁자의 추정 순위에 동일하게 적용해 대칭을 지킨다.
+ * 한 주의 차트 순위 → 점수(1위 100점, 41위 0점). 플레이어는 매주 이 점수를
+ * 연간 누적(yearChartPoints)하고, 경쟁자는 컴백 시 추정 순위 × 표준 런
+ * 주수로 같은 축을 쌓는다 — 양쪽 모두 동일한 환산이라 대칭이 유지된다.
  */
-export function awardChartScore(bestChartRank: number | null): number {
-  if (bestChartRank === null || bestChartRank <= 0) return 0;
+export function awardChartScore(chartRank: number | null): number {
+  if (chartRank === null || chartRank <= 0) return 0;
   return Math.max(
     0,
-    100 - (bestChartRank - 1) * AWARD_DIGITAL_INDEX.chartScorePerRank,
+    100 - (chartRank - 1) * AWARD_DIGITAL_INDEX.chartScorePerRank,
   );
 }
 
@@ -93,15 +94,24 @@ export function buildContenderFromCompetitor(
   // 시상 주의 지표를 붕괴시킨다(신인상 자동 수상 원인이었다).
   const seasonQuality =
     competitor.seasonBestQuality ?? competitor.currentAlbum?.quality ?? 0;
-  // 연중 차트 기록이 없는 경쟁자(이벤트 라이벌, 구버전 세이브)는 현재
-  // 지표로 즉석 추정한다 — 기록 부재가 시상 탈락이 되면 안 된다.
-  const chartRank =
-    competitor.seasonBestChartRank ??
+  // 연중 누적 기록이 없는 경쟁자(이벤트 라이벌, 구버전 세이브)는 현재
+  // 지표로 컴백 1회분 런을 즉석 추정한다 — 기록 부재가 시상 탈락이 되면
+  // 안 된다.
+  const chartPoints =
+    competitor.seasonChartPoints ??
     (seasonQuality > 0
-      ? estimateChartRankFromPower(
-          competitorChartPower(seasonQuality, competitor),
+      ? Math.round(
+          awardChartScore(
+            estimateChartRankFromPower(
+              competitorChartPower(seasonQuality, competitor),
+            ),
+          ) * AWARD_DIGITAL_INDEX.competitorRunWeeks,
         )
-      : null);
+      : 0);
+  const yearChartScore = Math.min(
+    100,
+    (chartPoints / AWARD_DIGITAL_INDEX.fullScorePoints) * 100,
+  );
   return {
     id: competitor.id,
     name: competitor.name,
@@ -110,7 +120,7 @@ export function buildContenderFromCompetitor(
     digitalIndex:
       competitor.public * AWARD_DIGITAL_INDEX.publicWeight +
       seasonQuality * AWARD_DIGITAL_INDEX.qualityWeight +
-      awardChartScore(chartRank) * AWARD_DIGITAL_INDEX.chartWeight,
+      yearChartScore * AWARD_DIGITAL_INDEX.chartWeight,
     albumSalesIndex:
       (competitor.fandom / 100) * 0.6 + competitor.industry * 0.4,
     fanVotes:

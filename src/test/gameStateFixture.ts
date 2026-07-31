@@ -94,6 +94,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
       campaignFailure: null,
       lastOpportunityWeek: null,
       crisisCardCooldowns: {},
+      yearChartPoints: 0,
       emergencyFinancing: [],
       strategicExpansion: { production: 0, fandom: 0, global: 0 },
       fiveYearReview: null,
