@@ -48,19 +48,37 @@ export function BottomNav({
               id={item.key}
               className={({ isFocusVisible, isSelected, isPressed }) =>
                 [
-                  "relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium outline-none",
-                  "transition-[scale,color,background-color] duration-[var(--motion-state)] ease-out",
+                  "group relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium outline-none",
+                  "transition-[scale,color] duration-[var(--motion-state)] ease-out",
                   isSelected
-                    ? "bg-action-secondary/[0.08] text-action-secondary after:absolute after:inset-x-3 after:top-0 after:h-0.5 after:rounded-full after:bg-action-secondary lg:after:inset-y-3 lg:after:left-0 lg:after:right-auto lg:after:h-auto lg:after:w-0.5"
-                    : "text-text-muted hover:bg-white/[0.04] hover:text-text-secondary",
+                    ? "text-action-secondary"
+                    : "text-text-muted hover:text-text-secondary",
                   isPressed ? "scale-[0.96]" : "scale-100",
                   isFocusVisible ? "ring-2 ring-inset ring-action-secondary" : "",
                   "lg:min-h-20 lg:w-full",
                 ].join(" ")
               }
             >
-              <Icon className="size-5" strokeWidth={1.8} aria-hidden="true" />
-              <span className="truncate">{item.label}</span>
+              {({ isSelected }) => (
+                <>
+                  <span
+                    className={[
+                      "grid h-7 w-12 place-items-center rounded-full",
+                      "transition-[background-color] duration-[var(--motion-state)] ease-out",
+                      isSelected
+                        ? "bg-action-secondary/15"
+                        : "bg-transparent group-hover:bg-white/[0.05]",
+                    ].join(" ")}
+                  >
+                    <Icon
+                      className="size-5"
+                      strokeWidth={isSelected ? 2.1 : 1.8}
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span className="truncate">{item.label}</span>
+                </>
+              )}
             </Tab>
           );
         }}

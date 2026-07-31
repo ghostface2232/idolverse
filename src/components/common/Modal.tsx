@@ -34,26 +34,27 @@ export function Modal({
       isDismissable={!isCloseDisabled}
       className={({ isEntering, isExiting }) =>
         [
-          "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/78 px-4 py-6 backdrop-blur-sm",
+          // 모바일: 바텀시트 정렬(하단 밀착). sm 이상: 센터 다이얼로그.
+          "fixed inset-0 z-50 flex items-end justify-center bg-slate-950/78 pt-10 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6",
           "transition-[opacity] duration-[var(--motion-state)] ease-out",
-          isEntering ? "opacity-100" : "",
-          isExiting ? "opacity-0 duration-150 ease-in" : "",
+          isEntering ? "animate-modal-fade" : "",
+          isExiting ? "opacity-0 duration-150" : "",
         ].join(" ")
       }
     >
       <AriaModal
         className={({ isEntering, isExiting }) =>
           [
-            "max-h-[88dvh] w-full max-w-md overflow-hidden rounded-3xl bg-surface-panel shadow-[var(--shadow-raised)] outline-none",
-            "transition-[transform,opacity] duration-[var(--motion-panel)] ease-out",
-            isEntering ? "translate-y-0 opacity-100" : "",
-            isExiting ? "-translate-y-3 opacity-0 duration-150 ease-in" : "",
+            "flex max-h-full w-full flex-col overflow-hidden rounded-t-3xl bg-surface-panel pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-raised)] outline-none sm:max-h-[88dvh] sm:max-w-md sm:rounded-3xl sm:pb-0",
+            "transition-[transform,opacity] duration-150 ease-out",
+            isEntering ? "animate-sheet-in" : "",
+            isExiting ? "translate-y-6 opacity-0 sm:-translate-y-3" : "",
             className,
           ].join(" ")
         }
       >
-        <Dialog className="outline-none">
-          <header className="flex min-h-16 items-center justify-between gap-3 border-b border-white/8 bg-surface-raised/70 px-5 py-3">
+        <Dialog className="flex min-h-0 flex-col outline-none">
+          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-white/8 bg-surface-raised/70 px-5 py-2.5 sm:min-h-16 sm:py-3">
             <Heading slot="title" className="text-lg font-semibold text-text-primary">
               {title}
             </Heading>
@@ -67,9 +68,11 @@ export function Modal({
               <X className="size-5" aria-hidden="true" />
             </Button>
           </header>
-          <div className="max-h-[62dvh] overflow-y-auto px-5 py-5">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+            {children}
+          </div>
           {footer ? (
-            <footer className="border-t border-white/8 bg-surface-shell/60 px-5 py-4">
+            <footer className="shrink-0 border-t border-white/8 bg-surface-shell/60 px-5 py-4">
               {footer}
             </footer>
           ) : null}

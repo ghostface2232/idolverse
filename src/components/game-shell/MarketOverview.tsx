@@ -37,10 +37,10 @@ const COMPETITOR_TYPE_LABELS: Record<CompetitorType, string> = {
 };
 
 const CHART_LABELS = [
-  { key: "melon", label: "멜론", dot: "bg-lime-400", bar: "bg-lime-400/60" },
-  { key: "spotify", label: "Spotify", dot: "bg-emerald-400", bar: "bg-emerald-400/60" },
-  { key: "youtube", label: "YouTube", dot: "bg-red-400", bar: "bg-red-400/60" },
-  { key: "albumSales", label: "앨범 판매", dot: "bg-amber-400", bar: "bg-amber-400/60" },
+  { key: "melon", label: "멜론", dot: "bg-lime-400" },
+  { key: "spotify", label: "Spotify", dot: "bg-emerald-400" },
+  { key: "youtube", label: "YouTube", dot: "bg-red-400" },
+  { key: "albumSales", label: "앨범 판매", dot: "bg-amber-400" },
 ] as const;
 
 /** 헤드라인 키워드로 어울리는 씬 아트를 고른다. */
@@ -86,7 +86,7 @@ export function MarketOverview() {
     .slice(0, 4);
 
   return (
-    <section className="h-full overflow-y-auto p-4">
+    <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl space-y-5">
         <SectionHeader
           eyebrow="시장"
@@ -126,7 +126,7 @@ export function MarketOverview() {
               이번 시즌 트렌드
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl bg-action-primary/[0.09] p-4 shadow-[var(--shadow-surface)]">
               <div className="flex items-center gap-1.5 text-xs font-medium text-pink-200">
                 <TrendingUp className="size-3.5" aria-hidden="true" />
@@ -176,12 +176,8 @@ export function MarketOverview() {
               return (
                 <div
                   key={chart.key}
-                  className="relative overflow-hidden rounded-xl bg-surface-shell/68 p-3 shadow-[var(--shadow-surface)]"
+                  className="rounded-xl bg-surface-shell/68 p-3 shadow-[var(--shadow-surface)]"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={["absolute inset-x-0 top-0 h-0.5", chart.bar].join(" ")}
-                  />
                   <dt className="flex items-center gap-1.5 text-xs text-text-muted">
                     <span
                       aria-hidden="true"

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { radioTileClasses } from "@/components/common/selectionTokens";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { sceneForEvent } from "@/utils/sceneMapping";
 import type {
@@ -147,22 +148,27 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
         {errorMessage ? <Alert message={errorMessage} /> : null}
 
         {choices.length > 0 && !event.resolved ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {choices.map((choice, index) => (
               <button
                 key={choice.label}
                 type="button"
                 disabled={saving}
-                className="min-h-11 w-full rounded-2xl border border-white/8 bg-surface-shell/70 px-4 py-3 text-left transition duration-[var(--motion-state)] hover:border-brand-cyan/60 hover:bg-surface-raised/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                className={[
+                  "min-h-16 w-full rounded-2xl border-2 px-3 py-3 text-left",
+                  "transition-[scale,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-out active:scale-[0.98]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-secondary disabled:cursor-not-allowed disabled:opacity-50",
+                  radioTileClasses(false, false),
+                ].join(" ")}
                 onClick={() => handleSelect(index)}
               >
                 <span className="block text-sm font-semibold text-text-primary [word-break:keep-all]">
                   {choice.label}
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-text-muted [word-break:keep-all]">
+                <span className="mt-1 block text-xs leading-5 text-text-secondary [word-break:keep-all]">
                   {choice.description}
                 </span>
-                <span className="mt-2 block text-xs text-brand-cyan [word-break:keep-all]">
+                <span className="mt-1 block text-xs leading-5 text-text-muted [word-break:keep-all]">
                   {choice.tradeoff}
                 </span>
               </button>

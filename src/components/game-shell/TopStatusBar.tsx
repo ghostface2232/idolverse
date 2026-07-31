@@ -20,7 +20,7 @@ export function TopStatusBar({
   onOpenNotifications,
 }: TopStatusBarProps) {
   return (
-    <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/8 bg-surface-shell/95 px-3 sm:px-4">
+    <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/8 bg-surface-shell/95 px-4">
       <div className="flex min-w-0 items-center gap-2">
         <span className="shrink-0 text-sm font-semibold tracking-[-0.01em] tabular-nums text-text-primary">
           {year}년차 {week}주차

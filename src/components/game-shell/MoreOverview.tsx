@@ -23,7 +23,8 @@ export function MoreOverview({
   const investor = INVESTOR_PROFILES[investorType];
 
   return (
-    <section className="h-full overflow-y-auto p-4">
+    <section className="h-full overflow-y-auto p-4 sm:p-5">
+      <div className="mx-auto max-w-xl">
       <SectionHeader
         eyebrow="회사"
         title="더보기"
@@ -50,6 +51,7 @@ export function MoreOverview({
       <Button className="mt-3 w-full gap-2" tone="secondary" onPress={onOpenNotifications}>
         <Bell className="size-4" aria-hidden="true" /> 알림 센터 열기
       </Button>
+      </div>
     </section>
   );
 }

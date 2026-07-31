@@ -18,7 +18,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
   );
 
   return (
-    <section className="h-full overflow-y-auto p-4">
+    <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl">
         <SectionHeader
           eyebrow="멤버"

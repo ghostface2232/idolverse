@@ -170,26 +170,11 @@ export function WeekReport({
           </p>
         </section>
 
-        <SpeakerBubble
-          portrait={
-            <StaffPortrait
-              profileImagePath={manager.profileImagePath}
-              profileSpriteIndex={manager.profileSpriteIndex}
-              size="md"
-            />
-          }
-          name={manager.name}
-          role={manager.roleLabel}
-          tone={managerContext === "crisis" || managerContext === "injury" ? "warning" : "default"}
-        >
-          {managerLine}
-        </SpeakerBubble>
-
         {report.comebackSettlement ? (
           <ComebackSettlementSection settlement={report.comebackSettlement} />
         ) : null}
 
-        {/* ── 핵심 숫자 ──────────────────────────────────────── */}
+        {/* ── 핵심 숫자: 요약을 가장 먼저 ─────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
           <StatTile
             label="순수익"
@@ -212,6 +197,21 @@ export function WeekReport({
             tone={deltaTone(statGrowth)}
           />
         </div>
+
+        <SpeakerBubble
+          portrait={
+            <StaffPortrait
+              profileImagePath={manager.profileImagePath}
+              profileSpriteIndex={manager.profileSpriteIndex}
+              size="md"
+            />
+          }
+          name={manager.name}
+          role={manager.roleLabel}
+          tone={managerContext === "crisis" || managerContext === "injury" ? "warning" : "default"}
+        >
+          {managerLine}
+        </SpeakerBubble>
 
         {/* ── 멤버 성장: 얼굴이 보이는 성장 기록 ─────────────── */}
         {memberGrowthRows.length > 0 ? (

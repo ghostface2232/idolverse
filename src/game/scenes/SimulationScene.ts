@@ -397,16 +397,18 @@ export class SimulationScene extends Phaser.Scene {
     }
 
     const padX = 18;
-    const padTop = 38;
-    const padBottom = 16;
+    const padBottom = 14;
     const charWidth = 36;
-    const charHeight = MEMBER_DISPLAY_HEIGHT;
     const innerWidth = room.rect.width - padX * 2;
     const cols = Math.max(1, Math.floor(innerWidth / charWidth));
     const colSpacing = innerWidth / cols;
-    const innerHeight = room.rect.height - padTop - padBottom;
     const rows = Math.max(1, Math.ceil(trainees.length / cols));
-    const rowSpacing = rows > 1 ? innerHeight / rows : 0;
+    // 발 위치는 방 세로 중간 아래의 바닥 밴드 안에만 둔다.
+    // (벽 아트 위에 떠 보이지 않도록, 룸 일러스트의 바닥 영역과 맞춘다.)
+    const floorTop = room.rect.y + room.rect.height * 0.55;
+    const floorBottom = room.rect.bottom - padBottom;
+    const bandHeight = floorBottom - floorTop;
+    const rowSpacing = bandHeight / rows;
 
     trainees.forEach((trainee, index) => {
       const col = index % cols;
@@ -414,9 +416,8 @@ export class SimulationScene extends Phaser.Scene {
       const x = Math.round(
         room.rect.x + padX + colSpacing * col + colSpacing / 2,
       );
-      const y = Math.round(
-        room.rect.y + padTop + rowSpacing * row + charHeight / 2,
-      );
+      // 마지막 줄이 floorBottom에 닿도록 아래에서부터 줄을 쌓는다.
+      const y = Math.round(floorBottom - rowSpacing * (rows - 1 - row));
 
       let container = this.traineeContainers.get(trainee.id);
       if (!container) {
@@ -469,9 +470,15 @@ export class SimulationScene extends Phaser.Scene {
     container.setData("slotX", x);
     container.setData("slotY", y);
 
+    // 소프트 라디얼 그림자: 크기·투명도가 다른 타원 3장을 겹쳐
+    // 가장자리가 부드럽게 사라지는 접지 그림자를 만든다.
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.32);
-    shadow.fillEllipse(0, 2, 24, 7);
+    shadow.fillStyle(0x020617, 0.1);
+    shadow.fillEllipse(0, 2, 30, 9);
+    shadow.fillStyle(0x020617, 0.16);
+    shadow.fillEllipse(0, 2, 23, 6.5);
+    shadow.fillStyle(0x020617, 0.22);
+    shadow.fillEllipse(0, 2.2, 15, 4);
     container.add(shadow);
 
     const sprite = this.add
@@ -487,10 +494,21 @@ export class SimulationScene extends Phaser.Scene {
     this.syncEntityMarks(container, trainee);
 
     if (!this.reducedMotion) {
+      const bobDuration = 900 + memberSpriteFrameForId(trainee.id) * 24;
       this.tweens.add({
         targets: sprite,
-        y: -2,
-        duration: 900 + memberSpriteFrameForId(trainee.id) * 24,
+        y: -1,
+        duration: bobDuration,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+      // 그림자는 숨쉬기와 같은 리듬으로 살짝 수축해 접지감을 유지한다.
+      this.tweens.add({
+        targets: shadow,
+        scaleX: 0.92,
+        alpha: 0.85,
+        duration: bobDuration,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
@@ -576,11 +594,12 @@ export class SimulationScene extends Phaser.Scene {
       if (!container.active) return;
       const slotX = (container.getData("slotX") as number) ?? container.x;
       const slotY = (container.getData("slotY") as number) ?? container.y;
+      // 바닥 위에서 가로로만 살짝 오간다. 세로 이동은 떠다니는 인상을 준다.
       const tween = this.tweens.add({
         targets: container,
-        x: slotX + Phaser.Math.Between(-9, 9),
-        y: slotY + Phaser.Math.Between(-3, 3),
-        duration: Phaser.Math.Between(1400, 2400),
+        x: slotX + Phaser.Math.Between(-8, 8),
+        y: slotY,
+        duration: Phaser.Math.Between(1600, 2600),
         delay: Phaser.Math.Between(600, 2800),
         ease: "Sine.easeInOut",
         onComplete: wander,

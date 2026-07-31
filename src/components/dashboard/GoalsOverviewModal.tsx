@@ -100,7 +100,7 @@ export function GoalsOverviewModal({
   );
 
   return (
-    <Modal title="목표 브리핑" onClose={onClose} className="max-w-lg">
+    <Modal title="목표 브리핑" onClose={onClose} className="sm:max-w-lg">
       <div className="space-y-6">
         <section aria-labelledby="weekly-goal-heading">
           <div className="mb-3 flex items-center gap-2">

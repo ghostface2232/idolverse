@@ -762,7 +762,16 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               canResolveWeek={canResolveWeek}
               flowState={weeklyFlow.state}
               riskLabel={primaryRisk?.description}
+              hintLabel={
+                canPlanComeback
+                  ? "제작 슬롯 비어 있음, 컴백 기획을 시작할 수 있습니다"
+                  : activityProject && weeklyFlow.state === "planning_ready"
+                    ? "활동기입니다, 프로모션을 고를 수 있습니다"
+                    : undefined
+              }
+              isAdvancing={isAdvancing}
               onOpenPlan={() => setActiveSection("week")}
+              onAdvanceWeek={() => void handleAdvanceWeek()}
             />
           ) : undefined
         }

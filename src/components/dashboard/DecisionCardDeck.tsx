@@ -384,7 +384,7 @@ export function DecisionCardDeck({
               className={({ isFocusVisible, isPressed, isSelected }) =>
                 [
                   "group min-h-16 rounded-2xl border-2 px-3 py-3",
-                  "transition-[scale,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-out",
+                  "transition-[scale,background-color,border-color,box-shadow,opacity] duration-[var(--motion-state)] ease-out",
                   radioTileClasses(isSelected, Boolean(selectedOptionId)),
                   isPressed ? "scale-[0.96]" : "scale-100",
                   isFocusVisible
@@ -396,7 +396,7 @@ export function DecisionCardDeck({
               {({ isSelected }) => (
                 <div className="flex items-start gap-3">
                   <span
-                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${
+                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full transition-[background-color,color] duration-[var(--motion-state)] ease-out ${
                       isSelected ? "bg-brand-cyan text-slate-950" : "bg-white/[0.06] text-transparent"
                     }`}
                     aria-hidden="true"

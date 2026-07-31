@@ -49,6 +49,10 @@
   --motion-press: 120ms;
   --motion-state: 180ms;
   --motion-panel: 240ms;
+  /* iOS 감각의 커스텀 이징. 기본 CSS 이징보다 초반이 빠르고 끝이 길다. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --shadow-surface: 0 0 0 1px rgba(255, 255, 255, 0.08);
   --shadow-surface-hover: 0 0 0 1px rgba(255, 255, 255, 0.13);
   --shadow-raised:
@@ -295,20 +299,43 @@ select {
 }
 
 .animate-modal-fade {
-  animation: modal-fade 150ms ease-out both;
+  animation: modal-fade 180ms var(--ease-out-strong) both;
 }
 
 .animate-modal-pop {
-  animation: modal-pop 200ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: modal-pop 260ms var(--ease-out-strong) both;
+}
+
+/* 모바일 바텀시트 등장. 데스크톱(sm+)에서는 센터 팝으로 바뀐다. */
+.animate-sheet-in {
+  animation: sheet-in 340ms var(--ease-drawer) both;
+}
+
+@media (min-width: 640px) {
+  .animate-sheet-in {
+    animation: modal-pop 260ms var(--ease-out-strong) both;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(64px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-step-fade {
-  animation: step-fade 350ms ease-out both;
+  animation: step-fade 320ms var(--ease-out-strong) both;
 }
 
 /* 컨테이너 하나를 통째로 페이드하는 대신, 직계 자식을 순차 등장시킨다. */
 .stagger-fade > * {
-  animation: step-fade 300ms ease-out both;
+  animation: step-fade 300ms var(--ease-out-strong) both;
 }
 
 .stagger-fade > *:nth-child(2) {
@@ -332,12 +359,12 @@ select {
 }
 
 .chart-rank-sweep {
-  animation: chart-rank-sweep 420ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: chart-rank-sweep 420ms var(--ease-out-strong) both;
 }
 
 /* 주 넘김 요일 티커의 델타 토스트 등장 */
 .week-toast-in {
-  animation: week-toast-in 260ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: week-toast-in 300ms var(--ease-out-strong) both;
 }
 
 @keyframes week-toast-in {
@@ -379,12 +406,14 @@ select {
 @keyframes step-fade {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
+    filter: blur(3px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
@@ -434,12 +463,14 @@ select {
 @keyframes modal-pop {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(14px) scale(0.96);
+    filter: blur(6px);
   }
 
   to {
     opacity: 1;
     transform: none;
+    filter: blur(0);
   }
 }
 

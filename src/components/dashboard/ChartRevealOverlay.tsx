@@ -66,7 +66,7 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/92 px-4 py-8 backdrop-blur-md"
+      className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/92 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))] backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label="차트 진입 순위 공개"

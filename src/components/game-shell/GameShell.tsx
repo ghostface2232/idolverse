@@ -39,7 +39,7 @@ export function GameShell({
             <div
               aria-hidden={activeSection !== "company"}
               className={[
-                "absolute inset-0 transition-opacity duration-[var(--motion-state)]",
+                "absolute inset-0 transition-opacity duration-[var(--motion-state)] ease-out",
                 activeSection === "company"
                   ? "z-10 opacity-100"
                   : "pointer-events-none z-0 opacity-0",
