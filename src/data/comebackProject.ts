@@ -46,7 +46,8 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
-      eventIds: ["comeback-part-assignment"],
+      eventIds: ["comeback-part-assignment", "comeback-part-dispute"],
+      eventPickCount: 1,
       unlocks: "집중 연습",
     },
     {
@@ -54,7 +55,13 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       title: "집중 연습",
       summary: "녹음과 안무를 발매 수준까지 끌어올리는 막바지 구간",
       weekWindow: [8, 9],
-      eventIds: ["comeback-recording-accident", "comeback-choreo-draft"],
+      eventIds: [
+        "comeback-recording-accident",
+        "comeback-choreo-draft",
+        "comeback-mv-set-accident",
+        "comeback-mv-scene-steal",
+      ],
+      eventPickCount: 2,
       unlocks: "티저 공개",
     },
     {
@@ -62,7 +69,8 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       title: "티저 공개",
       summary: "첫 티저가 공개되고 시장의 시선이 모이기 시작한다",
       weekWindow: [10, 10],
-      eventIds: ["comeback-teaser-reaction"],
+      eventIds: ["comeback-teaser-reaction", "comeback-teaser-debate"],
+      eventPickCount: 1,
       unlocks: "사전 반응 조사",
     },
     {
@@ -99,7 +107,8 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       entryRequirements: [
         { metric: "albumReleased", target: 1, label: "앨범 발매" },
       ],
-      eventIds: [],
+      eventIds: ["comeback-stage-mishap", "comeback-fancam-resurge"],
+      eventPickCount: 1,
       unlocks: "활동 정산",
     },
     {
@@ -110,7 +119,7 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       entryRequirements: [
         { metric: "albumReleased", target: 1, label: "앨범 발매" },
       ],
-      eventIds: [],
+      eventIds: ["comeback-settlement-notes"],
       unlocks: "다음 앨범 기획",
     },
   ],

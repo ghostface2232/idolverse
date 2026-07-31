@@ -239,6 +239,11 @@ export interface ProjectStageDefinition {
   weekWindow: readonly [number, number];
   entryRequirements?: ProjectStageRequirement[];
   eventIds?: string[];
+  /**
+   * eventIds가 이 수보다 많으면 프로젝트 인스턴스 시드로 이 수만큼만 추려 스폰한다.
+   * 같은 스테이지를 변주 풀로 만들어 사이클마다 다른 사건이 나오게 하는 장치다.
+   */
+  eventPickCount?: number;
   unlocks?: string;
 }
 

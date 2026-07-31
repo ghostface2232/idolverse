@@ -335,6 +335,23 @@ select {
   animation: chart-rank-sweep 420ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
+/* 주 넘김 요일 티커의 델타 토스트 등장 */
+.week-toast-in {
+  animation: week-toast-in 260ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes week-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes chart-rank-sweep {
   from {
     opacity: 0;

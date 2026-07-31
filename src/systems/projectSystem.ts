@@ -92,9 +92,33 @@ export function advanceProject(
       ...definition.stages.slice(0, targetIndex).map((stage) => stage.id),
     ]),
   ];
-  const spawnedEventIds = enteredStages
-    .flatMap((stage) => stage.eventIds ?? [])
-    .filter((eventId) => !project.spawnedEventIds.includes(eventId));
+  // 첫 스테이지는 "진입"이 없어 이벤트가 영영 스폰되지 않는 사각지대였다.
+  // 현재 스테이지가 아직 자기 이벤트를 하나도 스폰하지 않았다면 함께 스폰한다.
+  // (변주 풀로 일부만 스폰된 스테이지는 겹침이 있으므로 다시 뽑지 않는다.)
+  const currentStage = definition.stages[currentIndex];
+  const currentStageEventIds = currentStage.eventIds ?? [];
+  const currentStageUnspawned =
+    currentStageEventIds.length > 0 &&
+    relativeWeek >= currentStage.weekWindow[0] &&
+    !currentStageEventIds.some((eventId) =>
+      project.spawnedEventIds.includes(eventId),
+    );
+  const spawnStages = [
+    ...(currentStageUnspawned ? [currentStage] : []),
+    ...enteredStages,
+  ];
+
+  const spawnedEventIds = spawnStages.flatMap((stage) => {
+    const fresh = (stage.eventIds ?? []).filter(
+      (eventId) => !project.spawnedEventIds.includes(eventId),
+    );
+    // 변주 풀: eventPickCount가 있으면 인스턴스 시드로 일부만 추려
+    // 사이클마다 다른 사건이 나오게 한다. 시드가 같으면 항상 같은 조합이다.
+    if (stage.eventPickCount === undefined || fresh.length <= stage.eventPickCount) {
+      return fresh;
+    }
+    return pickSeededSubset(fresh, stage.eventPickCount, `${project.id}:${stage.id}`);
+  });
 
   const lastStage = definition.stages[definition.stages.length - 1];
   const completed =
@@ -115,6 +139,36 @@ export function advanceProject(
     spawnedEventIds,
     relativeWeek,
   };
+}
+
+function hashSeedText(text: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/** 시드 문자열이 같으면 항상 같은 부분집합을 고르는 결정론 샘플러다. */
+function pickSeededSubset(
+  items: readonly string[],
+  count: number,
+  seedText: string,
+): string[] {
+  let seed = hashSeedText(seedText) || 1;
+  const nextRandom = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  const pool = [...items];
+  const picked: string[] = [];
+  while (picked.length < count && pool.length > 0) {
+    const index = Math.floor(nextRandom() * pool.length);
+    picked.push(pool.splice(index, 1)[0]);
+  }
+  return picked;
 }
 
 export function appendProjectEvents(

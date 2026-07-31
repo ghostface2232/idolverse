@@ -35,6 +35,10 @@ export const WORLD_ROOM_ART_ASSETS: { key: string; path: string }[] = [
   { key: "room-dorm-lv3", path: roomPath("room-dorm-lv3") },
   { key: "room-dorm-lv4", path: roomPath("room-dorm-lv4") },
   { key: "room-office-bg", path: roomPath("room-office-bg") },
+  { key: "room-office-lv1", path: roomPath("room-office-lv1") },
+  { key: "room-office-lv2", path: roomPath("room-office-lv2") },
+  { key: "room-office-lv3", path: roomPath("room-office-lv3") },
+  { key: "room-office-lv4", path: roomPath("room-office-lv4") },
   { key: "room-locked-bg", path: roomPath("room-locked-bg") },
 ];
 
@@ -59,7 +63,12 @@ export const WORLD_ROOM_ART: Record<WorldRoomKey, WorldRoomArtEntry> = {
   },
   office: {
     base: "room-office-bg",
-    levels: {},
+    levels: {
+      1: "room-office-lv1",
+      2: "room-office-lv2",
+      3: "room-office-lv3",
+      4: "room-office-lv4",
+    },
   },
 };
 

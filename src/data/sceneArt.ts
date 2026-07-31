@@ -72,6 +72,7 @@ export type SceneKey =
   | "conflict"
   | "debut"
   | "comeback"
+  | "musicVideo"
   | "trophy";
 
 export interface SceneArt {
@@ -85,7 +86,14 @@ export interface SceneArt {
 }
 
 /** 전용 일러스트 파일이 실제로 존재하는 씬 키. 에셋 추가 시 여기에 등록한다. */
-export const SCENE_IMAGE_KEYS: ReadonlySet<SceneKey> = new Set<SceneKey>([]);
+export const SCENE_IMAGE_KEYS: ReadonlySet<SceneKey> = new Set<SceneKey>([
+  "practice",
+  "dorm",
+  "office",
+  "meeting",
+  "hospital",
+  "fanCafe",
+]);
 
 export function sceneImagePath(key: SceneKey): string {
   return `/game/scenes/${key}.png`;
@@ -315,6 +323,13 @@ export const SCENE_ART: Record<SceneKey, SceneArt> = {
     from: "#2e1065",
     to: "#7c3aed",
     accent: "#ddd6fe",
+  },
+  musicVideo: {
+    label: "뮤직비디오 촬영",
+    icon: Clapperboard,
+    from: "#2e1065",
+    to: "#a21caf",
+    accent: "#f0abfc",
   },
   trophy: {
     label: "1위 트로피",

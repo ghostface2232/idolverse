@@ -92,6 +92,42 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     conditions: { phase: "training" },
     effects: { public: 3, albumMarketing: 5 },
   },
+  {
+    id: "debut-observation-character",
+    type: "positive",
+    title: "관찰기의 뜻밖의 캐릭터",
+    description: "쉬는 시간마다 팀을 웃게 만드는 멤버의 예능 감각이 눈에 들어왔습니다. 데뷔 후 큰 무기가 될 수 있습니다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { charm: 3, chemistry: 2 },
+  },
+  {
+    id: "debut-dorm-rules",
+    type: "neutral",
+    title: "숙소 규칙 회의",
+    description: "청소 당번과 취침 시간을 놓고 멤버들이 처음으로 긴 회의를 했습니다. 서로의 생활 방식을 알아가는 중입니다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { chemistry: 3, satisfaction: 2 },
+  },
+  {
+    id: "debut-evaluation-upset",
+    type: "neutral",
+    title: "평가전의 이변",
+    description: "기대치가 낮았던 멤버가 선발전에서 최고 점수를 받았습니다. 연습실 공기가 달라졌습니다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { mental: 3, satisfaction: 2 },
+  },
+  {
+    id: "debut-rehearsal-blackout",
+    type: "neutral",
+    title: "리허설 돌발 정전",
+    description: "쇼케이스 리허설 중 전원이 나갔지만 멤버들이 무반주로 무대를 이어갔습니다. 지켜보던 스태프들이 박수를 보냈습니다.",
+    probability: 0,
+    conditions: { phase: "training" },
+    effects: { mental: 3, industry: 1 },
+  },
 ];
 
 /** 컴백 프로젝트 스테이지가 결정론적으로 스폰하는 사건. */
@@ -200,6 +236,127 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     probability: 0,
     conditions: {},
     effects: { albumMarketing: 3 },
+  },
+  {
+    id: "comeback-part-dispute",
+    type: "negative",
+    title: "파트 불만 면담 요청",
+    description: "파트가 줄어든 멤버가 따로 면담을 요청했습니다. 납득할 수 있는 답이 필요합니다.",
+    probability: 0,
+    conditions: {},
+    effects: {},
+    choices: [
+      {
+        label: "파트를 재조정한다",
+        description: "녹음 일부를 다시 배분해 불만을 풀어줍니다.",
+        tradeoff: "멤버 마음은 풀리지만 곡 완성 일정이 흔들립니다.",
+        effects: { satisfaction: 4, albumSong: -2, stress: 2 },
+      },
+      {
+        label: "설득하고 유지한다",
+        description: "이번 곡의 색에 맞는 배분이라는 점을 설명합니다.",
+        tradeoff: "완성도는 지키지만 서운함이 남습니다.",
+        effects: { albumSong: 2, satisfaction: -3, chemistry: -2 },
+      },
+    ],
+  },
+  {
+    id: "comeback-mv-set-accident",
+    type: "negative",
+    title: "뮤직비디오 세트 사고",
+    description: "촬영 중 메인 세트 일부가 무너졌습니다. 다친 사람은 없지만 핵심 장면이 날아갔습니다.",
+    probability: 0,
+    conditions: {},
+    effects: { stress: 4 },
+    choices: [
+      {
+        label: "세트를 복구해 재촬영",
+        description: "일정을 늘려서라도 기획한 장면을 살립니다.",
+        tradeoff: "영상 완성도는 지키지만 멤버들 피로가 쌓입니다.",
+        effects: { albumVisual: 6, stress: 5, condition: -3 },
+      },
+      {
+        label: "앵글을 바꿔 편집으로 살린다",
+        description: "남은 소스와 대체 장면으로 마무리합니다.",
+        tradeoff: "일정은 지키지만 영상 임팩트가 조금 줄어듭니다.",
+        effects: { albumVisual: -2, satisfaction: 2 },
+      },
+    ],
+  },
+  {
+    id: "comeback-mv-scene-steal",
+    type: "positive",
+    title: "원테이크 명장면 탄생",
+    description: "감독이 마지막 테이크를 보고 촬영장을 멈췄습니다. 이번 뮤직비디오의 얼굴이 될 장면이 나왔습니다.",
+    probability: 0,
+    conditions: {},
+    // 스테이지 이벤트는 사이클마다 반복 발동하므로 랜덤 풀보다 효과를 작게 잡는다.
+    effects: { albumVisual: 3, albumMarketing: 1 },
+  },
+  {
+    id: "comeback-teaser-debate",
+    type: "neutral",
+    title: "티저 반응 엇갈림",
+    description: "첫 티저를 두고 반응이 갈립니다. 새롭다는 평과 낯설다는 평이 반반입니다.",
+    probability: 0,
+    conditions: {},
+    effects: {},
+    choices: [
+      {
+        label: "콘셉트를 밀고 간다",
+        description: "기획 의도를 믿고 예정대로 갑니다.",
+        tradeoff: "팀의 색은 선명해지지만 낯설다는 반응은 남습니다.",
+        effects: { albumMarketing: 4, fandomLoyalty: 2 },
+      },
+      {
+        label: "2차 티저에서 톤을 조정한다",
+        description: "반응을 반영해 다음 티저의 방향을 다듬습니다.",
+        tradeoff: "진입 장벽은 낮아지지만 편집팀 일정이 빠듯해집니다.",
+        effects: { albumVisual: 3, albumMarketing: 2, stress: 3 },
+      },
+    ],
+  },
+  {
+    id: "comeback-stage-mishap",
+    type: "neutral",
+    title: "생방송 무대 사고",
+    description: "생방송 중 인이어가 꺼졌지만 멤버들이 침착하게 무대를 끝냈습니다. 방송 후 대응이 남았습니다.",
+    probability: 0,
+    conditions: {},
+    effects: { stress: 3 },
+    choices: [
+      {
+        label: "다음 무대로 증명한다",
+        description: "따로 언급하지 않고 더 좋은 무대를 준비합니다.",
+        tradeoff: "프로다운 인상을 남기지만 멤버들 부담이 커집니다.",
+        effects: { public: 3, industry: 2, stress: 3 },
+      },
+      {
+        label: "팬들에게 비하인드를 전한다",
+        description: "당시 상황과 멤버들의 대처를 솔직하게 공유합니다.",
+        tradeoff: "팬덤 결속은 깊어지지만 사고 자체는 더 오래 회자됩니다.",
+        effects: { fandomLoyalty: 4, public: 1 },
+      },
+    ],
+  },
+  {
+    id: "comeback-fancam-resurge",
+    type: "positive",
+    title: "활동기 직캠 역주행",
+    description: "지난주 무대 직캠이 뒤늦게 퍼지며 조회수가 치솟고 있습니다. 해외 계정들도 퍼 나르기 시작했습니다.",
+    probability: 0,
+    conditions: {},
+    // 스테이지 이벤트는 사이클마다 반복 발동하므로 랜덤 풀보다 효과를 작게 잡는다.
+    effects: { public: 3, fandom: 1, global: 1 },
+  },
+  {
+    id: "comeback-settlement-notes",
+    type: "neutral",
+    title: "활동을 닫는 밤",
+    description: "마지막 무대를 마친 멤버들이 대기실에 모여 이번 활동의 소회를 나눴습니다. 서로에게 고맙다는 말이 오갔습니다.",
+    probability: 0,
+    conditions: {},
+    effects: { satisfaction: 2, chemistry: 1 },
   },
 ];
 
@@ -697,6 +854,389 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         description: "팀 활동에 집중합니다.",
         tradeoff: "개인 인지도 상승 기회를 놓칩니다.",
         effects: { chemistry: 2, satisfaction: 1 },
+      },
+    ],
+  },
+  // ── 이하 확장 풀. 기존 이벤트의 시드 소비 순서를 지키기 위해 반드시 뒤에만 추가한다. ──
+  {
+    id: "regional-festival-invite",
+    type: "neutral",
+    title: "지역 축제 초청",
+    description: "지방 축제 무대에 초청받았습니다. 출연료는 확실하지만 왕복 이동이 만만치 않습니다.",
+    probability: 0.04,
+    conditions: {
+      minPublic: 10,
+      phase: ["debut", "growth"],
+    },
+    effects: {
+      public: 1,
+    },
+    choices: [
+      {
+        label: "내려가서 무대에 선다",
+        description: "출연료 1,500만 원을 받고 현장 관객을 만납니다.",
+        tradeoff: "수입과 지역 팬을 얻지만 긴 이동으로 컨디션이 소모됩니다.",
+        effects: { money: 15000000, public: 4, fandom: 2, condition: -3 },
+      },
+      {
+        label: "정중히 거절한다",
+        description: "이번 주는 팀 일정에 집중합니다.",
+        tradeoff: "수입 기회는 놓치지만 멤버들 체력을 지킵니다.",
+        effects: { satisfaction: 1, condition: 2 },
+      },
+    ],
+  },
+  {
+    id: "practice-room-livestream",
+    type: "positive",
+    title: "연습실 깜짝 라이브",
+    description: "멤버들이 즉흥으로 켠 연습실 라이브에 접속자가 몰렸습니다. 편한 모습에 반응이 뜨겁습니다.",
+    probability: 0.04,
+    conditions: {
+      minFandom: 10,
+    },
+    effects: {
+      fandom: 3,
+      fandomLoyalty: 3,
+    },
+    choices: [
+      {
+        label: "정기 콘텐츠로 확대",
+        description: "매주 고정 라이브 코너로 만듭니다.",
+        tradeoff: "팬덤과의 거리는 좁혀지지만 멤버들 체력 부담이 늘어납니다.",
+        effects: { fandom: 5, fandomLoyalty: 4, condition: -3, stress: 3 },
+      },
+      {
+        label: "깜짝 이벤트로 남긴다",
+        description: "부담 없이 가끔만 켜기로 합니다.",
+        tradeoff: "확산 효과는 작지만 멤버들이 편하게 임할 수 있습니다.",
+        effects: { fandomLoyalty: 3, satisfaction: 2 },
+      },
+    ],
+  },
+  {
+    id: "practice-room-blackout",
+    type: "neutral",
+    title: "연습실 정전 해프닝",
+    description: "정전으로 연습이 멈추자 멤버들이 휴대폰 불빛 아래에서 아카펠라를 이어갔습니다. 그 영상이 잔잔하게 퍼지고 있습니다.",
+    probability: 0.03,
+    conditions: {
+      phase: ["training", "debut", "growth"],
+    },
+    effects: {
+      chemistry: 3,
+      fandom: 1,
+    },
+  },
+  {
+    id: "teaser-typo-issue",
+    type: "negative",
+    title: "티저 오타 논란",
+    description: "공개된 티저 이미지에서 오타가 발견되어 가볍게 놀림거리가 되고 있습니다. 대응 방식이 여론을 가릅니다.",
+    probability: 0.03,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+      minPublic: 20,
+    },
+    effects: {
+      public: -2,
+      stress: 2,
+    },
+    choices: [
+      {
+        label: "정정 공지와 사과",
+        description: "빠르게 수정본을 올리고 짧게 사과합니다.",
+        tradeoff: "제작비가 조금 들지만 깔끔하게 마무리됩니다.",
+        effects: { money: -10000000, fandomDisappointment: -2, industry: 1 },
+      },
+      {
+        label: "유머로 받아친다",
+        description: "오타를 밈으로 만들어 공식 계정이 먼저 웃습니다.",
+        tradeoff: "화제성은 얻지만 가볍다고 느끼는 팬도 생깁니다.",
+        effects: { public: 4, fandom: 1, fandomDisappointment: 3 },
+      },
+    ],
+  },
+  {
+    id: "senior-group-advice",
+    type: "positive",
+    title: "선배 그룹의 조언",
+    description: "음악방송 대기실에서 만난 선배 그룹이 멤버들에게 긴 조언과 함께 식사를 대접했습니다.",
+    probability: 0.04,
+    conditions: {
+      phase: ["training", "debut", "growth"],
+    },
+    effects: {
+      satisfaction: 4,
+      mental: 2,
+      industry: 2,
+    },
+  },
+  {
+    id: "mental-slump-sign",
+    type: "negative",
+    title: "멤버 슬럼프 신호",
+    description: "한 멤버가 최근 무대가 무섭다고 털어놨습니다. 표정이 눈에 띄게 어두워졌습니다.",
+    probability: 0.04,
+    conditions: {
+      minStress: 45,
+    },
+    effects: {
+      stress: 4,
+    },
+    choices: [
+      {
+        label: "심리 상담을 지원한다",
+        description: "전문 상담을 연결하고 일정 부담을 줄여줍니다.",
+        tradeoff: "비용이 들지만 멤버가 다시 무대를 즐길 힘을 얻습니다.",
+        effects: { money: -15000000, mental: 3, satisfaction: 4 },
+      },
+      {
+        label: "일정 그대로, 지켜본다",
+        description: "스스로 이겨내길 기다립니다.",
+        tradeoff: "비용은 없지만 슬럼프가 깊어질 위험이 있습니다.",
+        effects: { satisfaction: -4, stress: 4, condition: -3 },
+      },
+    ],
+  },
+  {
+    id: "dorm-cooking-clip",
+    type: "positive",
+    title: "숙소 요리 영상 화제",
+    description: "막내가 올린 숙소 야식 영상이 귀엽다는 반응과 함께 퍼지고 있습니다. 멤버들의 일상 케미가 재조명됩니다.",
+    probability: 0.04,
+    conditions: {
+      phase: ["training", "debut", "growth"],
+    },
+    effects: {
+      fandom: 3,
+      fandomLoyalty: 3,
+      chemistry: 2,
+    },
+  },
+  {
+    id: "staff-wedding",
+    type: "neutral",
+    title: "매니저의 결혼식",
+    description: "데뷔 전부터 함께한 매니저가 결혼합니다. 주말 일정과 겹쳐 참석 여부를 정해야 합니다.",
+    probability: 0.03,
+    conditions: {
+      minWeek: 8,
+    },
+    effects: {},
+    choices: [
+      {
+        label: "전원이 축가를 부른다",
+        description: "하루 일정을 비우고 다 같이 식장으로 갑니다.",
+        tradeoff: "피로는 남지만 팀과 스태프의 신뢰가 깊어집니다.",
+        effects: { satisfaction: 4, chemistry: 3, condition: -2 },
+      },
+      {
+        label: "영상 편지만 보낸다",
+        description: "일정을 지키고 마음은 영상으로 전합니다.",
+        tradeoff: "일정은 지키지만 서운함이 남을 수 있습니다.",
+        effects: { industry: 1, satisfaction: -2 },
+      },
+    ],
+  },
+  {
+    id: "overseas-subtitle-team",
+    type: "positive",
+    title: "해외 팬 자막팀 결성",
+    description: "해외 팬들이 자발적으로 콘텐츠 번역 자막팀을 꾸렸습니다. 언어 장벽이 낮아지며 유입이 늘고 있습니다.",
+    probability: 0.04,
+    conditions: {
+      minGlobal: 12,
+    },
+    effects: {
+      global: 5,
+      fandomLoyalty: 3,
+    },
+  },
+  {
+    id: "equipment-breakdown",
+    type: "negative",
+    title: "연습실 장비 고장",
+    description: "연습실 음향 장비가 수명을 다했습니다. 소리가 끊겨 합주 연습이 자꾸 멈춥니다.",
+    probability: 0.04,
+    conditions: {
+      phase: ["training", "debut", "growth"],
+    },
+    effects: {
+      stress: 3,
+    },
+    choices: [
+      {
+        label: "새 장비를 들인다",
+        description: "2,000만 원을 들여 음향 장비를 교체합니다.",
+        tradeoff: "지출이 생기지만 연습 환경이 눈에 띄게 좋아집니다.",
+        effects: { money: -20000000, satisfaction: 3, condition: 2 },
+      },
+      {
+        label: "수리하며 버틴다",
+        description: "임시 수리로 당분간 사용을 이어갑니다.",
+        tradeoff: "비용은 아끼지만 연습 효율과 멤버들 사기가 떨어집니다.",
+        effects: { condition: -3, stress: 3, satisfaction: -2 },
+      },
+    ],
+  },
+  {
+    id: "cover-song-buzz",
+    type: "positive",
+    title: "커버 무대 역주행",
+    description: "라디오에서 부른 선배 곡 커버가 원곡 가수의 SNS에 언급되며 화제가 됐습니다.",
+    probability: 0.04,
+    conditions: {
+      minWeek: 6,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {
+      public: 6,
+      industry: 2,
+      fandom: 2,
+    },
+  },
+  {
+    id: "choreo-leak",
+    type: "negative",
+    title: "신곡 안무 유출",
+    description: "비공개 연습 영상 일부가 외부로 유출됐습니다. 공개 전 안무가 이미 돌아다니고 있습니다.",
+    probability: 0.03,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+      minFandom: 15,
+    },
+    effects: {
+      stress: 4,
+    },
+    choices: [
+      {
+        label: "정식 선공개로 전환",
+        description: "유출본보다 좋은 화질의 연습 영상을 공식 공개합니다.",
+        tradeoff: "화제성을 우리 쪽으로 가져오지만 기획했던 공개 순서가 무너집니다.",
+        effects: { albumMarketing: 4, public: 3, stress: 2 },
+      },
+      {
+        label: "유포자 법적 대응",
+        description: "법무팀을 통해 유출 경로를 추적하고 삭제를 요청합니다.",
+        tradeoff: "돈이 들지만 재발을 막고 팬들을 안심시킵니다.",
+        effects: { money: -20000000, fandomDisappointment: -2, industry: 1 },
+      },
+      {
+        label: "무대응",
+        description: "공개일까지 그대로 둡니다.",
+        tradeoff: "비용은 없지만 김이 빠지고 보안에 대한 실망이 남습니다.",
+        effects: { albumMarketing: -3, fandomDisappointment: 4, stress: 2 },
+      },
+    ],
+  },
+  {
+    id: "overseas-radio-play",
+    type: "positive",
+    title: "해외 라디오 전파",
+    description: "해외 유명 라디오 채널이 타이틀곡을 소개했습니다. 현지 반응이 조금씩 쌓이고 있습니다.",
+    probability: 0.03,
+    conditions: {
+      minGlobal: 15,
+    },
+    effects: {
+      global: 6,
+      public: 3,
+    },
+  },
+  {
+    id: "fan-gift-policy",
+    type: "neutral",
+    title: "팬 선물 정책 논의",
+    description: "고가의 팬 선물이 늘면서 정리된 원칙이 필요해졌습니다. 어떤 결정이든 반응이 갈릴 것입니다.",
+    probability: 0.03,
+    conditions: {
+      minFandom: 25,
+    },
+    effects: {},
+    choices: [
+      {
+        label: "선물 전면 반려를 발표한다",
+        description: "마음만 받겠다는 원칙을 공식화합니다.",
+        tradeoff: "건전한 팬 문화라는 평가를 얻지만 서운해하는 팬도 생깁니다.",
+        effects: { fandomDisappointment: 4, industry: 2, public: 2 },
+      },
+      {
+        label: "손편지만 받는 절충안",
+        description: "물건 대신 편지와 응원만 받기로 합니다.",
+        tradeoff: "팬들과의 정서적 연결은 지키지만 현장 관리 부담이 늘어납니다.",
+        effects: { fandomLoyalty: 3, stress: 2 },
+      },
+    ],
+  },
+  {
+    id: "dorm-noise-complaint",
+    type: "negative",
+    title: "숙소 소음 민원",
+    description: "새벽 안무 연습 소리로 이웃 민원이 들어왔습니다. 멤버들이 눈치를 보며 연습 시간을 줄이고 있습니다.",
+    probability: 0.03,
+    conditions: {
+      phase: ["training", "debut", "growth"],
+    },
+    effects: {
+      satisfaction: -3,
+      stress: 3,
+      public: -1,
+    },
+  },
+  {
+    id: "fan-art-exhibition",
+    type: "positive",
+    title: "팬아트 전시 프로젝트",
+    description: "팬들이 자발적으로 모은 팬아트 전시가 열렸습니다. 멤버들이 다녀간 인증샷에 커뮤니티가 들썩입니다.",
+    probability: 0.04,
+    conditions: {
+      minFandom: 15,
+    },
+    effects: {
+      fandomLoyalty: 5,
+      fandom: 2,
+      public: 2,
+    },
+  },
+  {
+    id: "broadcast-slot-cancelled",
+    type: "negative",
+    title: "방송 편성 취소 통보",
+    description: "출연 예정이던 음악 프로그램이 편성 개편으로 취소됐습니다. 준비했던 무대가 갈 곳을 잃었습니다.",
+    probability: 0.04,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+      minPublic: 15,
+    },
+    effects: {
+      public: -3,
+      stress: 3,
+      satisfaction: -2,
+    },
+  },
+  {
+    id: "sns-qna-request",
+    type: "neutral",
+    title: "팬들의 실시간 Q&A 요청",
+    description: "팬 커뮤니티에서 실시간 질문방을 열어 달라는 요청이 쏟아지고 있습니다.",
+    probability: 0.04,
+    conditions: {
+      minFandom: 12,
+    },
+    effects: {},
+    choices: [
+      {
+        label: "오늘 밤 라이브를 켠다",
+        description: "즉흥으로 소통 방송을 엽니다.",
+        tradeoff: "팬덤 반응은 뜨겁지만 준비 없는 방송이라 멤버들이 긴장합니다.",
+        effects: { fandom: 4, fandomLoyalty: 4, stress: 3 },
+      },
+      {
+        label: "다음 주에 준비해서 연다",
+        description: "질문을 미리 받아 정돈된 방송을 준비합니다.",
+        tradeoff: "안정적이지만 지금의 열기는 조금 식습니다.",
+        effects: { fandomLoyalty: 1, fandomDisappointment: 2, satisfaction: 1 },
       },
     ],
   },

@@ -3,7 +3,21 @@ import type { GameEvent } from "@/types/game";
 
 /** 이벤트 id의 키워드를 씬으로 번역한다. 위에서부터 먼저 맞는 규칙이 이긴다. */
 const EVENT_ID_RULES: readonly [pattern: RegExp, scene: SceneKey][] = [
-  [/showcase|promotion-launch/, "showcase"],
+  // 구체 규칙 먼저 — 일반 규칙(debut/comeback 등)에 삼켜지지 않게 한다.
+  [/-mv-/, "musicVideo"],
+  [/choreo-leak/, "scandal"],
+  [/part-dispute/, "conflict"],
+  [/stage-mishap/, "stage"],
+  [/fancam|cover-song/, "youtube"],
+  [/practice-room-livestream|sns-qna/, "liveBroadcast"],
+  [/practice-room|equipment|observation|evaluation-upset/, "practice"],
+  [/dorm/, "dorm"],
+  [/senior-group|mental-slump/, "counseling"],
+  [/fan-art|fan-gift/, "fanCafe"],
+  [/festival/, "concert"],
+  [/broadcast-slot/, "musicShow"],
+  [/staff-wedding/, "meeting"],
+  [/showcase|promotion-launch|rehearsal/, "showcase"],
   [/debut-title|song-candidates|composer|recording|ost/, "recording"],
   [/debut-concept|concept-research|concept-test/, "comeback"],
   [/debut-position|position-evaluation|unit-chemistry|personal-strength|hidden-talent/, "practice"],

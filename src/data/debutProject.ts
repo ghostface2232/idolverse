@@ -21,7 +21,8 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       title: "멤버 관찰",
       summary: "각 멤버의 강점과 팀 안에서의 역할을 찾는 기간",
       weekWindow: [1, 3],
-      eventIds: [],
+      eventIds: ["debut-observation-character", "debut-dorm-rules"],
+      eventPickCount: 1,
       unlocks: "포지션 선발전",
     },
     {
@@ -29,7 +30,11 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       title: "포지션 선발전 준비 · 곡 후보",
       summary: "가배정 역할을 집중 훈련하고 선발전과 데뷔곡 후보를 준비한다",
       weekWindow: [4, 6],
-      eventIds: ["debut-position-evaluation", "debut-song-candidates"],
+      eventIds: [
+        "debut-position-evaluation",
+        "debut-song-candidates",
+        "debut-evaluation-upset",
+      ],
       unlocks: "포지션 최종 확정",
     },
     {
@@ -56,7 +61,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
-      eventIds: ["debut-showcase-rehearsal"],
+      eventIds: ["debut-showcase-rehearsal", "debut-rehearsal-blackout"],
       unlocks: "데뷔 프로모션",
     },
     {

@@ -15,6 +15,7 @@ import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal"
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import { TrainingSummaryCard } from "@/components/dashboard/TrainingSummaryCard";
+import { WeekTickerOverlay } from "@/components/dashboard/WeekTickerOverlay";
 import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
 import { GameShell } from "@/components/game-shell/GameShell";
@@ -121,6 +122,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const [isCompanySaving, setIsCompanySaving] = useState(false);
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const [autoAdvance, setAutoAdvance] = useState(false);
+  const [weekTickerActive, setWeekTickerActive] = useState(false);
   const isAdvancingRef = useRef(false);
 
   const currentWeek = useGameStore((state) => state.currentWeek);
@@ -215,7 +217,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] === "available",
   );
   const displayedWeekReport =
-    weeklyFlow.state === "report_ready" && !isAdvancing
+    weeklyFlow.state === "report_ready" && !isAdvancing && !weekTickerActive
       ? weeklyFlow.report
       : null;
   // 벨 뱃지는 누적치가 아니라 "이번 주 새 소식"만 센다.
@@ -280,6 +282,13 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       setPromotionId(null);
       // 주가 흐르는 모습(월드 연출)이 보이도록 회사 화면으로 돌아간다.
       setActiveSection("company");
+      // 요일 티커: 자동 진행이나 모션 축소 설정에서는 건너뛴다.
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      if (!autoAdvance && !reducedMotion) {
+        setWeekTickerActive(true);
+      }
       presentationBus.emit("playWeekTimeline", {
         resolutionId: gameVanillaStore.getState().weeklyFlow.resolutionId,
       });
@@ -291,6 +300,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       setIsAdvancing(false);
     }
   }, [
+    autoAdvance,
     canResolveWeek,
     promotionId,
     resolvedDecisions,
@@ -697,7 +707,17 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       <GameShell
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        world={<GameWorldHost active={activeSection === "company"} />}
+        world={
+          <div className="relative h-full min-h-0">
+            <GameWorldHost active={activeSection === "company"} />
+            {weekTickerActive && weeklyFlow.state === "report_ready" && weeklyFlow.report ? (
+              <WeekTickerOverlay
+                report={weeklyFlow.report}
+                onComplete={() => setWeekTickerActive(false)}
+              />
+            ) : null}
+          </div>
+        }
         topStatus={
           <TopStatusBar
             year={currentYear}

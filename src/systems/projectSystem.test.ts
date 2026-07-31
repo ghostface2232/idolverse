@@ -51,6 +51,14 @@ describe("projectSystem", () => {
     const secondResult = advanceProject(DEBUT_PROJECT, second, 30, READY);
     expect(firstResult.project.currentStageId).toBe("title-decision");
     expect(secondResult.project.currentStageId).toBe("observation");
-    expect(secondResult.project.spawnedEventIds).toHaveLength(0);
+    // 첫 스테이지도 자기 창이 열리면 변주 풀에서 이벤트를 스폰한다.
+    // 두 번째 인스턴스는 자기 것만 기록하며 첫 인스턴스의 기록과 섞이지 않는다.
+    expect(secondResult.spawnedEventIds).toHaveLength(1);
+    expect(["debut-observation-character", "debut-dorm-rules"]).toContain(
+      secondResult.spawnedEventIds[0],
+    );
+    expect(secondResult.project.spawnedEventIds).toEqual(
+      secondResult.spawnedEventIds,
+    );
   });
 });
