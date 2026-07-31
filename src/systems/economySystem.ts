@@ -6,6 +6,7 @@ import type {
   InvestorCondition,
 } from "@/types/game";
 import { INVESTOR_INTERVENTION } from "@/data/balance";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 // 스트리밍은 활동기의 일상 수입 축이다. 30000/15000이던 시절에는 주간
 // 상한이 ~450만원으로 고정비·컴백 예산 대비 너무 작아, 콘서트 없이는
@@ -24,7 +25,7 @@ const CHART_RANK_BONUS_PER_RANK = 30000;
 // 구조적 적자였다(R6 프로브). 마진 800은 컴백 예산(3천만~1.2억)을 초동
 // 5만 장 이하로는 회수하지 못하는 수준이라 1200으로 올린다 — 표준 예산
 // 컴백이 초동 5만 장이면 발매 5주 동안 6천만원을 돌려받는 계산이다.
-const ALBUM_UNIT_MARGIN = 1200;
+export const ALBUM_UNIT_MARGIN = 1200;
 const ALBUM_DECAY_WEEKS = 4;
 /** 감쇠 가중치(1, 0.8, 0.6, 0.4, 0.2)의 합 — 총수익을 초동×마진으로 정규화한다. */
 const ALBUM_DECAY_WEIGHT_SUM = 3;
@@ -80,13 +81,19 @@ export function calculateAlbumRevenue(
   );
 }
 
+export function calculateAlbumLifetimeRevenue(firstWeekSales: number): number {
+  return Math.max(0, Math.round(firstWeekSales * ALBUM_UNIT_MARGIN));
+}
+
 export function processWeeklyFinances(
   finance: FinanceStoreState,
   ctx: RevenueContext,
 ): FinanceResult {
   let money = finance.money;
   const income: Record<string, number> = {};
-  const expenses: Record<string, number> = {};
+  // pendingExpenses는 계획 화면에서 이미 잔액에 반영됐다. 여기서는 다시
+  // 차감하지 않고 결산 장부에만 합쳐 이중 결제를 막는다.
+  const expenses: Record<string, number> = { ...(finance.pendingExpenses ?? {}) };
   const warnings: string[] = [];
 
   expenses.fixedCosts = finance.weeklyFixedTotal;
@@ -120,7 +127,7 @@ export function processWeeklyFinances(
   }
 
   if (money < 0) {
-    warnings.push(`자금 부족: ${money.toLocaleString()}원`);
+    warnings.push(`자금 부족: ${formatKoreanWon(money)}`);
   }
 
   return { money, income, expenses, warnings };

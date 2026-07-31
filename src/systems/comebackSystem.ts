@@ -167,6 +167,7 @@ export function createComebackPlan(input: ComebackPlanInput): {
       ),
       externalCollaborators: {},
       quality: 0,
+      productionCost: budgetTier.cost,
     },
   };
 }

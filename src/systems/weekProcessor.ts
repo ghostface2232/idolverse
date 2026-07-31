@@ -2,6 +2,7 @@ import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { advanceWeekState } from "@/systems/advanceWeek";
 import { applyEffects } from "@/systems/applyEffects";
 import { withJosa } from "@/utils/josa";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import {
   buildDecisionCardContext,
   generateWeeklyDecisionCards,
@@ -436,7 +437,7 @@ export function processWeek(
         adContractsSigned += 1;
       }
       report.warnings.push(
-        `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${offer.weeklyIncome.toLocaleString("ko-KR")}원이 들어옵니다`,
+        `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${formatKoreanWon(offer.weeklyIncome)}이 들어옵니다`,
       );
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
@@ -1344,7 +1345,7 @@ export function processWeek(
       record.id === matured.id ? { ...record, repaidAtWeek: cumulativeWeek } : record,
     );
     report.warnings.push(
-      `${matured.kind === "loan" ? "긴급 대출" : "추가 투자금"} ${matured.repaymentAmount.toLocaleString("ko-KR")}원이 만기 상환됐습니다`,
+      `${matured.kind === "loan" ? "긴급 대출" : "추가 투자금"} ${formatKoreanWon(matured.repaymentAmount)}이 만기 상환됐습니다`,
     );
   }
   if (financingRepaymentThisWeek > 0) {
@@ -1945,6 +1946,8 @@ export function processWeek(
     (snapshot.finance.cumulativeExpense ??
       sumBreakdownHistory(snapshot.finance.expenseHistory)) +
     expenseTotalThisWeek;
+  const { pendingExpenses: _settledExpenses, ...settledFinance } =
+    snapshot.finance;
 
   const newState: GameSnapshot = {
     game: {
@@ -2008,7 +2011,7 @@ export function processWeek(
       backgroundGroups: compResult.backgroundGroups,
     },
     finance: {
-      ...snapshot.finance,
+      ...settledFinance,
       money,
       incomeHistory: [
         ...snapshot.finance.incomeHistory,

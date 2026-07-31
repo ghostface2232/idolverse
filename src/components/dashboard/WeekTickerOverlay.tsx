@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeekDelta, WeeklyReportSnapshot } from "@/types/game";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 /** 하루가 흐르는 시간. 7일 합산 약 2.6초, 탭하면 즉시 결산으로 넘어간다. */
@@ -21,6 +22,7 @@ interface DayToast {
 
 interface WeekTickerOverlayProps {
   report: WeeklyReportSnapshot;
+  endingMoney: number;
   onComplete: () => void;
 }
 
@@ -29,7 +31,11 @@ interface WeekTickerOverlayProps {
  * 그 요일에 일어난 변화(WeekDelta.day)를 토스트로 흘린다.
  * 어디를 탭해도 즉시 완료되고, 정보는 전부 결산 리포트에 다시 나온다.
  */
-export function WeekTickerOverlay({ report, onComplete }: WeekTickerOverlayProps) {
+export function WeekTickerOverlay({
+  report,
+  endingMoney,
+  onComplete,
+}: WeekTickerOverlayProps) {
   const [dayIndex, setDayIndex] = useState(0);
   const doneRef = useRef(false);
 
@@ -60,6 +66,13 @@ export function WeekTickerOverlay({ report, onComplete }: WeekTickerOverlayProps
   const visibleToasts = toastsByDay
     .filter((toast) => toast.day <= dayIndex + 1)
     .slice(-3);
+  const incomeTotal = sumValues(report.finance.income);
+  const expenseTotal = sumValues(report.finance.expenses);
+  const net = incomeTotal - expenseTotal;
+  const startMoney = endingMoney - net;
+  const progress = Math.min(1, (dayIndex + 1) / DAY_LABELS.length);
+  const visibleMoney = Math.round(startMoney + net * progress);
+  const albumIncome = report.finance.income.album ?? 0;
 
   return (
     <button
@@ -68,32 +81,75 @@ export function WeekTickerOverlay({ report, onComplete }: WeekTickerOverlayProps
       className="absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-between bg-gradient-to-b from-slate-950/55 via-transparent to-slate-950/72 px-4 pb-20 pt-5 text-left"
       onClick={skip}
     >
-      <div className="flex items-center gap-1.5 rounded-2xl bg-slate-950/78 px-3 py-2 shadow-[var(--shadow-surface)] backdrop-blur-sm">
-        <span className="mr-1 text-[11px] font-semibold tabular-nums text-text-muted">
-          {report.week}주차
-        </span>
-        {DAY_LABELS.map((label, index) => {
-          const state =
-            index < dayIndex ? "past" : index === dayIndex ? "now" : "future";
-          return (
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-1.5 rounded-2xl bg-slate-950/78 px-3 py-2 shadow-[var(--shadow-surface)] backdrop-blur-sm">
+          <span className="mr-1 text-[11px] font-semibold tabular-nums text-text-muted">
+            {report.week}주차
+          </span>
+          {DAY_LABELS.map((label, index) => {
+            const state =
+              index < dayIndex ? "past" : index === dayIndex ? "now" : "future";
+            return (
+              <span
+                key={label}
+                className={[
+                  "grid size-6 place-items-center rounded-lg text-[11px] font-bold transition-colors duration-150",
+                  state === "now"
+                    ? "bg-brand-pink text-white"
+                    : state === "past"
+                      ? "bg-white/[0.14] text-text-secondary"
+                      : "bg-white/[0.05] text-text-muted",
+                ].join(" ")}
+              >
+                {label}
+              </span>
+            );
+          })}
+        </div>
+        <div className="rounded-2xl bg-slate-950/82 px-3 py-2 text-center shadow-[var(--shadow-surface)] backdrop-blur-sm">
+          <p className="text-[10px] text-text-muted">회사 잔액</p>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-white">
+            {formatKoreanWon(visibleMoney, { symbol: true })}
             <span
-              key={label}
               className={[
-                "grid size-6 place-items-center rounded-lg text-[11px] font-bold transition-colors duration-150",
-                state === "now"
-                  ? "bg-brand-pink text-white"
-                  : state === "past"
-                    ? "bg-white/[0.14] text-text-secondary"
-                    : "bg-white/[0.05] text-text-muted",
+                "ml-2 text-xs",
+                net >= 0 ? "text-emerald-300" : "text-rose-300",
               ].join(" ")}
             >
-              {label}
+              {net >= 0 ? "+" : "-"}
+              {formatKoreanWon(Math.abs(net), { symbol: true })}
             </span>
-          );
-        })}
+          </p>
+        </div>
       </div>
 
       <div className="flex w-full max-w-sm flex-col items-center gap-1.5">
+        {albumIncome > 0 ? (
+          <div className="mb-2 w-full rounded-2xl bg-slate-950/86 px-4 py-3 shadow-[var(--shadow-raised)] backdrop-blur-md">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-semibold text-pink-200">
+                이번 주 음반 정산
+              </span>
+              <span className="text-sm font-bold tabular-nums text-emerald-200">
+                +{formatKoreanWon(albumIncome, { symbol: true })}
+              </span>
+            </div>
+            <div className="mt-2 flex h-10 items-end gap-1" aria-hidden="true">
+              {[10, 18, 27, 23, 35, 29, 42].map((height, index) => (
+                <span
+                  key={index}
+                  className={[
+                    "flex-1 rounded-t-sm transition-[height,opacity,background-color] duration-200",
+                    index <= dayIndex
+                      ? "bg-gradient-to-t from-pink-600 to-cyan-300 opacity-100"
+                      : "bg-white/10 opacity-45",
+                  ].join(" ")}
+                  style={{ height: `${height}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
         {visibleToasts.map((toast) => (
           <span
             key={toast.id}
@@ -115,6 +171,10 @@ export function WeekTickerOverlay({ report, onComplete }: WeekTickerOverlayProps
       </div>
     </button>
   );
+}
+
+function sumValues(values: Record<string, number>) {
+  return Object.values(values).reduce((sum, value) => sum + value, 0);
 }
 
 /** 요일별 대표 변화 1건씩. 심각도 우선, 그다음 변화량 크기로 고른다. */

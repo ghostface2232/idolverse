@@ -74,15 +74,18 @@ export const financeVanillaStore = createStore<FinanceStore>()((set) => ({
       const upgrades = { ...state.upgrades };
       const fixedCosts = { ...state.fixedCosts };
       let money = state.money;
+      let paid = 0;
 
       if (target === "hasHealthcare" && !upgrades.hasHealthcare) {
         upgrades.hasHealthcare = true;
         fixedCosts.healthcare = OPTIONAL_FACILITY_COSTS.healthcare.monthly;
-        money -= UPGRADE_COSTS.hasHealthcare;
+        paid = UPGRADE_COSTS.hasHealthcare;
+        money -= paid;
       } else if (target === "hasSecurity" && !upgrades.hasSecurity) {
         upgrades.hasSecurity = true;
         fixedCosts.security = OPTIONAL_FACILITY_COSTS.security.monthly;
-        money -= UPGRADE_COSTS.hasSecurity;
+        paid = UPGRADE_COSTS.hasSecurity;
+        money -= paid;
       } else if (
         target === "dormLevel" ||
         target === "studioLevel" ||
@@ -93,7 +96,8 @@ export const financeVanillaStore = createStore<FinanceStore>()((set) => ({
         if (currentLevel < 4) {
           const nextLevel = (currentLevel + 1) as 1 | 2 | 3 | 4;
           upgrades[target] = nextLevel;
-          money -= UPGRADE_COSTS[target][currentLevel];
+          paid = UPGRADE_COSTS[target][currentLevel];
+          money -= paid;
 
           if (target === "dormLevel") {
             fixedCosts.dormitory += 900000;
@@ -113,6 +117,14 @@ export const financeVanillaStore = createStore<FinanceStore>()((set) => ({
         upgrades,
         fixedCosts,
         money,
+        pendingExpenses:
+          paid > 0
+            ? {
+                ...(state.pendingExpenses ?? {}),
+                facilityInvestment:
+                  (state.pendingExpenses?.facilityInvestment ?? 0) + paid,
+              }
+            : state.pendingExpenses,
         weeklyFixedTotal: calculateWeeklyFixedTotal(fixedCosts),
       };
     }),

@@ -542,6 +542,12 @@ export async function startComebackProjectAndSave(
     finance: {
       ...snapshot.finance,
       money: snapshot.finance.money - budgetTier.cost,
+      pendingExpenses: {
+        ...(snapshot.finance.pendingExpenses ?? {}),
+        productionBudget:
+          (snapshot.finance.pendingExpenses?.productionBudget ?? 0) +
+          budgetTier.cost,
+      },
     },
   };
   const saved = await saveGame(
@@ -705,6 +711,12 @@ export async function trainStaffAndSave(
     finance: {
       ...snapshot.finance,
       money: snapshot.finance.money - training.cost,
+      pendingExpenses: {
+        ...(snapshot.finance.pendingExpenses ?? {}),
+        staffDevelopment:
+          (snapshot.finance.pendingExpenses?.staffDevelopment ?? 0) +
+          training.cost,
+      },
     },
   };
   const saved = await saveGame(

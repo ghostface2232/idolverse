@@ -4,15 +4,18 @@ import { SectionHeader } from "@/components/common/SectionHeader";
 import { INVESTOR_PROFILES } from "@/data/investors";
 import { useFinanceStore } from "@/stores/financeStore";
 import { useGameStore } from "@/stores/gameStore";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 interface MoreOverviewProps {
   onOpenNotifications: () => void;
+  onOpenFinance: () => void;
   onOpenStaff: () => void;
   onOpenFacilities: () => void;
 }
 
 export function MoreOverview({
   onOpenNotifications,
+  onOpenFinance,
   onOpenStaff,
   onOpenFacilities,
 }: MoreOverviewProps) {
@@ -21,6 +24,8 @@ export function MoreOverview({
   const money = useFinanceStore((state) => state.money);
   const weeklyFixedTotal = useFinanceStore((state) => state.weeklyFixedTotal);
   const investor = INVESTOR_PROFILES[investorType];
+  const runwayWeeks =
+    weeklyFixedTotal > 0 ? Math.max(0, Math.floor(money / weeklyFixedTotal)) : null;
 
   return (
     <section className="h-full overflow-y-auto p-4 sm:p-5">
@@ -42,7 +47,11 @@ export function MoreOverview({
             {investor.label}와 함께 운영 중
           </p>
         </article>
-        <article className="rounded-3xl bg-surface-panel p-4 shadow-[var(--shadow-surface)]">
+        <button
+          type="button"
+          className="rounded-3xl bg-surface-panel p-4 text-left shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96]"
+          onClick={onOpenFinance}
+        >
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <WalletCards className="size-4 text-action-secondary" aria-hidden="true" />
             재무 요약
@@ -51,17 +60,30 @@ export function MoreOverview({
             <div>
               <dt className="text-[11px] text-text-muted">보유 자금</dt>
               <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums text-text-primary">
-                ₩{money.toLocaleString("ko-KR")}
+                {formatKoreanWon(money, { symbol: true })}
               </dd>
             </div>
             <div>
               <dt className="text-[11px] text-text-muted">주간 고정비</dt>
               <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums text-text-primary">
-                ₩{weeklyFixedTotal.toLocaleString("ko-KR")}
+                {formatKoreanWon(weeklyFixedTotal, { symbol: true })}
+              </dd>
+            </div>
+            <div className="col-span-2 rounded-xl bg-surface-shell/55 px-3 py-2">
+              <dt className="text-[11px] text-text-muted">현재 자금 여유</dt>
+              <dd className="mt-0.5 text-sm font-semibold text-text-primary">
+                {runwayWeeks === null
+                  ? "고정비 없음"
+                  : runwayWeeks > 52
+                    ? "1년 이상 안정"
+                    : `${runwayWeeks}주 유지 가능`}
               </dd>
             </div>
           </dl>
-        </article>
+          <p className="mt-3 text-xs font-semibold text-cyan-200">
+            자금 흐름 자세히 보기
+          </p>
+        </button>
       </div>
       <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">이번 주 경영 업무</h2>
       <div className="grid grid-cols-2 gap-3">

@@ -1,3 +1,5 @@
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
+
 interface MoneyDisplayProps {
   amount: number;
   size?: "sm" | "lg" | "2xl";
@@ -20,8 +22,7 @@ export function MoneyDisplay({ amount, size = "sm", className = "" }: MoneyDispl
       ].join(" ")}
     >
       <span className="font-semibold tracking-[-0.01em] tabular-nums">
-        <span aria-hidden="true">₩</span>
-        {new Intl.NumberFormat("ko-KR").format(amount)}
+        {formatKoreanWon(amount, { symbol: true })}
       </span>
     </span>
   );

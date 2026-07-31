@@ -39,6 +39,11 @@ import type {
   WeeklyReportSnapshot,
 } from "@/types/game";
 import { withJosa } from "@/utils/josa";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
+import {
+  ALBUM_UNIT_MARGIN,
+  calculateAlbumLifetimeRevenue,
+} from "@/systems/economySystem";
 
 interface WeekReportProps {
   report: WeeklyReportSnapshot;
@@ -178,12 +183,12 @@ export function WeekReport({
         <div className="grid grid-cols-2 gap-2">
           <StatTile
             label="순수익"
-            value={`${net >= 0 ? "+" : "-"}${formatMoney(Math.abs(net))}원`}
+            value={`${net >= 0 ? "+" : "-"}${formatKoreanWon(Math.abs(net))}`}
             tone={net >= 0 ? "good" : "bad"}
           />
           <StatTile
             label="회사 잔액"
-            value={`${money < 0 ? "-" : ""}${formatMoney(Math.abs(money))}원`}
+            value={`${money < 0 ? "-" : ""}${formatKoreanWon(Math.abs(money))}`}
             tone={money < 0 ? "bad" : "neutral"}
           />
           <StatTile
@@ -731,6 +736,21 @@ function ComebackSettlementSection({
           value={formatCompact(settlement.totalStreams)}
         />
       </div>
+      <div className="mt-2 rounded-xl bg-emerald-400/[0.08] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-text-muted">음반 예상 총수익</span>
+          <span className="text-sm font-semibold tabular-nums text-emerald-200">
+            {formatKoreanWon(
+              calculateAlbumLifetimeRevenue(settlement.firstWeekSales),
+            )}
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] text-text-muted">
+          초동 {settlement.firstWeekSales.toLocaleString("ko-KR")}장 × 장당 정산{" "}
+          {ALBUM_UNIT_MARGIN.toLocaleString("ko-KR")}원, 발매 후 5주에 걸쳐
+          들어옵니다.
+        </p>
+      </div>
       {settlement.fanGrowth > 0 ? (
         <p className="mt-2 text-xs text-state-success">
           이번 활동으로 팬덤이 {Math.round(settlement.fanGrowth)}만큼 늘었습니다.
@@ -843,6 +863,7 @@ const FINANCE_INCOME_LABELS: Record<string, string> = {
   streaming: "음원 스트리밍",
   album: "음반 판매",
   promotions: "프로모션 활동",
+  commercialContracts: "광고·외부 계약",
   strategicExpansion: "전략 확장 수익",
   emergencyFinancing: "긴급 자금 조달",
   decisionSupport: "주간 결정 지원",
@@ -851,6 +872,9 @@ const FINANCE_INCOME_LABELS: Record<string, string> = {
 const FINANCE_EXPENSE_LABELS: Record<string, string> = {
   fixedCosts: "고정 운영비",
   promotions: "프로모션 비용",
+  productionBudget: "앨범 제작비",
+  staffDevelopment: "스태프 육성",
+  facilityInvestment: "시설 투자",
   strategicExpansion: "전략 확장 유지비",
   financingRepayment: "차입금 상환",
   decisionCosts: "주간 결정 비용",
@@ -908,7 +932,7 @@ function FinanceSection({
           ].join(" ")}
         >
           {net >= 0 ? "+" : "-"}
-          {formatMoney(Math.abs(net))}원
+          {formatKoreanWon(Math.abs(net))}
         </span>
       </div>
     </section>
@@ -931,7 +955,7 @@ function FinanceGroup({
       <div className="flex items-center justify-between">
         <p className="text-xs text-text-muted">{label}</p>
         <p className="text-sm font-semibold tabular-nums text-text-primary">
-          {formatMoney(total)}원
+          {formatKoreanWon(total)}
         </p>
       </div>
       {entries.length > 0 ? (
@@ -942,7 +966,7 @@ function FinanceGroup({
                 {labels[key] ?? key}
               </span>
               <span className="shrink-0 tabular-nums text-text-secondary">
-                {formatMoney(value)}원
+                {formatKoreanWon(value)}
               </span>
             </li>
           ))}
@@ -1047,13 +1071,6 @@ function formatDelta(value: number) {
 }
 
 function formatCompact(amount: number) {
-  return new Intl.NumberFormat("ko-KR", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(amount);
-}
-
-function formatMoney(amount: number) {
   return new Intl.NumberFormat("ko-KR", {
     notation: "compact",
     maximumFractionDigits: 1,

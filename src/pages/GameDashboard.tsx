@@ -9,6 +9,7 @@ import { CampaignOverScreen } from "@/components/dashboard/CampaignOverScreen";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
 import { FacilityUpgradeModal } from "@/components/dashboard/FacilityUpgradeModal";
+import { FinanceOverviewModal } from "@/components/dashboard/FinanceOverviewModal";
 import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
 import { StaffManagementModal } from "@/components/dashboard/StaffManagementModal";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
@@ -108,6 +109,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const [overviewModal, setOverviewModal] = useState<OverviewModal>(null);
   const [memberDetailId, setMemberDetailId] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [financeOpen, setFinanceOpen] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
   const [isPositionReviewSaving, setIsPositionReviewSaving] = useState(false);
@@ -739,6 +741,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
             {weekTickerActive && weeklyFlow.state === "report_ready" && weeklyFlow.report ? (
               <WeekTickerOverlay
                 report={weeklyFlow.report}
+                endingMoney={money}
                 onComplete={() => setWeekTickerActive(false)}
               />
             ) : null}
@@ -751,6 +754,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
             seasonLabel={SEASON_LABELS[currentSeason]}
             money={money}
             alertCount={totalAlerts}
+            onOpenFinance={() => setFinanceOpen(true)}
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
         }
@@ -823,6 +827,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         {activeSection === "more" ? (
           <MoreOverview
             onOpenNotifications={() => setNotificationsOpen(true)}
+            onOpenFinance={() => setFinanceOpen(true)}
             onOpenStaff={() => setCompanyModal("staff")}
             onOpenFacilities={() => setCompanyModal("facility")}
           />
@@ -896,6 +901,10 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         news={news}
         notifications={notifications}
       />
+
+      {financeOpen ? (
+        <FinanceOverviewModal onClose={() => setFinanceOpen(false)} />
+      ) : null}
 
       {displayedWeekReport ? (
         <WeekReport

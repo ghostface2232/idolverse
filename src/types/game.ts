@@ -624,6 +624,8 @@ export interface Album {
     choreographer?: boolean;
   };
   quality: number;
+  /** 기획 착수 때 확정된 제작비. 음반 정산 회수율을 설명하는 기준이다. */
+  productionCost?: number;
   releaseWeek?: number;
   performance?: AlbumPerformance;
 }
@@ -1137,6 +1139,12 @@ export interface FinanceStoreState {
     hasSecurity: boolean;
   };
   weeklyFixedTotal: number;
+  /**
+   * 이미 잔액에서 빠졌지만 아직 주간 결산에 포함되지 않은 지출.
+   * 컴백 제작비·스태프 훈련·시설 투자처럼 계획 화면에서 즉시 결제되는
+   * 거래를 다음 결산에 한 번만 귀속한다.
+   */
+  pendingExpenses?: Record<string, number>;
   incomeHistory: { week: number; breakdown: Record<string, number> }[];
   expenseHistory: { week: number; breakdown: Record<string, number> }[];
   /**

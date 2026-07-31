@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 interface TopStatusBarProps {
   year: number;
@@ -8,6 +9,7 @@ interface TopStatusBarProps {
   seasonLabel: string;
   money: number;
   alertCount: number;
+  onOpenFinance: () => void;
   onOpenNotifications: () => void;
 }
 
@@ -17,6 +19,7 @@ export function TopStatusBar({
   seasonLabel,
   money,
   alertCount,
+  onOpenFinance,
   onOpenNotifications,
 }: TopStatusBarProps) {
   return (
@@ -30,11 +33,18 @@ export function TopStatusBar({
         </span>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-1.5">
-        <MoneyDisplay
-          amount={money}
-          size="sm"
-          className="max-w-[9.5rem] truncate px-2.5 sm:max-w-none sm:px-3"
-        />
+        <button
+          type="button"
+          className="min-h-11 rounded-full transition-transform active:scale-[0.96]"
+          aria-label={`자금 흐름 열기, 현재 ${formatKoreanWon(money)}`}
+          onClick={onOpenFinance}
+        >
+          <MoneyDisplay
+            amount={money}
+            size="sm"
+            className="max-w-[9.5rem] truncate px-2.5 sm:max-w-none sm:px-3"
+          />
+        </button>
         <Button
           tone="ghost"
           static

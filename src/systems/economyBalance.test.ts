@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateAlbumRevenue } from "@/systems/economySystem";
+import {
+  calculateAlbumLifetimeRevenue,
+  calculateAlbumRevenue,
+  processWeeklyFinances,
+} from "@/systems/economySystem";
+import { initialFinanceState } from "@/stores/financeStore";
 import { updateFandom, type WeeklyFandomContext } from "@/systems/fandomSystem";
 
 const QUIET_WEEK: WeeklyFandomContext = {
@@ -38,6 +43,30 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
       -1,
     );
     expect(calculateAlbumRevenue(sales, 5)).toBe(0);
+    expect(calculateAlbumLifetimeRevenue(sales)).toBe(sales * 1200);
+  });
+
+  it("계획 화면에서 이미 결제한 비용은 결산에 보이되 두 번 차감하지 않는다", () => {
+    const result = processWeeklyFinances(
+      {
+        ...initialFinanceState,
+        money: 100_000_000,
+        pendingExpenses: { productionBudget: 60_000_000 },
+      },
+      {
+        fandom: 0,
+        global: 0,
+        chartRank: null,
+        weeksAfterAlbumRelease: null,
+        albumFirstWeekSales: 0,
+        hasReleasedAlbum: false,
+        promotionIncome: 0,
+        promotionCost: 0,
+      },
+    );
+
+    expect(result.expenses.productionBudget).toBe(60_000_000);
+    expect(result.money).toBe(100_000_000);
   });
 
   it("실망은 래칫이 아니다: 새 실망이 없는 주에 자연 회복된다", () => {
