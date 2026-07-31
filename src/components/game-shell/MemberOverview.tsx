@@ -1,4 +1,4 @@
-import { Activity, ChevronRight, HeartPulse, Star } from "lucide-react";
+import { Activity, ChevronRight, HeartPulse, ShieldAlert, Star } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { TEMPERAMENT_PROFILES } from "@/data/balance";
@@ -16,32 +16,65 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
     (max, trainee) => Math.max(max, trainee.popularity ?? 0),
     0,
   );
+  const averageCondition =
+    trainees.length > 0
+      ? Math.round(
+          trainees.reduce((sum, trainee) => sum + trainee.condition, 0) /
+            trainees.length,
+        )
+      : 0;
+  const attentionCount = trainees.filter(
+    (trainee) => trainee.injuryWeeks > 0 || trainee.condition < 50,
+  ).length;
 
   return (
     <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl">
         <SectionHeader
-          eyebrow="멤버"
-          title="멤버 현황"
-          description="카드를 누르면 능력치와 관계를 자세히 볼 수 있습니다."
+          title="멤버"
         />
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-surface-panel px-3 py-2.5 shadow-[var(--shadow-surface)]">
+            <p className="flex items-center gap-1.5 text-[11px] text-text-muted">
+              <HeartPulse className="size-3.5 text-action-secondary" aria-hidden="true" />
+              팀 평균 컨디션
+            </p>
+            <p className="mt-0.5 text-base font-semibold tabular-nums text-text-primary">
+              {averageCondition}
+            </p>
+          </div>
+          <div
+            className={[
+              "rounded-2xl px-3 py-2.5 shadow-[var(--shadow-surface)]",
+              attentionCount > 0 ? "bg-state-danger/10" : "bg-surface-panel",
+            ].join(" ")}
+          >
+            <p className="flex items-center gap-1.5 text-[11px] text-text-muted">
+              <ShieldAlert
+                className={[
+                  "size-3.5",
+                  attentionCount > 0 ? "text-state-danger" : "text-state-success",
+                ].join(" ")}
+                aria-hidden="true"
+              />
+              관리 필요
+            </p>
+            <p className="mt-0.5 text-base font-semibold tabular-nums text-text-primary">
+              {attentionCount}명
+            </p>
+          </div>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {trainees.map((trainee) => (
             <button
               key={trainee.id}
               type="button"
-              className="rounded-3xl bg-surface-panel p-4 text-left shadow-[var(--shadow-surface)] transition-transform active:scale-[0.98]"
+              className="rounded-3xl bg-surface-panel p-3.5 text-left shadow-[var(--shadow-surface)] transition-transform duration-[var(--motion-press)] active:scale-[0.96]"
               onClick={() => onSelectTrainee(trainee.id)}
             >
               <div className="flex items-center gap-3">
                 <span className="relative shrink-0">
                   <MemberPortrait traineeId={trainee.id} size="lg" />
-                  {trainee.injuryWeeks > 0 ? (
-                    <span
-                      className="absolute -right-1 -top-1 size-3.5 rounded-full border-2 border-surface-panel bg-state-danger"
-                      title={`부상 회복 중 (${trainee.injuryWeeks}주 남음)`}
-                    />
-                  ) : null}
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="flex items-center gap-1.5 truncate font-semibold text-text-primary">
@@ -65,7 +98,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                       {trainee.position ? POSITION_LABELS[trainee.position] : "포지션 미정"}
                     </span>
                     {traitLabels(trainee)
-                      .slice(0, 2)
+                      .slice(0, 1)
                       .map((label) => (
                         <span key={label} className="rounded-md bg-white/[0.05] px-1.5 py-0.5">
                           {label}
@@ -81,8 +114,8 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                   aria-hidden="true"
                 />
               </div>
-              <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded-xl bg-surface-shell/70 p-2.5">
+              <dl className="mt-3 grid grid-cols-3 gap-1.5 text-xs">
+                <div className="rounded-xl bg-surface-shell/70 p-2">
                   <dt className="flex items-center gap-1.5 text-text-muted">
                     <HeartPulse className="size-3.5" aria-hidden="true" /> 컨디션
                   </dt>
@@ -90,7 +123,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                     {Math.round(trainee.condition)}
                   </dd>
                 </div>
-                <div className="rounded-xl bg-surface-shell/70 p-2.5">
+                <div className="rounded-xl bg-surface-shell/70 p-2">
                   <dt className="flex items-center gap-1.5 text-text-muted">
                     <Activity className="size-3.5" aria-hidden="true" /> 활동
                   </dt>
@@ -98,7 +131,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                     {activityLabel(trainee.currentActivity)}
                   </dd>
                 </div>
-                <div className="rounded-xl bg-surface-shell/70 p-2.5">
+                <div className="rounded-xl bg-surface-shell/70 p-2">
                   <dt className="flex items-center gap-1.5 text-text-muted">
                     <Star className="size-3.5" aria-hidden="true" /> 인기
                   </dt>

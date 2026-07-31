@@ -433,7 +433,7 @@ function buildRecontractCard(
     id: `recontract:${member.id}:w${cumulativeWeek}`,
     lane: "crisis",
     category: "계약",
-    title: `${member.name} 재계약 협상`,
+    title: `${member.name} 재계약`,
     summary: `${profile.label} ${member.name}의 처우 협상 시점이 왔습니다 (현재 ${contractTier}등급 · 개인 인기 ${Math.round(popularity)}). ${profile.description}.`,
     trigger: {
       kind: "contract",
@@ -476,8 +476,8 @@ function buildInjuryCard(member: DecisionMemberContext): WeeklyDecision {
     id: `injury:${member.id}`,
     lane: "crisis",
     category: "부상",
-    title: `${member.name} 부상 일정 조정`,
-    summary: `${member.name}의 부상이 ${member.injuryWeeks}주 남았습니다. 이번 주 활동 범위를 결정해야 합니다.`,
+    title: `${member.name} 부상 ${member.injuryWeeks}주`,
+    summary: "이번 주 참여 범위를 선택하세요.",
     trigger: createTrigger(
       "injury",
       member.injuryWeeks >= 3 ? "critical" : "warning",
@@ -513,7 +513,7 @@ function buildConflictCard(conflict: DecisionConflictContext): WeeklyDecision {
     id: `conflict:${conflict.memberAId}:${conflict.memberBId}`,
     lane: "crisis",
     category: "불화",
-    title: `${conflict.memberAName}·${conflict.memberBName} 갈등 중재`,
+    title: `${conflict.memberAName}·${conflict.memberBName} 갈등`,
     summary: "두 멤버의 사이가 심각하게 틀어졌습니다. 팀 분위기가 더 나빠지기 전에 개입이 필요합니다.",
     trigger: createTrigger(
       "conflict",
@@ -561,7 +561,7 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
     id: "emergency-investor",
     lane: "crisis",
     category: "투자사",
-    title: "투자사 경영 개입",
+    title: "투자사 개입 요구",
     summary: "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구하고 있습니다.",
     trigger: createTrigger("investor", "critical", [], "투자사 압박 활성"),
     options: [
@@ -610,7 +610,7 @@ function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDec
     id: "financial-crisis",
     lane: "crisis",
     category: "경영",
-    title: "운영 자금 긴급 조정",
+    title: `현금 런웨이 ${runwayLabel}`,
     summary: `현재 자금은 ${Math.round(money).toLocaleString("ko-KR")}원입니다. ${
       Number.isFinite(runwayWeeks)
         ? `고정비 기준 ${Math.max(0, runwayWeeks).toFixed(1)}주 버틸 수 있습니다.`
@@ -666,7 +666,7 @@ function buildFinancingRepaymentCard(
     id: `financing-repayment:${financing.id}`,
     lane: "crisis",
     category: "경영",
-    title: financing.kind === "loan" ? "긴급 대출 상환" : "추가 투자금 상환",
+    title: `상환 만기 D-${remainingWeeks}주`,
     summary: `상환액 ${Math.round(financing.repaymentAmount).toLocaleString("ko-KR")}원, 만기까지 ${remainingWeeks}주 남았습니다.`,
     trigger: createTrigger(
       "finance",
@@ -701,7 +701,7 @@ function buildFandomCrisisCard(
     id: "fandom-crisis",
     lane: "crisis",
     category: "팬덤",
-    title: "팬덤 신뢰 회복",
+    title: "팬덤 이탈 조짐",
     summary: "팬심이 눈에 띄게 식고 실망이 쌓이고 있습니다. 이탈이 커지기 전에 대응이 필요합니다.",
     trigger: createTrigger(
       "fandom",
@@ -808,7 +808,7 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
     id: `morale:${member.id}`,
     lane: "crisis",
     category: "멤버",
-    title: `${member.name} 이탈 위험`,
+    title: `${member.name} 만족도 급락`,
     summary: `${member.name}의 만족도가 위험한 수준까지 떨어졌습니다. 불만을 방치하면 이탈로 이어질 수 있습니다.`,
     trigger: createTrigger(
       "morale",
@@ -853,7 +853,7 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
     id: `overwork:${member.id}`,
     lane: "crisis",
     category: "과로",
-    title: `${member.name} 과로 경고`,
+    title: `${member.name} 과로 신호`,
     summary: `${member.name}의 스트레스가 한계에 가깝습니다. 부상이나 만족도 하락으로 번지기 전에 일정 조정이 필요합니다.`,
     trigger: createTrigger(
       "overwork",

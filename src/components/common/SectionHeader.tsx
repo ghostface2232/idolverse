@@ -1,6 +1,6 @@
 interface SectionHeaderProps {
   /** 상단 작은 카테고리 라벨 */
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description?: string;
 }
@@ -12,8 +12,17 @@ interface SectionHeaderProps {
 export function SectionHeader({ eyebrow, title, description }: SectionHeaderProps) {
   return (
     <header className="mb-4">
-      <p className="text-xs font-semibold text-action-secondary">{eyebrow}</p>
-      <h1 className="mt-1 text-xl font-semibold text-text-primary">{title}</h1>
+      {eyebrow ? (
+        <p className="text-xs font-semibold text-action-secondary">{eyebrow}</p>
+      ) : null}
+      <h1
+        className={[
+          "text-xl font-semibold text-text-primary",
+          eyebrow ? "mt-1" : "",
+        ].join(" ")}
+      >
+        {title}
+      </h1>
       {description ? (
         <p className="mt-1 text-sm text-text-muted [word-break:keep-all]">
           {description}

@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
 import {
+  BriefcaseBusiness,
   Building2,
   CalendarRange,
-  Ellipsis,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
 const NAV_ITEMS = [
-  { key: "company", label: "회사", icon: Building2 },
-  { key: "week", label: "이번 주", icon: CalendarRange },
-  { key: "members", label: "멤버", icon: Users },
-  { key: "market", label: "시장", icon: TrendingUp },
-  { key: "more", label: "더보기", icon: Ellipsis },
+  { key: "company", label: "회사", icon: Building2, primary: false },
+  { key: "members", label: "멤버", icon: Users, primary: false },
+  { key: "week", label: "이번 주", icon: CalendarRange, primary: true },
+  { key: "market", label: "시장", icon: TrendingUp, primary: false },
+  { key: "more", label: "운영", icon: BriefcaseBusiness, primary: false },
 ] as const;
 
 export type GameSection = (typeof NAV_ITEMS)[number]["key"];
@@ -21,12 +21,14 @@ export type GameSection = (typeof NAV_ITEMS)[number]["key"];
 interface BottomNavProps {
   selectedKey: GameSection;
   onSelectionChange: (key: GameSection) => void;
+  weekBadge?: number;
   children: ReactNode;
 }
 
 export function BottomNav({
   selectedKey,
   onSelectionChange,
+  weekBadge = 0,
   children,
 }: BottomNavProps) {
   return (
@@ -38,7 +40,7 @@ export function BottomNav({
     >
       <TabList
         items={NAV_ITEMS}
-        className="order-2 grid grid-cols-5 border-t border-white/8 bg-surface-panel lg:order-1 lg:flex lg:flex-col lg:border-r lg:border-t-0"
+        className="order-2 grid grid-cols-5 bg-surface-panel/96 shadow-[0_-1px_0_rgba(255,255,255,0.08),0_-16px_36px_rgba(2,6,23,0.34)] backdrop-blur-xl lg:order-1 lg:flex lg:flex-col lg:border-r lg:border-white/8 lg:shadow-none"
       >
         {(item) => {
           const Icon = item.icon;
@@ -51,7 +53,9 @@ export function BottomNav({
                   "group relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium outline-none",
                   "transition-[scale,color] duration-[var(--motion-state)] ease-out",
                   isSelected
-                    ? "text-action-secondary"
+                    ? item.primary
+                      ? "text-pink-100"
+                      : "text-action-secondary"
                     : "text-text-muted hover:text-text-secondary",
                   isPressed ? "scale-[0.96]" : "scale-100",
                   isFocusVisible ? "ring-2 ring-inset ring-action-secondary" : "",
@@ -63,18 +67,29 @@ export function BottomNav({
                 <>
                   <span
                     className={[
-                      "grid h-7 w-12 place-items-center rounded-full",
-                      "transition-[background-color] duration-[var(--motion-state)] ease-out",
-                      isSelected
-                        ? "bg-action-secondary/15"
-                        : "bg-transparent group-hover:bg-white/[0.05]",
+                      "relative grid place-items-center rounded-full",
+                      "transition-[background-color,box-shadow] duration-[var(--motion-state)] ease-out",
+                      item.primary ? "h-9 w-14" : "h-7 w-12",
+                      isSelected && item.primary
+                        ? "bg-action-primary text-white shadow-[0_6px_20px_rgba(236,72,153,0.32)]"
+                        : isSelected
+                          ? "bg-action-secondary/15"
+                          : "bg-transparent group-hover:bg-white/[0.05]",
                     ].join(" ")}
                   >
                     <Icon
-                      className="size-5"
+                      className={item.primary ? "size-[21px]" : "size-5"}
                       strokeWidth={isSelected ? 2.1 : 1.8}
                       aria-hidden="true"
                     />
+                    {item.key === "week" && weekBadge > 0 ? (
+                      <span
+                        className="absolute -right-0.5 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-state-warning px-1 text-[9px] font-bold leading-none text-slate-950 shadow-[0_0_0_2px_var(--color-surface-panel)]"
+                        aria-hidden="true"
+                      >
+                        {weekBadge > 9 ? "9+" : weekBadge}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="truncate">{item.label}</span>
                 </>

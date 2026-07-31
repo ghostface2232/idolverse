@@ -26,21 +26,43 @@ export function MoreOverview({
     <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl">
       <SectionHeader
-        eyebrow="회사"
-        title="더보기"
-        description="회사 운영과 기록을 확인합니다."
+        title="운영"
       />
       <div className="grid gap-3 sm:grid-cols-2">
-        <InfoCard icon={Building} label="회사" value={companyName} />
-        <InfoCard icon={Landmark} label="투자자" value={investor.label} />
-        <InfoCard icon={WalletCards} label="보유 자금" value={`₩${money.toLocaleString("ko-KR")}`} />
-        <InfoCard
-          icon={WalletCards}
-          label="주간 고정비"
-          value={`₩${weeklyFixedTotal.toLocaleString("ko-KR")}`}
-        />
+        <article className="rounded-3xl bg-surface-panel p-4 shadow-[var(--shadow-surface)]">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <Building className="size-4 text-action-secondary" aria-hidden="true" />
+            우리 회사
+          </div>
+          <p className="mt-2 text-base font-semibold text-text-primary">{companyName}</p>
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-text-muted">
+            <Landmark className="size-3.5" aria-hidden="true" />
+            {investor.label}와 함께 운영 중
+          </p>
+        </article>
+        <article className="rounded-3xl bg-surface-panel p-4 shadow-[var(--shadow-surface)]">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <WalletCards className="size-4 text-action-secondary" aria-hidden="true" />
+            재무 요약
+          </div>
+          <dl className="mt-2 grid grid-cols-2 gap-3">
+            <div>
+              <dt className="text-[11px] text-text-muted">보유 자금</dt>
+              <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums text-text-primary">
+                ₩{money.toLocaleString("ko-KR")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-text-muted">주간 고정비</dt>
+              <dd className="mt-0.5 truncate text-sm font-semibold tabular-nums text-text-primary">
+                ₩{weeklyFixedTotal.toLocaleString("ko-KR")}
+              </dd>
+            </div>
+          </dl>
+        </article>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">운영 업무</h2>
+      <div className="grid grid-cols-2 gap-3">
         <Button className="w-full gap-2" tone="secondary" onPress={onOpenStaff}>
           <Users className="size-4" aria-hidden="true" /> 인사 관리
         </Button>
@@ -49,30 +71,9 @@ export function MoreOverview({
         </Button>
       </div>
       <Button className="mt-3 w-full gap-2" tone="secondary" onPress={onOpenNotifications}>
-        <Bell className="size-4" aria-hidden="true" /> 알림 센터 열기
+        <Bell className="size-4" aria-hidden="true" /> 알림
       </Button>
       </div>
     </section>
-  );
-}
-
-function InfoCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Building;
-  label: string;
-  value: string;
-}) {
-  return (
-    <article className="rounded-3xl bg-surface-panel p-4 shadow-[var(--shadow-surface)]">
-      <div className="flex items-center gap-2 text-xs text-text-muted">
-        <Icon className="size-4 text-action-secondary" aria-hidden="true" /> {label}
-      </div>
-      <p className="mt-2 break-words text-sm font-semibold tabular-nums text-text-primary">
-        {value}
-      </p>
-    </article>
   );
 }

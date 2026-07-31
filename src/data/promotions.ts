@@ -33,7 +33,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "youtubeContent",
-    name: "유튜브 콘텐츠",
+    name: "자체 콘텐츠 촬영",
     cost: 500, // 저비용 반복 루프로 팬덤 관리를 가능하게 한다.
     duration: 1, // 짧게 반복 가능한 활동으로 둬야 활용도가 높다.
     successFactors: ["charm", "visualStyle"],
@@ -66,7 +66,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "liveBroadcast",
-    name: "라이브 방송",
+    name: "팬 커뮤니티 라이브",
     cost: 0, // 라이브는 가장 접근성 높은 팬 소통 수단으로 둔다.
     duration: 1, // 한 주에 한 번 넣기 쉬운 단기 액션이다.
     successFactors: ["charm"],
@@ -80,7 +80,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "fanCafeEvent",
-    name: "팬카페 이벤트",
+    name: "멤버십 이벤트",
     cost: 300, // 작은 운영비는 들지만 반복 가능한 충성도 유지 수단이어야 한다.
     duration: 1, // 짧게 소화 가능한 활동으로 남긴다.
     effects: {
@@ -93,7 +93,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "smallConcert",
-    name: "콘서트 - 소극장",
+    name: "라이브홀 팬콘",
     cost: 15000, // 소극장은 첫 유료 라이브 단계로 부담을 제한한다.
     duration: 2, // 준비와 후속 회복까지 고려하면 2주가 적절하다.
     effects: {
@@ -110,7 +110,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "midConcert",
-    name: "콘서트 - 중극장",
+    name: "아레나 콘서트",
     cost: 45000, // 중극장은 운영이 본격적으로 무거워져야 한다.
     duration: 2, // 여전히 짧은 투어 단위로 처리할 수 있게 한다.
     effects: {
@@ -128,7 +128,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "largeConcert",
-    name: "콘서트 - 대극장",
+    name: "고척돔 콘서트",
     cost: 120000, // 대극장은 큰 자금 묶임을 통해 리스크를 체감시킨다.
     duration: 3, // 준비 기간이 길어져 다른 활동을 희생하게 만든다.
     effects: {
@@ -147,7 +147,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   },
   {
     id: "domeConcert",
-    name: "콘서트 - 돔",
+    name: "스타디움 콘서트",
     cost: 300000, // 돔은 명백한 엔드게임급 베팅이어야 한다.
     duration: 4, // 긴 준비 기간이 다른 의사결정을 압박하게 한다.
     effects: {

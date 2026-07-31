@@ -1820,7 +1820,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
             },
           ],
           "summary": "투자 조건 미달 또는 누적 압박으로 투자사가 운영 방침 변경을 요구하고 있습니다.",
-          "title": "투자사 경영 개입",
+          "title": "투자사 개입 요구",
           "trigger": {
             "description": "투자사 압박 활성",
             "entityIds": [],
@@ -1873,7 +1873,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
             },
           ],
           "summary": "안정형 트레이니-t1의 처우 협상 시점이 왔습니다 (현재 1등급 · 개인 인기 0). 감정의 진폭이 작고 예측 가능합니다.",
-          "title": "트레이니-t1 재계약 협상",
+          "title": "트레이니-t1 재계약",
           "trigger": {
             "description": "트레이니-t1 재계약 협상 도래",
             "entityIds": [

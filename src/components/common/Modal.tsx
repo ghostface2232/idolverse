@@ -46,15 +46,21 @@ export function Modal({
         className={({ isEntering, isExiting }) =>
           [
             "flex max-h-full w-full flex-col overflow-hidden rounded-t-3xl bg-surface-panel pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-raised)] outline-none sm:max-h-[88dvh] sm:max-w-md sm:rounded-3xl sm:pb-0",
-            "transition-[transform,opacity] duration-150 ease-out",
+            "relative transition-[transform,scale,opacity] duration-150 ease-out",
             isEntering ? "animate-sheet-in" : "",
-            isExiting ? "translate-y-6 opacity-0 sm:-translate-y-3" : "",
+            isExiting
+              ? "translate-y-6 opacity-0 sm:translate-y-2 sm:scale-[0.98]"
+              : "",
             className,
           ].join(" ")
         }
       >
+        <span
+          className="pointer-events-none absolute left-1/2 top-2 z-10 h-1 w-9 -translate-x-1/2 rounded-full bg-white/20 sm:hidden"
+          aria-hidden="true"
+        />
         <Dialog className="flex min-h-0 flex-col outline-none">
-          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-white/8 bg-surface-raised/70 px-5 py-2.5 sm:min-h-16 sm:py-3">
+          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 bg-surface-raised/76 px-5 pb-2.5 pt-4 shadow-[0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl sm:min-h-16 sm:py-3">
             <Heading slot="title" className="text-lg font-semibold text-text-primary">
               {title}
             </Heading>

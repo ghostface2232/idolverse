@@ -681,7 +681,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         type="button"
         aria-pressed={autoAdvance}
         className={[
-          "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs transition",
+          "flex min-h-11 w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs transition-[scale,background-color,color,box-shadow] duration-[var(--motion-press)] active:scale-[0.96]",
           autoAdvance
             ? "bg-brand-cyan/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
             : "bg-white/[0.04] text-text-muted shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]",
@@ -707,6 +707,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       <GameShell
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        weekBadge={remainingDecisions}
         world={
           <div className="relative h-full min-h-0">
             <GameWorldHost active={activeSection === "company"} />
@@ -746,6 +747,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
             bestChartRank={bestChartRank}
             nextRivalComeback={nextRivalComeback}
             hasGoalRisk={Boolean(primaryRisk)}
+            goalRiskSeverity={primaryRisk?.severity}
             onOpenGoals={() => setOverviewModal("goals")}
             onOpenContracts={() => setOverviewModal("contracts")}
             onOpenMarket={() => setActiveSection("market")}
@@ -762,6 +764,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               canResolveWeek={canResolveWeek}
               flowState={weeklyFlow.state}
               riskLabel={primaryRisk?.description}
+              riskSeverity={primaryRisk?.severity}
               hintLabel={
                 canPlanComeback
                   ? "제작 슬롯 비어 있음, 컴백 기획을 시작할 수 있습니다"

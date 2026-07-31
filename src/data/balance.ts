@@ -250,7 +250,7 @@ export const FACILITY_TIER_UNLOCKS: Record<
   { milestoneId: string; label: string }
 > = {
   3: { milestoneId: "first-release", label: "첫 앨범 발매" },
-  4: { milestoneId: "mid-concert-open", label: "중극장 공연 규모 달성" },
+  4: { milestoneId: "mid-concert-open", label: "아레나 입성" },
 };
 
 // 상시 스태프 시장(M5): 풀 상한이 업계 신뢰와 함께 열리고, 후보는 매주

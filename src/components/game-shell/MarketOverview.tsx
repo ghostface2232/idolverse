@@ -14,6 +14,9 @@ import { GroupBadge } from "@/components/visual/GroupBadge";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { CONCEPT_MOOD_DATA, GENRE_DATA } from "@/data/concepts";
 import { NEWS_TYPE_LABELS } from "@/data/kpopCalendar";
+import {
+  getMarketStanding,
+} from "@/data/marketStanding";
 import type { SceneKey } from "@/data/sceneArt";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useCompetitorStore } from "@/stores/competitorStore";
@@ -22,10 +25,34 @@ import { useGameStore } from "@/stores/gameStore";
 import type { CompetitorType } from "@/types/game";
 
 const FANDOM_METRICS = [
-  { key: "public", label: "대중 인지도", icon: RadioTower },
-  { key: "fandom", label: "코어 팬덤", icon: Heart },
-  { key: "global", label: "해외 팬덤", icon: Globe2 },
-  { key: "industry", label: "업계 평판", icon: UsersRound },
+  {
+    key: "public",
+    label: "대중 인지도",
+    icon: RadioTower,
+    accent: "text-action-primary",
+    fill: "bg-action-primary",
+  },
+  {
+    key: "fandom",
+    label: "코어 팬덤",
+    icon: Heart,
+    accent: "text-pink-300",
+    fill: "bg-pink-400",
+  },
+  {
+    key: "global",
+    label: "해외 팬덤",
+    icon: Globe2,
+    accent: "text-action-secondary",
+    fill: "bg-action-secondary",
+  },
+  {
+    key: "industry",
+    label: "업계 평판",
+    icon: UsersRound,
+    accent: "text-state-warning",
+    fill: "bg-state-warning",
+  },
 ] as const;
 
 const COMPETITOR_TYPE_LABELS: Record<CompetitorType, string> = {
@@ -89,9 +116,7 @@ export function MarketOverview() {
     <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl space-y-5">
         <SectionHeader
-          eyebrow="시장"
-          title="시장 브리핑"
-          description="팬덤, 트렌드, 경쟁 그룹, 차트를 한눈에 봅니다."
+          title="시장"
         />
 
         <section aria-labelledby="fandom-heading">
@@ -101,18 +126,30 @@ export function MarketOverview() {
           <dl className="grid grid-cols-2 gap-2.5">
             {FANDOM_METRICS.map((metric) => {
               const Icon = metric.icon;
+              const standing = getMarketStanding(
+                metric.key,
+                fandom[metric.key],
+              );
               return (
                 <div
                   key={metric.key}
                   className="rounded-2xl bg-surface-panel p-3 shadow-[var(--shadow-surface)]"
                 >
                   <dt className="flex items-center gap-2 text-xs text-text-muted">
-                    <Icon className="size-4 text-action-secondary" aria-hidden="true" />
+                    <Icon
+                      className={["size-4", metric.accent].join(" ")}
+                      aria-hidden="true"
+                    />
                     {metric.label}
                   </dt>
-                  <dd className="mt-2 text-lg font-semibold tabular-nums text-text-primary">
-                    {fandom[metric.key].toLocaleString("ko-KR")}
+                  <dd className="mt-2 text-base font-semibold leading-snug text-text-primary text-pretty">
+                    {standing.label}
                   </dd>
+                  <StandingScale
+                    accentClass={metric.fill}
+                    label={metric.label}
+                    standing={standing}
+                  />
                 </div>
               );
             })}
@@ -123,14 +160,14 @@ export function MarketOverview() {
           <div className="mb-3 flex items-center gap-2">
             <TrendingUp className="size-4 text-action-secondary" aria-hidden="true" />
             <h2 id="trend-heading" className="text-sm font-semibold text-text-primary">
-              이번 시즌 트렌드
+              지금 뜨는 콘셉트
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl bg-action-primary/[0.09] p-4 shadow-[var(--shadow-surface)]">
               <div className="flex items-center gap-1.5 text-xs font-medium text-pink-200">
                 <TrendingUp className="size-3.5" aria-hidden="true" />
-                수요 상승
+                반응 상승
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <span className="rounded-full bg-action-primary/20 px-2.5 py-1 text-xs font-semibold text-pink-100">
@@ -144,7 +181,7 @@ export function MarketOverview() {
             <div className="rounded-2xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
               <div className="flex items-center gap-1.5 text-xs font-medium text-cyan-200/85">
                 <TrendingDown className="size-3.5" aria-hidden="true" />
-                수요 둔화
+                열기 식는 중
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <span className="rounded-full bg-action-secondary/16 px-2.5 py-1 text-xs font-semibold text-cyan-100/90">
@@ -163,10 +200,10 @@ export function MarketOverview() {
             <RadioTower className="size-4 text-action-primary" aria-hidden="true" />
             <div>
               <h2 id="charts-heading" className="text-sm font-semibold text-text-primary">
-                현재 주요 차트
+                최신 차트 성적
               </h2>
               <p className="mt-0.5 text-xs text-text-muted">
-                {groupName}의 최신 기록입니다.
+                {groupName}의 현재 순위입니다.
               </p>
             </div>
           </div>
@@ -208,7 +245,9 @@ export function MarketOverview() {
             <div className="mt-3 rounded-2xl bg-surface-raised/52 px-4 py-3.5 shadow-[var(--shadow-surface)]">
               <div className="mb-2.5 flex items-center gap-2">
                 <Trophy className="size-3.5 text-state-warning" aria-hidden="true" />
-                <h3 className="text-xs font-semibold text-text-secondary">시장 상위권</h3>
+                <h3 className="text-xs font-semibold text-text-secondary">
+                  지금 강한 팀
+                </h3>
               </div>
               <ol className="space-y-2.5">
                 {chartLeaders.map((group, index) => (
@@ -220,8 +259,8 @@ export function MarketOverview() {
                     <span className="min-w-0 flex-1 truncate text-text-secondary">
                       {group.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-text-muted">
-                      지수 {Math.round(group.chartScore)}
+                    <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-1 text-xs font-medium text-text-secondary">
+                      {getMarketStanding("chartPower", group.chartScore).label}
                     </span>
                   </li>
                 ))}
@@ -235,10 +274,10 @@ export function MarketOverview() {
             <UsersRound className="size-4 text-text-secondary" aria-hidden="true" />
             <div>
               <h2 id="rivals-heading" className="text-sm font-semibold text-text-primary">
-                경쟁 그룹 상황
+                라이벌 동향
               </h2>
               <p className="mt-0.5 text-xs text-text-muted">
-                대중 인지도가 높은 순서입니다.
+                국내 반응이 큰 순서입니다.
               </p>
             </div>
           </div>
@@ -246,6 +285,18 @@ export function MarketOverview() {
             {rivals.map((rival) => {
               const comeback = upcomingComebacks.find(
                 (item) => item.competitorId === rival.id,
+              );
+              const publicStanding = getMarketStanding(
+                "public",
+                rival.public,
+              );
+              const globalStanding = getMarketStanding(
+                "global",
+                rival.global / 50,
+              );
+              const industryStanding = getMarketStanding(
+                "industry",
+                rival.industry,
               );
               return (
                 <article key={rival.id} className="py-4 first:pt-3.5 last:pb-3.5">
@@ -266,18 +317,34 @@ export function MarketOverview() {
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-xs text-text-muted">대중 인지도</p>
-                        <p className="mt-0.5 font-semibold tabular-nums text-text-primary">
-                          {Math.round(rival.public)}
+                        <p className="text-xs text-text-muted">국내 반응</p>
+                        <p className="mt-0.5 max-w-24 text-xs font-semibold leading-snug text-text-primary text-pretty">
+                          {publicStanding.label}
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 pl-[52px] text-xs text-text-secondary">
-                    <span className="tabular-nums">
-                      해외 {Math.round(rival.global).toLocaleString("ko-KR")}
+                    <span
+                      className="inline-flex items-center gap-1"
+                      aria-label={`해외 반응 ${globalStanding.label}`}
+                    >
+                      <Globe2
+                        className="size-3 text-action-secondary"
+                        aria-hidden="true"
+                      />
+                      {globalStanding.label}
                     </span>
-                    <span className="tabular-nums">업계 {Math.round(rival.industry)}</span>
+                    <span
+                      className="inline-flex items-center gap-1"
+                      aria-label={`업계 평판 ${industryStanding.label}`}
+                    >
+                      <UsersRound
+                        className="size-3 text-state-warning"
+                        aria-hidden="true"
+                      />
+                      {industryStanding.label}
+                    </span>
                     <span className="inline-flex items-center gap-1 text-text-muted">
                       <CalendarClock className="size-3" aria-hidden="true" />
                       {comeback
@@ -305,7 +372,7 @@ export function MarketOverview() {
               id="market-news-heading"
               className="text-sm font-semibold text-text-primary"
             >
-              주요 업계 소식
+              업계 핫이슈
             </h2>
           </div>
           <ul className="divide-y divide-white/8 rounded-2xl bg-surface-shell/68 px-4 shadow-[var(--shadow-surface)]">
@@ -334,12 +401,57 @@ export function MarketOverview() {
             ))}
             {news.length === 0 ? (
               <li className="py-6 text-center text-sm text-text-muted">
-                이번 주 주요 업계 소식이 없습니다.
+                이번 주 업계 핫이슈가 없습니다.
               </li>
             ) : null}
           </ul>
         </section>
       </div>
     </section>
+  );
+}
+
+function StandingScale({
+  accentClass,
+  label,
+  standing,
+}: {
+  accentClass: string;
+  label: string;
+  standing: ReturnType<typeof getMarketStanding>;
+}) {
+  const completedTiers = standing.tierIndex + 1;
+  const progress = Math.round((completedTiers / standing.tierCount) * 100);
+
+  return (
+    <div
+      className="mt-3"
+      role="progressbar"
+      aria-label={`${label} 단계`}
+      aria-valuemin={1}
+      aria-valuemax={standing.tierCount}
+      aria-valuenow={completedTiers}
+      aria-valuetext={`${standing.label}, ${
+        standing.nextLabel ? `다음 ${standing.nextLabel}` : "최고 단계"
+      }`}
+    >
+      <div aria-hidden="true" className="flex gap-1">
+        {Array.from({ length: standing.tierCount }, (_, index) => (
+          <span
+            key={index}
+            className={[
+              "h-1.5 min-w-0 flex-1 rounded-full",
+              index <= standing.tierIndex
+                ? accentClass
+                : "bg-white/[0.08]",
+            ].join(" ")}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-[11px] leading-4 text-text-muted text-pretty">
+        {standing.nextLabel ? `다음 단계 · ${standing.nextLabel}` : "최고 단계"}
+        <span className="sr-only">, 단계 진행 {progress}%</span>
+      </p>
+    </div>
   );
 }

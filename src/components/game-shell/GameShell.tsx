@@ -4,6 +4,7 @@ import { BottomNav, type GameSection } from "@/components/game-shell/BottomNav";
 interface GameShellProps {
   activeSection: GameSection;
   onSectionChange: (section: GameSection) => void;
+  weekBadge?: number;
   topStatus: ReactNode;
   overviewBar: ReactNode;
   children: ReactNode;
@@ -15,6 +16,7 @@ interface GameShellProps {
 export function GameShell({
   activeSection,
   onSectionChange,
+  weekBadge,
   topStatus,
   overviewBar,
   children,
@@ -26,7 +28,11 @@ export function GameShell({
     <main className="mx-auto flex h-dvh w-full max-w-[1200px] flex-col overflow-hidden bg-surface-shell pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-text-primary shadow-[0_0_80px_rgba(2,6,23,0.72)] lg:h-[min(900px,100dvh)] lg:border-x lg:border-white/8">
       {topStatus}
       {overviewBar}
-      <BottomNav selectedKey={activeSection} onSelectionChange={onSectionChange}>
+      <BottomNav
+        selectedKey={activeSection}
+        onSelectionChange={onSectionChange}
+        weekBadge={weekBadge}
+      >
         <div
           className={[
             "flex h-full min-h-0 flex-col",

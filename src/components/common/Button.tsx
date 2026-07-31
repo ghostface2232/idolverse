@@ -34,11 +34,13 @@ const toneShadow: Record<Tone, string> = {
 
 const toneShadowPressed: Record<Tone, string> = {
   primary:
-    "translate-y-[3px] shadow-[0_1px_0_#9d174d,0_4px_12px_rgba(236,72,153,0.16)]",
-  secondary: "translate-y-[3px] shadow-[0_1px_0_#0d2947,var(--shadow-surface)]",
-  ghost: "translate-y-[3px] shadow-[0_1px_0_#0b1220,var(--shadow-surface)]",
-  danger: "translate-y-[3px] shadow-[0_1px_0_#9f1239]",
-  success: "translate-y-[3px] shadow-[0_1px_0_#047857]",
+    "translate-y-[3px] scale-[0.96] shadow-[0_1px_0_#9d174d,0_4px_12px_rgba(236,72,153,0.16)]",
+  secondary:
+    "translate-y-[3px] scale-[0.96] shadow-[0_1px_0_#0d2947,var(--shadow-surface)]",
+  ghost:
+    "translate-y-[3px] scale-[0.96] shadow-[0_1px_0_#0b1220,var(--shadow-surface)]",
+  danger: "translate-y-[3px] scale-[0.96] shadow-[0_1px_0_#9f1239]",
+  success: "translate-y-[3px] scale-[0.96] shadow-[0_1px_0_#047857]",
 };
 
 export function Button({
@@ -57,8 +59,8 @@ export function Button({
       isDisabled={isDisabled ?? disabled}
       className={({ isDisabled, isFocusVisible, isPressed }) =>
         [
-          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-base font-normal tracking-[-0.01em] [font-family:'DungGeunMo',monospace]",
-          "transition-[translate,background-color,color,box-shadow,opacity] duration-[var(--motion-press)] ease-out",
+          "inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold tracking-[-0.01em]",
+          "transition-[translate,scale,background-color,color,box-shadow,opacity] duration-[var(--motion-press)] ease-out",
           isFocusVisible ? "outline-none ring-2 ring-action-secondary ring-offset-2 ring-offset-surface-shell" : "outline-none",
           isDisabled ? "cursor-not-allowed opacity-45" : "",
           toneClasses[tone],

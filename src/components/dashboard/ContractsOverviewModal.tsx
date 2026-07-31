@@ -129,7 +129,7 @@ export function ContractsOverviewModal({
   );
 
   return (
-    <Modal title="계약 브리핑" onClose={onClose} className="sm:max-w-lg">
+    <Modal title="계약" onClose={onClose} className="sm:max-w-lg">
       <div className="space-y-6">
         <section className="rounded-2xl bg-surface-raised/72 p-4 shadow-[var(--shadow-surface)]">
           <div className="flex items-start gap-3">

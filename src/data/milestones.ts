@@ -54,7 +54,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
     requirements: [
       { metric: "fandom", target: fanCafeReq.minFandom ?? 10, label: "팬덤" },
     ],
-    unlocks: "팬카페 이벤트",
+    unlocks: "멤버십 이벤트",
   },
   {
     id: "fan-sign-open",
@@ -87,21 +87,21 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   },
   {
     id: "small-concert-open",
-    title: "소극장 공연 규모 달성",
+    title: "첫 팬콘 매진권",
     category: "promotion",
     requirements: [
       { metric: "fandom", target: smallConcertReq.minFandom ?? 35, label: "팬덤" },
     ],
-    unlocks: "콘서트 - 소극장",
+    unlocks: "라이브홀 팬콘",
   },
   {
     id: "mid-concert-open",
-    title: "중극장 공연 규모 달성",
+    title: "아레나 입성",
     category: "promotion",
     requirements: [
       { metric: "fandom", target: midConcertReq.minFandom ?? 50, label: "팬덤" },
     ],
-    unlocks: "콘서트 - 중극장",
+    unlocks: "아레나 콘서트",
   },
   {
     id: "bonsang-eligible",
@@ -142,7 +142,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   },
   {
     id: "large-concert-open",
-    title: "대극장 공연 규모 달성",
+    title: "고척돔 입성",
     category: "promotion",
     requirements: [
       { metric: "fandom", target: largeConcertReq.minFandom ?? 70, label: "팬덤" },
@@ -152,7 +152,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
         label: "업계 신뢰",
       },
     ],
-    unlocks: "콘서트 - 대극장",
+    unlocks: "고척돔 콘서트",
   },
   {
     id: "global-partnership-open",
@@ -197,7 +197,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   },
   {
     id: "dome-concert-open",
-    title: "돔 공연 규모 달성",
+    title: "스타디움 입성",
     category: "promotion",
     requirements: [
       { metric: "fandom", target: domeConcertReq.minFandom ?? 85, label: "팬덤" },
@@ -207,7 +207,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
         label: "업계 신뢰",
       },
     ],
-    unlocks: "콘서트 - 돔",
+    unlocks: "스타디움 콘서트",
   },
   {
     id: "world-tour-open",

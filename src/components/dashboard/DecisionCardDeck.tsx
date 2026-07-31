@@ -19,13 +19,12 @@ import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
 import { StaffPortrait } from "@/components/visual/StaffPortrait";
 import { POSITION_LABELS } from "@/data/founding";
 import { hashSeed, MANAGER_BRIEFING_LINES, pickLine } from "@/data/voiceLines";
-import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
 import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
 import { useManagerPersona } from "@/utils/managerPersona";
 import { sceneForDecisionCategory } from "@/utils/sceneMapping";
-import type { WeeklyDecisionTrigger } from "@/types/game";
+import type { WeeklyDecision, WeeklyDecisionTrigger } from "@/types/game";
 
 const TRIGGER_LABELS: Record<WeeklyDecisionTrigger["severity"], string> = {
   notice: "주의",
@@ -33,7 +32,7 @@ const TRIGGER_LABELS: Record<WeeklyDecisionTrigger["severity"], string> = {
   critical: "긴급",
 };
 
-const TRIGGER_CLASSES: Record<WeeklyDecisionTrigger["severity"], string> = {
+const TRIGGER_TONE_CLASSES: Record<WeeklyDecisionTrigger["severity"], string> = {
   notice: "bg-state-info/10 text-sky-100",
   warning: "bg-state-warning/10 text-amber-100",
   critical: "bg-state-danger/10 text-rose-100",
@@ -49,6 +48,32 @@ const LANE_CLASSES = {
   opportunity: "bg-action-secondary/12 text-cyan-100",
 } as const;
 
+function decisionToneClasses(card: WeeklyDecision): string {
+  if (card.lane === "opportunity") return LANE_CLASSES.opportunity;
+  return card.trigger
+    ? TRIGGER_TONE_CLASSES[card.trigger.severity]
+    : LANE_CLASSES.crisis;
+}
+
+function conciseDecisionTitle(card: WeeklyDecision): string {
+  switch (card.trigger?.kind) {
+    case "injury":
+    case "finance":
+    case "fandom":
+    case "morale":
+    case "overwork":
+      return card.trigger.description;
+    case "contract":
+      return card.title.replace(" 협상", "");
+    case "conflict":
+      return card.title.replace(" 중재", "");
+    case "investor":
+      return "투자사 개입 요구";
+    default:
+      return card.title;
+  }
+}
+
 interface DecisionCardDeckProps {
   onConfirm: () => void;
   isRunning?: boolean;
@@ -58,9 +83,6 @@ export function DecisionCardDeck({
   onConfirm,
   isRunning = false,
 }: DecisionCardDeckProps) {
-  const headline = useCalendarStore(
-    (state) => state.kpopNews[0]?.headline ?? "이번 주 시장은 비교적 조용합니다.",
-  );
   const cards = useGameStore((state) => state.weeklyDecisions);
   const flow = useGameStore(weeklyFlowSelectors.flow);
   const currentWeek = useGameStore((state) => state.currentWeek);
@@ -80,6 +102,7 @@ export function DecisionCardDeck({
     ((reviewing || flow.state === "review_ready") && editingIndex === null);
   const safeIndex = Math.min(activeIndex, Math.max(cards.length - 1, 0));
   const activeCard = cards[safeIndex];
+  const activeTitle = activeCard ? conciseDecisionTitle(activeCard) : "";
   const selectedOptionId = activeCard
     ? flow.selectedDecisionIds[activeCard.id] ?? null
     : null;
@@ -138,11 +161,8 @@ export function DecisionCardDeck({
     return (
       <section className="space-y-4 [word-break:keep-all]" aria-labelledby="weekly-review-title">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
-            매니저 브리핑
-          </p>
-          <h2 id="weekly-review-title" className="mt-1 text-xl font-semibold text-text-primary">
-            이번 주 일정 검토
+          <h2 id="weekly-review-title" className="text-xl font-semibold text-text-primary">
+            이번 주 계획
           </h2>
         </header>
 
@@ -217,8 +237,10 @@ export function DecisionCardDeck({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-xs text-text-muted">{card.title}</p>
-                        <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${LANE_CLASSES[card.lane]}`}>
+                        <p className="text-xs text-text-muted">
+                          {conciseDecisionTitle(card)}
+                        </p>
+                        <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${decisionToneClasses(card)}`}>
                           {LANE_LABELS[card.lane]}
                         </span>
                       </div>
@@ -246,7 +268,7 @@ export function DecisionCardDeck({
                     <Button
                       tone="ghost"
                       className="min-w-11 px-0"
-                      aria-label={`${card.title} 선택 수정`}
+                      aria-label={`${conciseDecisionTitle(card)} 선택 수정`}
                       onPress={() => {
                         setActiveIndex(index);
                         setEditingIndex(index);
@@ -261,16 +283,6 @@ export function DecisionCardDeck({
             })}
           </ol>
         )}
-
-        <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
-          <p className="text-xs font-semibold text-action-secondary">매니저 운영안</p>
-          <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            {pickLine(
-              MANAGER_BRIEFING_LINES.confirm,
-              hashSeed(`confirm:${currentWeek}`),
-            )}
-          </p>
-        </article>
 
         <div className="space-y-2">
           <Button
@@ -292,31 +304,38 @@ export function DecisionCardDeck({
   if (!activeCard) return null;
 
   return (
-    <section className="space-y-4 [word-break:keep-all]" aria-labelledby={`decision-${activeCard.id}`}>
+    <section className="space-y-3 [word-break:keep-all]" aria-labelledby={`decision-${activeCard.id}`}>
       <header>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
             이번 주 안건
           </p>
-          <span className="text-xs font-semibold tabular-nums text-text-muted">
+          <span className="sr-only">
             {safeIndex + 1} / {cards.length}
           </span>
         </div>
-        <div className="mt-2 flex gap-1" aria-hidden="true">
+        <div
+          className="mt-2 flex gap-1"
+          role="progressbar"
+          aria-label="안건 진행"
+          aria-valuemin={1}
+          aria-valuemax={cards.length}
+          aria-valuenow={safeIndex + 1}
+        >
           {cards.map((card, index) => (
             <span
               key={card.id}
+              aria-hidden="true"
               className={`h-1.5 flex-1 rounded-full ${
                 index <= safeIndex ? "bg-action-primary" : "bg-white/10"
               }`}
             />
           ))}
         </div>
-        <p className="mt-3 text-pretty text-xs leading-5 text-text-muted">{headline}</p>
       </header>
 
       <article
-        className={`rounded-3xl p-4 shadow-[var(--shadow-raised)] ${
+        className={`rounded-3xl p-3.5 shadow-[var(--shadow-raised)] ${
           activeCard.lane === "opportunity"
             ? "bg-gradient-to-br from-cyan-950/90 to-surface-raised"
             : "bg-surface-raised"
@@ -325,57 +344,46 @@ export function DecisionCardDeck({
         <SceneThumb
           scene={sceneForDecisionCategory(activeCard.category)}
           variant="banner"
-          label={activeCard.category}
-          className="mb-3"
+          label={null}
+          className="mb-3 [height:5rem] outline outline-1 -outline-offset-1 outline-white/10 sm:[height:6rem]"
         />
-        <div className="flex items-start justify-between gap-3">
+        <div>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
-                {activeCard.category}
-              </p>
-              <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold ${LANE_CLASSES[activeCard.lane]}`}>
-                {activeCard.lane === "opportunity" ? (
-                  <Sparkles className="size-3" aria-hidden="true" />
-                ) : (
-                  <ShieldAlert className="size-3" aria-hidden="true" />
-                )}
-                {LANE_LABELS[activeCard.lane]}
-              </span>
-            </div>
+            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold ${decisionToneClasses(activeCard)}`}>
+              {activeCard.lane === "opportunity" ? (
+                <Sparkles className="size-3" aria-hidden="true" />
+              ) : (
+                <ShieldAlert className="size-3" aria-hidden="true" />
+              )}
+              {LANE_LABELS[activeCard.lane]}
+              {activeCard.trigger
+                ? ` · ${
+                    activeCard.lane === "opportunity"
+                      ? "이번 주 한정"
+                      : TRIGGER_LABELS[activeCard.trigger.severity]
+                  }`
+                : ""}
+            </span>
             <h2
               id={`decision-${activeCard.id}`}
-              className="mt-1 text-balance text-lg font-semibold text-text-primary"
+              className="mt-1.5 text-balance text-lg font-semibold text-text-primary"
             >
-              {activeCard.title}
+              {activeTitle}
             </h2>
           </div>
-          {activeCard.trigger ? (
-            <span
-              className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-semibold ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}
-            >
-              {activeCard.lane === "opportunity"
-                ? "이번 주 한정"
-                : TRIGGER_LABELS[activeCard.trigger.severity]}
-            </span>
-          ) : null}
         </div>
 
-        {activeCard.trigger ? (
-          <p className={`mt-3 rounded-xl px-3 py-2 text-pretty text-xs leading-5 ${activeCard.lane === "opportunity" ? LANE_CLASSES.opportunity : TRIGGER_CLASSES[activeCard.trigger.severity]}`}>
-            <span className="font-semibold">
-              {activeCard.lane === "opportunity" ? "제안 배경 · " : "발생 원인 · "}
-            </span>
-            {activeCard.trigger.description}
+        {!activeCard.trigger ? (
+          <p className="mt-2.5 text-pretty text-sm leading-5 text-text-secondary">
+            {activeCard.summary}
           </p>
         ) : null}
-        <p className="mt-3 text-pretty text-sm leading-6 text-text-secondary">{activeCard.summary}</p>
 
         <RadioGroup
-          aria-label={`${activeCard.title} 선택지`}
+          aria-label={`${activeTitle} 선택지`}
           value={selectedOptionId}
           onChange={handleSelect}
-          className="mt-4 grid gap-2"
+          className="mt-3 grid gap-2"
         >
           {activeCard.options.map((option) => (
             <Radio
@@ -383,7 +391,7 @@ export function DecisionCardDeck({
               value={option.id}
               className={({ isFocusVisible, isPressed, isSelected }) =>
                 [
-                  "group min-h-16 rounded-2xl border-2 px-3 py-3",
+                  "group min-h-16 rounded-2xl border-2 px-3 py-2.5",
                   "transition-[scale,background-color,border-color,box-shadow,opacity] duration-[var(--motion-state)] ease-out",
                   radioTileClasses(isSelected, Boolean(selectedOptionId)),
                   isPressed ? "scale-[0.96]" : "scale-100",
@@ -448,7 +456,7 @@ export function DecisionCardDeck({
                     type="button"
                     disabled={atLimit}
                     aria-pressed={selected}
-                    className={`min-h-11 rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
+                    className={`min-h-11 rounded-xl border-2 px-3 py-2 text-left transition-[scale,background-color,border-color,box-shadow,opacity] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
                       selected ? "text-cyan-50" : "text-text-secondary"
                     } ${radioTileClasses(selected, selectedTargets.length > 0)}`}
                     onClick={() => toggleTarget(trainee.id)}

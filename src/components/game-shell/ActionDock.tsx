@@ -1,6 +1,6 @@
-import { ChevronRight, ClipboardCheck, Play } from "lucide-react";
+import { ChevronRight, ClipboardCheck, Play, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/common/Button";
-import type { WeeklyFlowState } from "@/types/game";
+import type { WeeklyDecisionTrigger, WeeklyFlowState } from "@/types/game";
 
 interface ActionDockProps {
   totalDecisions: number;
@@ -8,6 +8,7 @@ interface ActionDockProps {
   canResolveWeek: boolean;
   flowState: WeeklyFlowState;
   riskLabel?: string;
+  riskSeverity?: WeeklyDecisionTrigger["severity"];
   /** 안건은 없지만 열려 있는 선택 기회(컴백 기획, 프로모션 등) 안내. */
   hintLabel?: string;
   isAdvancing?: boolean;
@@ -21,49 +22,53 @@ export function ActionDock({
   canResolveWeek,
   flowState,
   riskLabel,
+  riskSeverity = "warning",
   hintLabel,
   isAdvancing = false,
   onOpenPlan,
   onAdvanceWeek,
 }: ActionDockProps) {
-  const completed = Math.max(0, totalDecisions - remainingDecisions);
   const isReviewReady = canResolveWeek;
   const isLocked = flowState === "resolving" || flowState === "event_focus";
   // 안건이 하나도 없는 조용한 주는 탭 이동 없이 이 자리에서 바로 진행한다.
   const isQuietWeek = totalDecisions === 0 && canResolveWeek;
 
   return (
-    <section className="bg-surface-panel px-4 py-3 shadow-[0_-12px_32px_rgba(2,6,23,0.32)]">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-sm font-semibold text-text-primary">
+    <section
+      aria-label="이번 주 진행"
+      className="bg-surface-panel/96 px-4 py-2.5 shadow-[0_-12px_32px_rgba(2,6,23,0.32)] backdrop-blur-xl"
+    >
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-xs font-semibold text-text-secondary">
           {totalDecisions === 0
-            ? "이번 주 안건 없음"
-            : `이번 주 안건 ${completed}/${totalDecisions}`}
+            ? "이번 주는 바로 진행할 수 있어요"
+            : remainingDecisions > 0
+              ? `결정 ${remainingDecisions}개 남음`
+              : "모든 결정을 마쳤어요"}
         </p>
-        {totalDecisions > 0 && totalDecisions <= 6 ? (
-          <div className="flex shrink-0 items-center gap-1" aria-hidden="true">
-            {Array.from({ length: totalDecisions }, (_, index) => (
-              <span
-                key={index}
-                className={[
-                  "size-1.5 rounded-full",
-                  index < completed ? "bg-action-secondary" : "bg-white/15",
-                ].join(" ")}
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
       {riskLabel ? (
-        <p className="mb-2 truncate text-xs text-amber-200/90">⚠ {riskLabel}</p>
+        <p
+          className={[
+            "mb-2 flex min-w-0 items-center gap-1.5 truncate text-[11px] font-medium",
+            riskSeverity === "critical"
+              ? "text-rose-300"
+              : riskSeverity === "warning"
+                ? "text-amber-200"
+                : "text-sky-200",
+          ].join(" ")}
+        >
+          <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{riskLabel}</span>
+        </p>
       ) : hintLabel ? (
-        <p className="mb-2 truncate text-xs text-cyan-200/85">{hintLabel}</p>
+        <p className="mb-2 truncate text-[11px] text-cyan-200/85">{hintLabel}</p>
       ) : null}
       {isQuietWeek ? (
         <div className="flex gap-2">
           <Button
             tone="secondary"
-            className="shrink-0 gap-1.5"
+            className="shrink-0 gap-1.5 px-3"
             isDisabled={isLocked || isAdvancing}
             onPress={onOpenPlan}
           >
@@ -80,7 +85,7 @@ export function ActionDock({
         </div>
       ) : (
         <Button
-          className="w-full gap-2"
+          className="w-full gap-2 py-2.5"
           tone={isReviewReady ? "primary" : "secondary"}
           isDisabled={isLocked || isAdvancing}
           onPress={onOpenPlan}
