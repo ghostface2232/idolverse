@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { GAME_BALANCE, MEMBER_LEAVE } from "@/data/balance";
+import {
+  AWARD_ELIGIBILITY_THRESHOLDS,
+  GAME_BALANCE,
+  MEMBER_LEAVE,
+} from "@/data/balance";
 import { simulateCampaign } from "@/test/campaignPersonas";
 
 // GUIDE의 핵심 약속은 "잘못된 선택은 실질적 손실로 돌아온다"이다. 이 파일은
@@ -11,6 +15,7 @@ describe("혹사 운영의 손실 경로", () => {
     const seeds = [11, 101];
     for (const seed of seeds) {
       const abusive = simulateCampaign("abusive", seed);
+      const novice = simulateCampaign("novice", seed);
 
       if (process.env.BALANCE_REPORT === "1") {
         console.log(JSON.stringify({ abusiveRun: abusive }, null, 2));
@@ -31,14 +36,20 @@ describe("혹사 운영의 손실 경로", () => {
       expect(abusive.firstDepartureWeek!).toBeLessThan(
         GAME_BALANCE.weeksPerYear * 5,
       );
-      // 경제 계약: 최악의 운영이 초기 투자금을 불려서는 안 된다. 이전에는
-      // global 참여 순환이 품질과 무관하게 자기 강화되어(40만 넘으면 +4/주
-      // 영구 유지) 팬덤 0·품질 19의 앨범 남발로도 스트리밍만으로 5년 순증
-      // 흑자였다. 품질 게이트(minAlbumQuality)와 품질 유지 상한 조정 후에는
-      // 순손실이어야 하고, 이 부등호가 다시 뒤집히면 관대함이 재발한 것이다.
-      expect(abusive.endingMoney).toBeLessThan(abusive.startingMoney);
+      // 경제 계약(v2): 초긴축 방치는 돌봄 비용이 0이라 순현금은 남을 수
+      // 있다 — 스캔들 재분류로 상시 실망 유입이 사라진 뒤에는 "절대
+      // 순손실" 계약이 성립하지 않는다(방치의 대가는 현금이 아니라 사업
+      // 전체로 설계됐다). 대신 같은 로스터·시드의 초보 돌봄 대비 총수입이
+      // 항상 뚜렷하게 작아야 하고, 위신 성과(본상 이상·업계 신뢰)는
+      // 전멸이어야 한다. 이 마진이 좁아지면 방치가 다시 이득이 된 것이다.
+      expect(abusive.totalIncome).toBeLessThan(novice.totalIncome * 0.8);
+      expect(abusive.bonsangAwards + abusive.daesangAwards).toBe(0);
+      // 위신 없는 운영은 업계 신뢰가 대상 자격 게이트에 닿을 수 없어야 한다.
+      expect(abusive.industry).toBeLessThan(
+        AWARD_ELIGIBILITY_THRESHOLDS.daesang.minIndustry,
+      );
     }
-  }, 15_000);
+  }, 30_000);
 
   it("같은 로스터라도 초보 수준의 평범한 돌봄이면 전원이 남는다", () => {
     // abusive는 novice와 동일한 로스터·시드로 시작하므로, 이 대조는 이탈이

@@ -9,6 +9,10 @@ import {
   EVENT_COMPETITOR_ARCHETYPES,
 } from "@/data/competitors";
 import { createSeededRandom, pickUniqueItems } from "@/lib/seededRandom";
+import {
+  competitorChartPower,
+  estimateChartRankFromPower,
+} from "@/systems/evaluationSystem";
 import type {
   BackgroundGroup,
   CompetitorGroup,
@@ -132,6 +136,11 @@ export function simulateCompetitorWeek(
     // 4주 뒤 소멸해 시상 주의 지표를 붕괴시키기 때문에 별도로 든다.
     if ((cumulativeWeek - 1) % GAME_BALANCE.weeksPerYear === 0) {
       rival.seasonBestQuality = rival.currentAlbum?.quality ?? 0;
+      rival.seasonBestChartRank = rival.currentAlbum
+        ? estimateChartRankFromPower(
+            competitorChartPower(rival.currentAlbum.quality, rival),
+          )
+        : undefined;
     }
 
     const growth = 0.3 + random() * 0.4;
@@ -163,6 +172,15 @@ export function simulateCompetitorWeek(
         rival.seasonBestQuality = Math.max(
           rival.seasonBestQuality ?? 0,
           quality,
+        );
+        // 시상식 디지털 지표용 연중 차트 기록 — 플레이어의 chartPeak와
+        // 같은 축에서 경쟁하도록 같은 파워 공식으로 순위를 추정한다.
+        const estimatedRank = estimateChartRankFromPower(
+          competitorChartPower(quality, rival),
+        );
+        rival.seasonBestChartRank = Math.min(
+          rival.seasonBestChartRank ?? 100,
+          estimatedRank,
         );
         comebacks.push(rival.name);
       }

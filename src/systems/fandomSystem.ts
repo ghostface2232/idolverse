@@ -3,6 +3,7 @@ import {
   FANDOM_DISAPPOINTMENT_COMMERCIAL,
   FANDOM_DISAPPOINTMENT_SCANDAL,
   FANDOM_LEAVE_THRESHOLD,
+  INDUSTRY_REPUTATION,
   PUBLIC_DECAY_RATE,
 } from "@/data/balance";
 import type { Nationality, Trainee } from "@/types/game";
@@ -143,6 +144,16 @@ export function updateFandom(
   }
   if (ctx.scandalThisWeek) iDelta -= 5;
   if (ctx.qualityDecline) iDelta -= 3;
+  // 위신 신호가 없는 주에는 업계 신뢰가 바닥값 위에서 천천히 내려온다 —
+  // 명성은 최근 결과물을 계속 요구한다(INDUSTRY_REPUTATION 참조).
+  if (
+    !ctx.musicQualityHigh &&
+    !ctx.stageExcellent &&
+    !ctx.awardWin &&
+    current.industry > INDUSTRY_REPUTATION.regressionFloor
+  ) {
+    iDelta -= INDUSTRY_REPUTATION.weeklyRegression;
+  }
 
   // 실망은 래칫이 아니다: 새 실망이 없는 주에는 서서히 식는다(주 8%, 최소 1).
   // 회복 경로 없이는 실망 임계 초과가 영구화되어 팬덤이 0으로 수렴한다

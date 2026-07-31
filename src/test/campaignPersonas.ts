@@ -98,6 +98,10 @@ export interface CampaignSummary {
   facilityLevelTotal: number;
   incomeBreakdown: Record<string, number>;
   expenseBreakdown: Record<string, number>;
+  /** 위기 카드 루트별 제시 주 수. 페이싱(매주 위기 스팸 여부) 검증용. */
+  crisisCardWeeks: Record<string, number>;
+  /** 위기 카드가 1장 이상 올라온 주의 비율(0~1). */
+  crisisWeekShare: number;
   yearly: Array<{
     year: number;
     money: number;
@@ -990,6 +994,8 @@ export function simulateCampaign(
   const decisionCostBreakdown: Record<string, number> = {};
   const incomeBreakdown: Record<string, number> = {};
   const expenseBreakdown: Record<string, number> = {};
+  const crisisCardWeeks: Record<string, number> = {};
+  let weeksWithCrisisCard = 0;
   let facilitySpend = 0;
   let injuries = 0;
   let musicShowWins = 0;
@@ -1005,6 +1011,15 @@ export function simulateCampaign(
     const cumulativeWeek =
       (snapshot.game.currentYear - 1) * GAME_BALANCE.weeksPerYear +
       snapshot.game.currentWeek;
+
+    let hasCrisisCardThisWeek = false;
+    for (const card of snapshot.game.weeklyDecisions) {
+      if (card.lane !== "crisis") continue;
+      hasCrisisCardThisWeek = true;
+      const root = card.id.split(":")[0];
+      crisisCardWeeks[root] = (crisisCardWeeks[root] ?? 0) + 1;
+    }
+    if (hasCrisisCardThisWeek) weeksWithCrisisCard++;
 
     snapshot = completeProjectChoices(snapshot, profile);
     const facility = applyFacilityPolicy(snapshot, profile);
@@ -1187,6 +1202,8 @@ export function simulateCampaign(
     firstDepartureWeek,
     incomeBreakdown,
     expenseBreakdown,
+    crisisCardWeeks,
+    crisisWeekShare: weeksPlayed > 0 ? weeksWithCrisisCard / weeksPlayed : 0,
     facilityLevelTotal:
       upgrades.dormLevel + upgrades.studioLevel + upgrades.equipmentLevel,
     yearly,

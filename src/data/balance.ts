@@ -185,7 +185,10 @@ export const COMEBACK_BUDGET_TIERS_BY_ID = new Map(
 // 승리의 만족도 보너스는 이 효과(satisfaction)가 유일한 경로다 — 주간 만족도
 // 갱신(5단계)은 1위 판정(7.6단계)보다 먼저 돌아 그쪽에서는 알 수 없다.
 export const MUSIC_SHOW_OUTCOME = {
-  win: { fandom: 4, public: 5, industry: 3, satisfaction: 6 },
+  // industry는 1로 낮춘다 — 무대 탁월(stageExcellent, 품질 조건부 +4)과
+  // 합쳐 승리당 +7이던 시절에는 중급 플레이(승수 ~29)도 업계 신뢰가
+  // 포화되어 대상 자격 게이트(minIndustry 75)가 무력화됐다.
+  win: { fandom: 4, public: 5, industry: 1, satisfaction: 6 },
   lose: { fandomLoyalty: 2, stress: 3 },
 } as const;
 
@@ -487,8 +490,12 @@ export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inact
  * 한 주에 조금씩만 내려가므로 한 번의 실험작이 팬덤을 즉시 붕괴시키지는 않는다.
  */
 export const AUDIENCE_QUALITY_RETENTION = {
-  coreBase: 65,
-  coreQualityScale: 0.35,
+  // base 65이던 시절에는 품질 0의 결과물로도 코어 65가 영구 보존됐다 —
+  // 혹사 프로브에서 팬덤이 정확히 상한(65+0.35×q)에 앉아 저품질 다작이
+  // 스트리밍·음반으로 순증 흑자를 냈다. 코어는 해외(base 30)보다는
+  // 관성이 크지만, 결국 품질이 지탱하는 만큼만 남는다.
+  coreBase: 40,
+  coreQualityScale: 0.55,
   // 해외 팬덤은 코어보다 관성이 약하다 — 유입도 이탈도 콘텐츠 품질에 가장
   // 민감하다. base 55이던 시절에는 품질 0의 결과물로도 global 55가 영구
   // 유지됐고, 그 위에 아래 참여 순환(+4/주)이 얹혀 "품질 19 앨범을 남발하는
@@ -499,6 +506,30 @@ export const AUDIENCE_QUALITY_RETENTION = {
   maxWeeklyErosion: 3,
 } as const;
 export const ALBUM_QUALITY_REPUTATION_THRESHOLD = 75;
+
+/**
+ * 업계 신뢰는 최근의 음악적 성과가 계속 공급되어야 유지된다. 고품질 발매,
+ * 무대 탁월, 수상 같은 위신 신호가 없는 주에는 이 바닥값 위에서 천천히
+ * 내려온다 — 이 회귀가 없으면 주간 차트 잔류(+1)와 음방 승수만으로 어떤
+ * 플레이든 수년 안에 100에 포화되어, 업계 평판이 실력 축이 아니라 시간
+ * 축이 된다(2026-07 프로브: 중급 91, 대상 자격 게이트 무력화).
+ */
+export const INDUSTRY_REPUTATION = {
+  regressionFloor: 50,
+  weeklyRegression: 1,
+} as const;
+
+/**
+ * 코어 팬덤 규모가 기대하는 발매 완성도. 팬덤이 클수록 기대가 높아지고,
+ * 기대에 크게 못 미치는 발매는 실망을 쌓는다 — "품질 하락 → 팬 이탈"의
+ * 발매 시점 구현이다. 이 항이 없으면 스캔들 없는 세계에서 품질 19 앨범을
+ * 21번 내도 팬덤 80이 유지된다(2026-07 혹사 프로브).
+ */
+export const RELEASE_QUALITY_EXPECTATION = {
+  perFandomPoint: 0.6,
+  disappointmentScale: 0.4,
+  maxDisappointment: 12,
+} as const;
 export const FANDOM_DISAPPOINTMENT_SCANDAL = 15; // Scandals need to be one of the fastest ways to damage loyalty.
 export const FANDOM_DISAPPOINTMENT_COMMERCIAL = 5; // Overt monetization should annoy fans, but less than scandals or betrayal.
 export const FANDOM_LEAVE_THRESHOLD = 80; // Churn should begin only after multiple ignored warning signs.
@@ -544,6 +575,35 @@ export const DECISION_TRIGGER_THRESHOLDS = {
   lowFandomLoyalty: 30,
   minFandomForLoyaltyIssue: 10,
   financialRunwayWeeks: 8,
+} as const;
+
+/**
+ * 지표가 임계 위에 머문다고 같은 위기 카드를 매주 다시 올리지 않는다.
+ * 한 번 대응을 고르면 이 주 수만큼은 매니저가 후속을 맡고, critical로
+ * 악화된 경우에만 쿨다운을 무시하고 즉시 재소환한다 — 위기가 "이벤트"가
+ * 아니라 매주 나가는 배경 세금이 되는 것을 막는 페이싱 장치다.
+ * (부상·재계약·자금 카드는 그 주의 실무 결정이라 쿨다운을 두지 않는다.)
+ */
+export const CRISIS_CARD_COOLDOWN_WEEKS: Readonly<Record<string, number>> = {
+  "fandom-crisis": 4,
+  overwork: 3,
+  morale: 3,
+  conflict: 4,
+};
+
+/**
+ * 시상식 디지털 지표의 구성. GUIDE의 "MMA 디지털 60% = 음원 성적"이
+ * 실제로 그 해 차트 성과를 읽게 한다 — 이전에는 시상 주(50주차)의 public
+ * 스냅샷과 그 해 최고 품질만 봐서 연중 차트 1위 기록이 시상에 아무
+ * 영향도 없었다. chartScorePerRank는 순위→점수 환산 기울기(1위 100점,
+ * 41위 0점)로, 플레이어(실제 차트 피크)와 경쟁자(차트 파워로 추정한
+ * 순위)에 동일하게 적용된다.
+ */
+export const AWARD_DIGITAL_INDEX = {
+  publicWeight: 0.35,
+  qualityWeight: 0.25,
+  chartWeight: 0.4,
+  chartScorePerRank: 2.5,
 } as const;
 
 /** 기회 카드는 평온한 주에 리듬을 만들되 위기 판단을 가리지 않아야 한다. */

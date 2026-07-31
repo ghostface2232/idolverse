@@ -283,10 +283,21 @@ export function previewTraineeWeek(
 
   let stressDelta = STRESS_INCREASE_RATE[schedule.intensity];
   if (schedule.restDay) {
-    stressDelta = Math.max(0, stressDelta + STRESS_DECREASE_RATE.rest * 0.4);
+    // 바닥을 0으로 막으면 훈련 주간의 스트레스는 절대 내려가지 않는 래칫이
+    // 된다(이벤트·계약·활동의 유입은 계속 쌓이므로 전 구간이 만성 과로
+    // 상태로 수렴 — 2026-07 프로브에서 전 페르소나 스트레스 70~100 상주).
+    // 일반 강도 + 휴식일 = -5/주로, 외부 유입(계약 +2, 행사·사건)을 감당할
+    // 수 있는 지속 레버여야 한다. 강훈련 중의 휴식일은 완화까지만(7-8=-1),
+    // 성장 페널티(REST_DAY_GROWTH_MULT)는 그대로라 상시 휴식일이 지배
+    // 전략이 되지는 않는다.
+    stressDelta += STRESS_DECREASE_RATE.rest * 0.8;
   }
   const mentalResist = trainee.stats.mental / 200;
-  stressDelta *= 1 - mentalResist;
+  // 멘탈은 스트레스 유입에 대한 저항이다 — 회복(음수)까지 깎으면 멘탈이
+  // 높을수록 쉬어도 회복이 안 되는 역설이 생긴다.
+  if (stressDelta > 0) {
+    stressDelta *= 1 - mentalResist;
+  }
 
   return {
     mode: "training",

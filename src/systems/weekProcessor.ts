@@ -64,6 +64,7 @@ import {
 } from "@/systems/economySystem";
 import {
   evaluateAwards,
+  awardChartScore,
   buildContenderFromPlayer,
   buildContenderFromCompetitor,
   getPlayerAwardWins,
@@ -79,6 +80,8 @@ import {
   GAME_BALANCE,
   ALBUM_QUALITY_DECLINE_GAP,
   ALBUM_QUALITY_REPUTATION_THRESHOLD,
+  AWARD_DIGITAL_INDEX,
+  CRISIS_CARD_COOLDOWN_WEEKS,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   EMERGENCY_FINANCING,
@@ -316,6 +319,17 @@ export function processWeek(
       playerYearReleases.length > 0
         ? Math.max(...playerYearReleases.map((released) => released.quality))
         : 0;
+    // 연중 최고 차트 순위 — 디지털 지표가 "그 해 음원 성적"을 실제로 읽는
+    // 축이다. 이 항이 없던 시절에는 연중 차트 1위 기록이 시상에 아무 영향이
+    // 없었고, 발매 타이밍 전략도 무의미했다.
+    const yearBestChartPeak = playerYearReleases.reduce<number | null>(
+      (best, released) => {
+        const peak = released.performance?.chartPeak;
+        if (peak == null || peak <= 0) return best;
+        return best === null ? peak : Math.min(best, peak);
+      },
+      null,
+    );
     const contenders = [
       ...(playerDebutYear !== null && playerYearReleases.length > 0
         ? [
@@ -324,7 +338,10 @@ export function processWeek(
               snapshot.game.groupName,
               {
                 digitalIndex:
-                  fandomAxis.public * 0.6 + latestQuality * 0.4,
+                  fandomAxis.public * AWARD_DIGITAL_INDEX.publicWeight +
+                  latestQuality * AWARD_DIGITAL_INDEX.qualityWeight +
+                  awardChartScore(yearBestChartPeak) *
+                    AWARD_DIGITAL_INDEX.chartWeight,
                 albumSalesIndex:
                   fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
                 fanVotes:
@@ -455,18 +472,25 @@ export function processWeek(
       );
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
-      const track = d.optionId.slice(
-        "strategic-".length,
-      ) as keyof typeof strategicExpansion;
-      if (
-        track in strategicExpansion &&
-        strategicExpansion[track] < STRATEGIC_EXPANSION.maxLevelPerTrack
-      ) {
-        strategicExpansion = {
-          ...strategicExpansion,
-          [track]: strategicExpansion[track] + 1,
-        };
+      if (d.optionId === "strategic-defer") {
+        // 보류도 검토를 마친 것이다. 갱신하지 않으면 같은 카드가 다음
+        // 주기까지 기다리지 않고 매주 다시 올라와, 보류 페널티(industry
+        // -1)가 사실상 주간 세금이 된다(초보 프로브에서 5년간 156회).
         lastStrategicExpansionWeek = cumulativeWeek;
+      } else {
+        const track = d.optionId.slice(
+          "strategic-".length,
+        ) as keyof typeof strategicExpansion;
+        if (
+          track in strategicExpansion &&
+          strategicExpansion[track] < STRATEGIC_EXPANSION.maxLevelPerTrack
+        ) {
+          strategicExpansion = {
+            ...strategicExpansion,
+            [track]: strategicExpansion[track] + 1,
+          };
+          lastStrategicExpansionWeek = cumulativeWeek;
+        }
       }
     }
     if (
@@ -1488,9 +1512,12 @@ export function processWeek(
     albumReleaseThisWeek: albumReleasedThisWeek,
     concertThisWeek,
     fanServiceThisWeek,
+    // negative 이벤트 전체가 아니라 대외 평판 스캔들(isScandal)만 센다 —
+    // 내부 악재(장비 고장, 스태프 이직 등)는 각 이벤트의 개별 효과로만
+    // 대가를 치르고, 업계 신뢰 -5·팬 실망 +15의 스캔들 판정은 받지 않는다.
     scandalThisWeek:
       vacationScandal !== null ||
-      rolledEvents.some((e) => e.template.type === "negative"),
+      rolledEvents.some((e) => e.template.isScandal === true),
     excessiveCommercial: excessiveCommercialPenalty > 0,
     // global은 0~100 클램프 지표 — 문턱도 같은 스케일이어야 한다.
     // 순환에는 돌릴 만한 최신작이 필요하다(minAlbumQuality 게이트).
@@ -1507,8 +1534,12 @@ export function processWeek(
     musicQualityHigh:
       albumReleasedThisWeek &&
       (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
-    // 무대 탁월 판정 = 이번 주 음악방송 1위(7.6에서 확정된 값).
-    stageExcellent: musicShowWonThisWeek,
+    // 무대 탁월 판정 = 이번 주 음악방송 1위 + 위신을 만들 완성도. 팬덤
+    // 화력으로 딴 저품질 1위는 화제(public·fandom 보상)는 되어도 업계
+    // 신뢰(industry +4)까지 쌓아 주지는 않는다.
+    stageExcellent:
+      musicShowWonThisWeek &&
+      (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
     awardWin: playerWonAward,
     // 품질 하락은 발매 주에만 1회 판정: 직전 발매작보다 일정 폭 이상 낮으면
     // 업계 신뢰가 하락한다.
@@ -1931,6 +1962,7 @@ export function processWeek(
     ),
     activeCommercialContracts,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
+    crisisCardCooldowns: snapshot.game.crisisCardCooldowns,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,
     strategicExpansion,
@@ -1972,6 +2004,15 @@ export function processWeek(
   );
   if (nextDecisions.some((decision) => decision.id === "emergency-investor")) {
     lastInvestorDemandWeek = nextCumulativeWeek;
+  }
+  // 이번 주 제시된 위기 루트의 쿨다운 시계를 갱신한다.
+  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
+  for (const decision of nextDecisions) {
+    if (decision.lane !== "crisis") continue;
+    const root = decision.id.split(":")[0];
+    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
+      crisisCardCooldowns[root] = nextCumulativeWeek;
+    }
   }
 
   // ── Assemble new state
@@ -2021,6 +2062,7 @@ export function processWeek(
       lastOpportunityWeek: opportunityOffered
         ? nextCumulativeWeek
         : snapshot.game.lastOpportunityWeek,
+      crisisCardCooldowns,
       emergencyFinancing,
       strategicExpansion,
       fiveYearReview,

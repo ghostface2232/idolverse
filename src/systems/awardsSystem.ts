@@ -1,6 +1,13 @@
 import { AWARD_SHOWS } from "@/data/awards";
-import { AWARD_ELIGIBILITY_THRESHOLDS } from "@/data/balance";
+import {
+  AWARD_DIGITAL_INDEX,
+  AWARD_ELIGIBILITY_THRESHOLDS,
+} from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
+import {
+  competitorChartPower,
+  estimateChartRankFromPower,
+} from "@/systems/evaluationSystem";
 import type {
   AwardCategory,
   AwardShow,
@@ -59,6 +66,18 @@ export function buildContenderFromPlayer(
   };
 }
 
+/**
+ * 연중 최고 차트 순위 → 시상 디지털 점수(1위 100점, 41위 0점). 플레이어의
+ * 실제 chartPeak와 경쟁자의 추정 순위에 동일하게 적용해 대칭을 지킨다.
+ */
+export function awardChartScore(bestChartRank: number | null): number {
+  if (bestChartRank === null || bestChartRank <= 0) return 0;
+  return Math.max(
+    0,
+    100 - (bestChartRank - 1) * AWARD_DIGITAL_INDEX.chartScorePerRank,
+  );
+}
+
 export function buildContenderFromCompetitor(
   competitor: CompetitorGroup | EventCompetitor,
 ): AwardContender {
@@ -72,17 +91,26 @@ export function buildContenderFromCompetitor(
   // 가중 평균한다. 플레이어 지표(0~100)와 같은 스케일이어야 경쟁이 성립한다.
   // 앨범 품질은 연간 최고 기록을 쓴다 — currentAlbum은 4주 뒤 소멸해
   // 시상 주의 지표를 붕괴시킨다(신인상 자동 수상 원인이었다).
+  const seasonQuality =
+    competitor.seasonBestQuality ?? competitor.currentAlbum?.quality ?? 0;
+  // 연중 차트 기록이 없는 경쟁자(이벤트 라이벌, 구버전 세이브)는 현재
+  // 지표로 즉석 추정한다 — 기록 부재가 시상 탈락이 되면 안 된다.
+  const chartRank =
+    competitor.seasonBestChartRank ??
+    (seasonQuality > 0
+      ? estimateChartRankFromPower(
+          competitorChartPower(seasonQuality, competitor),
+        )
+      : null);
   return {
     id: competitor.id,
     name: competitor.name,
     isPlayer: false,
     debutYear: competitor.debutYear,
     digitalIndex:
-      competitor.public * 0.6 +
-      (competitor.seasonBestQuality ??
-        competitor.currentAlbum?.quality ??
-        0) *
-        0.4,
+      competitor.public * AWARD_DIGITAL_INDEX.publicWeight +
+      seasonQuality * AWARD_DIGITAL_INDEX.qualityWeight +
+      awardChartScore(chartRank) * AWARD_DIGITAL_INDEX.chartWeight,
     albumSalesIndex:
       (competitor.fandom / 100) * 0.6 + competitor.industry * 0.4,
     fanVotes:

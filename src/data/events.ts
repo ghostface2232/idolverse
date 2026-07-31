@@ -543,6 +543,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "malicious-rumor",
     type: "negative",
+    isScandal: true,
     title: "악성 루머 확산",
     description: "근거 없는 루머가 커뮤니티와 숏폼 플랫폼을 통해 번지고 있습니다.",
     probability: 0.04,
@@ -572,6 +573,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "dating-scandal",
     type: "negative",
+    isScandal: true,
     title: "연애 스캔들 포착",
     description: "휴식 중 사적인 장면이 포착되어 팬덤이 흔들리고 있습니다.",
     probability: 0.03,
@@ -668,6 +670,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "sns-controversy",
     type: "negative",
+    isScandal: true,
     title: "SNS 과거 발언 발굴",
     description: "멤버의 과거 SNS 게시물이 발굴되어 논란이 일고 있습니다.",
     probability: 0.03,
