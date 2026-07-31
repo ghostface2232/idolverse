@@ -1272,6 +1272,9 @@ export function processWeek(
   // ── 7.9 연간 차트 누적(연말 시상 디지털 지표의 차트 축).
   // 이번 주 최고 순위를 점수로 환산해 쌓는다 — 상위권 런이 길수록,
   // 그리고 그 런이 올해 안에 있을수록 시상에 실린다. 연초(1주차) 리셋.
+  // 시상 평가(50주차, 위의 AWARDS_WEEK 블록)는 그 시점까지의 누적
+  // (1~49주차)을 읽으므로, 50~52주차 득점은 이 리셋으로 소멸한다 —
+  // 연말 발매의 런은 새해로 넘어간 구간만 이듬해 심사에 실린다.
   const weeklyBestChartRank = (() => {
     const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
     return ranks.length > 0 ? Math.min(...ranks) : null;
