@@ -53,7 +53,7 @@ export function NotificationsModal({
               K-POP 뉴스피드
             </p>
             {news.length > 0 ? (
-              <span className="rounded-full bg-brand-pink/12 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-brand-pink">
+              <span className="rounded-full bg-brand-pink/12 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-brand-pink">
                 {news.length}건
               </span>
             ) : null}
@@ -79,7 +79,7 @@ export function NotificationsModal({
                       <h3 className="text-sm font-medium text-text-primary [word-break:keep-all]">
                         {item.headline}
                       </h3>
-                      <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-brand-cyan">
+                      <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-brand-cyan">
                         {NEWS_TYPE_LABELS[item.type]}
                         <span className="ml-2 normal-case tracking-normal tabular-nums text-text-muted">
                           {item.week}주차
@@ -102,7 +102,7 @@ export function NotificationsModal({
               알림
             </p>
             {notifications.length > 0 ? (
-              <span className="rounded-full bg-brand-cyan/12 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-brand-cyan">
+              <span className="rounded-full bg-brand-cyan/12 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-brand-cyan">
                 {notifications.length}건
               </span>
             ) : null}
@@ -136,7 +136,7 @@ export function NotificationsModal({
                         >
                           {notification.title}
                         </p>
-                        <span className="shrink-0 text-[10px] tabular-nums text-text-muted">
+                        <span className="shrink-0 text-[11px] tabular-nums text-text-muted">
                           {notification.week}주차
                         </span>
                       </div>

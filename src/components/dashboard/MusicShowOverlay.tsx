@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trophy, Mic2 } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { PresentationDialog } from "@/components/common/PresentationDialog";
 import { GroupBadge } from "@/components/visual/GroupBadge";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
@@ -62,13 +63,7 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
   const showScores = step !== "candidates";
 
   return (
-    <div
-      className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/92 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))] backdrop-blur-md"
-      role="dialog"
-      aria-modal="true"
-      aria-label="음악방송 1위 발표"
-    >
-      <div className="w-full max-w-md rounded-[32px] bg-surface-panel p-3 shadow-[var(--shadow-raised)]">
+    <PresentationDialog label="음악방송 1위 발표">
         <div className="overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.22),transparent_45%),linear-gradient(180deg,#1a1130,#0f172a)] px-5 py-8 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-pink-300">
             {command.showName}
@@ -134,14 +129,14 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
           )}
         </div>
         <Button
+          autoFocus
           className="mt-3 min-h-11 w-full transition-transform active:scale-[0.96]"
           isDisabled={saving}
           onPress={finish}
         >
           {saving ? "저장 중…" : isFinal ? "무대 마치기" : "결과 바로 보기"}
         </Button>
-      </div>
-    </div>
+    </PresentationDialog>
   );
 }
 
@@ -170,7 +165,7 @@ function ContenderCard({
           : "bg-white/[0.04] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
       }`}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
         {isPlayer ? "우리 팀" : "경쟁 후보"}
       </p>
       {visual ? <div className="mt-2.5">{visual}</div> : null}

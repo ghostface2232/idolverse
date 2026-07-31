@@ -27,6 +27,9 @@ interface HomeBriefingProps {
   totalDecisions: number;
   remainingDecisions: number;
   riskSeverity?: WeeklyDecisionTrigger["severity"];
+  onOpenMembers: () => void;
+  onOpenGoals: () => void;
+  onOpenWeek: () => void;
 }
 
 export function HomeBriefing({
@@ -39,8 +42,15 @@ export function HomeBriefing({
   totalDecisions,
   remainingDecisions,
   riskSeverity,
+  onOpenMembers,
+  onOpenGoals,
+  onOpenWeek,
 }: HomeBriefingProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = (callback: () => void) => {
+    setIsExpanded(false);
+    callback();
+  };
   const decisionLabel =
     totalDecisions === 0
       ? "매니저 일정 확인 완료"
@@ -67,9 +77,12 @@ export function HomeBriefing({
             {groupName}
           </h1>
         </div>
-        <span
+        <button
+          type="button"
+          onClick={() => navigate(onOpenWeek)}
+          aria-label={`${decisionLabel}, 이번 주 안건 열기`}
           className={[
-            "ml-auto shrink-0 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold tabular-nums",
+            "ml-auto min-h-11 shrink-0 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold tabular-nums transition-transform active:scale-[0.96]",
             hasCriticalRisk
               ? "bg-state-danger/15 text-rose-200"
               : remainingDecisions > 0
@@ -78,7 +91,7 @@ export function HomeBriefing({
           ].join(" ")}
         >
           {decisionLabel}
-        </span>
+        </button>
         <button
           type="button"
           aria-expanded={isExpanded}
@@ -109,7 +122,11 @@ export function HomeBriefing({
       >
         <div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl bg-white/[0.055] px-3 py-2.5">
+            <button
+              type="button"
+              onClick={() => navigate(onOpenMembers)}
+              className="min-h-14 rounded-2xl bg-white/[0.055] px-3 py-2.5 text-left transition-transform active:scale-[0.97]"
+            >
               <p className="flex items-center gap-1.5 text-[11px] text-text-muted">
                 <HeartPulse className="size-3.5 text-cyan-300" aria-hidden="true" />
                 팀 컨디션
@@ -117,8 +134,12 @@ export function HomeBriefing({
               <p className="mt-1 text-sm font-semibold text-text-primary">
                 평균 <span className="tabular-nums">{averageCondition}</span>
               </p>
-            </div>
-            <div className="rounded-2xl bg-white/[0.055] px-3 py-2.5">
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(onOpenMembers)}
+              className="min-h-14 rounded-2xl bg-white/[0.055] px-3 py-2.5 text-left transition-transform active:scale-[0.97]"
+            >
               <p className="flex items-center gap-1.5 text-[11px] text-text-muted">
                 <ShieldAlert
                   className={[
@@ -132,11 +153,15 @@ export function HomeBriefing({
               <p className="mt-1 text-sm font-semibold text-text-primary">
                 {attentionCount > 0 ? `관리 필요 ${attentionCount}명` : "모두 안정"}
               </p>
-            </div>
+            </button>
           </div>
 
           {projectTitle ? (
-            <div className="mt-2 flex items-center gap-2 rounded-2xl bg-action-secondary/[0.08] px-3 py-2.5">
+            <button
+              type="button"
+              onClick={() => navigate(onOpenGoals)}
+              className="mt-2 flex min-h-11 w-full items-center gap-2 rounded-2xl bg-action-secondary/[0.08] px-3 py-2.5 text-left transition-transform active:scale-[0.97]"
+            >
               <CalendarCheck2
                 className="size-4 shrink-0 text-cyan-300"
                 aria-hidden="true"
@@ -149,7 +174,7 @@ export function HomeBriefing({
                   {projectDeadline}
                 </span>
               ) : null}
-            </div>
+            </button>
           ) : null}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeekDelta, WeeklyReportSnapshot } from "@/types/game";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
+import { isGoodWeekDelta } from "@/utils/weekDeltaTone";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 /** 하루가 흐르는 시간. 7일 합산 약 2.6초, 탭하면 즉시 결산으로 넘어간다. */
@@ -107,7 +108,7 @@ export function WeekTickerOverlay({
           })}
         </div>
         <div className="rounded-2xl bg-slate-950/82 px-3 py-2 text-center shadow-[var(--shadow-surface)] backdrop-blur-sm">
-          <p className="text-[10px] text-text-muted">회사 잔액</p>
+          <p className="text-[11px] text-text-muted">회사 잔액</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-white">
             {formatKoreanWon(visibleMoney, { symbol: true })}
             <span
@@ -165,7 +166,7 @@ export function WeekTickerOverlay({
             {toast.text}
           </span>
         ))}
-        <span className="mt-1 text-[10px] text-white/55">
+        <span className="mt-1 text-[11px] text-white/65">
           탭하면 바로 결산으로 넘어갑니다
         </span>
       </div>
@@ -206,20 +207,20 @@ function buildDayToasts(deltas: WeekDelta[]): DayToast[] {
     const diff = (top.after as number) - (top.before as number);
     const rounded = Math.round(diff * 10) / 10;
     if (rounded === 0) continue;
-    const magnitude = Number.isInteger(Math.abs(rounded))
-      ? String(Math.abs(rounded))
-      : Math.abs(rounded).toFixed(1);
+    const magnitude =
+      top.target.kind === "finance"
+        ? formatKoreanWon(Math.abs(diff))
+        : Number.isInteger(Math.abs(rounded))
+          ? String(Math.abs(rounded))
+          : Math.abs(rounded).toFixed(1);
+    const isGood = isGoodWeekDelta(top);
 
     toasts.push({
       id: top.id,
       day,
       text: `${DAY_LABELS[day - 1]} · ${top.target.label} ${rounded > 0 ? "+" : "-"}${magnitude} (${top.source.label})`,
       tone:
-        top.severity === "warning" || top.severity === "critical"
-          ? "bad"
-          : rounded > 0
-            ? "good"
-            : "bad",
+        isGood === null ? "neutral" : isGood ? "good" : "bad",
     });
   }
 

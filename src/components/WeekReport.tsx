@@ -41,6 +41,10 @@ import type {
 import { withJosa } from "@/utils/josa";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import {
+  isDangerousWeekDelta,
+  isGoodWeekDelta,
+} from "@/utils/weekDeltaTone";
+import {
   ALBUM_UNIT_MARGIN,
   calculateAlbumLifetimeRevenue,
 } from "@/systems/economySystem";
@@ -152,6 +156,7 @@ export function WeekReport({
   );
 
   const memberVoices = buildMemberVoices(report, trainees, memberGrowthRows);
+  const decisionOutcomes = buildDecisionOutcomes(deltas);
 
   return (
     <Modal
@@ -174,6 +179,47 @@ export function WeekReport({
             {hero.text}
           </p>
         </section>
+
+        {decisionOutcomes.length > 0 ? (
+          <section
+            className="rounded-3xl bg-[linear-gradient(135deg,rgba(236,72,153,0.11),rgba(6,182,212,0.07))] p-4 shadow-[var(--shadow-surface)]"
+            aria-labelledby="decision-outcome-heading"
+          >
+            <h2
+              id="decision-outcome-heading"
+              className="flex items-center gap-1.5 text-xs font-semibold tracking-[0.08em] text-pink-200"
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              내 선택이 만든 변화
+            </h2>
+            <div className="mt-3 space-y-3">
+              {decisionOutcomes.map((outcome) => (
+                <article key={outcome.id}>
+                  <p className="text-sm font-semibold text-text-primary">
+                    {outcome.label}
+                  </p>
+                  <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                    {outcome.changes.map((change) => (
+                      <li
+                        key={change.id}
+                        className={[
+                          "rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums shadow-[inset_0_0_0_1px_currentColor]",
+                          change.isGood
+                            ? "bg-emerald-400/10 text-emerald-200"
+                            : change.isDanger
+                              ? "bg-state-danger/10 text-rose-200"
+                              : "bg-amber-400/10 text-amber-200",
+                        ].join(" ")}
+                      >
+                        {change.label} {change.value}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {report.comebackSettlement ? (
           <ComebackSettlementSection settlement={report.comebackSettlement} />
@@ -419,6 +465,60 @@ export function WeekReport({
       </div>
     </Modal>
   );
+}
+
+interface DecisionOutcome {
+  id: string;
+  label: string;
+  changes: Array<{
+    id: string;
+    label: string;
+    value: string;
+    isGood: boolean;
+    isDanger: boolean;
+  }>;
+}
+
+function buildDecisionOutcomes(deltas: WeekDelta[]): DecisionOutcome[] {
+  const grouped = new Map<string, DecisionOutcome>();
+
+  for (const delta of deltas) {
+    if (
+      delta.source.kind !== "decision" ||
+      typeof delta.before !== "number" ||
+      typeof delta.after !== "number"
+    ) {
+      continue;
+    }
+    const difference = delta.after - delta.before;
+    if (difference === 0) continue;
+
+    const isGood = isGoodWeekDelta(delta) ?? false;
+    const value =
+      delta.target.kind === "finance"
+        ? `${difference > 0 ? "+" : "-"}${formatKoreanWon(Math.abs(difference))}`
+        : formatDelta(difference);
+    const current = grouped.get(delta.source.id) ?? {
+      id: delta.source.id,
+      label: delta.source.label,
+      changes: [],
+    };
+    current.changes.push({
+      id: delta.id,
+      label: delta.target.label,
+      value,
+      isGood,
+      isDanger: isDangerousWeekDelta(delta),
+    });
+    grouped.set(delta.source.id, current);
+  }
+
+  return [...grouped.values()].slice(0, 3).map((outcome) => ({
+    ...outcome,
+    changes: outcome.changes
+      .sort((left, right) => Number(right.isDanger) - Number(left.isDanger))
+      .slice(0, 4),
+  }));
 }
 
 // ── 헤드라인 결정 ──────────────────────────────────────────────

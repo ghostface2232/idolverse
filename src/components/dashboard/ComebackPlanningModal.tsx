@@ -232,7 +232,7 @@ export function ComebackPlanningModal({
                         ) : null}
                       </span>
                       <span
-                        className={`mt-1.5 inline-block rounded-lg px-1.5 py-0.5 text-[10px] font-semibold ${badge.tone}`}
+                        className={`mt-1.5 inline-block rounded-lg px-1.5 py-0.5 text-[11px] font-semibold ${badge.tone}`}
                       >
                         {badge.label}
                       </span>

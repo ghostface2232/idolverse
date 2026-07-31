@@ -30,17 +30,20 @@ export const weeklyFlowSelectors = {
     state.weeklyFlow.selectedDecisionIds,
   remainingDecisionCount: (state: GameStoreState) =>
     state.weeklyDecisions.filter(
-      (decision) => !isWeeklyDecisionComplete(decision, state.weeklyFlow),
+      (decision) =>
+        !(state.weeklyFlow.skippedDecisionIds ?? []).includes(decision.id) &&
+        (!(state.weeklyFlow.confirmedDecisionIds ?? []).includes(decision.id) ||
+          !isWeeklyDecisionComplete(decision, state.weeklyFlow)),
     ).length,
   canResolveWeek: (state: GameStoreState) =>
     state.weeklyFlow.state !== "resolving" &&
     state.weeklyFlow.state !== "report_ready" &&
     state.weeklyFlow.state !== "event_focus" &&
-    state.weeklyDecisions.every((decision) =>
-      decision.lane === "opportunity" &&
-      !state.weeklyFlow.selectedDecisionIds[decision.id]
-        ? true
-        : isWeeklyDecisionComplete(decision, state.weeklyFlow),
+    state.weeklyDecisions.every(
+      (decision) =>
+        (state.weeklyFlow.skippedDecisionIds ?? []).includes(decision.id) ||
+        ((state.weeklyFlow.confirmedDecisionIds ?? []).includes(decision.id) &&
+          isWeeklyDecisionComplete(decision, state.weeklyFlow)),
     ),
   activeEventId: (state: GameStoreState) =>
     state.weeklyFlow.eventQueueIds[state.weeklyFlow.activeEventIndex] ?? null,
@@ -49,7 +52,9 @@ export const weeklyFlowSelectors = {
 export interface WeeklyFlowCommands {
   selectDecision: GameStore["selectWeeklyDecision"];
   setDecisionTargets: GameStore["setWeeklyDecisionTargets"];
+  confirmDecision: GameStore["confirmWeeklyDecision"];
   clearDecision: GameStore["clearWeeklyDecision"];
+  skipDecision: GameStore["skipWeeklyDecision"];
   acknowledgeReport: GameStore["acknowledgeWeeklyReport"];
   advanceEvent: GameStore["advanceWeeklyEvent"];
 }
@@ -58,7 +63,9 @@ export function selectWeeklyFlowCommands(state: GameStore): WeeklyFlowCommands {
   return {
     selectDecision: state.selectWeeklyDecision,
     setDecisionTargets: state.setWeeklyDecisionTargets,
+    confirmDecision: state.confirmWeeklyDecision,
     clearDecision: state.clearWeeklyDecision,
+    skipDecision: state.skipWeeklyDecision,
     acknowledgeReport: state.acknowledgeWeeklyReport,
     advanceEvent: state.advanceWeeklyEvent,
   };

@@ -31,7 +31,7 @@ export function ActionDock({
   const isReviewReady = canResolveWeek;
   const isLocked = flowState === "resolving" || flowState === "event_focus";
   // 안건이 하나도 없는 조용한 주는 탭 이동 없이 이 자리에서 바로 진행한다.
-  const isQuietWeek = totalDecisions === 0 && canResolveWeek;
+  const isQuietWeek = totalDecisions === 0 && canResolveWeek && !hintLabel;
   const completedDecisions = Math.max(0, totalDecisions - remainingDecisions);
 
   return (
@@ -125,7 +125,9 @@ export function ActionDock({
             <ChevronRight className="size-4" aria-hidden="true" />
           )}
           {isReviewReady
-            ? "계획 검토하고 진행"
+            ? totalDecisions === 0
+              ? "추가 계획 확인"
+              : "계획 검토하고 진행"
             : `안건 ${remainingDecisions}개 결정하기`}
         </Button>
       )}

@@ -134,7 +134,6 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const currentPhase = useGameStore((state) => state.currentPhase);
   const weeklyDecisions = useGameStore((state) => state.weeklyDecisions);
   const notifications = useGameStore((state) => state.notifications);
-  const trainingSchedule = useGameStore((state) => state.trainingSchedule);
   const investorConditions = useGameStore((state) => state.investorConditions);
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
   const awardHistory = useGameStore((state) => state.awardHistory);
@@ -184,8 +183,13 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     activeEvent?.presentation?.kind === "music-show"
       ? activeEvent.presentation
       : null;
+  const hasFinalizedWeeklyDecision =
+    (weeklyFlow.confirmedDecisionIds?.length ?? 0) > 0 ||
+    (weeklyFlow.skippedDecisionIds?.length ?? 0) > 0;
   const canPlanComeback =
-    weeklyFlow.state === "planning_ready" &&
+    (weeklyFlow.state === "planning_ready" ||
+      (weeklyFlow.state === "planning_active" &&
+        !hasFinalizedWeeklyDecision)) &&
     canStartComebackProject(currentPhase, activeProjects, currentAlbum);
   // 활동기(발매 후) 프로젝트가 있으면 프로모션 실행이 열린다.
   const activityProject = activeProjects.find(
@@ -240,31 +244,33 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       null,
     [weeklyDecisions],
   );
-  const resolvedDecisions = useMemo<PlayerDecisions["resolvedDecisions"]>(
-    () =>
-      weeklyDecisions.flatMap((card) => {
-        const optionId = weeklyFlow.selectedDecisionIds[card.id];
+  const handleAdvanceWeek = useCallback(async () => {
+    const latestGame = gameVanillaStore.getState();
+    if (
+      !weeklyFlowSelectors.canResolveWeek(latestGame) ||
+      isAdvancingRef.current
+    ) {
+      return;
+    }
+    const latestResolvedDecisions: PlayerDecisions["resolvedDecisions"] =
+      latestGame.weeklyDecisions.flatMap((card) => {
+        const optionId = latestGame.weeklyFlow.selectedDecisionIds[card.id];
         const option = card.options.find((candidate) => candidate.id === optionId);
-
-        return option && isWeeklyDecisionComplete(card, weeklyFlow)
+        return option && isWeeklyDecisionComplete(card, latestGame.weeklyFlow)
           ? [
               {
                 cardId: card.id,
                 optionId: option.id,
                 effects: option.effects,
                 targetTraineeIds: option.targetSelection
-                  ? weeklyFlow.selectedTargetTraineeIds[card.id]
+                  ? latestGame.weeklyFlow.selectedTargetTraineeIds[card.id]
                   : option.targetTraineeIds,
                 activityOverride: option.activityOverride,
               },
             ]
           : [];
-      }),
-    [weeklyDecisions, weeklyFlow],
-  );
-
-  const handleAdvanceWeek = useCallback(async () => {
-    if (!canResolveWeek || isAdvancingRef.current) return;
+      });
+    const latestTrainingSchedule = latestGame.trainingSchedule;
 
     isAdvancingRef.current = true;
     setIsAdvancing(true);
@@ -274,11 +280,11 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       await runWeekAndSave(
         {
           trainingSchedule: {
-            intensity: trainingSchedule.intensity,
-            focus: trainingSchedule.focus ?? undefined,
-            restDay: trainingSchedule.restDay,
+            intensity: latestTrainingSchedule.intensity,
+            focus: latestTrainingSchedule.focus ?? undefined,
+            restDay: latestTrainingSchedule.restDay,
           },
-          resolvedDecisions,
+          resolvedDecisions: latestResolvedDecisions,
           promotionOrders: promotionId ? [{ activityId: promotionId }] : [],
         },
         userId,
@@ -307,10 +313,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     }
   }, [
     autoAdvance,
-    canResolveWeek,
     promotionId,
-    resolvedDecisions,
-    trainingSchedule,
     userId,
   ]);
 
@@ -348,19 +351,23 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
 
   // R5: 조용한 주 자동 진행. 결정 카드·프로젝트 결정·활동기·파산 카운트다운·
   // 열린 모달이 없을 때만 주가 흐르고, 무언가 생기면 그 자리에서 멈춘다.
+  const hasBlockingOverlay =
+    Boolean(positionReviewProject) ||
+    Boolean(titleTrackProject) ||
+    Boolean(campaignFailure) ||
+    comebackPlanningOpen ||
+    companyModal !== null ||
+    overviewModal !== null ||
+    financeOpen ||
+    notificationsOpen ||
+    memberDetailId !== null;
   const quietPlanning =
     weeklyFlow.state === "planning_ready" &&
     weeklyDecisions.length === 0 &&
-    !positionReviewProject &&
-    !titleTrackProject &&
     !activityProject &&
+    !canPlanComeback &&
     insolvencyWeeks === 0 &&
-    !campaignFailure &&
-    !comebackPlanningOpen &&
-    companyModal === null &&
-    overviewModal === null &&
-    !notificationsOpen &&
-    memberDetailId === null &&
+    !hasBlockingOverlay &&
     workflowError === null;
   const quietReport =
     weeklyFlow.state === "report_ready" &&
@@ -370,6 +377,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     weeklyFlow.report.injuries.length === 0 &&
     weeklyFlow.report.conflicts.length === 0 &&
     !weeklyFlow.report.comebackSettlement &&
+    !hasBlockingOverlay &&
     workflowError === null;
 
   useEffect(() => {
@@ -661,7 +669,16 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const plan = (
     <div className="space-y-3">
       {workflowError ? <Alert message={workflowError} /> : null}
-      {activityProject && weeklyFlow.state === "planning_ready" ? (
+      <TrainingSummaryCard
+        onOpen={() => {
+          setWeekView("training");
+          setActiveSection("week");
+        }}
+      />
+      {activityProject &&
+      (weeklyFlow.state === "planning_ready" ||
+        weeklyFlow.state === "planning_active" ||
+        weeklyFlow.state === "review_ready") ? (
         <ActivityPromotionPanel
           activities={availablePromotions}
           selectedId={promotionId}
@@ -736,6 +753,9 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               totalDecisions={weeklyDecisions.length}
               remainingDecisions={remainingDecisions}
               riskSeverity={primaryRisk?.severity}
+              onOpenMembers={() => setActiveSection("members")}
+              onOpenGoals={() => setOverviewModal("goals")}
+              onOpenWeek={() => setActiveSection("week")}
             />
             <div className="min-h-0 flex-1">
               <GameWorldHost active={activeSection === "company"} />
@@ -816,7 +836,6 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           ) : (
             <section className="h-full overflow-y-auto p-4 sm:p-5">
               <div className="mx-auto max-w-xl space-y-3">
-                <TrainingSummaryCard onOpen={() => setWeekView("training")} />
                 {plan}
               </div>
             </section>
@@ -907,7 +926,6 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       {financeOpen ? (
         <FinanceOverviewModal onClose={() => setFinanceOpen(false)} />
       ) : null}
-
       {displayedWeekReport ? (
         <WeekReport
           report={displayedWeekReport}

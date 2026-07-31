@@ -154,7 +154,7 @@ export function TitleTrackSelectionModal({
                       </span>
                       <span className="mt-2 flex items-start gap-2">
                         <span
-                          className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold ${strategy.tone}`}
+                          className={`shrink-0 rounded-lg px-2 py-1 text-[11px] font-semibold ${strategy.tone}`}
                         >
                           {strategy.label}
                         </span>

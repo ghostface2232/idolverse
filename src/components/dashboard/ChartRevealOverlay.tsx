@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { PresentationDialog } from "@/components/common/PresentationDialog";
 import { AlbumArt } from "@/components/visual/AlbumArt";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
 
@@ -65,13 +66,7 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
   const displayedRank = countdown[step] ?? command.rank;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/92 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))] backdrop-blur-md"
-      role="dialog"
-      aria-modal="true"
-      aria-label="차트 진입 순위 공개"
-    >
-      <div className="w-full max-w-md rounded-[32px] bg-surface-panel p-3 shadow-[var(--shadow-raised)]">
+    <PresentationDialog label="차트 진입 순위 공개">
         <div className="overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.24),transparent_45%),linear-gradient(180deg,#111b31,#0f172a)] px-5 py-8 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-cyan">
             {command.chartName}
@@ -108,13 +103,13 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
           )}
         </div>
         <Button
+          autoFocus
           className="mt-3 min-h-11 w-full transition-transform active:scale-[0.96]"
           isDisabled={saving}
           onPress={finish}
         >
           {saving ? "저장 중…" : isFinal ? "첫 기록 확인" : "결과 바로 보기"}
         </Button>
-      </div>
-    </div>
+    </PresentationDialog>
   );
 }

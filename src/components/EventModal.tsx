@@ -4,15 +4,10 @@ import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { DecisionImpactChips } from "@/components/dashboard/DecisionImpactChips";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { sceneForEvent } from "@/utils/sceneMapping";
-import { formatKoreanWon } from "@/utils/formatKoreanWon";
-import type {
-  EffectKey,
-  EffectMap,
-  GameEvent,
-  RandomEventTone,
-} from "@/types/game";
+import type { GameEvent, RandomEventTone } from "@/types/game";
 
 interface EventModalProps {
   event: GameEvent;
@@ -30,32 +25,6 @@ const TONE_LABELS: Record<RandomEventTone, string> = {
   positive: "좋은 소식",
   negative: "긴급 보고",
   neutral: "새 소식",
-};
-
-const EFFECT_LABELS: Record<EffectKey, string> = {
-  money: "자금",
-  public: "대중 인지도",
-  fandom: "코어 팬덤",
-  fandomLoyalty: "팬 충성도",
-  fandomDisappointment: "팬 실망",
-  global: "해외 팬덤",
-  industry: "업계 평판",
-  investorPressure: "투자사 압박",
-  condition: "컨디션",
-  stress: "스트레스",
-  satisfaction: "만족도",
-  injuryWeeks: "부상 기간",
-  chemistry: "팀 케미",
-  visual: "비주얼",
-  vocal: "보컬",
-  dance: "댄스",
-  charm: "끼",
-  stamina: "체력",
-  mental: "멘탈",
-  albumSong: "곡 완성도",
-  albumChoreography: "안무 완성도",
-  albumVisual: "비주얼 완성도",
-  albumMarketing: "홍보 준비도",
 };
 
 export function EventModal({ event, onResolve, onClose }: EventModalProps) {
@@ -215,16 +184,11 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
                     >
                       <Check className="size-3.5" strokeWidth={3} />
                     </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold text-text-primary [word-break:keep-all]">
                         {choice.label}
                       </span>
-                      <span className="mt-1 block text-xs leading-5 text-text-secondary [word-break:keep-all]">
-                        {choice.description}
-                      </span>
-                      <span className="mt-1 block text-xs leading-5 text-text-muted [word-break:keep-all]">
-                        {choice.tradeoff}
-                      </span>
+                      <DecisionImpactChips option={choice} className="mt-2" />
                     </span>
                   </span>
                 </button>
@@ -238,10 +202,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
             <p className="text-sm font-semibold text-text-primary [word-break:keep-all]">
               {selectedChoice.label}
             </p>
-            <p className="mt-2 text-xs text-text-muted [word-break:keep-all]">
-              {selectedChoice.tradeoff}
-            </p>
-            <EffectList effects={selectedChoice.effects} />
+            <DecisionImpactChips option={selectedChoice} className="mt-3" />
           </div>
         ) : null}
 
@@ -253,43 +214,6 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
       </div>
     </Modal>
   );
-}
-
-function EffectList({ effects }: { effects: EffectMap }) {
-  const entries = Object.entries(effects);
-
-  if (entries.length === 0) {
-    return <p className="mt-3 text-xs text-text-muted">추가 변화는 없습니다.</p>;
-  }
-
-  return (
-    <ul className="mt-3 flex flex-wrap gap-2">
-      {entries.map(([key, value]) => (
-        <li
-          key={key}
-          className="rounded-full bg-surface-raised px-2.5 py-1 text-xs tabular-nums text-text-secondary"
-        >
-          {EFFECT_LABELS[key as EffectKey]}{" "}
-          {formatEffectValue(key as EffectKey, value)}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function formatEffectValue(key: EffectKey, value: number) {
-  if (key === "money") {
-    const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-    return `${sign}${formatKoreanWon(Math.abs(value), { symbol: true })}`;
-  }
-
-  if (key === "investorPressure" && value <= 0) {
-    return "해제";
-  }
-
-  const sign = value > 0 ? "+" : "";
-  const unit = key === "injuryWeeks" || key === "investorPressure" ? "주" : "";
-  return `${sign}${value}${unit}`;
 }
 
 function inferTone(type: GameEvent["type"]): RandomEventTone {

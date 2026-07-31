@@ -48,7 +48,7 @@ export function TopStatusBar({
         <Button
           tone="ghost"
           static
-          className="relative size-8 !min-h-8 !min-w-8 shrink-0 rounded-xl bg-white/[0.06] !px-0 !py-0 text-text-primary shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96] before:absolute before:-inset-1.5 before:content-['']"
+          className="relative size-11 !min-h-11 !min-w-11 shrink-0 rounded-xl bg-white/[0.06] !px-0 !py-0 text-text-primary shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96]"
           aria-label={`알림 열기${alertCount > 0 ? `, ${alertCount}개` : ""}`}
           onPress={onOpenNotifications}
         >
@@ -58,7 +58,7 @@ export function TopStatusBar({
             aria-hidden="true"
           />
           {alertCount > 0 ? (
-            <span className="absolute -right-1 -top-1 inline-flex min-h-3.5 min-w-3.5 items-center justify-center rounded-full bg-action-primary px-1 text-[8px] font-bold leading-none text-white shadow-[0_0_0_2px_var(--color-surface-shell)]">
+            <span className="absolute -right-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-action-primary px-1 text-[9px] font-bold leading-none text-white shadow-[0_0_0_2px_var(--color-surface-shell)]">
               {alertCount > 99 ? "99+" : alertCount}
             </span>
           ) : null}

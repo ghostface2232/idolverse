@@ -1,4 +1,9 @@
-import type { EffectKey, WeeklyDecisionOption } from "@/types/game";
+import type {
+  CommercialContractOffer,
+  EffectKey,
+  EffectMap,
+  TraineeActivity,
+} from "@/types/game";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
 const EFFECT_LABELS: Record<EffectKey, string> = {
@@ -30,11 +35,17 @@ const EFFECT_LABELS: Record<EffectKey, string> = {
 interface ImpactChip {
   id: string;
   label: string;
-  tone: "positive" | "negative" | "neutral";
+  tone: "positive" | "negative" | "danger" | "neutral";
+}
+
+interface ImpactSource {
+  effects: EffectMap;
+  contractOffer?: CommercialContractOffer;
+  activityOverride?: TraineeActivity;
 }
 
 interface DecisionImpactChipsProps {
-  option: WeeklyDecisionOption;
+  option: ImpactSource;
   className?: string;
 }
 
@@ -50,9 +61,11 @@ export function DecisionImpactChips({
         <span
           key={chip.id}
           className={[
-            "inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold leading-4 shadow-[inset_0_0_0_1px_currentColor]",
+            "inline-flex min-h-8 items-center rounded-full px-3 py-1.5 text-xs font-semibold leading-5 shadow-[inset_0_0_0_1px_currentColor]",
             chip.tone === "positive"
               ? "bg-emerald-400/10 text-emerald-200"
+              : chip.tone === "danger"
+                ? "bg-state-danger/10 text-rose-200"
               : chip.tone === "negative"
                 ? "bg-amber-400/10 text-amber-200"
                 : "bg-cyan-400/10 text-cyan-200",
@@ -65,7 +78,7 @@ export function DecisionImpactChips({
   );
 }
 
-function buildImpactChips(option: WeeklyDecisionOption): ImpactChip[] {
+function buildImpactChips(option: ImpactSource): ImpactChip[] {
   const chips = Object.entries(option.effects)
     .filter((entry): entry is [EffectKey, number] => {
       const value = entry[1];
@@ -83,6 +96,16 @@ function buildImpactChips(option: WeeklyDecisionOption): ImpactChip[] {
       id: "contract-term",
       label: `${option.contractOffer.durationWeeks}주 계약`,
       tone: "neutral",
+    });
+    chips.push({
+      id: "contract-schedule",
+      label: `매주 일정 ${option.contractOffer.scheduleSlots}칸`,
+      tone: "negative",
+    });
+    chips.push({
+      id: "contract-fatigue",
+      label: `매주 피로 +${option.contractOffer.weeklyStress}`,
+      tone: "negative",
     });
   }
 
@@ -120,8 +143,18 @@ function effectToChip(key: EffectKey, value: number): ImpactChip {
   return {
     id: key,
     label: `${EFFECT_LABELS[key]} ${direction.repeat(intensityFor(key, value))}`,
-    tone: positive ? "positive" : "negative",
+    tone: positive ? "positive" : isDangerChange(key, value) ? "danger" : "negative",
   };
+}
+
+function isDangerChange(key: EffectKey, value: number) {
+  return (
+    (key === "injuryWeeks" ||
+      key === "investorPressure" ||
+      key === "fandomDisappointment" ||
+      key === "stress") &&
+    value > 0
+  );
 }
 
 function isPositiveChange(key: EffectKey, value: number) {

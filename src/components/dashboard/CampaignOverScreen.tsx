@@ -37,7 +37,7 @@ export function CampaignOverScreen({
         </p>
 
         <div className="rounded-2xl bg-white/[0.04] p-4 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-text-muted">
             남긴 기록
           </p>
           <div className="mt-2 grid grid-cols-3 gap-2 tabular-nums">

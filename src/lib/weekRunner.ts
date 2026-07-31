@@ -136,6 +136,8 @@ function resolveWeek(decisions: PlayerDecisions) {
         state: "resolving",
         selectedDecisionIds,
         selectedTargetTraineeIds,
+        confirmedDecisionIds: Object.keys(selectedDecisionIds),
+        skippedDecisionIds: [],
         eventQueueIds: [],
         activeEventIndex: 0,
         resolutionId,
@@ -163,6 +165,8 @@ function resolveWeek(decisions: PlayerDecisions) {
     state: "report_ready",
     selectedDecisionIds,
     selectedTargetTraineeIds,
+    confirmedDecisionIds: Object.keys(selectedDecisionIds),
+    skippedDecisionIds: [],
     eventQueueIds,
     activeEventIndex: 0,
     resolutionId,
@@ -362,6 +366,8 @@ function advanceWeeklyEventSnapshot(snapshot: GameSnapshot): GameSnapshot {
         state: complete ? "planning_ready" : "event_focus",
         selectedDecisionIds: {},
         selectedTargetTraineeIds: {},
+        confirmedDecisionIds: [],
+        skippedDecisionIds: [],
         eventQueueIds: complete ? [] : flow.eventQueueIds,
         activeEventIndex: complete ? 0 : nextIndex,
       },
@@ -389,6 +395,8 @@ export async function acknowledgeWeeklyReportAndSave(
         state: hasEvents ? "event_focus" : "planning_ready",
         selectedDecisionIds: {},
         selectedTargetTraineeIds: {},
+        confirmedDecisionIds: [],
+        skippedDecisionIds: [],
         activeEventIndex: 0,
       },
     },
@@ -481,7 +489,14 @@ export async function startComebackProjectAndSave(
   slotNumber = DEFAULT_AUTO_SAVE_SLOT,
 ) {
   const snapshot = buildGameSnapshot();
-  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+  const weeklyFlow = snapshot.game.weeklyFlow;
+  const hasFinalizedWeeklyDecision =
+    (weeklyFlow.confirmedDecisionIds?.length ?? 0) > 0 ||
+    (weeklyFlow.skippedDecisionIds?.length ?? 0) > 0;
+  const canStartDuringPlanning =
+    weeklyFlow.state === "planning_ready" ||
+    (weeklyFlow.state === "planning_active" && !hasFinalizedWeeklyDecision);
+  if (!canStartDuringPlanning) {
     throw new WeeklyResolutionConflictError(
       "A comeback project can only start while planning the week.",
     );

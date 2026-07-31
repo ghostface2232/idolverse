@@ -85,7 +85,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                     {trainee.name}
                     {maxPopularity > 0 && (trainee.popularity ?? 0) === maxPopularity ? (
                       <span
-                        className="rounded-md bg-amber-400/15 px-1 py-0.5 text-[10px] font-semibold text-amber-200"
+                        className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-200"
                         title="팀 내 최고 인기"
                       >
                         인기 1위

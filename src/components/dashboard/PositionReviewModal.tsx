@@ -215,7 +215,7 @@ export function PositionReviewModal({
                                     {trainee.name}
                                   </span>
                                   {selected ? (
-                                    <span className="shrink-0 rounded-full bg-brand-cyan/15 px-2 py-0.5 text-[10px] text-cyan-200">
+                                    <span className="shrink-0 rounded-full bg-brand-cyan/15 px-2 py-0.5 text-[11px] text-cyan-200">
                                       현재 배정
                                     </span>
                                   ) : null}

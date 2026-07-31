@@ -2,9 +2,7 @@ import { useState } from "react";
 import {
   Check,
   ChevronLeft,
-  ChevronRight,
   Clock3,
-  Pencil,
   Play,
   ShieldAlert,
   Sparkles,
@@ -25,7 +23,10 @@ import { POSITION_LABELS } from "@/data/founding";
 import { hashSeed, MANAGER_BRIEFING_LINES, pickLine } from "@/data/voiceLines";
 import { useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
-import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
+import {
+  isWeeklyDecisionComplete,
+  weeklyFlowSelectors,
+} from "@/stores/weeklyFlowSelectors";
 import { useManagerPersona } from "@/utils/managerPersona";
 import { sceneForDecisionCategory } from "@/utils/sceneMapping";
 import type { WeeklyDecision, WeeklyDecisionTrigger } from "@/types/game";
@@ -97,13 +98,24 @@ export function DecisionCardDeck({
   const setWeeklyDecisionTargets = useGameStore(
     (state) => state.setWeeklyDecisionTargets,
   );
-  const clearWeeklyDecision = useGameStore((state) => state.clearWeeklyDecision);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [reviewing, setReviewing] = useState(false);
-  const showReview =
-    cards.length === 0 ||
-    ((reviewing || flow.state === "review_ready") && editingIndex === null);
+  const confirmWeeklyDecision = useGameStore(
+    (state) => state.confirmWeeklyDecision,
+  );
+  const skipWeeklyDecision = useGameStore((state) => state.skipWeeklyDecision);
+  const skippedDecisionIds = new Set(flow.skippedDecisionIds ?? []);
+  const confirmedDecisionIds = new Set(flow.confirmedDecisionIds ?? []);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const firstIncomplete = cards.findIndex(
+      (card) =>
+        !skippedDecisionIds.has(card.id) &&
+        (!confirmedDecisionIds.has(card.id) ||
+          !isWeeklyDecisionComplete(card, flow)),
+    );
+    return firstIncomplete >= 0
+      ? firstIncomplete
+      : Math.max(cards.length - 1, 0);
+  });
+  const showReview = cards.length === 0;
   const safeIndex = Math.min(activeIndex, Math.max(cards.length - 1, 0));
   const activeCard = cards[safeIndex];
   const activeTitle = activeCard ? conciseDecisionTitle(activeCard) : "";
@@ -121,11 +133,26 @@ export function DecisionCardDeck({
     ? selectedTargets.length >= targetSelection.min &&
       selectedTargets.length <= targetSelection.max
     : true;
+  const completedCardCount = cards.filter((card) => {
+    if (skippedDecisionIds.has(card.id)) return true;
+    if (!confirmedDecisionIds.has(card.id)) return false;
+    const option = card.options.find(
+      (candidate) => candidate.id === flow.selectedDecisionIds[card.id],
+    );
+    if (!option) return false;
+    if (!option.targetSelection) return true;
+    const targets = flow.selectedTargetTraineeIds[card.id] ?? [];
+    return (
+      targets.length >= option.targetSelection.min &&
+      targets.length <= option.targetSelection.max
+    );
+  }).length;
 
   const finishActiveCard = () => {
-    if (editingIndex !== null || safeIndex >= cards.length - 1) {
-      setEditingIndex(null);
-      setReviewing(true);
+    if (!activeCard) return;
+    confirmWeeklyDecision(activeCard.id);
+    if (safeIndex >= cards.length - 1) {
+      onConfirm();
       return;
     }
     setActiveIndex(safeIndex + 1);
@@ -150,10 +177,9 @@ export function DecisionCardDeck({
 
   const handleSkipOpportunity = () => {
     if (!activeCard || activeCard.lane !== "opportunity") return;
-    clearWeeklyDecision(activeCard.id);
+    skipWeeklyDecision(activeCard.id);
     if (safeIndex >= cards.length - 1) {
-      setEditingIndex(null);
-      setReviewing(true);
+      onConfirm();
       return;
     }
     setActiveIndex(safeIndex + 1);
@@ -190,101 +216,12 @@ export function DecisionCardDeck({
           )}
         </SpeakerBubble>
 
-        {cards.length === 0 ? (
-          <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
-            <p className="text-sm font-semibold text-cyan-100">직접 결정할 일 없음</p>
-            <p className="mt-2 text-pretty text-sm leading-6 text-text-muted">
-              이번 주는 직접 챙길 긴급 사안이 없습니다.
-            </p>
-          </article>
-        ) : (
-          <ol className="space-y-2">
-            {cards.map((card, index) => {
-              const option = card.options.find(
-                (candidate) => candidate.id === flow.selectedDecisionIds[card.id],
-              );
-              const targetIds = flow.selectedTargetTraineeIds[card.id] ?? [];
-              const targetNames = targetIds
-                .map((id) => trainees.find((trainee) => trainee.id === id)?.name)
-                .filter((name): name is string => Boolean(name));
-              const selectionComplete = Boolean(
-                option &&
-                  (!option.targetSelection ||
-                    (targetIds.length >= option.targetSelection.min &&
-                      targetIds.length <= option.targetSelection.max)),
-              );
-
-              return (
-                <li
-                  key={card.id}
-                  className={`rounded-2xl p-3 shadow-[var(--shadow-surface)] ${
-                    card.lane === "opportunity"
-                      ? "bg-action-secondary/[0.07]"
-                      : "bg-surface-raised/70"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`grid size-7 shrink-0 place-items-center rounded-lg ${
-                        selectionComplete
-                          ? "bg-state-success/12 text-state-success"
-                          : "bg-action-secondary/12 text-action-secondary"
-                      }`}
-                    >
-                      {selectionComplete ? (
-                        <Check className="size-4" aria-hidden="true" />
-                      ) : (
-                        <Clock3 className="size-4" aria-hidden="true" />
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-xs text-text-muted">
-                          {conciseDecisionTitle(card)}
-                        </p>
-                        <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${decisionToneClasses(card)}`}>
-                          {LANE_LABELS[card.lane]}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm font-semibold text-text-primary">
-                        {option?.label ??
-                          (card.lane === "opportunity"
-                            ? "수락하지 않음"
-                            : "선택 필요")}
-                      </p>
-                      {option ? (
-                        <>
-                          <DecisionImpactChips option={option} className="mt-2" />
-                          {targetNames.length > 0 ? (
-                            <p className="mt-1 text-xs font-medium text-cyan-100">
-                              참여 · {targetNames.join(" · ")}
-                            </p>
-                          ) : null}
-                        </>
-                      ) : card.lane === "opportunity" ? (
-                        <p className="mt-1 text-pretty text-xs leading-5 text-cyan-100/70">
-                          수락하지 않으면 제안은 이번 주가 끝날 때 만료됩니다.
-                        </p>
-                      ) : null}
-                    </div>
-                    <Button
-                      tone="ghost"
-                      className="min-w-11 px-0"
-                      aria-label={`${conciseDecisionTitle(card)} 선택 수정`}
-                      onPress={() => {
-                        setActiveIndex(index);
-                        setEditingIndex(index);
-                        setReviewing(false);
-                      }}
-                    >
-                      <Pencil className="size-4" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+        <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
+          <p className="text-sm font-semibold text-cyan-100">직접 결정할 일 없음</p>
+          <p className="mt-2 text-pretty text-sm leading-6 text-text-muted">
+            이번 주는 직접 챙길 긴급 사안이 없습니다.
+          </p>
+        </article>
 
         <div className="space-y-2">
           <Button
@@ -323,19 +260,38 @@ export function DecisionCardDeck({
           className="mt-2 flex gap-1"
           role="progressbar"
           aria-label="안건 진행"
-          aria-valuemin={1}
+          aria-valuemin={0}
           aria-valuemax={cards.length}
-          aria-valuenow={safeIndex + 1}
+          aria-valuenow={completedCardCount}
         >
-          {cards.map((card, index) => (
-            <span
-              key={card.id}
-              aria-hidden="true"
-              className={`h-1.5 flex-1 rounded-full ${
-                index <= safeIndex ? "bg-action-primary" : "bg-white/10"
-              }`}
-            />
-          ))}
+          {cards.map((card, index) => {
+            const option = card.options.find(
+              (candidate) => candidate.id === flow.selectedDecisionIds[card.id],
+            );
+            const targets = flow.selectedTargetTraineeIds[card.id] ?? [];
+            const isComplete =
+              skippedDecisionIds.has(card.id) ||
+              (confirmedDecisionIds.has(card.id) &&
+                Boolean(
+                  option &&
+                    (!option.targetSelection ||
+                      (targets.length >= option.targetSelection.min &&
+                        targets.length <= option.targetSelection.max)),
+                ));
+            return (
+              <span
+                key={card.id}
+                aria-hidden="true"
+                className={`h-1.5 flex-1 rounded-full ${
+                  isComplete
+                    ? "bg-action-primary"
+                    : index === safeIndex
+                      ? "bg-white/35"
+                      : "bg-white/10"
+                }`}
+              />
+            );
+          })}
         </div>
       </header>
 
@@ -430,12 +386,13 @@ export function DecisionCardDeck({
           <Button
             className="mt-3 w-full gap-2"
             tone="secondary"
+            isDisabled={isRunning}
             onPress={finishActiveCard}
           >
             <Check className="size-4" aria-hidden="true" />
             {safeIndex >= cards.length - 1
-              ? "선택 확정하고 계획 검토"
-              : "선택 확정하고 다음 안건"}
+              ? "확인하고 이번 주 진행"
+              : "확인하고 다음 안건"}
           </Button>
         ) : null}
 
@@ -484,7 +441,7 @@ export function DecisionCardDeck({
                         <span
                           className={`absolute -bottom-1 -right-1 grid size-4 place-items-center rounded-full ${
                             selected
-                              ? "bg-brand-cyan text-slate-950"
+                              ? "bg-emerald-400 text-slate-950"
                               : "bg-surface-shell text-transparent"
                           }`}
                           aria-hidden="true"
@@ -511,10 +468,12 @@ export function DecisionCardDeck({
             <Button
               tone="secondary"
               className="mt-3 w-full"
-              isDisabled={!targetCountValid}
+              isDisabled={!targetCountValid || isRunning}
               onPress={finishActiveCard}
             >
-              참여 멤버 확정
+              {safeIndex >= cards.length - 1
+                ? "확인하고 이번 주 진행"
+                : "확인하고 다음 안건"}
             </Button>
           </section>
         ) : null}
@@ -524,6 +483,7 @@ export function DecisionCardDeck({
         <Button
           tone="ghost"
           className="w-full gap-2 text-cyan-100"
+          isDisabled={isRunning}
           onPress={handleSkipOpportunity}
         >
           <Clock3 className="size-4" aria-hidden="true" />
@@ -531,7 +491,7 @@ export function DecisionCardDeck({
         </Button>
       ) : null}
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
         <Button
           tone="ghost"
           className="gap-1.5"
@@ -539,17 +499,6 @@ export function DecisionCardDeck({
           onPress={() => setActiveIndex((index) => Math.max(0, index - 1))}
         >
           <ChevronLeft className="size-4" aria-hidden="true" /> 이전
-        </Button>
-        <Button
-          tone="ghost"
-          className="gap-1.5"
-          isDisabled={
-            safeIndex >= cards.length - 1 ||
-            Boolean(targetSelection && !targetCountValid)
-          }
-          onPress={() => setActiveIndex((index) => Math.min(cards.length - 1, index + 1))}
-        >
-          다음 <ChevronRight className="size-4" aria-hidden="true" />
         </Button>
       </div>
     </section>

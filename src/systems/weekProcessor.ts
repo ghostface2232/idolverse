@@ -529,7 +529,11 @@ export function processWeek(
     applyToState(d.effects, undefined, 1, d.targetTraineeIds);
     recordTransition(
       beforeDecision,
-      { kind: "decision", id: `${d.cardId}:${d.optionId}`, label: "주간 결정" },
+      {
+        kind: "decision",
+        id: `${d.cardId}:${d.optionId}`,
+        label: selectedOption?.label ?? "주간 결정",
+      },
       1,
     );
   }

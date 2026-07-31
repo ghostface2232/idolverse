@@ -922,6 +922,10 @@ export interface WeeklyFlowSnapshot {
   state: WeeklyFlowState;
   selectedDecisionIds: Record<string, string>;
   selectedTargetTraineeIds: Record<string, string[]>;
+  /** 선택 후 확인까지 마친 안건. 라디오 선택만으로 완료 처리하지 않는다. */
+  confirmedDecisionIds?: string[];
+  /** 이번 주에 의도적으로 넘긴 선택 기회. 탭 이동 후에도 진행 상태를 유지한다. */
+  skippedDecisionIds?: string[];
   eventQueueIds: string[];
   activeEventIndex: number;
   resolutionId: string | null;
@@ -1002,7 +1006,9 @@ export interface GameStoreActions {
   setTrainingSchedule: (schedule: Partial<TrainingScheduleState>) => void;
   selectWeeklyDecision: (cardId: string, optionId: string) => void;
   setWeeklyDecisionTargets: (cardId: string, traineeIds: string[]) => void;
+  confirmWeeklyDecision: (cardId: string) => void;
   clearWeeklyDecision: (cardId: string) => void;
+  skipWeeklyDecision: (cardId: string) => void;
   acknowledgeWeeklyReport: () => void;
   advanceWeeklyEvent: () => void;
 }

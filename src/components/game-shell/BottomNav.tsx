@@ -39,14 +39,14 @@ export function BottomNav({
       className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[88px_minmax(0,1fr)] lg:grid-rows-1"
     >
       <TabList
-        items={NAV_ITEMS}
         className="order-2 grid grid-cols-5 bg-surface-panel/96 shadow-[var(--shadow-dock)] backdrop-blur-xl lg:order-1 lg:flex lg:flex-col lg:border-r lg:border-white/8 lg:shadow-none"
       >
-        {(item) => {
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
 
           return (
             <Tab
+              key={item.key}
               id={item.key}
               className={({ isFocusVisible, isSelected, isPressed }) =>
                 [
@@ -106,7 +106,7 @@ export function BottomNav({
               )}
             </Tab>
           );
-        }}
+        })}
       </TabList>
       <TabPanel
         id={selectedKey}

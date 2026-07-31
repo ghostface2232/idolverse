@@ -29,7 +29,7 @@ export function GameShell({
       {topStatus}
       <div
         className={
-          activeSection === "company" || activeSection === "week"
+          activeSection === "week"
             ? "contents"
             : "hidden lg:contents"
         }

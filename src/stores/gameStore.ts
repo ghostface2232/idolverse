@@ -11,6 +11,8 @@ export const initialWeeklyFlowState: GameStoreState["weeklyFlow"] = {
   state: "planning_ready",
   selectedDecisionIds: {},
   selectedTargetTraineeIds: {},
+  confirmedDecisionIds: [],
+  skippedDecisionIds: [],
   eventQueueIds: [],
   activeEventIndex: 0,
   resolutionId: null,
@@ -146,17 +148,17 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
         ...state.weeklyFlow,
         selectedDecisionIds,
         selectedTargetTraineeIds,
+        confirmedDecisionIds: (state.weeklyFlow.confirmedDecisionIds ?? []).filter(
+          (id) => id !== cardId,
+        ),
+        skippedDecisionIds: (state.weeklyFlow.skippedDecisionIds ?? []).filter(
+          (id) => id !== cardId,
+        ),
       };
-      const complete =
-        state.weeklyDecisions.length > 0 &&
-        state.weeklyDecisions.every((decision) =>
-          isWeeklyDecisionComplete(decision, nextFlow),
-        );
-
       return {
         weeklyFlow: {
           ...nextFlow,
-          state: complete ? "review_ready" : "planning_active",
+          state: "planning_active",
           eventQueueIds: [],
           activeEventIndex: 0,
           report: null,
@@ -189,6 +191,46 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
           ...state.weeklyFlow,
           state: "planning_active",
           selectedTargetTraineeIds,
+          confirmedDecisionIds: (
+            state.weeklyFlow.confirmedDecisionIds ?? []
+          ).filter((id) => id !== cardId),
+        },
+      };
+    }),
+  confirmWeeklyDecision: (cardId) =>
+    set((state) => {
+      if (
+        state.weeklyFlow.state === "resolving" ||
+        state.weeklyFlow.state === "report_ready" ||
+        state.weeklyFlow.state === "event_focus"
+      ) {
+        return state;
+      }
+      const card = state.weeklyDecisions.find((candidate) => candidate.id === cardId);
+      if (!card || !isWeeklyDecisionComplete(card, state.weeklyFlow)) return state;
+
+      const confirmedDecisionIds = [
+        ...new Set([...(state.weeklyFlow.confirmedDecisionIds ?? []), cardId]),
+      ];
+      const skippedDecisionIds = (
+        state.weeklyFlow.skippedDecisionIds ?? []
+      ).filter((id) => id !== cardId);
+      const nextFlow = {
+        ...state.weeklyFlow,
+        confirmedDecisionIds,
+        skippedDecisionIds,
+      };
+      const complete = state.weeklyDecisions.every(
+        (decision) =>
+          skippedDecisionIds.includes(decision.id) ||
+          (confirmedDecisionIds.includes(decision.id) &&
+            isWeeklyDecisionComplete(decision, nextFlow)),
+      );
+
+      return {
+        weeklyFlow: {
+          ...nextFlow,
+          state: complete ? "review_ready" : "planning_active",
         },
       };
     }),
@@ -218,6 +260,53 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
           state: "planning_active",
           selectedDecisionIds,
           selectedTargetTraineeIds,
+          confirmedDecisionIds: (
+            state.weeklyFlow.confirmedDecisionIds ?? []
+          ).filter((id) => id !== cardId),
+        },
+      };
+    }),
+  skipWeeklyDecision: (cardId) =>
+    set((state) => {
+      if (
+        state.weeklyFlow.state === "resolving" ||
+        state.weeklyFlow.state === "report_ready" ||
+        state.weeklyFlow.state === "event_focus"
+      ) {
+        return state;
+      }
+      const card = state.weeklyDecisions.find((candidate) => candidate.id === cardId);
+      if (!card || card.lane !== "opportunity") return state;
+
+      const selectedDecisionIds = { ...state.weeklyFlow.selectedDecisionIds };
+      const selectedTargetTraineeIds = {
+        ...state.weeklyFlow.selectedTargetTraineeIds,
+      };
+      delete selectedDecisionIds[cardId];
+      delete selectedTargetTraineeIds[cardId];
+      const skippedDecisionIds = [
+        ...new Set([...(state.weeklyFlow.skippedDecisionIds ?? []), cardId]),
+      ];
+      const nextFlow = {
+        ...state.weeklyFlow,
+        selectedDecisionIds,
+        selectedTargetTraineeIds,
+        confirmedDecisionIds: (state.weeklyFlow.confirmedDecisionIds ?? []).filter(
+          (id) => id !== cardId,
+        ),
+        skippedDecisionIds,
+      };
+      const complete = state.weeklyDecisions.every(
+        (decision) =>
+          skippedDecisionIds.includes(decision.id) ||
+          ((nextFlow.confirmedDecisionIds ?? []).includes(decision.id) &&
+            isWeeklyDecisionComplete(decision, nextFlow)),
+      );
+
+      return {
+        weeklyFlow: {
+          ...nextFlow,
+          state: complete ? "review_ready" : "planning_active",
         },
       };
     }),
@@ -232,6 +321,8 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
           state: hasEvents ? "event_focus" : "planning_ready",
           selectedDecisionIds: {},
           selectedTargetTraineeIds: {},
+          confirmedDecisionIds: [],
+          skippedDecisionIds: [],
           activeEventIndex: 0,
         },
       };
@@ -248,6 +339,8 @@ export const gameVanillaStore = createStore<GameStore>()((set) => ({
           state: complete ? "planning_ready" : "event_focus",
           selectedDecisionIds: {},
           selectedTargetTraineeIds: {},
+          confirmedDecisionIds: [],
+          skippedDecisionIds: [],
           eventQueueIds: complete ? [] : state.weeklyFlow.eventQueueIds,
           activeEventIndex: complete ? 0 : nextIndex,
         },
