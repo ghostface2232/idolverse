@@ -28,7 +28,7 @@ export interface MarketContext {
 export interface ReleaseInput {
   albumQuality: number;
   titleTrack: TitleTrack;
-  /** 트렌드·계절 스윙 판정에 쓰는 앨범 콘셉트. */
+  /** 트렌드·계절 스윙 판정에 쓰는 앨범 컨셉. */
   concept: { genre: Genre; mood: ConceptMood };
   season: Season;
   fandom: number;

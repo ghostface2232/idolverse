@@ -282,7 +282,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       },
       {
         type: "stylistSupport",
-        description: "시즌 전담 스타일리스트 및 화보 콘셉트 패키지 제공",
+        description: "시즌 전담 스타일리스트 및 화보 컨셉 패키지 제공",
       },
     ],
     personality: "수치보다 분위기와 화제성을 읽지만, 시즌 감각이 떨어지면 냉정하게 손을 뗀다.",

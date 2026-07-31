@@ -39,7 +39,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
     },
     {
       id: "concept-test",
-      title: "콘셉트 테스트",
+      title: "컨셉 테스트",
       summary: "멤버 핏과 시장 반응을 비교해 데뷔 색을 정한다",
       weekWindow: [7, 9],
       eventIds: ["debut-concept-test", "debut-unit-chemistry"],

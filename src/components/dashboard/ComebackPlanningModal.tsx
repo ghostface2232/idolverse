@@ -190,7 +190,7 @@ export function ComebackPlanningModal({
 
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
-                콘셉트 무드
+                컨셉 무드
               </h3>
               <RadioGroup
                 aria-label="컨셉 무드"

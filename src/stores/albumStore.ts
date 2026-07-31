@@ -24,7 +24,7 @@ const initialAlbum: Album = {
       name: "Neon Current",
       type: "bold",
       quality: 63,
-      description: "콘셉트 색깔이 뚜렷한 곡입니다. 소화 난도가 높지만 성공하면 강한 인상을 남깁니다.",
+      description: "컨셉 색깔이 뚜렷한 곡입니다. 소화 난도가 높지만 성공하면 강한 인상을 남깁니다.",
     },
     {
       id: "track-global",

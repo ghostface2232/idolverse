@@ -25,7 +25,7 @@ export interface WeeklyFandomContext {
   concertThisWeek: boolean;
   fanServiceThisWeek: boolean;
   scandalThisWeek: boolean;
-  // 콘셉트 급변의 팬덤 대가는 발매 평가(albumSystem의 fandomExpectation)가
+  // 컨셉 급변의 팬덤 대가는 발매 평가(albumSystem의 fandomExpectation)가
   // 이미 치르게 한다 — 별도 conceptBreak 플래그는 이중 페널티라 제거했다.
   excessiveCommercial: boolean;
   /** global 지표(0~100) 기준의 해외 활동성 — 문턱은 GLOBAL_ENGAGEMENT_THRESHOLDS. */

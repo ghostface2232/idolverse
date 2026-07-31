@@ -324,7 +324,7 @@ export function calculateFandomExpectation(
       fandomPenalty: 0,
       publicBonus: -5,
       publicBonusChance: 0,
-      description: "같은 콘셉트를 3회 이상 반복했습니다. 팬덤은 안정적이지만 대중에게는 식상할 수 있습니다.",
+      description: "같은 컨셉을 3회 이상 반복했습니다. 팬덤은 안정적이지만 대중에게는 식상할 수 있습니다.",
     };
   }
 

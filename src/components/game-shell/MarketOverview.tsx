@@ -160,7 +160,7 @@ export function MarketOverview() {
           <div className="mb-3 flex items-center gap-2">
             <TrendingUp className="size-4 text-action-secondary" aria-hidden="true" />
             <h2 id="trend-heading" className="text-sm font-semibold text-text-primary">
-              지금 뜨는 콘셉트
+              지금 뜨는 컨셉
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-2.5">

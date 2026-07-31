@@ -110,10 +110,10 @@ function computeDelta(
     const affinity = trainee.conceptAffinity[ctx.albumConcept] ?? 50;
     if (affinity < CONCEPT_AFFINITY_LOW) {
       delta += SATISFACTION_CONCEPT_MISMATCH_PENALTY;
-      reasons.push("부적합 콘셉트");
+      reasons.push("부적합 컨셉");
     } else if (affinity >= CONCEPT_AFFINITY_HIGH) {
       delta += 2;
-      reasons.push("적합 콘셉트");
+      reasons.push("적합 컨셉");
     }
   }
 

@@ -23,7 +23,7 @@ const initialPermanentRivals: CompetitorGroup[] = [
     activeWeeks: 24,
     debutYear: 1,
     strengths: ["빈틈없는 제작진", "안정적인 방송 편성"],
-    weaknesses: ["낮은 개성", "보수적 콘셉트"],
+    weaknesses: ["낮은 개성", "보수적 컨셉"],
   },
   {
     id: "rival-pulse",

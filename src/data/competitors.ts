@@ -23,7 +23,7 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     industryRange: { min: 45, max: 70 },
     comebackIntervalWeeks: { min: 12, max: 16 },
     strengths: ["안정적인 라이브", "강한 방송 편성", "비주얼 평균치"],
-    weaknesses: ["느린 성장", "보수적인 콘셉트 전환"],
+    weaknesses: ["느린 성장", "보수적인 컨셉 전환"],
   },
   {
     id: "viralCharacter",
@@ -195,7 +195,7 @@ export const EVENT_COMPETITOR_ARCHETYPES: EventCompetitorTemplate[] = [
     publicRange: { min: 40, max: 75 },
     globalRange: { min: 20, max: 42 },
     industryRange: { min: 35, max: 60 },
-    strengths: ["시즌 특화 콘셉트", "공연 시즌 장악력"],
+    strengths: ["시즌 특화 컨셉", "공연 시즌 장악력"],
     weaknesses: ["비시즌 약세"],
     durationWeeks: { min: 6, max: 8 },
     intensityRange: { min: 60, max: 80 },

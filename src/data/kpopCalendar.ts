@@ -17,7 +17,7 @@ export const SEASONAL_NEWS_TEMPLATES: Record<Season, string[]> = {
   spring: [
     "[대형 기획사]의 신인 [그룹명], 다음 달 데뷔 예정",
     "신인 시즌 개막, 이번 분기 데뷔 팀 [N]팀 예상",
-    "봄 시즌 청량 콘셉트 컴백 러시, 차트 경쟁 치열",
+    "봄 시즌 청량 컨셉 컴백 러시, 차트 경쟁 치열",
     "올해 상반기 주목할 루키 그룹 TOP 5 공개",
   ],
   summer: [
@@ -65,7 +65,7 @@ export const SEASONAL_NEWS_POOL: Record<
       type: "competitor",
     },
     {
-      headline: "봄 시즌 청량 콘셉트 수요 급증",
+      headline: "봄 시즌 청량 컨셉 수요 급증",
       detail: "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
       type: "trend",
     },
@@ -175,7 +175,7 @@ export const SEASONAL_NEWS_POOL: Record<
     },
     {
       headline: "가을 감성 컴백 대전, 발라드·시티팝 강세",
-      detail: "감성적인 콘셉트가 시즌 무드와 맞물려 차트 상위권을 점령 중이다.",
+      detail: "감성적인 컨셉이 시즌 무드와 맞물려 차트 상위권을 점령 중이다.",
       type: "trend",
     },
     {
@@ -226,7 +226,7 @@ export const SEASONAL_NEWS_POOL: Record<
       type: "event",
     },
     {
-      headline: "크리스마스·겨울 콘셉트 컴백 시즌 진입",
+      headline: "크리스마스·겨울 컨셉 컴백 시즌 진입",
       detail: "몽환·감성 계열이 연말 시장에서 유리한 위치를 선점하고 있다.",
       type: "trend",
     },

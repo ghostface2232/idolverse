@@ -265,7 +265,7 @@ describe("투자사 조건 체크 (P0-3)", () => {
     ).toBe(52);
   });
 
-  it("패션 트렌드 목표는 업계 평판이 아니라 앨범 콘셉트와 시장의 적합도로 판정한다", () => {
+  it("패션 트렌드 목표는 업계 평판이 아니라 앨범 컨셉과 시장의 적합도로 판정한다", () => {
     const cold = makeGameSnapshot({ week: 39, investorType: "fashion" });
     cold.fandom.industry = 100;
     cold.album.releasedAlbums = [

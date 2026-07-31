@@ -193,7 +193,7 @@ export function generateTraineeCandidates(
 const STAFF_SPECIALTY_POOL: Record<StaffRole, string[]> = {
   manager: ["스케줄 최적화", "컨디션 관리", "위기 대응", "방송 섭외", "멘탈 케어"],
   producer: ["훅 라이팅", "트랙 편곡", "보컬 디렉팅", "비트메이킹", "사운드 디자인"],
-  designer: ["안무 제작", "뮤직비디오 연출", "비주얼 콘셉트", "무대 연출", "스타일링"],
+  designer: ["안무 제작", "뮤직비디오 연출", "비주얼 컨셉", "무대 연출", "스타일링"],
   marketer: ["숏폼 캠페인", "팬덤 마케팅", "해외 프로모션", "브랜드 콜라보", "바이럴 전략"],
 };
 

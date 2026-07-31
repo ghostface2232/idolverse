@@ -81,7 +81,7 @@ function pickComment(
     return "좀 쉬고 싶어요…";
   }
   if (effectiveSatisfaction >= 70) {
-    const high = ["오늘 컨디션 최고예요!", "이 콘셉트 너무 좋아요!"];
+    const high = ["오늘 컨디션 최고예요!", "이 컨셉 너무 좋아요!"];
     return high[trainee.id.length % high.length];
   }
   if (effectiveSatisfaction >= 40) {

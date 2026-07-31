@@ -32,7 +32,7 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "debut-concept-test",
     type: "neutral",
-    title: "비공개 콘셉트 테스트",
+    title: "비공개 컨셉 테스트",
     description: "두 가지 스타일의 테스트 촬영에서 멤버 핏과 현장 반응이 엇갈렸습니다.",
     probability: 0,
     conditions: { phase: "training" },
@@ -87,7 +87,7 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     id: "debut-promotion-launch",
     type: "positive",
     title: "데뷔 티저 공개",
-    description: "팀의 이름과 첫 콘셉트가 세상에 공개되며 카운트다운이 시작됐습니다.",
+    description: "팀의 이름과 첫 컨셉이 세상에 공개되며 카운트다운이 시작됐습니다.",
     probability: 0,
     conditions: { phase: "training" },
     effects: { public: 3, albumMarketing: 5 },
@@ -303,7 +303,7 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     effects: {},
     choices: [
       {
-        label: "콘셉트를 밀고 간다",
+        label: "컨셉을 밀고 간다",
         description: "기획 의도를 믿고 예정대로 갑니다.",
         tradeoff: "팀의 색은 선명해지지만 낯설다는 반응은 남습니다.",
         effects: { albumMarketing: 4, fandomLoyalty: 2 },
