@@ -1980,6 +1980,25 @@ export function processWeek(
     (lastInvestorDemandWeek === null ||
       nextCumulativeWeek - lastInvestorDemandWeek >=
         INVESTOR_INTERVENTION.minDemandGapWeeks);
+  // 쿨다운 시계는 카드가 "제시된" 주가 아니라 플레이어가 "대응을 고른" 주에
+  // 시작한다(보류·강행 옵션도 대응이다). 정식 플로우에서는 위기 카드를
+  // 미해소로 주를 넘길 수 없어(weekRunner가 거부) 차이가 없지만, 엔진을
+  // 직접 모는 호출자(시뮬레이션, 향후 매니저 위임 진행)가 위기를 해소하지
+  // 않으면 스탬프가 찍히지 않아 카드가 다음 주 곧바로 다시 올라온다 —
+  // 무응답이 위기를 침묵시키는 통로가 되지 않는다.
+  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
+  const presentedCrisisCardIds = new Set(
+    snapshot.game.weeklyDecisions
+      .filter((card) => card.lane === "crisis")
+      .map((card) => card.id),
+  );
+  for (const decision of decisions.resolvedDecisions) {
+    if (!presentedCrisisCardIds.has(decision.cardId)) continue;
+    const root = decision.cardId.split(":")[0];
+    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
+      crisisCardCooldowns[root] = cumulativeWeek;
+    }
+  }
   const cardCtx = buildDecisionCardContext({
     phase: advancedGame.currentPhase,
     trainees: decisionTrainees,
@@ -2004,7 +2023,7 @@ export function processWeek(
     ),
     activeCommercialContracts,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
-    crisisCardCooldowns: snapshot.game.crisisCardCooldowns,
+    crisisCardCooldowns,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,
     strategicExpansion,
@@ -2046,15 +2065,6 @@ export function processWeek(
   );
   if (nextDecisions.some((decision) => decision.id === "emergency-investor")) {
     lastInvestorDemandWeek = nextCumulativeWeek;
-  }
-  // 이번 주 제시된 위기 루트의 쿨다운 시계를 갱신한다.
-  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
-  for (const decision of nextDecisions) {
-    if (decision.lane !== "crisis") continue;
-    const root = decision.id.split(":")[0];
-    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
-      crisisCardCooldowns[root] = nextCumulativeWeek;
-    }
   }
 
   // ── Assemble new state
