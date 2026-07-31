@@ -5,6 +5,7 @@ import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { StaffPotentialStars } from "@/components/staff/StaffPotentialStars";
+import { StaffPortrait } from "@/components/visual/StaffPortrait";
 import {
   FOUNDING_STAFF_ABILITY_CAP,
   STAFF_MARKET,
@@ -97,18 +98,28 @@ export function StaffManagementModal({
                 }}
               >
                 {current ? (
-                  <span className="min-w-0 text-xs">
-                    <span className="block font-semibold text-text-primary">
-                      {current.name}
-                      <span className="ml-2 tabular-nums text-text-muted">
-                        능력 {Math.floor(current.ability)}
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <StaffPortrait
+                      profileImagePath={current.profileImagePath}
+                      profileSpriteIndex={current.profileSpriteIndex}
+                      size="md"
+                    />
+                    <span className="min-w-0 text-xs">
+                      <span className="block truncate font-semibold text-text-primary">
+                        {current.name}
+                        <span className="ml-2 tabular-nums text-text-muted">
+                          능력 {Math.floor(current.ability)}
+                        </span>
                       </span>
+                      <StaffPotentialStars staff={current} className="mt-1" />
                     </span>
-                    <StaffPotentialStars staff={current} className="mt-1" />
                   </span>
                 ) : (
-                  <span className="text-xs text-rose-300">
-                    공석입니다. 담당 업무가 멈춰 있습니다.
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <StaffPortrait size="md" />
+                    <span className="text-xs text-rose-300">
+                      공석입니다. 담당 업무가 멈춰 있습니다.
+                    </span>
                   </span>
                 )}
                 <span className="flex shrink-0 items-center gap-1 text-[11px] text-text-muted">
@@ -199,24 +210,32 @@ export function StaffManagementModal({
                           key={candidate.id}
                           className="flex items-center justify-between gap-2 rounded-xl bg-surface-shell/50 px-3 py-2"
                         >
-                          <span className="min-w-0 text-xs">
-                            <span className="font-semibold text-text-primary">
-                              {candidate.name}
-                            </span>
-                            <span className="ml-2 tabular-nums text-text-muted">
-                              능력 {Math.floor(candidate.ability)}
-                            </span>
-                            <StaffPotentialStars
-                              staff={candidate}
-                              className="ml-2"
-                              showLabel={false}
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <StaffPortrait
+                              profileImagePath={candidate.profileImagePath}
+                              profileSpriteIndex={candidate.profileSpriteIndex}
+                              size="md"
                             />
-                            <span className="ml-2 text-text-muted">
-                              월{" "}
-                              <MoneyDisplay
-                                amount={candidate.salary}
-                                size="sm"
-                              />
+                            <span className="min-w-0 text-xs">
+                              <span className="block truncate font-semibold text-text-primary">
+                                {candidate.name}
+                                <span className="ml-2 font-normal tabular-nums text-text-muted">
+                                  능력 {Math.floor(candidate.ability)}
+                                </span>
+                              </span>
+                              <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <StaffPotentialStars
+                                  staff={candidate}
+                                  showLabel={false}
+                                />
+                                <span className="text-text-muted">
+                                  월{" "}
+                                  <MoneyDisplay
+                                    amount={candidate.salary}
+                                    size="sm"
+                                  />
+                                </span>
+                              </span>
                             </span>
                           </span>
                           <Button

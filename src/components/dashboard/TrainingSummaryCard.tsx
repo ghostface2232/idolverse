@@ -1,7 +1,8 @@
 import { ChevronRight, Dumbbell } from "lucide-react";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
-import type { TraineeStatKey, TrainingIntensity } from "@/types/game";
+import type { Trainee, TraineeStatKey, TrainingIntensity } from "@/types/game";
 
 const INTENSITY_LABELS: Record<TrainingIntensity, string> = {
   normal: "보통",
@@ -28,6 +29,16 @@ const ACTIVITY_SEGMENTS = [
 
 interface TrainingSummaryCardProps {
   onOpen: () => void;
+}
+
+/** 멤버 초상화에 붙는 활동 상태 점의 색. 분포 막대의 색과 같은 문법을 쓴다. */
+function activityDotClass(trainee: Trainee): string {
+  if (trainee.injuryWeeks > 0) return "bg-red-400/90";
+  const activity = trainee.currentActivity ?? "training";
+  if (activity === "entertainment") return "bg-pink-400/90";
+  if (activity === "individual") return "bg-purple-400/90";
+  if (activity === "rest" || activity === "vacation") return "bg-emerald-400/90";
+  return "bg-cyan-400/90";
 }
 
 /**
@@ -96,8 +107,18 @@ export function TrainingSummaryCard({ onOpen }: TrainingSummaryCardProps) {
 
       {total > 0 ? (
         <>
+          <div className="mt-3 flex flex-wrap gap-1.5" aria-hidden="true">
+            {trainees.map((trainee) => (
+              <span key={trainee.id} className="relative">
+                <MemberPortrait traineeId={trainee.id} size="xs" />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-surface-panel ${activityDotClass(trainee)}`}
+                />
+              </span>
+            ))}
+          </div>
           <div
-            className="mt-3 flex h-2 overflow-hidden rounded-full bg-surface-shell/80"
+            className="mt-2.5 flex h-2 overflow-hidden rounded-full bg-surface-shell/80"
             aria-hidden="true"
           >
             {activeSegments.map((segment) => (

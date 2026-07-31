@@ -9,6 +9,10 @@ import {
   memberSpriteFrameForId,
   memberSpriteKey,
 } from "@/game/assets/memberSprites";
+import {
+  roomArtCandidates,
+  WORLD_LOCKED_ROOM_TEXTURE,
+} from "@/game/assets/worldRoomArt";
 import { presentationBus } from "@/game/EventBus";
 import {
   simulationProjectionCoordinator,
@@ -43,6 +47,8 @@ export class SimulationScene extends Phaser.Scene {
   private roomGraphics?: Phaser.GameObjects.Graphics;
   private rooms: RoomLayout[] = [];
   private roomLabels = new Map<RoomKey, Phaser.GameObjects.Text>();
+  private roomImages = new Map<RoomKey, Phaser.GameObjects.Image>();
+  private roomImageMasks = new Map<RoomKey, Phaser.GameObjects.Graphics>();
   private traineeContainers = new Map<string, Phaser.GameObjects.Container>();
   private unsubscribers: Array<() => void> = [];
   private projection = simulationProjectionCoordinator.getSnapshot();
@@ -91,6 +97,10 @@ export class SimulationScene extends Phaser.Scene {
     this.traineeContainers.clear();
     this.roomLabels.forEach((label) => label.destroy());
     this.roomLabels.clear();
+    this.roomImages.forEach((image) => image.destroy());
+    this.roomImages.clear();
+    this.roomImageMasks.forEach((mask) => mask.destroy());
+    this.roomImageMasks.clear();
   }
 
   private layoutRooms() {
@@ -166,11 +176,17 @@ export class SimulationScene extends Phaser.Scene {
       const unlocked = projectionRoom?.unlocked ?? false;
       const level = projectionRoom?.level ?? 0;
 
-      this.drawRoomShell(room, unlocked);
-      room.furniture(this.roomGraphics!, room.rect, unlocked);
+      // 전용 일러스트가 로드돼 있으면 그것을, 없으면 벡터 인테리어를 그린다.
+      const artTexture = this.resolveRoomArtTexture(room.key, unlocked, level);
+      this.syncRoomImage(room, artTexture);
+
+      if (!artTexture) {
+        this.drawRoomShell(room, unlocked);
+        room.furniture(this.roomGraphics!, room.rect, unlocked);
+      }
 
       if (!unlocked) {
-        this.drawLockedOverlay(room.rect);
+        this.drawLockedOverlay(room.rect, Boolean(artTexture));
       }
 
       const label = this.roomLabels.get(room.key);
@@ -226,9 +242,70 @@ export class SimulationScene extends Phaser.Scene {
     g.strokeRoundedRect(rect.x, rect.y, rect.width, rect.height, ROOM_RADIUS);
   }
 
-  private drawLockedOverlay(rect: Phaser.Geom.Rectangle) {
+  /** 전용 룸 아트가 상태에 맞게 로드돼 있으면 그 텍스처 키를 돌려준다. */
+  private resolveRoomArtTexture(
+    roomKey: RoomKey,
+    unlocked: boolean,
+    level: number,
+  ): string | null {
+    if (!unlocked) {
+      return this.textures.exists(WORLD_LOCKED_ROOM_TEXTURE)
+        ? WORLD_LOCKED_ROOM_TEXTURE
+        : null;
+    }
+    for (const candidate of roomArtCandidates(roomKey, level)) {
+      if (this.textures.exists(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  /** 룸 일러스트 이미지를 생성·갱신한다. textureKey가 null이면 숨긴다. */
+  private syncRoomImage(room: RoomLayout, textureKey: string | null) {
+    const existing = this.roomImages.get(room.key);
+
+    if (!textureKey) {
+      existing?.setVisible(false);
+      return;
+    }
+
+    if (existing) {
+      if (existing.texture.key !== textureKey) {
+        existing.setTexture(textureKey);
+        existing.setDisplaySize(room.rect.width, room.rect.height);
+      }
+      existing.setVisible(true);
+      return;
+    }
+
+    const image = this.add
+      .image(room.rect.x, room.rect.y, textureKey)
+      .setOrigin(0, 0)
+      .setDepth(0.5);
+    image.setDisplaySize(room.rect.width, room.rect.height);
+
+    // 벡터 방과 같은 둥근 모서리를 유지하도록 지오메트리 마스크를 씌운다.
+    // 마스크용 그래픽스는 씬에 추가하지 않는다(추가하면 흰 사각형이 그려진다).
+    const maskGraphics = this.make.graphics({}, false);
+    maskGraphics.fillStyle(0xffffff, 1);
+    maskGraphics.fillRoundedRect(
+      room.rect.x,
+      room.rect.y,
+      room.rect.width,
+      room.rect.height,
+      ROOM_RADIUS,
+    );
+    image.setMask(maskGraphics.createGeometryMask());
+
+    this.roomImages.set(room.key, image);
+    this.roomImageMasks.set(room.key, maskGraphics);
+  }
+
+  private drawLockedOverlay(rect: Phaser.Geom.Rectangle, hasArt = false) {
     const g = this.roomGraphics!;
-    g.fillStyle(0x020617, 0.55);
+    // 전용 잠금 일러스트가 있으면 어둡게 덮지 않고 자물쇠 표식만 얹는다.
+    g.fillStyle(0x020617, hasArt ? 0.28 : 0.55);
     g.fillRoundedRect(rect.x, rect.y, rect.width, rect.height, ROOM_RADIUS);
 
     // 자물쇠

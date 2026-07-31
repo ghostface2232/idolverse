@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { AlbumArt } from "@/components/visual/AlbumArt";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
 
 type ChartRevealCommand = PresentationEvents["chartReveal"];
@@ -85,11 +86,16 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
             <p className="mt-2 text-sm font-semibold text-pink-300">위</p>
           </div>
 
-          <div className="mt-8 space-y-1">
-            <h2 className="text-xl font-semibold text-text-primary">
-              {command.trackTitle}
-            </h2>
-            <p className="text-sm text-text-muted">{command.albumTitle}</p>
+          <div className="mt-8 flex items-center justify-center gap-3 text-left">
+            <AlbumArt title={command.albumTitle} size="md" />
+            <div className="min-w-0">
+              <h2 className="truncate text-xl font-semibold text-text-primary">
+                {command.trackTitle}
+              </h2>
+              <p className="truncate text-sm text-text-muted">
+                {command.albumTitle}
+              </p>
+            </div>
           </div>
 
           {isFinal ? (

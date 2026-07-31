@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import {
   ALL_POSITIONS,
   isRequiredPosition,
@@ -134,13 +135,23 @@ export function PositionReviewModal({
                   ].join(" ")}
                   onClick={() => setEditing(expanded ? null : position)}
                 >
-                  <span className="min-w-0">
-                    <span className="block text-xs text-text-muted">
-                      {POSITION_LABELS[position]}
-                      {isRequiredPosition(position) ? " · 필수" : " · 선택"}
-                    </span>
-                    <span className="mt-0.5 block truncate text-sm font-semibold text-text-primary">
-                      {assigned?.name ?? "미배정"}
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    {assigned ? (
+                      <MemberPortrait traineeId={assigned.id} size="sm" />
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="size-9 shrink-0 rounded-xl bg-white/[0.04] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                      />
+                    )}
+                    <span className="min-w-0">
+                      <span className="block text-xs text-text-muted">
+                        {POSITION_LABELS[position]}
+                        {isRequiredPosition(position) ? " · 필수" : " · 선택"}
+                      </span>
+                      <span className="mt-0.5 block truncate text-sm font-semibold text-text-primary">
+                        {assigned?.name ?? "미배정"}
+                      </span>
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
@@ -188,27 +199,30 @@ export function PositionReviewModal({
                           onClick={() => assign(position, trainee.id)}
                         >
                           <span className="flex items-start justify-between gap-3">
-                            <span className="min-w-0">
-                              <span className="flex items-center gap-2">
-                                <span
-                                  className={[
-                                    "text-sm font-bold tabular-nums",
-                                    scoreTone(candidateResult),
-                                  ].join(" ")}
-                                >
-                                  #{candidateResult.rank}
-                                </span>
-                                <span className="truncate text-sm font-semibold text-text-primary">
-                                  {trainee.name}
-                                </span>
-                                {selected ? (
-                                  <span className="rounded-full bg-brand-cyan/15 px-2 py-0.5 text-[10px] text-cyan-200">
-                                    현재 배정
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <MemberPortrait traineeId={trainee.id} size="sm" />
+                              <span className="min-w-0">
+                                <span className="flex items-center gap-2">
+                                  <span
+                                    className={[
+                                      "text-sm font-bold tabular-nums",
+                                      scoreTone(candidateResult),
+                                    ].join(" ")}
+                                  >
+                                    #{candidateResult.rank}
                                   </span>
-                                ) : null}
-                              </span>
-                              <span className="mt-1 block text-xs text-text-muted">
-                                기초 적합도 {candidateResult.baseRating}/5
+                                  <span className="truncate text-sm font-semibold text-text-primary">
+                                    {trainee.name}
+                                  </span>
+                                  {selected ? (
+                                    <span className="shrink-0 rounded-full bg-brand-cyan/15 px-2 py-0.5 text-[10px] text-cyan-200">
+                                      현재 배정
+                                    </span>
+                                  ) : null}
+                                </span>
+                                <span className="mt-1 block text-xs text-text-muted">
+                                  기초 적합도 {candidateResult.baseRating}/5
+                                </span>
                               </span>
                             </span>
                             <span

@@ -1,5 +1,6 @@
-import { Activity, ChevronRight, HeartPulse, Star, UserRound } from "lucide-react";
+import { Activity, ChevronRight, HeartPulse, Star } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { TEMPERAMENT_PROFILES } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
 import { traitLabels } from "@/data/memberTraits";
@@ -33,8 +34,14 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
               onClick={() => onSelectTrainee(trainee.id)}
             >
               <div className="flex items-center gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-action-primary/14 text-pink-200 shadow-[var(--shadow-surface)]">
-                  <UserRound className="size-5" aria-hidden="true" />
+                <span className="relative shrink-0">
+                  <MemberPortrait traineeId={trainee.id} size="lg" />
+                  {trainee.injuryWeeks > 0 ? (
+                    <span
+                      className="absolute -right-1 -top-1 size-3.5 rounded-full border-2 border-surface-panel bg-state-danger"
+                      title={`부상 회복 중 (${trainee.injuryWeeks}주 남음)`}
+                    />
+                  ) : null}
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="flex items-center gap-1.5 truncate font-semibold text-text-primary">
@@ -49,6 +56,11 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                     ) : null}
                   </h2>
                   <div className="mt-1 flex flex-wrap gap-1 text-[11px] text-text-muted">
+                    {trainee.injuryWeeks > 0 ? (
+                      <span className="rounded-md bg-state-danger/15 px-1.5 py-0.5 font-semibold text-state-danger">
+                        부상 {trainee.injuryWeeks}주
+                      </span>
+                    ) : null}
                     <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5">
                       {trainee.position ? POSITION_LABELS[trainee.position] : "포지션 미정"}
                     </span>

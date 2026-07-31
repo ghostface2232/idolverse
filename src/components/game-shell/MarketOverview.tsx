@@ -10,8 +10,11 @@ import {
   UsersRound,
 } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
+import { GroupBadge } from "@/components/visual/GroupBadge";
+import { SceneThumb } from "@/components/visual/SceneThumb";
 import { CONCEPT_MOOD_DATA, GENRE_DATA } from "@/data/concepts";
 import { NEWS_TYPE_LABELS } from "@/data/kpopCalendar";
+import type { SceneKey } from "@/data/sceneArt";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useCompetitorStore } from "@/stores/competitorStore";
 import { useFandomStore } from "@/stores/fandomStore";
@@ -34,11 +37,20 @@ const COMPETITOR_TYPE_LABELS: Record<CompetitorType, string> = {
 };
 
 const CHART_LABELS = [
-  { key: "melon", label: "멜론" },
-  { key: "spotify", label: "Spotify" },
-  { key: "youtube", label: "YouTube" },
-  { key: "albumSales", label: "앨범 판매" },
+  { key: "melon", label: "멜론", dot: "bg-lime-400", bar: "bg-lime-400/60" },
+  { key: "spotify", label: "Spotify", dot: "bg-emerald-400", bar: "bg-emerald-400/60" },
+  { key: "youtube", label: "YouTube", dot: "bg-red-400", bar: "bg-red-400/60" },
+  { key: "albumSales", label: "앨범 판매", dot: "bg-amber-400", bar: "bg-amber-400/60" },
 ] as const;
+
+/** 헤드라인 키워드로 어울리는 씬 아트를 고른다. */
+function sceneForHeadline(text: string): SceneKey {
+  if (/컴백|데뷔|신곡|타이틀/.test(text)) return "comeback";
+  if (/차트|1위|순위|스트리밍/.test(text)) return "chart";
+  if (/시상|수상|어워드|대상|트로피/.test(text)) return "award";
+  if (/해외|글로벌|월드|투어/.test(text)) return "global";
+  return "news";
+}
 
 /**
  * 시장 탭 화면. 기존에 탭(요약)과 모달(상세)로 나뉘어 있던 시장 정보를
@@ -115,29 +127,33 @@ export function MarketOverview() {
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-action-secondary/[0.075] p-4 shadow-[var(--shadow-surface)]">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-cyan-200">
+            <div className="rounded-2xl bg-action-primary/[0.09] p-4 shadow-[var(--shadow-surface)]">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-pink-200">
                 <TrendingUp className="size-3.5" aria-hidden="true" />
                 수요 상승
               </div>
-              <p className="mt-3 text-base font-semibold text-text-primary">
-                {GENRE_DATA[marketTrend.hotGenre].label}
-              </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                {CONCEPT_MOOD_DATA[marketTrend.hotMood].label} 무드
-              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-action-primary/20 px-2.5 py-1 text-xs font-semibold text-pink-100">
+                  {GENRE_DATA[marketTrend.hotGenre].label}
+                </span>
+                <span className="rounded-full bg-action-primary/10 px-2.5 py-1 text-xs text-pink-200/90">
+                  {CONCEPT_MOOD_DATA[marketTrend.hotMood].label} 무드
+                </span>
+              </div>
             </div>
-            <div className="rounded-2xl bg-surface-shell/68 p-4 shadow-[var(--shadow-surface)]">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
+            <div className="rounded-2xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-cyan-200/85">
                 <TrendingDown className="size-3.5" aria-hidden="true" />
                 수요 둔화
               </div>
-              <p className="mt-3 text-base font-semibold text-text-primary">
-                {GENRE_DATA[marketTrend.coldGenre].label}
-              </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                {CONCEPT_MOOD_DATA[marketTrend.coldMood].label} 무드
-              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-action-secondary/16 px-2.5 py-1 text-xs font-semibold text-cyan-100/90">
+                  {GENRE_DATA[marketTrend.coldGenre].label}
+                </span>
+                <span className="rounded-full bg-action-secondary/8 px-2.5 py-1 text-xs text-cyan-200/75">
+                  {CONCEPT_MOOD_DATA[marketTrend.coldMood].label} 무드
+                </span>
+              </div>
             </div>
           </div>
         </section>
@@ -155,19 +171,37 @@ export function MarketOverview() {
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-2.5">
-            {CHART_LABELS.map((chart, index) => {
+            {CHART_LABELS.map((chart) => {
               const rank = chartPositions[chart.key];
               return (
                 <div
                   key={chart.key}
-                  className={[
-                    "rounded-xl p-3 shadow-[var(--shadow-surface)]",
-                    index === 0 ? "bg-action-primary/[0.07]" : "bg-surface-shell/68",
-                  ].join(" ")}
+                  className="relative overflow-hidden rounded-xl bg-surface-shell/68 p-3 shadow-[var(--shadow-surface)]"
                 >
-                  <dt className="text-xs text-text-muted">{chart.label}</dt>
-                  <dd className="mt-1.5 text-base font-semibold tabular-nums text-text-primary">
-                    {rank > 0 ? `${rank}위` : "미진입"}
+                  <span
+                    aria-hidden="true"
+                    className={["absolute inset-x-0 top-0 h-0.5", chart.bar].join(" ")}
+                  />
+                  <dt className="flex items-center gap-1.5 text-xs text-text-muted">
+                    <span
+                      aria-hidden="true"
+                      className={["size-1.5 rounded-full", chart.dot].join(" ")}
+                    />
+                    {chart.label}
+                  </dt>
+                  <dd className="mt-1.5">
+                    {rank > 0 ? (
+                      <>
+                        <span className="text-2xl font-bold tabular-nums leading-none text-text-primary">
+                          {rank}
+                        </span>
+                        <span className="ml-0.5 text-sm font-medium text-text-secondary">
+                          위
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium text-text-muted">미진입</span>
+                    )}
                   </dd>
                 </div>
               );
@@ -182,10 +216,11 @@ export function MarketOverview() {
               </div>
               <ol className="space-y-2.5">
                 {chartLeaders.map((group, index) => (
-                  <li key={group.id} className="flex items-center gap-3 text-sm">
+                  <li key={group.id} className="flex items-center gap-2.5 text-sm">
                     <span className="w-4 shrink-0 text-right text-xs font-semibold tabular-nums text-text-muted">
                       {index + 1}
                     </span>
+                    <GroupBadge name={group.name} size="sm" />
                     <span className="min-w-0 flex-1 truncate text-text-secondary">
                       {group.name}
                     </span>
@@ -218,28 +253,31 @@ export function MarketOverview() {
               );
               return (
                 <article key={rival.id} className="py-4 first:pt-3.5 last:pb-3.5">
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="truncate text-[15px] font-semibold text-text-primary">
-                          {rival.name}
-                        </h3>
-                        <span className="shrink-0 text-xs text-text-muted">
-                          {COMPETITOR_TYPE_LABELS[rival.type]}
-                        </span>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <GroupBadge name={rival.name} size="md" className="mt-0.5" />
+                    <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <h3 className="truncate text-[15px] font-semibold text-text-primary">
+                            {rival.name}
+                          </h3>
+                          <span className="shrink-0 text-xs text-text-muted">
+                            {COMPETITOR_TYPE_LABELS[rival.type]}
+                          </span>
+                        </div>
+                        <p className="mt-1 truncate text-xs text-text-muted">
+                          {rival.agency} · 강점 {rival.strengths[0] ?? "분석 중"}
+                        </p>
                       </div>
-                      <p className="mt-1 truncate text-xs text-text-muted">
-                        {rival.agency} · 강점 {rival.strengths[0] ?? "분석 중"}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-xs text-text-muted">대중 인지도</p>
-                      <p className="mt-0.5 font-semibold tabular-nums text-text-primary">
-                        {Math.round(rival.public)}
-                      </p>
+                      <div className="shrink-0 text-right">
+                        <p className="text-xs text-text-muted">대중 인지도</p>
+                        <p className="mt-0.5 font-semibold tabular-nums text-text-primary">
+                          {Math.round(rival.public)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-secondary">
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 pl-[52px] text-xs text-text-secondary">
                     <span className="tabular-nums">
                       해외 {Math.round(rival.global).toLocaleString("ko-KR")}
                     </span>
@@ -277,16 +315,25 @@ export function MarketOverview() {
           <ul className="divide-y divide-white/8 rounded-2xl bg-surface-shell/68 px-4 shadow-[var(--shadow-surface)]">
             {news.slice(0, 4).map((item) => (
               <li key={item.id} className="py-3.5 first:pt-3 last:pb-3">
-                <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
-                  <span>{NEWS_TYPE_LABELS[item.type]}</span>
-                  <span className="tabular-nums">{item.week}주차</span>
+                <div className="flex items-start gap-2.5">
+                  <SceneThumb
+                    scene={sceneForHeadline(item.headline)}
+                    variant="chip"
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
+                      <span>{NEWS_TYPE_LABELS[item.type]}</span>
+                      <span className="tabular-nums">{item.week}주차</span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-text-primary [word-break:keep-all]">
+                      {item.headline}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-text-muted [word-break:keep-all]">
+                      {item.detail}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-1.5 text-sm font-medium leading-relaxed text-text-primary [word-break:keep-all]">
-                  {item.headline}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-text-muted [word-break:keep-all]">
-                  {item.detail}
-                </p>
               </li>
             ))}
             {news.length === 0 ? (

@@ -6,6 +6,7 @@ import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import {
   COMEBACK_BUDGET_TIERS,
   type ComebackBudgetTierId,
@@ -313,13 +314,18 @@ export function ComebackPlanningModal({
                   value={trainee.id}
                   className={({ isSelected, isPressed }) =>
                     [
-                      "flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 outline-none transition duration-150 ease-out",
+                      "flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl border-2 px-3 py-2 outline-none transition duration-150 ease-out",
                       isPressed ? "scale-[0.98]" : "scale-100",
                       radioTileClasses(isSelected, centerTraineeId !== null),
                     ].join(" ")
                   }
                 >
-                  <span className="min-w-0 truncate text-xs">
+                  <MemberPortrait
+                    traineeId={trainee.id}
+                    size="md"
+                    outfit="stage"
+                  />
+                  <span className="min-w-0 flex-1 truncate text-xs">
                     <span className="font-semibold text-text-primary">
                       {trainee.name}
                     </span>

@@ -12,10 +12,10 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "currentSeason": "winter",
       "kpopNews": [
         {
-          "detail": "연말 무대 완성도와 업계 평판이 직접적인 변수로 작동한다.",
-          "headline": "MMA/MAMA/골든디스크 시상식 일정 확정",
+          "detail": "트렌드 피로도가 누적되며 세련된 정체성 유지가 중요해지고 있다.",
+          "headline": "연말 결산: 올해 K-POP 키워드는 레트로와 Y2K",
           "id": "news-y1-w50-0",
-          "type": "event",
+          "type": "trend",
           "week": 50,
         },
       ],
@@ -802,10 +802,10 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
     "injuries": [],
     "news": [
       {
-        "detail": "연말 무대 완성도와 업계 평판이 직접적인 변수로 작동한다.",
-        "headline": "MMA/MAMA/골든디스크 시상식 일정 확정",
+        "detail": "트렌드 피로도가 누적되며 세련된 정체성 유지가 중요해지고 있다.",
+        "headline": "연말 결산: 올해 K-POP 키워드는 레트로와 Y2K",
         "id": "news-y1-w50-0",
-        "type": "event",
+        "type": "trend",
         "week": 50,
       },
     ],
@@ -841,10 +841,10 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       "currentSeason": "spring",
       "kpopNews": [
         {
-          "detail": "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
-          "headline": "봄 시즌 청량 콘셉트 수요 급증",
+          "detail": "라이브 실력이 검증된 그룹에게 유리한 시즌이 시작된다.",
+          "headline": "대학 축제 시즌 개막, 인기 그룹 섭외 경쟁 치열",
           "id": "news-y1-w5-0",
-          "type": "trend",
+          "type": "event",
           "week": 5,
         },
       ],
@@ -1575,10 +1575,10 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
     "injuries": [],
     "news": [
       {
-        "detail": "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
-        "headline": "봄 시즌 청량 콘셉트 수요 급증",
+        "detail": "라이브 실력이 검증된 그룹에게 유리한 시즌이 시작된다.",
+        "headline": "대학 축제 시즌 개막, 인기 그룹 섭외 경쟁 치열",
         "id": "news-y1-w5-0",
-        "type": "trend",
+        "type": "event",
         "week": 5,
       },
     ],
@@ -1612,10 +1612,10 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
       "currentSeason": "fall",
       "kpopNews": [
         {
-          "detail": "페스티벌 출연은 신인 그룹에게도 대중 인지도 도약의 기회가 된다.",
-          "headline": "워터밤·뮤직페스티벌 티켓 전쟁 예고",
+          "detail": "본 컴백 전에 화제성을 끌어올리는 브릿지 전략이 유행이다.",
+          "headline": "서머 리믹스·선공개 싱글 발매 러시",
           "id": "news-y2-w26-0",
-          "type": "event",
+          "type": "trend",
           "week": 26,
         },
       ],
@@ -2420,10 +2420,10 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
     "injuries": [],
     "news": [
       {
-        "detail": "페스티벌 출연은 신인 그룹에게도 대중 인지도 도약의 기회가 된다.",
-        "headline": "워터밤·뮤직페스티벌 티켓 전쟁 예고",
+        "detail": "본 컴백 전에 화제성을 끌어올리는 브릿지 전략이 유행이다.",
+        "headline": "서머 리믹스·선공개 싱글 발매 러시",
         "id": "news-y2-w26-0",
-        "type": "event",
+        "type": "trend",
         "week": 26,
       },
     ],

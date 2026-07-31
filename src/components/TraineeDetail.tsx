@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
+import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
 import { traitLabels } from "@/data/memberTraits";
 import {
   ALL_POSITIONS,
@@ -155,16 +157,37 @@ export function TraineeDetail({
   return (
     <Modal title={trainee.name} onClose={onClose}>
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-xs text-text-muted">
-          <span>
-            {trainee.position
-              ? POSITION_LABELS[trainee.position]
-              : "포지션 미배정"}
-          </span>
-          <span title="트레이너들이 가늠한 잠재력입니다">
-            잠재력 {"★".repeat(potentialToStars(trainee.potential))}
-            {"☆".repeat(5 - potentialToStars(trainee.potential))}
-          </span>
+        <div className="flex items-center gap-4">
+          <MemberPortrait traineeId={trainee.id} size="xl" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-semibold text-text-primary">
+              {trainee.name}
+            </p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {trainee.position
+                ? POSITION_LABELS[trainee.position]
+                : "포지션 미배정"}
+            </p>
+            <p
+              className="mt-0.5 text-xs text-text-muted"
+              title="트레이너들이 가늠한 잠재력입니다"
+            >
+              잠재력 {"★".repeat(potentialToStars(trainee.potential))}
+              {"☆".repeat(5 - potentialToStars(trainee.potential))}
+            </p>
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {traitLabels(trainee)
+                .slice(0, 3)
+                .map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-md bg-white/[0.05] px-1.5 py-0.5 text-[11px] text-text-muted"
+                  >
+                    {label}
+                  </span>
+                ))}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="멤버 상세 보기">
@@ -360,13 +383,29 @@ export function TraineeDetail({
               ))}
             </section>
 
-            <section className="rounded-xl border border-action-primary/30 bg-action-primary/5 px-4 py-3">
+            <section className="space-y-2">
               <p className="text-[11px] uppercase tracking-[0.18em] text-pink-200">
                 한마디
               </p>
-              <p className="mt-1 text-sm text-text-primary [word-break:keep-all]">
-                "{comment}"
-              </p>
+              <SpeakerBubble
+                portrait={<MemberPortrait traineeId={trainee.id} size="md" />}
+                name={trainee.name}
+                role={
+                  trainee.position
+                    ? POSITION_LABELS[trainee.position]
+                    : undefined
+                }
+                tone={
+                  conflictPartner ||
+                  trainee.injuryWeeks > 0 ||
+                  trainee.stress >= 75 ||
+                  effectiveSatisfaction < 40
+                    ? "warning"
+                    : "default"
+                }
+              >
+                {comment}
+              </SpeakerBubble>
             </section>
           </div>
         )}

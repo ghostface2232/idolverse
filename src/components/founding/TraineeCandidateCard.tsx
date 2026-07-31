@@ -2,6 +2,7 @@ import { BadgeIcon } from "@/components/common/BadgeIcon";
 import { Card } from "@/components/common/Card";
 import { PixelText } from "@/components/common/PixelText";
 import { StatBar } from "@/components/common/StatBar";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { TEMPERAMENT_PROFILES } from "@/data/balance";
 import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { traitLabels } from "@/data/memberTraits";
@@ -84,21 +85,22 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
             : "hover:border-emerald-400/50",
         ].join(" ")}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-baseline gap-2">
-            <PixelText className="text-lg text-slate-50 [text-shadow:none]">
-              {trainee.name}
-            </PixelText>
-            <span className="text-xs text-slate-400">
+        <div className="flex items-center gap-3">
+          <MemberPortrait traineeId={trainee.id} size="lg" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <PixelText className="min-w-0 truncate text-lg text-slate-50 [text-shadow:none]">
+                {trainee.name}
+              </PixelText>
+              {selected && (
+                <span className="shrink-0 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-200">
+                  선발
+                </span>
+              )}
+            </div>
+            <span className="mt-0.5 block text-xs text-slate-400">
               {trainee.age}세 · {flag}
             </span>
-          </div>
-          <div className="flex items-center gap-1">
-            {selected && (
-              <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-200">
-                선발
-              </span>
-            )}
           </div>
         </div>
 

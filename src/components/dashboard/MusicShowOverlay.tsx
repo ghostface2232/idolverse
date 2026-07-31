@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Trophy, Mic2 } from "lucide-react";
 import { Button } from "@/components/common/Button";
+import { GroupBadge } from "@/components/visual/GroupBadge";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
+import { useGameStore } from "@/stores/gameStore";
+import { useTraineeStore } from "@/stores/traineeStore";
 
 type MusicShowCommand = PresentationEvents["musicShow"];
 
@@ -16,6 +20,8 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
   const [command, setCommand] = useState<MusicShowCommand | null>(null);
   const [step, setStep] = useState<RevealStep>("candidates");
   const [saving, setSaving] = useState(false);
+  const groupName = useGameStore((state) => state.groupName);
+  const trainees = useTraineeStore((state) => state.trainees);
 
   useEffect(
     () =>
@@ -74,16 +80,37 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <ContenderCard
               name={command.trackTitle}
+              subName={groupName}
               score={command.playerScore}
               showScore={showScores}
               highlighted={isFinal && command.won}
               isPlayer
+              visual={
+                trainees.length > 0 ? (
+                  <span className="flex justify-center -space-x-2">
+                    {trainees.slice(0, 4).map((trainee) => (
+                      <MemberPortrait
+                        key={trainee.id}
+                        traineeId={trainee.id}
+                        outfit="stage"
+                        size="sm"
+                        className="ring-2 ring-slate-950/70"
+                      />
+                    ))}
+                  </span>
+                ) : null
+              }
             />
             <ContenderCard
               name={command.rivalName}
               score={command.rivalScore}
               showScore={showScores}
               highlighted={isFinal && !command.won}
+              visual={
+                <span className="flex justify-center">
+                  <GroupBadge name={command.rivalName} size="md" className="rounded-full" />
+                </span>
+              }
             />
           </div>
 
@@ -120,16 +147,20 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
 
 function ContenderCard({
   name,
+  subName,
   score,
   showScore,
   highlighted,
   isPlayer = false,
+  visual,
 }: {
   name: string;
+  subName?: string;
   score: number;
   showScore: boolean;
   highlighted: boolean;
   isPlayer?: boolean;
+  visual?: React.ReactNode;
 }) {
   return (
     <div
@@ -142,11 +173,15 @@ function ContenderCard({
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">
         {isPlayer ? "우리 팀" : "경쟁 후보"}
       </p>
-      <p className="mt-1 truncate text-sm font-semibold text-text-primary">
+      {visual ? <div className="mt-2.5">{visual}</div> : null}
+      <p className="mt-2 truncate text-sm font-semibold text-text-primary">
         {name}
       </p>
+      {subName ? (
+        <p className="truncate text-[11px] text-text-muted">{subName}</p>
+      ) : null}
       <p
-        className={`mt-3 text-3xl font-black tabular-nums transition-opacity duration-300 ${
+        className={`mt-2.5 text-3xl font-black tabular-nums transition-opacity duration-300 ${
           showScore ? "opacity-100" : "opacity-0"
         } ${isPlayer ? "text-cyan-200" : "text-slate-200"}`}
       >

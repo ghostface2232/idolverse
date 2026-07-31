@@ -1,11 +1,40 @@
 import type { ReactNode } from "react";
-import { HeartPulse, Sparkles, TriangleAlert } from "lucide-react";
+import {
+  Coins,
+  Globe,
+  HeartPulse,
+  Landmark,
+  MessageCircle,
+  Sparkles,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+} from "lucide-react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { AlbumArt } from "@/components/visual/AlbumArt";
+import { GroupBadge } from "@/components/visual/GroupBadge";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
+import { SceneThumb } from "@/components/visual/SceneThumb";
+import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
+import { StaffPortrait } from "@/components/visual/StaffPortrait";
+import {
+  hashSeed,
+  MANAGER_REPORT_LINES,
+  MEMBER_VOICE_LINES,
+  pickLine,
+  type ManagerReportContext,
+  type MemberVoiceContext,
+} from "@/data/voiceLines";
+import type { SceneKey } from "@/data/sceneArt";
 import { useFinanceStore } from "@/stores/financeStore";
+import { useTraineeStore } from "@/stores/traineeStore";
+import { useManagerPersona } from "@/utils/managerPersona";
+import { sceneForEvent } from "@/utils/sceneMapping";
 import type {
   ComebackSettlementReport,
+  Trainee,
   WeekDelta,
   WeeklyReportSnapshot,
 } from "@/types/game";
@@ -18,6 +47,27 @@ interface WeekReportProps {
   onClose: () => void | Promise<void>;
 }
 
+const STAT_FIELD_LABELS: Record<string, string> = {
+  "stats.visual": "비주얼",
+  "stats.vocal": "보컬",
+  "stats.dance": "댄스",
+  "stats.charm": "끼",
+  "stats.stamina": "체력",
+  "stats.mental": "멘탈",
+};
+
+const FANDOM_FIELD_META: Record<string, { label: string; icon: typeof Users }> = {
+  public: { label: "대중 인지도", icon: TrendingUp },
+  fandom: { label: "코어 팬덤", icon: Users },
+  fandomLoyalty: { label: "팬 충성도", icon: HeartPulse },
+  fandomDisappointment: { label: "팬 실망", icon: TriangleAlert },
+  global: { label: "해외 팬덤", icon: Globe },
+  industry: { label: "업계 평판", icon: Landmark },
+};
+
+/** 증가가 오히려 나쁜 지표. 색을 뒤집는다. */
+const BAD_WHEN_UP_FIELDS = new Set(["fandomDisappointment"]);
+
 export function WeekReport({
   report,
   isSaving = false,
@@ -27,13 +77,14 @@ export function WeekReport({
   const money = useFinanceStore((state) => state.money);
   const incomeHistory = useFinanceStore((state) => state.incomeHistory);
   const expenseHistory = useFinanceStore((state) => state.expenseHistory);
+  const trainees = useTraineeStore((state) => state.trainees);
+  const manager = useManagerPersona();
 
   const deltas = report.deltas ?? [];
   const incomeTotal = sumValues(report.finance.income);
   const expenseTotal = sumValues(report.finance.expenses);
   const net = incomeTotal - expenseTotal;
 
-  // 구조화 변화 로그에서 핵심 숫자를 뽑는다. 문장 나열 대신 숫자로 말한다.
   const fandomChange = sumNumericDeltas(
     deltas,
     (delta) => delta.target.kind === "fandom" && delta.target.field === "fandom",
@@ -43,18 +94,13 @@ export function WeekReport({
     (delta) =>
       delta.target.kind === "trainee" && delta.target.field.startsWith("stats."),
   );
-  const statChips = aggregateDeltaChips(
-    deltas,
-    (delta) =>
-      delta.target.kind === "trainee" && delta.target.field.startsWith("stats."),
-  );
+  const memberGrowthRows = buildMemberGrowthRows(deltas, trainees);
   const fandomChips = aggregateDeltaChips(
     deltas,
     (delta) => delta.target.kind === "fandom",
   );
 
   // 헤드라인 우선순위: 컴백 정산 > 경고 첫 건 > 부상 첫 건.
-  // 헤드라인으로 올린 항목은 아래 상세 카드에서 뺀다.
   const headlineWarning = report.comebackSettlement
     ? null
     : (report.warnings[0] ?? null);
@@ -71,96 +117,36 @@ export function WeekReport({
 
   const netHistory = buildNetHistory(incomeHistory, expenseHistory, 12);
 
-  const detailCards: { title: string; node: ReactNode }[] = [];
-
-  if (statChips.length > 0) {
-    detailCards.push({
-      title: "멤버 성장",
-      node: <DeltaChipList chips={statChips} />,
-    });
-  } else if (report.statChanges.length > 0) {
-    // 구버전 리포트에는 deltas가 비어 있다. 문장 기록으로 대신 보여준다.
-    detailCards.push({
-      title: "멤버 성장",
-      node: <BulletList items={report.statChanges} />,
-    });
-  }
-
-  if (fandomChips.length > 0) {
-    detailCards.push({
-      title: "팬덤 반응",
-      node: <DeltaChipList chips={fandomChips} />,
-    });
-  }
-
-  if (remainingInjuries.length > 0) {
-    detailCards.push({
-      title: "부상 발생",
-      node: (
-        <BulletList
-          items={remainingInjuries.map(
-            (injury) => `${withJosa(injury.traineeName, "이/가")} 부상을 입었습니다.`,
-          )}
-        />
-      ),
-    });
-  }
-
-  if (report.conflicts.length > 0) {
-    detailCards.push({
-      title: "멤버 관계",
-      node: (
-        <BulletList
-          items={report.conflicts.map(
-            (conflict) =>
-              `${withJosa(conflict.a, "과/와")} ${conflict.b} 사이의 갈등이${
-                conflict.resolved ? " 풀렸습니다." : " 불거졌습니다."
-              }`,
-          )}
-        />
-      ),
-    });
-  }
-
-  if (report.events.length > 0) {
-    detailCards.push({
-      title: "이번 주 주요 소식",
-      node: <BulletList items={report.events.map((event) => event.title)} />,
-    });
-  }
-
-  if (report.news.length > 0) {
-    detailCards.push({
-      title: "K-POP 뉴스",
-      node: <BulletList items={report.news.map((news) => news.headline)} />,
-    });
-  }
-
-  if (report.competitorComebacks.length > 0) {
-    detailCards.push({
-      title: "경쟁 그룹 동향",
-      node: (
-        <BulletList
-          items={report.competitorComebacks.map(
-            (comeback) => `${withJosa(comeback, "이/가")} 컴백 활동을 시작했습니다.`,
-          )}
-        />
-      ),
-    });
-  }
-
-  if (remainingWarnings.length > 0) {
-    detailCards.push({
-      title: "확인할 문제",
-      node: <BulletList items={remainingWarnings} />,
-    });
-  }
-
   const isQuietWeek =
-    detailCards.length === 0 &&
+    memberGrowthRows.length === 0 &&
+    fandomChips.length === 0 &&
+    report.injuries.length === 0 &&
+    report.conflicts.length === 0 &&
+    report.events.length === 0 &&
+    report.competitorComebacks.length === 0 &&
     !report.comebackSettlement &&
-    !headlineWarning &&
-    !headlineInjury;
+    report.warnings.length === 0;
+
+  // 이번 주의 얼굴이 될 헤드라인 씬과 문장.
+  const hero = resolveHero({
+    report,
+    headlineWarning,
+    headlineInjury,
+    statGrowth,
+  });
+
+  const managerContext = resolveManagerContext({
+    report,
+    net,
+    statGrowth,
+    isQuietWeek,
+  });
+  const managerLine = pickLine(
+    MANAGER_REPORT_LINES[managerContext],
+    hashSeed(`${report.week}:${managerContext}`),
+  );
+
+  const memberVoices = buildMemberVoices(report, trainees, memberGrowthRows);
 
   return (
     <Modal
@@ -176,21 +162,34 @@ export function WeekReport({
       <div className="space-y-4 text-sm text-text-secondary">
         {errorMessage ? <Alert message={errorMessage} /> : null}
 
+        {/* ── 헤드라인: 이번 주의 얼굴 ───────────────────────── */}
+        <section>
+          <SceneThumb scene={hero.scene} variant="banner" label={hero.label} />
+          <p className="mt-3 flex items-start gap-2 text-balance text-base font-semibold leading-6 text-text-primary [word-break:keep-all]">
+            {hero.text}
+          </p>
+        </section>
+
+        <SpeakerBubble
+          portrait={
+            <StaffPortrait
+              profileImagePath={manager.profileImagePath}
+              profileSpriteIndex={manager.profileSpriteIndex}
+              size="md"
+            />
+          }
+          name={manager.name}
+          role={manager.roleLabel}
+          tone={managerContext === "crisis" || managerContext === "injury" ? "warning" : "default"}
+        >
+          {managerLine}
+        </SpeakerBubble>
+
         {report.comebackSettlement ? (
           <ComebackSettlementSection settlement={report.comebackSettlement} />
         ) : null}
 
-        {headlineWarning ? (
-          <HeadlineBanner tone="warning" text={headlineWarning} />
-        ) : null}
-
-        {headlineInjury ? (
-          <HeadlineBanner
-            tone="danger"
-            text={`${withJosa(headlineInjury.traineeName, "이/가")} 부상을 입었습니다. 이번 주 일정 조정이 필요합니다.`}
-          />
-        ) : null}
-
+        {/* ── 핵심 숫자 ──────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
           <StatTile
             label="순수익"
@@ -214,17 +213,202 @@ export function WeekReport({
           />
         </div>
 
+        {/* ── 멤버 성장: 얼굴이 보이는 성장 기록 ─────────────── */}
+        {memberGrowthRows.length > 0 ? (
+          <ReportCard title="멤버 성장">
+            <ul className="space-y-2.5">
+              {memberGrowthRows.map((row) => (
+                <li key={row.traineeId} className="flex items-center gap-2.5">
+                  <MemberPortrait traineeId={row.traineeId} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-text-primary">
+                      {row.name}
+                    </p>
+                    <ul className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                      {row.chips.map((chip) => (
+                        <li key={chip.key} className="text-xs">
+                          <span className="text-text-muted">{chip.label}</span>{" "}
+                          <span
+                            className={`font-semibold tabular-nums ${
+                              chip.value > 0
+                                ? "text-state-success"
+                                : "text-state-danger"
+                            }`}
+                          >
+                            {formatDelta(chip.value)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <span
+                    className={`shrink-0 text-sm font-bold tabular-nums ${
+                      row.total > 0 ? "text-state-success" : "text-state-danger"
+                    }`}
+                  >
+                    {formatDelta(row.total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : report.statChanges.length > 0 ? (
+          <ReportCard title="멤버 성장">
+            <BulletList items={report.statChanges} />
+          </ReportCard>
+        ) : null}
+
+        {/* ── 멤버 보이스: 숫자를 사람의 말로 ────────────────── */}
+        {memberVoices.length > 0 ? (
+          <ReportCard title="이번 주 멤버 한마디">
+            <div className="space-y-3">
+              {memberVoices.map((voice) => (
+                <SpeakerBubble
+                  key={voice.traineeId}
+                  portrait={<MemberPortrait traineeId={voice.traineeId} size="sm" />}
+                  name={voice.name}
+                  tone={voice.tone}
+                >
+                  {voice.line}
+                </SpeakerBubble>
+              ))}
+            </div>
+          </ReportCard>
+        ) : null}
+
+        {/* ── 팬덤 반응: 4축을 게이지 감각으로 ───────────────── */}
+        {fandomChips.length > 0 ? (
+          <ReportCard title="팬덤 반응">
+            <ul className="space-y-1.5">
+              {fandomChips.map((chip) => {
+                const meta = FANDOM_FIELD_META[chip.field];
+                const Icon = meta?.icon ?? Users;
+                const isGood = BAD_WHEN_UP_FIELDS.has(chip.field)
+                  ? chip.value < 0
+                  : chip.value > 0;
+
+                return (
+                  <li key={chip.key} className="flex items-center gap-2.5">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-surface-raised text-text-muted">
+                      <Icon className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-text-secondary">
+                      {meta?.label ?? chip.label}
+                    </span>
+                    <DeltaMeter value={chip.value} isGood={isGood} />
+                    <span
+                      className={`w-11 shrink-0 text-right text-xs font-semibold tabular-nums ${
+                        isGood ? "text-state-success" : "text-state-danger"
+                      }`}
+                    >
+                      {formatDelta(chip.value)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </ReportCard>
+        ) : null}
+
+        {/* ── 부상·관계 ──────────────────────────────────────── */}
+        {remainingInjuries.length > 0 || report.conflicts.length > 0 ? (
+          <ReportCard title="컨디션과 관계">
+            <ul className="space-y-2">
+              {remainingInjuries.map((injury) => (
+                <li key={injury.traineeId} className="flex items-center gap-2.5">
+                  <MemberPortrait traineeId={injury.traineeId} size="xs" />
+                  <span className="text-xs text-text-secondary [word-break:keep-all]">
+                    {withJosa(injury.traineeName, "이/가")} 부상을 입었습니다.
+                  </span>
+                </li>
+              ))}
+              {report.conflicts.map((conflict) => (
+                <li
+                  key={`${conflict.a}-${conflict.b}`}
+                  className="flex items-center gap-2.5"
+                >
+                  <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-surface-raised text-text-muted">
+                    <MessageCircle className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <span className="text-xs text-text-secondary [word-break:keep-all]">
+                    {withJosa(conflict.a, "과/와")} {conflict.b} 사이의 갈등이
+                    {conflict.resolved ? " 풀렸습니다." : " 불거졌습니다."}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
+        {/* ── 소식·뉴스·경쟁 동향 ────────────────────────────── */}
+        {report.events.length > 0 ? (
+          <ReportCard title="이번 주 주요 소식">
+            <ul className="space-y-2">
+              {report.events.map((event) => (
+                <li key={event.id} className="flex items-center gap-2.5">
+                  <SceneThumb scene={sceneForEvent(event)} variant="chip" />
+                  <span className="min-w-0 flex-1 text-xs text-text-secondary [word-break:keep-all]">
+                    {event.title}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
+        {report.news.length > 0 ? (
+          <ReportCard title="K-POP 뉴스">
+            <ul className="space-y-2">
+              {report.news.map((news) => (
+                <li key={news.id} className="flex items-center gap-2.5">
+                  <SceneThumb scene={sceneForHeadline(news.headline)} variant="chip" />
+                  <span className="min-w-0 flex-1 text-xs text-text-secondary [word-break:keep-all]">
+                    {news.headline}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
+        {report.competitorComebacks.length > 0 ? (
+          <ReportCard title="경쟁 그룹 동향">
+            <ul className="space-y-2">
+              {report.competitorComebacks.map((comeback) => (
+                <li key={comeback} className="flex items-center gap-2.5">
+                  <GroupBadge name={comeback} size="sm" />
+                  <span className="min-w-0 flex-1 text-xs text-text-secondary [word-break:keep-all]">
+                    {withJosa(comeback, "이/가")} 컴백 활동을 시작했습니다.
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
+        {remainingWarnings.length > 0 ? (
+          <ReportCard title="확인할 문제">
+            <ul className="space-y-2">
+              {remainingWarnings.map((warning) => (
+                <li key={warning} className="flex items-start gap-2">
+                  <TriangleAlert
+                    className="mt-0.5 size-3.5 shrink-0 text-state-warning"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs leading-5 text-text-secondary [word-break:keep-all]">
+                    {warning}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
         {isQuietWeek ? (
           <p className="rounded-2xl bg-surface-shell/60 p-4 text-center text-text-muted">
-            조용한 한 주였습니다.
+            큰 사건 없이 흘러간 한 주였습니다.
           </p>
-        ) : (
-          detailCards.map((card) => (
-            <ReportCard key={card.title} title={card.title}>
-              {card.node}
-            </ReportCard>
-          ))
-        )}
+        ) : null}
 
         <FinanceSection finance={report.finance} netHistory={netHistory} />
       </div>
@@ -232,33 +416,233 @@ export function WeekReport({
   );
 }
 
-/** 이번 주 최대 사건 1건. 큰 글씨와 아이콘으로 최상단에 못 박는다. */
-function HeadlineBanner({
-  tone,
-  text,
-}: {
-  tone: "warning" | "danger";
-  text: string;
-}) {
-  const toneClasses =
-    tone === "warning"
-      ? "border-state-warning/40 bg-state-warning/10"
-      : "border-state-danger/40 bg-state-danger/10";
-  const accent = tone === "warning" ? "text-state-warning" : "text-state-danger";
-  const Icon = tone === "warning" ? TriangleAlert : HeartPulse;
+// ── 헤드라인 결정 ──────────────────────────────────────────────
 
-  return (
-    <section className={`rounded-2xl border p-4 ${toneClasses}`}>
-      <p className={`text-[11px] uppercase tracking-[0.2em] ${accent}`}>
-        이번 주 헤드라인
-      </p>
-      <p className="mt-2 flex items-start gap-2 text-base font-semibold leading-6 text-text-primary [word-break:keep-all]">
-        <Icon className={`mt-0.5 size-5 shrink-0 ${accent}`} aria-hidden="true" />
-        {text}
-      </p>
-    </section>
-  );
+interface HeroResult {
+  scene: SceneKey;
+  label: string;
+  text: string;
 }
+
+function resolveHero({
+  report,
+  headlineWarning,
+  headlineInjury,
+  statGrowth,
+}: {
+  report: WeeklyReportSnapshot;
+  headlineWarning: string | null;
+  headlineInjury: { traineeName: string } | null;
+  statGrowth: number;
+}): HeroResult {
+  if (report.comebackSettlement) {
+    const settlement = report.comebackSettlement;
+    const won = (settlement.musicShowWins ?? 0) > 0;
+    return {
+      scene: won ? "trophy" : "comeback",
+      label: "컴백 정산",
+      text: won
+        ? `'${settlement.albumTitle}' 활동 종료. 음악방송 1위 ${settlement.musicShowWins}회의 성과를 남겼습니다.`
+        : `'${settlement.albumTitle}' 활동이 끝났습니다. 차트 최고 ${settlement.chartPeak}위를 기록했습니다.`,
+    };
+  }
+
+  if (headlineWarning) {
+    return { scene: "scandal", label: "이번 주 헤드라인", text: headlineWarning };
+  }
+
+  if (headlineInjury) {
+    return {
+      scene: "hospital",
+      label: "이번 주 헤드라인",
+      text: `${withJosa(headlineInjury.traineeName, "이/가")} 부상을 입었습니다. 이번 주 일정 조정이 필요합니다.`,
+    };
+  }
+
+  if (report.events.length > 0) {
+    const event = report.events[0];
+    return { scene: sceneForEvent(event), label: "이번 주 헤드라인", text: event.title };
+  }
+
+  if (statGrowth >= 1) {
+    return {
+      scene: "practice",
+      label: `${report.week}주차`,
+      text: "연습실의 한 주. 눈에 띄는 성장이 쌓였습니다.",
+    };
+  }
+
+  return {
+    scene: "dorm",
+    label: `${report.week}주차`,
+    text: "차분하게 흘러간 한 주입니다.",
+  };
+}
+
+function resolveManagerContext({
+  report,
+  net,
+  statGrowth,
+  isQuietWeek,
+}: {
+  report: WeeklyReportSnapshot;
+  net: number;
+  statGrowth: number;
+  isQuietWeek: boolean;
+}): ManagerReportContext {
+  if (report.comebackSettlement) return "settlement";
+  if (report.injuries.length > 0) return "injury";
+  if (report.warnings.length > 0) return "crisis";
+  if (isQuietWeek) return "quiet";
+  if (statGrowth >= 1.5) return "growth";
+  if (net < 0) return "loss";
+  return "quiet";
+}
+
+// ── 멤버 성장 행 ───────────────────────────────────────────────
+
+interface MemberGrowthRow {
+  traineeId: string;
+  name: string;
+  total: number;
+  chips: { key: string; label: string; value: number }[];
+}
+
+function buildMemberGrowthRows(
+  deltas: WeekDelta[],
+  trainees: Trainee[],
+): MemberGrowthRow[] {
+  const rows = new Map<string, MemberGrowthRow>();
+
+  for (const delta of deltas) {
+    if (delta.target.kind !== "trainee") continue;
+    if (!delta.target.field.startsWith("stats.")) continue;
+    if (typeof delta.before !== "number" || typeof delta.after !== "number") {
+      continue;
+    }
+    const traineeId = delta.target.id;
+    if (!traineeId) continue;
+
+    const diff = delta.after - delta.before;
+    const trainee = trainees.find((candidate) => candidate.id === traineeId);
+    const row = rows.get(traineeId) ?? {
+      traineeId,
+      name: trainee?.name ?? delta.target.label,
+      total: 0,
+      chips: [],
+    };
+    row.total += diff;
+
+    const label = STAT_FIELD_LABELS[delta.target.field] ?? delta.target.field;
+    const chip = row.chips.find((candidate) => candidate.key === delta.target.field);
+    if (chip) {
+      chip.value += diff;
+    } else {
+      row.chips.push({ key: delta.target.field, label, value: diff });
+    }
+    rows.set(traineeId, row);
+  }
+
+  return [...rows.values()]
+    .map((row) => ({
+      ...row,
+      chips: row.chips.filter((chip) => Math.abs(chip.value) >= 0.05),
+    }))
+    .filter((row) => Math.abs(row.total) >= 0.05)
+    .sort((a, b) => b.total - a.total);
+}
+
+// ── 멤버 보이스 ────────────────────────────────────────────────
+
+interface MemberVoice {
+  traineeId: string;
+  name: string;
+  line: string;
+  tone: "default" | "accent" | "warning";
+}
+
+/** 이번 주 상황에 맞는 멤버 반응을 최대 2건 고른다. 시드 기반이라 같은 주엔 같은 말이 나온다. */
+function buildMemberVoices(
+  report: WeeklyReportSnapshot,
+  trainees: Trainee[],
+  growthRows: MemberGrowthRow[],
+): MemberVoice[] {
+  const voices: MemberVoice[] = [];
+  const used = new Set<string>();
+
+  const pushVoice = (
+    trainee: Trainee | undefined,
+    context: MemberVoiceContext,
+    tone: MemberVoice["tone"],
+  ) => {
+    if (!trainee || used.has(trainee.id) || voices.length >= 2) return;
+    used.add(trainee.id);
+    voices.push({
+      traineeId: trainee.id,
+      name: trainee.name,
+      line: pickLine(
+        MEMBER_VOICE_LINES[context],
+        hashSeed(`${report.week}:${trainee.id}:${context}`),
+      ),
+      tone,
+    });
+  };
+
+  // 우선순위: 부상 > 갈등 > 최고 성장 > 지친 멤버 > 기분 좋은 멤버.
+  if (report.injuries.length > 0) {
+    const injured = trainees.find(
+      (candidate) => candidate.id === report.injuries[0].traineeId,
+    );
+    pushVoice(injured, "injured", "warning");
+  }
+
+  const unresolvedConflict = report.conflicts.find((conflict) => !conflict.resolved);
+  if (unresolvedConflict) {
+    const member = trainees.find(
+      (candidate) => candidate.name === unresolvedConflict.a,
+    );
+    pushVoice(member, "conflict", "warning");
+  }
+
+  if (growthRows.length > 0 && growthRows[0].total >= 0.5) {
+    const top = trainees.find((candidate) => candidate.id === growthRows[0].traineeId);
+    pushVoice(top, "growth", "accent");
+  }
+
+  if (voices.length < 2) {
+    const tired = trainees.find(
+      (candidate) => candidate.stress >= 70 && !used.has(candidate.id),
+    );
+    pushVoice(tired, "tired", "warning");
+  }
+
+  if (voices.length < 2) {
+    const happy = trainees.find(
+      (candidate) =>
+        candidate.satisfaction >= 70 &&
+        candidate.stress < 50 &&
+        !used.has(candidate.id),
+    );
+    pushVoice(happy, "happy", "default");
+  }
+
+  return voices;
+}
+
+// ── 뉴스 헤드라인 → 씬 ────────────────────────────────────────
+
+function sceneForHeadline(headline: string): SceneKey {
+  if (/컴백/.test(headline)) return "comeback";
+  if (/데뷔/.test(headline)) return "debut";
+  if (/차트|1위/.test(headline)) return "chart";
+  if (/시상|수상|어워드/.test(headline)) return "award";
+  if (/해외|글로벌|빌보드|월드/.test(headline)) return "global";
+  if (/예능|방송/.test(headline)) return "variety";
+  if (/콘서트|공연|무대/.test(headline)) return "concert";
+  return "news";
+}
+
+// ── 이하 기존 구성 요소 ────────────────────────────────────────
 
 /** 핵심 숫자 타일. 라벨은 작게, 숫자는 크게. */
 function StatTile({
@@ -287,6 +671,25 @@ function StatTile({
   );
 }
 
+/** 변화량을 즉시 읽히게 하는 미니 막대. 최대 ±10을 풀스케일로 본다. */
+function DeltaMeter({ value, isGood }: { value: number; isGood: boolean }) {
+  const magnitude = Math.min(Math.abs(value) / 10, 1);
+
+  return (
+    <span
+      aria-hidden="true"
+      className="relative h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-white/[0.07]"
+    >
+      <span
+        className={`absolute inset-y-0 left-0 rounded-full ${
+          isGood ? "bg-state-success/80" : "bg-state-danger/80"
+        }`}
+        style={{ width: `${Math.max(magnitude * 100, 8)}%` }}
+      />
+    </span>
+  );
+}
+
 /** 컴백 정산 주에만 등장하는 격상 섹션. 성과 정리와 다음 사이클 훅을 함께 낸다. */
 function ComebackSettlementSection({
   settlement,
@@ -295,10 +698,18 @@ function ComebackSettlementSection({
 }) {
   return (
     <section className="rounded-2xl bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.14),transparent_55%)] bg-surface-shell/70 p-3 shadow-[inset_0_0_0_1px_rgba(236,72,153,0.25)]">
-      <h3 className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-brand-pink">
-        <Sparkles className="size-3.5" aria-hidden="true" />
-        컴백 정산: {settlement.albumTitle}
-      </h3>
+      <div className="flex items-center gap-3">
+        <AlbumArt title={settlement.albumTitle} size="md" />
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-brand-pink">
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            컴백 정산
+          </h3>
+          <p className="mt-0.5 truncate text-sm font-semibold text-text-primary">
+            {settlement.albumTitle}
+          </p>
+        </div>
+      </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <SettlementStat label="차트 최고" value={`${settlement.chartPeak}위`} />
         <SettlementStat
@@ -378,39 +789,6 @@ interface DeltaChip {
   label: string;
   field: string;
   value: number;
-}
-
-/** 증가가 오히려 나쁜 지표. 색을 뒤집는다. */
-const BAD_WHEN_UP_FIELDS = new Set(["fandomDisappointment"]);
-
-function DeltaChipList({ chips }: { chips: DeltaChip[] }) {
-  return (
-    <ul className="flex flex-wrap gap-1.5">
-      {chips.map((chip) => {
-        const isGood = BAD_WHEN_UP_FIELDS.has(chip.field)
-          ? chip.value < 0
-          : chip.value > 0;
-
-        return (
-          <li
-            key={chip.key}
-            className="flex items-center gap-1.5 rounded-full bg-surface-raised/80 px-2.5 py-1 text-xs"
-          >
-            <span className="text-text-secondary [word-break:keep-all]">
-              {chip.label}
-            </span>
-            <span
-              className={`font-semibold tabular-nums ${
-                isGood ? "text-state-success" : "text-state-danger"
-              }`}
-            >
-              {formatDelta(chip.value)}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
 }
 
 /** 같은 대상·항목의 하루치 변화를 주 단위로 합산해 칩 데이터로 만든다. */
@@ -493,7 +871,8 @@ function FinanceSection({
 
   return (
     <section className="rounded-2xl bg-surface-shell/60 p-3">
-      <h3 className="text-xs uppercase tracking-[0.2em] text-brand-cyan">
+      <h3 className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] text-brand-cyan">
+        <Coins className="size-3.5" aria-hidden="true" />
         재정 상세
       </h3>
 

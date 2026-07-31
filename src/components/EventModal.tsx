@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
+import { SceneThumb } from "@/components/visual/SceneThumb";
+import { sceneForEvent } from "@/utils/sceneMapping";
 import type {
   EffectKey,
   EffectMap,
@@ -122,14 +124,16 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
       }
     >
       <div className="space-y-5">
-        <div
-          className={[
-            "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
-            TONE_CLASSES[tone],
-          ].join(" ")}
-        >
-          {TONE_LABELS[tone]}
-        </div>
+        <SceneThumb scene={sceneForEvent(event)} variant="banner" label={null}>
+          <span
+            className={[
+              "absolute bottom-2 left-2.5 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur-sm",
+              TONE_CLASSES[tone],
+            ].join(" ")}
+          >
+            {TONE_LABELS[tone]}
+          </span>
+        </SceneThumb>
 
         <div className="space-y-2">
           <h2 className="text-2xl text-text-primary [word-break:keep-all]">

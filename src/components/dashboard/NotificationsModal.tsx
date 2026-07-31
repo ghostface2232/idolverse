@@ -1,5 +1,7 @@
 import { Modal } from "@/components/common/Modal";
+import { SceneThumb } from "@/components/visual/SceneThumb";
 import { NEWS_TYPE_LABELS } from "@/data/kpopCalendar";
+import type { SceneKey } from "@/data/sceneArt";
 import type { KPopNews, Notification } from "@/types/game";
 
 interface NotificationsModalProps {
@@ -22,6 +24,15 @@ const TYPE_TITLE_TONE: Record<Notification["type"], string> = {
   warning: "text-state-warning",
   error: "text-state-danger",
 };
+
+/** 헤드라인 키워드로 어울리는 씬 아트를 고른다. */
+function sceneForHeadline(text: string): SceneKey {
+  if (/컴백|데뷔|신곡|타이틀/.test(text)) return "comeback";
+  if (/차트|1위|순위|스트리밍/.test(text)) return "chart";
+  if (/시상|수상|어워드|대상|트로피/.test(text)) return "award";
+  if (/해외|글로벌|월드|투어/.test(text)) return "global";
+  return "news";
+}
 
 export function NotificationsModal({
   open,
@@ -58,15 +69,27 @@ export function NotificationsModal({
                   key={item.id}
                   className="rounded-2xl border border-white/8 bg-surface-raised/70 p-3"
                 >
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-brand-cyan">
-                    {NEWS_TYPE_LABELS[item.type]}
-                  </p>
-                  <h3 className="mt-2 text-sm text-text-primary [word-break:keep-all]">
-                    {item.headline}
-                  </h3>
-                  <p className="mt-2 text-xs leading-5 text-text-muted [word-break:keep-all]">
-                    {item.detail}
-                  </p>
+                  <div className="flex items-start gap-2.5">
+                    <SceneThumb
+                      scene={sceneForHeadline(item.headline)}
+                      variant="chip"
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-medium text-text-primary [word-break:keep-all]">
+                        {item.headline}
+                      </h3>
+                      <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-brand-cyan">
+                        {NEWS_TYPE_LABELS[item.type]}
+                        <span className="ml-2 normal-case tracking-normal tabular-nums text-text-muted">
+                          {item.week}주차
+                        </span>
+                      </p>
+                      <p className="mt-1.5 text-xs leading-5 text-text-muted [word-break:keep-all]">
+                        {item.detail}
+                      </p>
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
@@ -96,22 +119,32 @@ export function NotificationsModal({
                     TYPE_TONE[notification.type],
                   ].join(" ")}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <p
-                      className={[
-                        "text-xs font-semibold [word-break:keep-all]",
-                        TYPE_TITLE_TONE[notification.type],
-                      ].join(" ")}
-                    >
-                      {notification.title}
-                    </p>
-                    <span className="shrink-0 text-[10px] tabular-nums text-text-muted">
-                      {notification.week}주차
-                    </span>
+                  <div className="flex items-start gap-2.5">
+                    <SceneThumb
+                      scene={sceneForHeadline(
+                        `${notification.title} ${notification.message}`,
+                      )}
+                      variant="chip"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p
+                          className={[
+                            "text-xs font-semibold [word-break:keep-all]",
+                            TYPE_TITLE_TONE[notification.type],
+                          ].join(" ")}
+                        >
+                          {notification.title}
+                        </p>
+                        <span className="shrink-0 text-[10px] tabular-nums text-text-muted">
+                          {notification.week}주차
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-text-secondary [word-break:keep-all]">
+                        {notification.message}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-text-secondary [word-break:keep-all]">
-                    {notification.message}
-                  </p>
                 </li>
               ))}
             </ul>

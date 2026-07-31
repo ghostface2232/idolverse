@@ -1,8 +1,20 @@
 import { useState } from "react";
+import {
+  Heart,
+  Minus,
+  Music,
+  TriangleAlert,
+  X,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { Card } from "@/components/common/Card";
 import { TabPanel } from "@/components/common/TabPanel";
 import { radioTileClasses } from "@/components/common/selectionTokens";
 import { TraineeDetail } from "@/components/TraineeDetail";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
+import { SceneThumb } from "@/components/visual/SceneThumb";
+import type { SceneKey } from "@/data/sceneArt";
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
   INJURY_RISK_CRITICAL_THRESHOLD,
@@ -53,20 +65,23 @@ const FOCUS_OPTIONS: {
 const ACTIVITY_OPTIONS: {
   key: Exclude<TraineeActivity, null>;
   label: string;
+  scene: SceneKey;
   warning?: string;
 }[] = [
-  { key: "training", label: "훈련" },
+  { key: "training", label: "훈련", scene: "practice" },
   {
     key: "entertainment",
     label: "예능",
+    scene: "variety",
     warning: "연습 대신 방송에 나갑니다. 반응은 열어봐야 압니다",
   },
   {
     key: "individual",
     label: "개인 레슨",
+    scene: "lesson",
     warning: "개인 기량은 늘지만 팀 케미는 멈춥니다",
   },
-  { key: "rest", label: "휴식" },
+  { key: "rest", label: "휴식", scene: "dorm" },
 ];
 
 const ACTIVITY_LABEL: Record<Exclude<TraineeActivity, null>, string> = {
@@ -85,17 +100,20 @@ const ACTIVITY_TONE: Record<Exclude<TraineeActivity, null>, string> = {
   vacation: "border-activity-rest/40 bg-activity-rest/10 text-activity-rest",
 };
 
-function statusIcon(kind: "mood" | "stress" | "condition", value: number) {
+function statusIcon(
+  kind: "mood" | "stress" | "condition",
+  value: number,
+): { Icon: LucideIcon; tone: string; title: string } {
   const noun =
     kind === "mood" ? "만족도" : kind === "stress" ? "스트레스" : "컨디션";
   if (kind === "stress") {
-    if (value >= 70) return { icon: "X", tone: "text-state-danger", title: "스트레스가 높습니다" };
-    if (value >= 40) return { icon: "~", tone: "text-state-warning", title: "스트레스가 쌓이고 있습니다" };
-    return { icon: "♪", tone: "text-state-success", title: "스트레스는 걱정 없는 수준입니다" };
+    if (value >= 70) return { Icon: X, tone: "text-state-danger", title: "스트레스가 높습니다" };
+    if (value >= 40) return { Icon: Minus, tone: "text-state-warning", title: "스트레스가 쌓이고 있습니다" };
+    return { Icon: Music, tone: "text-state-success", title: "스트레스는 걱정 없는 수준입니다" };
   }
-  if (value >= 70) return { icon: "♥", tone: "text-state-success", title: `${withJosa(noun, "이/가")} 좋습니다` };
-  if (value >= 40) return { icon: "~", tone: "text-state-warning", title: `${withJosa(noun, "은/는")} 무난한 편입니다` };
-  return { icon: "X", tone: "text-state-danger", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
+  if (value >= 70) return { Icon: Heart, tone: "text-state-success", title: `${withJosa(noun, "이/가")} 좋습니다` };
+  if (value >= 40) return { Icon: Minus, tone: "text-state-warning", title: `${withJosa(noun, "은/는")} 무난한 편입니다` };
+  return { Icon: X, tone: "text-state-danger", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
 }
 
 function injuryRiskLabel(probability: number): string | null {
@@ -378,18 +396,21 @@ export function Training({ onBack }: TrainingProps) {
                   onClick={() => setOpenTraineeId(trainee.id)}
                   className="flex min-h-11 w-full items-start justify-between gap-2 text-left"
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">
-                      {trainee.name}
-                    </p>
-                    <p className="text-[11px] text-text-muted">
-                      {trainee.position
-                        ? POSITION_LABELS[trainee.position]
-                        : "포지션 미배정"}
-                      {trainee.subPosition
-                        ? ` · ${POSITION_LABELS[trainee.subPosition]}`
-                        : ""}
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <MemberPortrait traineeId={trainee.id} size="md" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text-primary">
+                        {trainee.name}
+                      </p>
+                      <p className="truncate text-[11px] text-text-muted">
+                        {trainee.position
+                          ? POSITION_LABELS[trainee.position]
+                          : "포지션 미배정"}
+                        {trainee.subPosition
+                          ? ` · ${POSITION_LABELS[trainee.subPosition]}`
+                          : ""}
+                      </p>
+                    </div>
                   </div>
                   <span
                     className={[
@@ -415,29 +436,38 @@ export function Training({ onBack }: TrainingProps) {
                       {STAT_LABELS[key]} {Math.round(trainee.stats[key])}
                     </span>
                   ))}
-                  <span className={moodIcon.tone} title={moodIcon.title}>
-                    {moodIcon.icon} 만족
+                  <span
+                    className={["flex items-center gap-1", moodIcon.tone].join(" ")}
+                    title={moodIcon.title}
+                  >
+                    <moodIcon.Icon className="size-3.5" aria-hidden="true" /> 만족
                   </span>
-                  <span className={stressIcon.tone} title={stressIcon.title}>
-                    {stressIcon.icon} 스트레스
+                  <span
+                    className={["flex items-center gap-1", stressIcon.tone].join(" ")}
+                    title={stressIcon.title}
+                  >
+                    <stressIcon.Icon className="size-3.5" aria-hidden="true" /> 스트레스
                   </span>
-                  <span className={conditionIcon.tone} title={conditionIcon.title}>
-                    {conditionIcon.icon} 컨디션
+                  <span
+                    className={["flex items-center gap-1", conditionIcon.tone].join(" ")}
+                    title={conditionIcon.title}
+                  >
+                    <conditionIcon.Icon className="size-3.5" aria-hidden="true" /> 컨디션
                   </span>
                   {best && best.value >= 30 && (
                     <span
-                      className="text-pink-200"
+                      className="flex items-center gap-1 text-pink-200"
                       title={`${withJosa(best.name, "과/와")} 합이 잘 맞습니다`}
                     >
-                      ♥ {best.name}
+                      <Heart className="size-3.5" aria-hidden="true" /> {best.name}
                     </span>
                   )}
                   {conflict && (
                     <span
-                      className="text-state-danger"
+                      className="flex items-center gap-1 text-state-danger"
                       title={`${withJosa(conflict.name, "과/와")} 사이가 좋지 않습니다`}
                     >
-                      ⚡ {conflict.name}
+                      <Zap className="size-3.5" aria-hidden="true" /> {conflict.name}
                     </span>
                   )}
                 </div>
@@ -453,7 +483,7 @@ export function Training({ onBack }: TrainingProps) {
                           disabled={injured}
                           onClick={() => handleActivityChange(trainee.id, opt.key)}
                           className={[
-                            "min-h-11 rounded-xl border px-1 py-1.5 text-xs transition duration-150 ease-out [word-break:keep-all]",
+                            "flex min-h-11 flex-col items-center justify-center gap-1.5 rounded-xl border px-1 py-2 text-xs transition duration-150 ease-out [word-break:keep-all]",
                             active ? "text-text-primary" : "text-text-secondary",
                             radioTileClasses(active, !injured),
                             injured
@@ -461,6 +491,11 @@ export function Training({ onBack }: TrainingProps) {
                               : "active:scale-[0.96]",
                           ].join(" ")}
                         >
+                          <SceneThumb
+                            scene={opt.scene}
+                            variant="chip"
+                            className={active ? "" : "opacity-70"}
+                          />
                           {opt.label}
                         </button>
                       );
@@ -470,8 +505,12 @@ export function Training({ onBack }: TrainingProps) {
                     {formatPreview(preview)}
                   </p>
                   {!injured && activityWarning && (
-                    <p className="text-[11px] text-pink-200 [word-break:keep-all]">
-                      ⚠ {activityWarning}
+                    <p className="flex items-start gap-1 text-[11px] text-pink-200 [word-break:keep-all]">
+                      <TriangleAlert
+                        className="mt-0.5 size-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span>{activityWarning}</span>
                     </p>
                   )}
                 </div>

@@ -21,8 +21,8 @@ import { GameShell } from "@/components/game-shell/GameShell";
 import { GameWorldHost } from "@/components/game-shell/GameWorldHost";
 import { MarketOverview } from "@/components/game-shell/MarketOverview";
 import { MemberOverview } from "@/components/game-shell/MemberOverview";
+import { MissionStrip } from "@/components/game-shell/MissionStrip";
 import { MoreOverview } from "@/components/game-shell/MoreOverview";
-import { OverviewPills } from "@/components/game-shell/OverviewPills";
 import { TopStatusBar } from "@/components/game-shell/TopStatusBar";
 import { EventModal } from "@/components/EventModal";
 import { TraineeDetail } from "@/components/TraineeDetail";
@@ -34,7 +34,6 @@ import {
   type ComebackBudgetTierId,
 } from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
-import { CONCEPT_MOOD_DATA } from "@/data/concepts";
 import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import {
@@ -69,7 +68,6 @@ import {
   toCumulativeWeek,
 } from "@/systems/progressionSystem";
 import { canStartComebackProject } from "@/systems/comebackSystem";
-import { getContractRemainingWeeks } from "@/systems/contractSystem";
 import { listAvailablePromotions } from "@/systems/promotionSystem";
 import type {
   ConceptMood,
@@ -162,6 +160,11 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const news = useCalendarStore((state) => state.kpopNews);
   const marketTrend = useCalendarStore((state) => state.marketTrend);
   const pendingEvents = useEventStore((state) => state.pendingEvents);
+  const investorType = useGameStore((state) => state.investorType);
+  const chartPositions = useFandomStore((state) => state.chartPositions);
+  const upcomingCompetitorComebacks = useCalendarStore(
+    (state) => state.upcomingCompetitorComebacks,
+  );
 
   const activeEvent =
     pendingEvents.find((event) => event.id === activeEventId) ?? null;
@@ -612,6 +615,23 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const memberDetailTrainee =
     trainees.find((trainee) => trainee.id === memberDetailId) ?? null;
+  // 미션 스트립: 차트 최고 순위(진입한 차트 중 최소값)와 가장 가까운 라이벌 컴백.
+  const bestChartRank = useMemo(() => {
+    const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
+    return ranks.length > 0 ? Math.min(...ranks) : null;
+  }, [chartPositions]);
+  const nextRivalComeback = useMemo(() => {
+    const cumulativeWeek = toCumulativeWeek(currentYear, currentWeek);
+    const upcoming = upcomingCompetitorComebacks
+      .filter((comeback) => comeback.week >= cumulativeWeek)
+      .sort((left, right) => left.week - right.week)[0];
+    return upcoming
+      ? {
+          name: upcoming.competitorName,
+          weeksUntil: upcoming.week - cumulativeWeek,
+        }
+      : null;
+  }, [upcomingCompetitorComebacks, currentYear, currentWeek]);
   const plan = (
     <div className="space-y-3">
       {workflowError ? <Alert message={workflowError} /> : null}
@@ -689,10 +709,22 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           />
         }
         overviewBar={
-          <OverviewPills
-            goalSummary={goalLanes.project?.deadlineLabel ?? "이번 주"}
-            contractSummary={`${getContractRemainingWeeks(currentYear, currentWeek)}주`}
-            marketSummary={`${CONCEPT_MOOD_DATA[marketTrend.hotMood].label} 강세`}
+          <MissionStrip
+            projectGoal={goalLanes.project}
+            investorGoal={
+              goalLanes.longTerm.find((item) => item.id.startsWith("investor:")) ??
+              null
+            }
+            investorType={investorType}
+            rookieGoal={
+              goalLanes.longTerm.find((item) => item.id === "rookie-award") ?? null
+            }
+            contractDeadlineLabel={
+              goalLanes.longTerm.find((item) => item.id === "contract-term")
+                ?.deadlineLabel ?? null
+            }
+            bestChartRank={bestChartRank}
+            nextRivalComeback={nextRivalComeback}
             hasGoalRisk={Boolean(primaryRisk)}
             onOpenGoals={() => setOverviewModal("goals")}
             onOpenContracts={() => setOverviewModal("contracts")}

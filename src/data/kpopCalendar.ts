@@ -79,6 +79,31 @@ export const SEASONAL_NEWS_POOL: Record<
       detail: "라이브 실력이 검증된 그룹에게 유리한 시즌이 시작된다.",
       type: "event",
     },
+    {
+      headline: "음악방송 신인 무대 편성 확대",
+      detail: "지상파와 케이블 모두 루키 특집 코너를 늘리며 기회의 문이 넓어졌다.",
+      type: "industry",
+    },
+    {
+      headline: "숏폼 챌린지 발 신곡 역주행 사례 등장",
+      detail: "안무 포인트가 명확한 곡일수록 챌린지 확산 속도가 빠르다.",
+      type: "trend",
+    },
+    {
+      headline: "벚꽃 시즌 음원 정산 시작, 스테디셀러 강세",
+      detail: "시즌송의 벽을 넘으려면 확실한 화제성이 필요하다는 분석이다.",
+      type: "trend",
+    },
+    {
+      headline: "중소 기획사 신인들의 약진, 업계 지형 변화 조짐",
+      detail: "기획력과 팀 색깔만으로 대형 기획사와 맞붙는 사례가 늘고 있다.",
+      type: "industry",
+    },
+    {
+      headline: "봄 개편 앞둔 예능가, 아이돌 고정 자리 쟁탈전",
+      detail: "예능감이 검증된 멤버를 보유한 팀에게 섭외가 몰리고 있다.",
+      type: "event",
+    },
   ],
   summer: [
     {
@@ -105,6 +130,31 @@ export const SEASONAL_NEWS_POOL: Record<
       headline: "여름 해외 팬미팅 수요 급증, 동남아 시장 주목",
       detail: "글로벌 팬덤을 보유한 그룹에게 해외 활동 확장 기회가 열린다.",
       type: "industry",
+    },
+    {
+      headline: "폭염 속 야외 무대 안전 논란, 스케줄 관리 도마 위",
+      detail: "무리한 일정 강행이 멤버 컨디션 저하로 이어진 사례가 보도됐다.",
+      type: "industry",
+    },
+    {
+      headline: "서머 리믹스·선공개 싱글 발매 러시",
+      detail: "본 컴백 전에 화제성을 끌어올리는 브릿지 전략이 유행이다.",
+      type: "trend",
+    },
+    {
+      headline: "직캠 조회수 경쟁 과열, '여름 무대 맛집' 화제",
+      detail: "무대 위 표정과 애드리브가 개인 인기의 승부처가 되고 있다.",
+      type: "trend",
+    },
+    {
+      headline: "글로벌 스트리밍 플랫폼, K-POP 여름 기획전 편성",
+      detail: "해외 노출 창구가 늘며 초동보다 롱런 곡선이 중요해졌다.",
+      type: "industry",
+    },
+    {
+      headline: "한여름 게릴라 버스킹 이벤트 유행",
+      detail: "팬과의 접점을 늘린 팀들이 코어 팬덤 결속에서 재미를 보고 있다.",
+      type: "event",
     },
   ],
   fall: [
@@ -133,6 +183,31 @@ export const SEASONAL_NEWS_POOL: Record<
       detail: "팬 투표 비중이 높은 시상식일수록 코어 팬덤의 결속력이 중요하다.",
       type: "event",
     },
+    {
+      headline: "가을 음방 1위 경쟁, 초접전 구간 진입",
+      detail: "음원 점수와 팬덤 투표가 엎치락뒤치락하는 주가 이어지고 있다.",
+      type: "trend",
+    },
+    {
+      headline: "대형 콘서트 시즌 개막, 공연장 대관 전쟁",
+      detail: "공연 실적은 코어 팬덤의 실체를 증명하는 가장 확실한 지표다.",
+      type: "event",
+    },
+    {
+      headline: "업계 재계약 시즌 도래, 이적설 무성",
+      detail: "전속계약 만료를 앞둔 팀들의 거취가 업계 최대 관심사로 떠올랐다.",
+      type: "industry",
+    },
+    {
+      headline: "해외 어워드 K-POP 부문 신설 발표",
+      detail: "글로벌 팬덤 지표가 새로운 커리어 목표로 자리잡고 있다.",
+      type: "industry",
+    },
+    {
+      headline: "낙엽 감성 플레이리스트 열풍, 수록곡 재조명",
+      detail: "타이틀 외 수록곡의 완성도가 팬덤 유입의 숨은 통로가 되고 있다.",
+      type: "trend",
+    },
   ],
   winter: [
     {
@@ -158,6 +233,31 @@ export const SEASONAL_NEWS_POOL: Record<
     {
       headline: "올해 음반 총판매량 전년 대비 18% 증가",
       detail: "팬덤 경제의 성장세가 업계 전체의 투자 심리를 끌어올리고 있다.",
+      type: "industry",
+    },
+    {
+      headline: "연말 무대 콜라보 라인업 유출설로 온라인 들썩",
+      detail: "특별 무대 한 번이 다음 해 커리어의 방향을 바꾸기도 한다.",
+      type: "event",
+    },
+    {
+      headline: "시상식 드레스코드와 레드카펫 화제성 경쟁",
+      detail: "무대 밖 노출도 비주얼·패션 계열 팀에게는 실질적인 기회다.",
+      type: "trend",
+    },
+    {
+      headline: "내년 데뷔 예정 신인 라인업 윤곽",
+      detail: "다음 시즌의 경쟁 구도가 벌써부터 짜이고 있다.",
+      type: "competitor",
+    },
+    {
+      headline: "겨울 발라드 음원 강세, 차트 장기전 돌입",
+      detail: "화력 싸움보다 곡의 체급이 오래 버티는 시즌이다.",
+      type: "trend",
+    },
+    {
+      headline: "연말 결산 방송, 올해의 무대 다시보기 열풍",
+      detail: "한 해 동안 쌓인 무대 아카이브가 뒤늦게 신규 팬을 데려온다.",
       type: "industry",
     },
   ],

@@ -13,11 +13,18 @@ import {
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { MemberPortrait } from "@/components/visual/MemberPortrait";
+import { SceneThumb } from "@/components/visual/SceneThumb";
+import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
+import { StaffPortrait } from "@/components/visual/StaffPortrait";
 import { POSITION_LABELS } from "@/data/founding";
+import { hashSeed, MANAGER_BRIEFING_LINES, pickLine } from "@/data/voiceLines";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
 import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
+import { useManagerPersona } from "@/utils/managerPersona";
+import { sceneForDecisionCategory } from "@/utils/sceneMapping";
 import type { WeeklyDecisionTrigger } from "@/types/game";
 
 const TRIGGER_LABELS: Record<WeeklyDecisionTrigger["severity"], string> = {
@@ -56,7 +63,9 @@ export function DecisionCardDeck({
   );
   const cards = useGameStore((state) => state.weeklyDecisions);
   const flow = useGameStore(weeklyFlowSelectors.flow);
+  const currentWeek = useGameStore((state) => state.currentWeek);
   const trainees = useTraineeStore((state) => state.trainees);
+  const manager = useManagerPersona();
   const canResolveWeek = useGameStore(weeklyFlowSelectors.canResolveWeek);
   const selectWeeklyDecision = useGameStore((state) => state.selectWeeklyDecision);
   const setWeeklyDecisionTargets = useGameStore(
@@ -135,10 +144,29 @@ export function DecisionCardDeck({
           <h2 id="weekly-review-title" className="mt-1 text-xl font-semibold text-text-primary">
             이번 주 일정 검토
           </h2>
-          <p className="mt-1 text-pretty text-sm text-text-muted">
-            확정하면 이 일정대로 한 주가 시작됩니다.
-          </p>
         </header>
+
+        <SpeakerBubble
+          portrait={
+            <StaffPortrait
+              profileImagePath={manager.profileImagePath}
+              profileSpriteIndex={manager.profileSpriteIndex}
+              size="md"
+            />
+          }
+          name={manager.name}
+          role={manager.roleLabel}
+          tone={cards.some((card) => card.lane === "crisis") ? "warning" : "accent"}
+        >
+          {pickLine(
+            cards.length === 0
+              ? MANAGER_BRIEFING_LINES.noCards
+              : cards.some((card) => card.lane === "crisis")
+                ? MANAGER_BRIEFING_LINES.hasCrisis
+                : MANAGER_BRIEFING_LINES.hasOpportunity,
+            hashSeed(`briefing:${currentWeek}`),
+          )}
+        </SpeakerBubble>
 
         {cards.length === 0 ? (
           <article className="rounded-3xl bg-action-secondary/[0.07] p-4 shadow-[var(--shadow-surface)]">
@@ -237,18 +265,26 @@ export function DecisionCardDeck({
         <article className="rounded-2xl bg-surface-shell/72 p-3 shadow-[var(--shadow-surface)]">
           <p className="text-xs font-semibold text-action-secondary">매니저 운영안</p>
           <p className="mt-1 text-pretty text-xs leading-5 text-text-muted">
-            남은 훈련과 휴식, 내부 업무는 팀 상황에 맞춰 배정해 뒀습니다.
+            {pickLine(
+              MANAGER_BRIEFING_LINES.confirm,
+              hashSeed(`confirm:${currentWeek}`),
+            )}
           </p>
         </article>
 
-        <Button
-          className="w-full gap-2"
-          isDisabled={!canResolveWeek || isRunning}
-          onPress={onConfirm}
-        >
-          <Play className="ml-0.5 size-4" aria-hidden="true" />
-          {isRunning ? "이번 주 일정 진행 중…" : "이번 주 진행"}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            className="w-full gap-2"
+            isDisabled={!canResolveWeek || isRunning}
+            onPress={onConfirm}
+          >
+            <Play className="ml-0.5 size-4" aria-hidden="true" />
+            {isRunning ? "이번 주 일정 진행 중…" : "이번 주 진행"}
+          </Button>
+          <p className="text-center text-[11px] text-text-muted">
+            확정하면 이 일정대로 한 주가 시작됩니다.
+          </p>
+        </div>
       </section>
     );
   }
@@ -286,6 +322,12 @@ export function DecisionCardDeck({
             : "bg-surface-raised"
         }`}
       >
+        <SceneThumb
+          scene={sceneForDecisionCategory(activeCard.category)}
+          variant="banner"
+          label={activeCard.category}
+          className="mb-3"
+        />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -412,15 +454,18 @@ export function DecisionCardDeck({
                     onClick={() => toggleTarget(trainee.id)}
                   >
                     <span className="flex items-center gap-2">
-                      <span
-                        className={`grid size-5 shrink-0 place-items-center rounded-full ${
-                          selected
-                            ? "bg-brand-cyan text-slate-950"
-                            : "bg-white/[0.06] text-transparent"
-                        }`}
-                        aria-hidden="true"
-                      >
-                        <Check className="size-3" strokeWidth={3} />
+                      <span className="relative shrink-0">
+                        <MemberPortrait traineeId={trainee.id} size="sm" />
+                        <span
+                          className={`absolute -bottom-1 -right-1 grid size-4 place-items-center rounded-full ${
+                            selected
+                              ? "bg-brand-cyan text-slate-950"
+                              : "bg-surface-shell text-transparent"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <Check className="size-2.5" strokeWidth={3.5} />
+                        </span>
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">

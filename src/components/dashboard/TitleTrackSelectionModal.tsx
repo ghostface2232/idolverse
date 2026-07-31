@@ -5,6 +5,7 @@ import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { SceneThumb } from "@/components/visual/SceneThumb";
 import type { TitleTrack } from "@/types/game";
 
 const TRACK_STRATEGY: Record<
@@ -80,10 +81,8 @@ export function TitleTrackSelectionModal({
     >
       <div className="space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
-            {albumTitle}
-          </p>
-          <h2 className="mt-1 text-balance text-lg font-semibold text-text-primary">
+          <SceneThumb scene="recording" variant="banner" label={albumTitle} />
+          <h2 className="mt-3 text-balance text-lg font-semibold text-text-primary">
             어떤 시장을 먼저 공략할까요?
           </h2>
           <p className="mt-2 text-pretty text-sm leading-6 text-text-secondary [word-break:keep-all]">

@@ -5,6 +5,7 @@ import {
   MEMBER_SPRITE_KEYS,
   MEMBER_SPRITE_PATHS,
 } from "@/game/assets/memberSprites";
+import { WORLD_ROOM_ART_ASSETS } from "@/game/assets/worldRoomArt";
 import { assetUrl } from "@/utils/assets";
 
 interface WorldImageAsset {
@@ -17,8 +18,8 @@ interface WorldSpriteSheetAsset extends WorldImageAsset {
   frameHeight: number;
 }
 
-/** Phase 4 아트가 준비되면 이 목록만 채운다. 경로는 public/images 기준이다. */
-const WORLD_IMAGE_ASSETS: WorldImageAsset[] = [];
+/** 경로는 public/images 기준이다. 룸 아트는 worldRoomArt 레지스트리가 단일 소스다. */
+const WORLD_IMAGE_ASSETS: WorldImageAsset[] = [...WORLD_ROOM_ART_ASSETS];
 
 const WORLD_SPRITESHEET_ASSETS: WorldSpriteSheetAsset[] = (
   ["female", "male"] as const
