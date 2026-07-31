@@ -8,6 +8,7 @@ import {
   generateWeeklyDecisionCards,
 } from "@/systems/generateWeeklyDecisionCards";
 import {
+  countContractSlotsByTrainee,
   processTrainingWeek,
   type TrainingSchedule,
 } from "@/systems/trainingSystem";
@@ -676,23 +677,11 @@ export function processWeek(
   const albumConcept = album?.concept.mood ?? null;
   // 광고·OST 일정을 소화하는 멤버는 그 주 훈련을 온전히 못 한다 —
   // 예능 출연이 훈련을 건너뛰는 것과 같은 기회비용이다.
-  const contractSlotsByTrainee: Record<string, number> = {};
-  for (const contract of activeCommercialContracts) {
-    if (
-      contract.signedAtWeek > cumulativeWeek ||
-      contract.endsAtWeek < cumulativeWeek
-    ) {
-      continue;
-    }
-    const targets =
-      contract.targetTraineeIds.length > 0
-        ? contract.targetTraineeIds
-        : trainees.map((t) => t.id);
-    for (const traineeId of targets) {
-      contractSlotsByTrainee[traineeId] =
-        (contractSlotsByTrainee[traineeId] ?? 0) + contract.scheduleSlots;
-    }
-  }
+  const contractSlotsByTrainee = countContractSlotsByTrainee(
+    activeCommercialContracts,
+    trainees.map((t) => t.id),
+    cumulativeWeek,
+  );
   const beforeTraining = captureWeekDeltaState(getDeltaState());
   const trainingResult = processTrainingWeek(
     trainees,
@@ -1283,6 +1272,9 @@ export function processWeek(
   // ── 7.9 연간 차트 누적(연말 시상 디지털 지표의 차트 축).
   // 이번 주 최고 순위를 점수로 환산해 쌓는다 — 상위권 런이 길수록,
   // 그리고 그 런이 올해 안에 있을수록 시상에 실린다. 연초(1주차) 리셋.
+  // 시상 평가(50주차, 위의 AWARDS_WEEK 블록)는 그 시점까지의 누적
+  // (1~49주차)을 읽으므로, 50~52주차 득점은 이 리셋으로 소멸한다 —
+  // 연말 발매의 런은 새해로 넘어간 구간만 이듬해 심사에 실린다.
   const weeklyBestChartRank = (() => {
     const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
     return ranks.length > 0 ? Math.min(...ranks) : null;
@@ -1991,6 +1983,25 @@ export function processWeek(
     (lastInvestorDemandWeek === null ||
       nextCumulativeWeek - lastInvestorDemandWeek >=
         INVESTOR_INTERVENTION.minDemandGapWeeks);
+  // 쿨다운 시계는 카드가 "제시된" 주가 아니라 플레이어가 "대응을 고른" 주에
+  // 시작한다(보류·강행 옵션도 대응이다). 정식 플로우에서는 위기 카드를
+  // 미해소로 주를 넘길 수 없어(weekRunner가 거부) 차이가 없지만, 엔진을
+  // 직접 모는 호출자(시뮬레이션, 향후 매니저 위임 진행)가 위기를 해소하지
+  // 않으면 스탬프가 찍히지 않아 카드가 다음 주 곧바로 다시 올라온다 —
+  // 무응답이 위기를 침묵시키는 통로가 되지 않는다.
+  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
+  const presentedCrisisCardIds = new Set(
+    snapshot.game.weeklyDecisions
+      .filter((card) => card.lane === "crisis")
+      .map((card) => card.id),
+  );
+  for (const decision of decisions.resolvedDecisions) {
+    if (!presentedCrisisCardIds.has(decision.cardId)) continue;
+    const root = decision.cardId.split(":")[0];
+    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
+      crisisCardCooldowns[root] = cumulativeWeek;
+    }
+  }
   const cardCtx = buildDecisionCardContext({
     phase: advancedGame.currentPhase,
     trainees: decisionTrainees,
@@ -2015,7 +2026,7 @@ export function processWeek(
     ),
     activeCommercialContracts,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
-    crisisCardCooldowns: snapshot.game.crisisCardCooldowns,
+    crisisCardCooldowns,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,
     strategicExpansion,
@@ -2057,15 +2068,6 @@ export function processWeek(
   );
   if (nextDecisions.some((decision) => decision.id === "emergency-investor")) {
     lastInvestorDemandWeek = nextCumulativeWeek;
-  }
-  // 이번 주 제시된 위기 루트의 쿨다운 시계를 갱신한다.
-  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
-  for (const decision of nextDecisions) {
-    if (decision.lane !== "crisis") continue;
-    const root = decision.id.split(":")[0];
-    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
-      crisisCardCooldowns[root] = nextCumulativeWeek;
-    }
   }
 
   // ── Assemble new state

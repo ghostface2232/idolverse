@@ -17,6 +17,7 @@ import {
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
+  ActiveCommercialContract,
   ConceptMood,
   Staff,
   Trainee,
@@ -185,6 +186,36 @@ export interface TraineeWeekPreview {
   conditionDelta: number;
   /** 이번 주 부상 확률(0..1). 훈련 활동에만 적용된다. */
   injuryProbability: number;
+}
+
+/**
+ * 이번 주 각 멤버가 소화하는 외부 계약 일정 슬롯 집계. 대상 미지정 계약은
+ * 전원이 나눠 소화한다. weekProcessor의 실제 처리와 훈련 UI의 프리뷰가
+ * 반드시 이 집계를 함께 써야 한다 — 계산이 갈라지면 "표시된 성장과 실제
+ * 성장이 같다"는 TraineeWeekPreview의 계약이 계약 슬롯 축에서 깨진다.
+ */
+export function countContractSlotsByTrainee(
+  contracts: readonly ActiveCommercialContract[],
+  traineeIds: readonly string[],
+  cumulativeWeek: number,
+): Record<string, number> {
+  const slots: Record<string, number> = {};
+  for (const contract of contracts) {
+    if (
+      contract.signedAtWeek > cumulativeWeek ||
+      contract.endsAtWeek < cumulativeWeek
+    ) {
+      continue;
+    }
+    const targets =
+      contract.targetTraineeIds.length > 0
+        ? contract.targetTraineeIds
+        : traineeIds;
+    for (const traineeId of targets) {
+      slots[traineeId] = (slots[traineeId] ?? 0) + contract.scheduleSlots;
+    }
+  }
+  return slots;
 }
 
 export function previewTraineeWeek(

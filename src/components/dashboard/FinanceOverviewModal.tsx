@@ -42,6 +42,7 @@ const EXPENSE_LABELS: Record<string, string> = {
   staffDevelopment: "스태프 육성",
   facilityInvestment: "시설 투자",
   strategicExpansion: "사업 유지비",
+  memberSettlement: "멤버 정산",
   financingRepayment: "자금 상환",
   decisionCosts: "이번 주 선택 비용",
 };
