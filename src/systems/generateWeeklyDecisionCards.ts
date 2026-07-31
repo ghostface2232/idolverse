@@ -53,9 +53,14 @@ export interface DecisionCardContext {
   investorComplianceCount: number;
   money: number;
   weeklyFixedTotal: number;
+  public?: number;
   fandom: number;
+  global?: number;
+  industry?: number;
+  bestChartRank?: number | null;
   fandomLoyalty: number;
   fandomDisappointment: number;
+  activeCommercialContractDefinitionIds?: string[];
   lastOpportunityWeek: number | null;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks: string[];
@@ -72,9 +77,14 @@ export interface DecisionContextState {
   investorComplianceCount: number;
   money: number;
   weeklyFixedTotal: number;
+  public?: number;
   fandom: number;
+  global?: number;
+  industry?: number;
+  bestChartRank?: number | null;
   fandomLoyalty: number;
   fandomDisappointment: number;
+  activeCommercialContractDefinitionIds?: readonly string[];
   lastOpportunityWeek?: number | null;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks?: readonly string[];
@@ -134,9 +144,16 @@ export function buildDecisionCardContext(
     investorComplianceCount: state.investorComplianceCount,
     money: state.money,
     weeklyFixedTotal: state.weeklyFixedTotal,
+    public: state.public ?? 0,
     fandom: state.fandom,
+    global: state.global ?? 0,
+    industry: state.industry ?? 0,
+    bestChartRank: state.bestChartRank ?? null,
     fandomLoyalty: state.fandomLoyalty,
     fandomDisappointment: state.fandomDisappointment,
+    activeCommercialContractDefinitionIds: [
+      ...(state.activeCommercialContractDefinitionIds ?? []),
+    ],
     lastOpportunityWeek: state.lastOpportunityWeek ?? null,
     emergencyFinancing: [...(state.emergencyFinancing ?? [])],
     competitorComebacks: [...(state.competitorComebacks ?? [])],
@@ -327,15 +344,26 @@ function buildOpportunityCard(
     );
   if (cumulativeWeek - lastOpportunityWeek < requiredGap) return null;
 
+  const isEligible = (definition: (typeof OPPORTUNITY_DEFINITIONS)[number]) =>
+    definition.phases.includes(ctx.phase) &&
+    (ctx.public ?? 0) >= (definition.minPublic ?? 0) &&
+    ctx.fandom >= (definition.minFandom ?? 0) &&
+    (ctx.global ?? 0) >= (definition.minGlobal ?? 0) &&
+    (ctx.industry ?? 0) >= (definition.minIndustry ?? 0) &&
+    (!definition.requiresReleasedAlbum || (ctx.releasedAlbumCount ?? 0) > 0) &&
+    (definition.minBestChartRank === undefined ||
+      (ctx.bestChartRank != null &&
+        ctx.bestChartRank <= definition.minBestChartRank)) &&
+    (!definition.uniqueWhileActive ||
+      !(ctx.activeCommercialContractDefinitionIds ?? []).includes(definition.id));
   const phasePool = OPPORTUNITY_DEFINITIONS.filter(
-    (definition) =>
-      definition.phases.includes(ctx.phase) && !definition.requiresRivalComeback,
+    (definition) => isEligible(definition) && !definition.requiresRivalComeback,
   );
   const rivalDefinition =
     ctx.competitorComebacks.length > 0
       ? OPPORTUNITY_DEFINITIONS.find(
           (definition) =>
-            definition.requiresRivalComeback && definition.phases.includes(ctx.phase),
+            definition.requiresRivalComeback && isEligible(definition),
         )
       : undefined;
   const random = createSeededRandom(

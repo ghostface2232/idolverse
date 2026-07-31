@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { evaluateRelease, type ReleaseInput } from "@/systems/evaluationSystem";
+import {
+  calculatePlatformChartPositions,
+  evaluateRelease,
+  type ReleaseInput,
+} from "@/systems/evaluationSystem";
 
 const BASE_RELEASE: Omit<ReleaseInput, "albumQuality"> = {
   titleTrack: {
@@ -34,5 +38,28 @@ describe("앨범 품질의 차트 보상", () => {
 
     expect(expert.chartPower - intermediate.chartPower).toBeGreaterThan(20);
     expect(intermediate.chartRank - expert.chartRank).toBeGreaterThanOrEqual(10);
+  });
+
+  it("플랫폼별 순위는 각 시장의 실제 팬 기반을 따라 갈라진다", () => {
+    const domesticHit = calculatePlatformChartPositions({
+      baseRank: 8,
+      albumQuality: 70,
+      public: 90,
+      fandom: 25,
+      global: 15,
+    });
+    const fandomHit = calculatePlatformChartPositions({
+      baseRank: 8,
+      albumQuality: 70,
+      public: 45,
+      fandom: 85,
+      global: 80,
+    });
+
+    expect(domesticHit.melon).toBe(8);
+    expect(domesticHit.albumSales).toBeGreaterThan(domesticHit.melon);
+    expect(domesticHit.spotify).toBeGreaterThan(domesticHit.melon);
+    expect(fandomHit.albumSales).toBeLessThan(fandomHit.melon);
+    expect(fandomHit.spotify).toBeLessThan(fandomHit.melon);
   });
 });

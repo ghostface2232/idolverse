@@ -452,6 +452,30 @@ export interface Notification {
   week: number;
 }
 
+export type CommercialContractKind =
+  | "ost"
+  | "ambassador"
+  | "brand-exclusive"
+  | "content"
+  | "acting";
+
+export interface CommercialContractOffer {
+  kind: CommercialContractKind;
+  title: string;
+  /** 계약 기간. 체결 주를 포함해 이 기간 동안 매주 정산한다. */
+  durationWeeks: number;
+  weeklyIncome: number;
+}
+
+export interface ActiveCommercialContract extends CommercialContractOffer {
+  id: string;
+  /** 같은 종류의 제안이 중복 등장하지 않게 하는 기회 정의 id. */
+  definitionId: string;
+  signedAtWeek: number;
+  endsAtWeek: number;
+  targetTraineeIds: string[];
+}
+
 export interface WeeklyDecisionOption {
   id: string;
   label: string;
@@ -468,6 +492,8 @@ export interface WeeklyDecisionOption {
   };
   /** 선택 때문에 이번 주 훈련 대신 수행할 활동. 다음 주에는 자동 해제한다. */
   activityOverride?: TraineeActivity;
+  /** 수락 뒤 비활동기에도 매주 수익을 만드는 외부 계약. */
+  contractOffer?: CommercialContractOffer;
 }
 
 export type WeeklyDecisionTriggerKind =
@@ -933,6 +959,8 @@ export interface GameStoreState {
   lastInvestorDemandWeek: number | null;
   /** 실제 광고 제안을 수락해 체결한 누적 광고 계약 수. */
   adContractsSigned: number;
+  /** 광고·OST·앰배서더 등 현재 정산 중인 외부 계약. */
+  activeCommercialContracts: ActiveCommercialContract[];
   /**
    * 상업형 활동(팬사인회·유튜브·라이브)이 이어진 연속 주 수.
    * 과도 상업활동 판정은 수입 내역(콘서트 수익이 섞임)이 아니라

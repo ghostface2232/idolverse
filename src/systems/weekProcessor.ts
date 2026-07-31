@@ -22,6 +22,7 @@ import { progressAlbum } from "@/systems/albumSystem";
 import { getDebutSchedule, processDebutProjectWeek } from "@/systems/debutSystem";
 import { processComebackProjectWeek } from "@/systems/comebackSystem";
 import {
+  calculatePlatformChartPositions,
   weeklyChartDecay,
   type ReleaseResult,
 } from "@/systems/evaluationSystem";
@@ -380,6 +381,9 @@ export function processWeek(
   // ── 1. Apply player decisions
   let investorComplianceCount = snapshot.game.investorComplianceCount ?? 0;
   let adContractsSigned = snapshot.game.adContractsSigned ?? 0;
+  let activeCommercialContracts = [
+    ...(snapshot.game.activeCommercialContracts ?? []),
+  ];
   let emergencyFinancing = [...(snapshot.game.emergencyFinancing ?? [])];
   let financingIncomeThisWeek = 0;
   let financingRepaymentThisWeek = 0;
@@ -410,6 +414,30 @@ export function processWeek(
     }
     if (isAcceptedAdvertisingOpportunity(d.cardId, d.optionId)) {
       adContractsSigned += 1;
+    }
+    const selectedOption = snapshot.game.weeklyDecisions
+      .find((card) => card.id === d.cardId)
+      ?.options.find((option) => option.id === d.optionId);
+    if (selectedOption?.contractOffer) {
+      const definitionId = d.cardId.split(":")[1] ?? d.cardId;
+      const offer = selectedOption.contractOffer;
+      activeCommercialContracts.push({
+        ...offer,
+        id: `${definitionId}:${cumulativeWeek}`,
+        definitionId,
+        signedAtWeek: cumulativeWeek,
+        endsAtWeek: cumulativeWeek + offer.durationWeeks - 1,
+        targetTraineeIds: [...(d.targetTraineeIds ?? [])],
+      });
+      if (
+        offer.kind === "ambassador" ||
+        offer.kind === "brand-exclusive"
+      ) {
+        adContractsSigned += 1;
+      }
+      report.warnings.push(
+        `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${offer.weeklyIncome.toLocaleString("ko-KR")}원이 들어옵니다`,
+      );
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
       const track = d.optionId.slice(
@@ -847,12 +875,13 @@ export function processWeek(
     releasedAlbums = [...releasedAlbums, released];
     conceptHistory = [...conceptHistory, released.concept.mood];
     albumReleasedThisWeek = true;
-    chartPositions = {
-      melon: release.chartRank,
-      spotify: Math.min(100, release.chartRank + 2),
-      youtube: Math.min(100, release.chartRank + 4),
-      albumSales: Math.min(100, Math.max(1, release.chartRank + 1)),
-    };
+    chartPositions = calculatePlatformChartPositions({
+      baseRank: release.chartRank,
+      albumQuality: released.quality,
+      public: fandomAxis.public,
+      fandom: fandomAxis.fandom,
+      global: fandomAxis.global,
+    });
     applyToState(
       {
         fandom: release.fandomDelta,
@@ -1151,6 +1180,10 @@ export function processWeek(
       melon: decayRank(chartPositions.melon, decay.melonDelta),
       spotify: decayRank(chartPositions.spotify, decay.spotifyDelta),
       youtube: decayRank(chartPositions.youtube, decay.youtubeDelta),
+      albumSales: decayRank(
+        chartPositions.albumSales,
+        decay.albumSalesDelta,
+      ),
     };
   }
 
@@ -1251,6 +1284,26 @@ export function processWeek(
   );
   report.finance.income = financeResult.income;
   report.finance.expenses = financeResult.expenses;
+  const commercialContractIncome = activeCommercialContracts
+    .filter(
+      (contract) =>
+        contract.signedAtWeek <= cumulativeWeek &&
+        contract.endsAtWeek >= cumulativeWeek,
+    )
+    .reduce((sum, contract) => sum + contract.weeklyIncome, 0);
+  if (commercialContractIncome > 0) {
+    money += commercialContractIncome;
+    report.finance.income.commercialContracts = commercialContractIncome;
+  }
+  const completedCommercialContracts = activeCommercialContracts.filter(
+    (contract) => contract.endsAtWeek === cumulativeWeek,
+  );
+  for (const contract of completedCommercialContracts) {
+    report.warnings.push(`${contract.title} 계약이 종료됐습니다`);
+  }
+  activeCommercialContracts = activeCommercialContracts.filter(
+    (contract) => contract.endsAtWeek > cumulativeWeek,
+  );
   const strategicIncome =
     fandomAxis.fandom *
       STRATEGIC_EXPANSION.tracks.fandom.weeklyRevenuePerPoint *
@@ -1374,6 +1427,8 @@ export function processWeek(
         e.template.id === "fan-challenge-viral",
     ),
     chartRank,
+    albumSalesRank:
+      chartPositions.albumSales > 0 ? chartPositions.albumSales : null,
     isActive:
       album !== null ||
       trainees.some((t) => t.currentActivity === "entertainment") ||
@@ -1805,8 +1860,18 @@ export function processWeek(
     money,
     weeklyFixedTotal: snapshot.finance.weeklyFixedTotal,
     fandom: fandomAxis.fandom,
+    public: fandomAxis.public,
+    global: fandomAxis.global,
+    industry: fandomAxis.industry,
+    bestChartRank: (() => {
+      const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
+      return ranks.length > 0 ? Math.min(...ranks) : null;
+    })(),
     fandomLoyalty: fandomAxis.fandomLoyalty,
     fandomDisappointment: fandomAxis.fandomDisappointment,
+    activeCommercialContractDefinitionIds: activeCommercialContracts.map(
+      (contract) => contract.definitionId,
+    ),
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,
@@ -1890,6 +1955,7 @@ export function processWeek(
       investorComplianceCount,
       lastInvestorDemandWeek,
       adContractsSigned,
+      activeCommercialContracts,
       insolvencyWeeks,
       campaignFailure,
       lastOpportunityWeek: opportunityOffered

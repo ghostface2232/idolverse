@@ -20,6 +20,7 @@ export interface WeeklyFandomContext {
   hadVarietyAppearance: boolean;
   hadViralEvent: boolean;
   chartRank: number | null;
+  albumSalesRank?: number | null;
   isActive: boolean;
   albumReleaseThisWeek: boolean;
   concertThisWeek: boolean;
@@ -73,6 +74,15 @@ export function updateFandom(
   // 이미 준다 — 여기서 또 주면 이중 보상으로 팬덤이 인플레이션된다.
   if (ctx.concertThisWeek) fDelta += 6;
   if (ctx.fanServiceThisWeek) fDelta += 3;
+  // 넓은 대중 노출이 좋은 음악·활동과 만났을 때 일부가 코어 팬으로
+  // 전환된다. 인지도만 반복해서 올린다고 구매 팬덤이 자동 생성되지는 않는다.
+  if (
+    ctx.isActive &&
+    ctx.latestAlbumQuality >= 55 &&
+    current.public - current.fandom >= 20
+  ) {
+    fDelta += 1;
+  }
 
   if (ctx.scandalThisWeek) dDelta += FANDOM_DISAPPOINTMENT_SCANDAL;
   if (ctx.excessiveCommercial) dDelta += FANDOM_DISAPPOINTMENT_COMMERCIAL;
@@ -117,6 +127,20 @@ export function updateFandom(
   if (ctx.musicQualityHigh) iDelta += 3;
   if (ctx.stageExcellent) iDelta += 4;
   if (ctx.awardWin) iDelta += 6;
+  if (
+    (ctx.chartRank !== null && ctx.chartRank <= 30) ||
+    (ctx.albumSalesRank != null && ctx.albumSalesRank <= 30)
+  ) {
+    iDelta += 1;
+  }
+  // 대중적 성공이 여러 주 확인되면 업계 신뢰도도 늦게 따라온다.
+  if (
+    ctx.chartRank !== null &&
+    ctx.chartRank <= 10 &&
+    current.public - current.industry >= 25
+  ) {
+    iDelta += 1;
+  }
   if (ctx.scandalThisWeek) iDelta -= 5;
   if (ctx.qualityDecline) iDelta -= 3;
 

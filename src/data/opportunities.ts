@@ -6,6 +6,12 @@ import type {
 export type OpportunityDefinitionId =
   | "variety-offer"
   | "advertising-offer"
+  | "self-content-sponsor"
+  | "fan-sign-tour"
+  | "ost-offer"
+  | "drama-casting"
+  | "annual-ambassador"
+  | "brand-exclusive-model"
   | "collaboration-offer"
   | "viral-cover"
   | "rival-comeback-overlap";
@@ -18,6 +24,14 @@ export interface OpportunityDefinition {
   triggerDescription: string;
   phases: readonly GamePhase[];
   requiresRivalComeback?: boolean;
+  minPublic?: number;
+  minFandom?: number;
+  minGlobal?: number;
+  minIndustry?: number;
+  minBestChartRank?: number;
+  requiresReleasedAlbum?: boolean;
+  /** 해당 정의로 체결한 계약이 진행 중이면 같은 제안을 다시 내지 않는다. */
+  uniqueWhileActive?: boolean;
   options: readonly WeeklyDecisionOption[];
 }
 
@@ -91,6 +105,179 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
           max: 2,
         },
         activityOverride: "individual",
+      },
+    ],
+  },
+  {
+    id: "self-content-sponsor",
+    category: "자체 콘텐츠",
+    title: "웹예능 제작 지원 제안",
+    summary: "콘텐츠 플랫폼이 팀의 일상을 담는 자체 예능에 제작비와 협찬을 제안했습니다.",
+    triggerDescription: "온라인 반응과 팬 체류 시간이 자체 콘텐츠 기준을 넘김",
+    phases: ["debut", "growth", "peak"],
+    minFandom: 12,
+    uniqueWhileActive: true,
+    options: [
+      {
+        id: "produce-season",
+        label: "8부작 시즌을 제작한다",
+        description: "매주 공개할 자체 예능으로 팬과 꾸준히 만납니다.",
+        tradeoff:
+          "8주 동안 매주 협찬 수입 250만 원을 받습니다. 촬영이 이어져 멤버들의 피로도 함께 쌓입니다.",
+        effects: { fandom: 3, stress: 4 },
+        contractOffer: {
+          kind: "content",
+          title: "자체 웹예능 시즌 협찬",
+          durationWeeks: 8,
+          weeklyIncome: 2_500_000,
+        },
+        activityOverride: "entertainment",
+      },
+      {
+        id: "produce-pilot",
+        label: "파일럿만 먼저 공개한다",
+        description: "한 편으로 반응을 확인하고 팬 접점을 넓힙니다.",
+        tradeoff: "제작 지원금 800만 원을 받고 이번 주 촬영에 집중합니다.",
+        effects: { money: 8_000_000, fandom: 2, stress: 2 },
+        activityOverride: "entertainment",
+      },
+    ],
+  },
+  {
+    id: "fan-sign-tour",
+    category: "팬 이벤트",
+    title: "유통사의 팬사인회 투어 제안",
+    summary: "앨범 유통사가 활동 종료 뒤에도 주요 도시에서 팬들과 만나는 자리를 제안했습니다.",
+    triggerDescription: "코어 팬덤과 최근 앨범 구매력이 팬 이벤트 기준을 넘김",
+    phases: ["debut", "growth", "peak"],
+    minFandom: 20,
+    requiresReleasedAlbum: true,
+    options: [
+      {
+        id: "accept-fan-sign-tour",
+        label: "주말 팬사인회를 연다",
+        description: "팬들과 직접 만나 결속과 판매 뒷심을 높입니다.",
+        tradeoff:
+          "행사 수입 1,200만 원을 얻고 코어 팬덤이 단단해집니다. 이번 주 휴식 시간은 줄어듭니다.",
+        effects: { money: 12_000_000, fandom: 3, stress: 3, condition: -2 },
+        activityOverride: "entertainment",
+      },
+    ],
+  },
+  {
+    id: "ost-offer",
+    category: "OST",
+    title: "화제 드라마의 OST 가창 제안",
+    summary: "음악감독이 팀의 음색과 드라마의 주요 장면이 잘 맞는다고 판단했습니다.",
+    triggerDescription: "음원 성적과 업계 평판이 OST 제작진의 섭외 기준을 통과",
+    phases: ["debut", "growth", "peak"],
+    minIndustry: 24,
+    minBestChartRank: 60,
+    requiresReleasedAlbum: true,
+    uniqueWhileActive: true,
+    options: [
+      {
+        id: "record-ost",
+        label: "OST를 녹음한다",
+        description: "드라마 방영 동안 음원 수입과 새로운 대중 접점을 만듭니다.",
+        tradeoff:
+          "계약금 1,500만 원과 12주간 매주 음원 수입 180만 원을 받습니다. 녹음 준비로 이번 주 팀 훈련을 거릅니다.",
+        effects: { money: 15_000_000, public: 3, industry: 2, stress: 4 },
+        contractOffer: {
+          kind: "ost",
+          title: "드라마 OST 음원 계약",
+          durationWeeks: 12,
+          weeklyIncome: 1_800_000,
+        },
+        activityOverride: "individual",
+      },
+    ],
+  },
+  {
+    id: "drama-casting",
+    category: "드라마",
+    title: "주말 드라마 조연 오디션 제안",
+    summary: "캐스팅팀이 대중에게 얼굴을 알린 멤버 한 명을 조연 후보로 보고 있습니다.",
+    triggerDescription: "대중 인지도와 업계 신뢰가 드라마 캐스팅 기준을 통과",
+    phases: ["growth", "peak"],
+    minPublic: 42,
+    minIndustry: 30,
+    uniqueWhileActive: true,
+    options: [
+      {
+        id: "accept-drama-role",
+        label: "멤버 한 명을 출연시킨다",
+        description: "개인 활동으로 팀의 대중 접점을 넓힙니다.",
+        tradeoff:
+          "출연료 2,000만 원과 10주간 매주 300만 원을 받습니다. 출연 멤버는 이번 주 팀 연습에서 빠집니다.",
+        effects: { money: 20_000_000, public: 4, industry: 2, stress: 5 },
+        contractOffer: {
+          kind: "acting",
+          title: "주말 드라마 조연 출연",
+          durationWeeks: 10,
+          weeklyIncome: 3_000_000,
+        },
+        targetSelection: { label: "출연할 멤버", min: 1, max: 1 },
+        activityOverride: "individual",
+      },
+    ],
+  },
+  {
+    id: "annual-ambassador",
+    category: "앰배서더",
+    title: "라이프스타일 브랜드 연간 앰배서더",
+    summary: "브랜드가 팀의 넓어진 인지도와 팬 반응을 보고 1년 파트너십을 제안했습니다.",
+    triggerDescription: "대중 인지도와 코어 팬덤이 연간 앰배서더 기준을 통과",
+    phases: ["growth", "peak"],
+    minPublic: 55,
+    minFandom: 35,
+    minIndustry: 30,
+    uniqueWhileActive: true,
+    options: [
+      {
+        id: "sign-ambassador",
+        label: "연간 앰배서더가 된다",
+        description: "브랜드 행사와 캠페인에 꾸준히 참여합니다.",
+        tradeoff:
+          "계약금 5,000만 원과 52주간 매주 250만 원을 받습니다. 상업 일정이 늘어 팬들의 시선을 살펴야 합니다.",
+        effects: { money: 50_000_000, public: 3, industry: 3, stress: 4, fandomDisappointment: 2 },
+        contractOffer: {
+          kind: "ambassador",
+          title: "라이프스타일 브랜드 연간 앰배서더",
+          durationWeeks: 52,
+          weeklyIncome: 2_500_000,
+        },
+        activityOverride: "entertainment",
+      },
+    ],
+  },
+  {
+    id: "brand-exclusive-model",
+    category: "전속 모델",
+    title: "대형 브랜드 전속 모델 계약",
+    summary: "검증된 화제성과 구매력을 바탕으로 단독 광고 모델 제안이 들어왔습니다.",
+    triggerDescription: "최상위 인지도·팬덤·업계 평판이 전속 모델 심사를 통과",
+    phases: ["peak"],
+    minPublic: 72,
+    minFandom: 50,
+    minIndustry: 55,
+    minBestChartRank: 20,
+    uniqueWhileActive: true,
+    options: [
+      {
+        id: "sign-exclusive-model",
+        label: "브랜드의 얼굴이 된다",
+        description: "대규모 캠페인과 연간 모델 활동을 맡습니다.",
+        tradeoff:
+          "계약금 1억 5,000만 원과 52주간 매주 500만 원을 받습니다. 경쟁 브랜드 제안은 계약 기간 동안 받을 수 없습니다.",
+        effects: { money: 150_000_000, public: 4, industry: 5, stress: 6 },
+        contractOffer: {
+          kind: "brand-exclusive",
+          title: "대형 브랜드 전속 모델",
+          durationWeeks: 52,
+          weeklyIncome: 5_000_000,
+        },
+        activityOverride: "entertainment",
       },
     ],
   },

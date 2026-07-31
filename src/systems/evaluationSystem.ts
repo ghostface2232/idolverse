@@ -85,6 +85,43 @@ export interface ReleaseResult {
   fandomDisappointmentDelta: number;
 }
 
+export interface PlatformChartPositions {
+  melon: number;
+  spotify: number;
+  youtube: number;
+  albumSales: number;
+}
+
+/**
+ * 같은 발매 성과를 플랫폼별 소비층에 맞게 나눈다.
+ * 국내 음원은 대중성, 해외 플랫폼은 해외 팬덤, 음반은 코어 팬덤과
+ * 완성도의 영향을 더 크게 받는다.
+ */
+export function calculatePlatformChartPositions(input: {
+  baseRank: number;
+  albumQuality: number;
+  public: number;
+  fandom: number;
+  global: number;
+}): PlatformChartPositions {
+  const rank = (value: number) =>
+    Math.max(1, Math.min(100, Math.round(value)));
+  const { baseRank, albumQuality, public: publicStat, fandom, global } = input;
+
+  return {
+    melon: rank(baseRank),
+    spotify: rank(baseRank + (publicStat - global) * 0.28),
+    youtube: rank(
+      baseRank + (publicStat - (global * 0.65 + fandom * 0.35)) * 0.18,
+    ),
+    albumSales: rank(
+      baseRank +
+        (publicStat - fandom) * 0.32 +
+        (60 - albumQuality) * 0.12,
+    ),
+  };
+}
+
 function computeChartPower(
   albumQuality: number,
   fandom: number,
@@ -222,6 +259,7 @@ export interface ChartDecayResult {
   melonDelta: number;
   spotifyDelta: number;
   youtubeDelta: number;
+  albumSalesDelta: number;
 }
 
 export function weeklyChartDecay(
@@ -236,5 +274,6 @@ export function weeklyChartDecay(
     melonDelta: -(baseDrop + Math.round(ageFactor)),
     spotifyDelta: -(baseDrop - 1 + Math.round(ageFactor * 0.7)),
     youtubeDelta: -(baseDrop - 1 + Math.round(ageFactor * 0.5)),
+    albumSalesDelta: -(baseDrop + 2 + Math.round(ageFactor * 1.2)),
   };
 }

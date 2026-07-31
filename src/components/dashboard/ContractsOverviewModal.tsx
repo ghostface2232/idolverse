@@ -1,4 +1,9 @@
-import { CalendarClock, HeartHandshake, UserRound } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CalendarClock,
+  HeartHandshake,
+  UserRound,
+} from "lucide-react";
 import { Modal } from "@/components/common/Modal";
 import { CONTRACT_TERM_WEEKS } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
@@ -7,10 +12,11 @@ import {
   getContractSentiment,
   type ContractSentiment,
 } from "@/systems/contractSystem";
-import type { Trainee } from "@/types/game";
+import type { ActiveCommercialContract, Trainee } from "@/types/game";
 
 interface ContractsOverviewModalProps {
   trainees: readonly Trainee[];
+  commercialContracts: readonly ActiveCommercialContract[];
   currentYear: number;
   currentWeek: number;
   onClose: () => void;
@@ -118,6 +124,7 @@ function MemberContractRow({
 
 export function ContractsOverviewModal({
   trainees,
+  commercialContracts,
   currentYear,
   currentWeek,
   onClose,
@@ -127,6 +134,7 @@ export function ContractsOverviewModal({
     0,
     Math.min(1, remainingWeeks / CONTRACT_TERM_WEEKS),
   );
+  const cumulativeWeek = (currentYear - 1) * 52 + currentWeek;
 
   return (
     <Modal title="계약" onClose={onClose} className="sm:max-w-lg">
@@ -152,6 +160,59 @@ export function ContractsOverviewModal({
               style={{ width: `${Math.round(remainingRatio * 100)}%` }}
             />
           </span>
+        </section>
+
+        <section aria-labelledby="commercial-contracts-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <BriefcaseBusiness
+              className="size-4 text-cyan-300"
+              aria-hidden="true"
+            />
+            <div>
+              <h2
+                id="commercial-contracts-heading"
+                className="text-sm font-semibold text-text-primary"
+              >
+                외부 활동 계약
+              </h2>
+              <p className="mt-0.5 text-xs text-text-muted">
+                활동 공백에도 매주 정산되는 광고, 콘텐츠, 출연 계약입니다.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {commercialContracts.map((contract) => {
+              const contractRemaining = Math.max(
+                0,
+                contract.endsAtWeek - cumulativeWeek + 1,
+              );
+              return (
+                <article
+                  key={contract.id}
+                  className="rounded-2xl bg-surface-shell/68 p-4 shadow-[var(--shadow-surface)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-text-primary">
+                        {contract.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-text-muted">
+                        남은 {contractRemaining}주
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-cyan-400/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-cyan-200">
+                      주 {contract.weeklyIncome.toLocaleString("ko-KR")}원
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+            {commercialContracts.length === 0 ? (
+              <p className="rounded-2xl bg-surface-shell/68 px-4 py-6 text-center text-sm text-text-muted shadow-[var(--shadow-surface)]">
+                진행 중인 외부 활동 계약이 없습니다.
+              </p>
+            ) : null}
+          </div>
         </section>
 
         <section aria-labelledby="member-contracts-heading">

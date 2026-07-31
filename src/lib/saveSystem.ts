@@ -282,6 +282,7 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     lastInvestorDemandWeek: rest.lastInvestorDemandWeek ?? null,
     adContractsSigned: rest.adContractsSigned ?? 0,
+    activeCommercialContracts: rest.activeCommercialContracts ?? [],
     commercialWeekStreak: rest.commercialWeekStreak ?? 0,
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
     // 5년 성과 미달은 더 이상 캠페인 종료 조건이 아니다. 과거 버전에서

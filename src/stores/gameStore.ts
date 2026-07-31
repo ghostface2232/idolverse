@@ -35,6 +35,7 @@ export const initialGameState: GameStoreState = {
   investorComplianceCount: 0,
   lastInvestorDemandWeek: null,
   adContractsSigned: 0,
+  activeCommercialContracts: [],
   commercialWeekStreak: 0,
   insolvencyWeeks: 0,
   campaignFailure: null,

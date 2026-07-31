@@ -164,6 +164,9 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const pendingEvents = useEventStore((state) => state.pendingEvents);
   const investorType = useGameStore((state) => state.investorType);
   const chartPositions = useFandomStore((state) => state.chartPositions);
+  const commercialContracts = useGameStore(
+    (state) => state.activeCommercialContracts,
+  );
   const upcomingCompetitorComebacks = useCalendarStore(
     (state) => state.upcomingCompetitorComebacks,
   );
@@ -815,6 +818,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       {overviewModal === "contracts" ? (
         <ContractsOverviewModal
           trainees={trainees}
+          commercialContracts={commercialContracts}
           currentYear={currentYear}
           currentWeek={currentWeek}
           onClose={() => setOverviewModal(null)}
