@@ -8,11 +8,16 @@ import {
   Play,
   ShieldAlert,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Button } from "@/components/common/Button";
-import { radioTileClasses } from "@/components/common/selectionTokens";
+import {
+  checkTileClasses,
+  radioTileClasses,
+} from "@/components/common/selectionTokens";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
@@ -131,8 +136,6 @@ export function DecisionCardDeck({
     if (!activeCard) return;
 
     selectWeeklyDecision(activeCard.id, optionId);
-    const option = activeCard.options.find((candidate) => candidate.id === optionId);
-    if (!option?.targetSelection) finishActiveCard();
   };
 
   const toggleTarget = (traineeId: string) => {
@@ -307,8 +310,11 @@ export function DecisionCardDeck({
     <section className="space-y-3 [word-break:keep-all]" aria-labelledby={`decision-${activeCard.id}`}>
       <header>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-action-primary">
-            이번 주 안건
+          <p className="text-xs font-semibold text-action-primary">
+            이번 주 안건{" "}
+            <span className="tabular-nums text-pink-100">
+              {safeIndex + 1}/{cards.length}
+            </span>
           </p>
           <span className="sr-only">
             {safeIndex + 1} / {cards.length}
@@ -411,16 +417,43 @@ export function DecisionCardDeck({
                   >
                     <Check className="size-3" strokeWidth={3} />
                   </span>
-                  <span className="min-w-0 space-y-1">
-                    <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
-                    <span className="block text-pretty text-xs leading-5 text-text-secondary">{option.description}</span>
-                    <span className="block text-pretty text-[11px] leading-4 text-text-muted">{option.tradeoff}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
+                      <span className="mt-2 grid gap-1.5">
+                        <span className="flex items-start gap-1.5 text-pretty text-xs leading-5">
+                          <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-cyan-300" aria-hidden="true" />
+                          <span className="min-w-0">
+                            <span className="sr-only">기대 효과: </span>
+                            <span className="text-text-secondary">{option.description}</span>
+                          </span>
+                        </span>
+                        <span className="flex items-start gap-1.5 text-pretty text-xs leading-5">
+                          <TrendingDown className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden="true" />
+                          <span className="min-w-0">
+                            <span className="sr-only">기회비용: </span>
+                            <span className="text-text-secondary">{option.tradeoff}</span>
+                          </span>
+                        </span>
+                      </span>
                   </span>
                 </div>
               )}
             </Radio>
           ))}
         </RadioGroup>
+
+        {selectedOption && !targetSelection ? (
+          <Button
+            className="mt-3 w-full gap-2"
+            tone="secondary"
+            onPress={finishActiveCard}
+          >
+            <Check className="size-4" aria-hidden="true" />
+            {safeIndex >= cards.length - 1
+              ? "선택 확정하고 계획 검토"
+              : "선택 확정하고 다음 안건"}
+          </Button>
+        ) : null}
 
         {targetSelection ? (
           <section
@@ -456,9 +489,9 @@ export function DecisionCardDeck({
                     type="button"
                     disabled={atLimit}
                     aria-pressed={selected}
-                    className={`min-h-11 rounded-xl border-2 px-3 py-2 text-left transition-[scale,background-color,border-color,box-shadow,opacity] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
-                      selected ? "text-cyan-50" : "text-text-secondary"
-                    } ${radioTileClasses(selected, selectedTargets.length > 0)}`}
+                    className={`min-h-11 rounded-xl border-2 px-3 py-2 text-left transition-[scale,background-color,border-color,box-shadow,opacity] duration-150 ease-out active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-secondary disabled:cursor-not-allowed disabled:opacity-35 ${
+                      selected ? "text-emerald-50" : "text-text-secondary"
+                    } ${checkTileClasses(selected)}`}
                     onClick={() => toggleTarget(trainee.id)}
                   >
                     <span className="flex items-center gap-2">

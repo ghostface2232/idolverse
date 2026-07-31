@@ -32,25 +32,52 @@ export function ActionDock({
   const isLocked = flowState === "resolving" || flowState === "event_focus";
   // 안건이 하나도 없는 조용한 주는 탭 이동 없이 이 자리에서 바로 진행한다.
   const isQuietWeek = totalDecisions === 0 && canResolveWeek;
+  const completedDecisions = Math.max(0, totalDecisions - remainingDecisions);
 
   return (
     <section
       aria-label="이번 주 진행"
-      className="bg-surface-panel/96 px-4 py-2.5 shadow-[0_-12px_32px_rgba(2,6,23,0.32)] backdrop-blur-xl"
+      className="bg-surface-panel/96 px-4 py-3 shadow-[var(--shadow-dock)] backdrop-blur-xl"
     >
-      <div className="mb-1.5 flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-xs font-semibold text-text-secondary">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="min-w-0 text-[13px] font-semibold text-text-primary">
           {totalDecisions === 0
             ? "이번 주는 바로 진행할 수 있어요"
             : remainingDecisions > 0
-              ? `결정 ${remainingDecisions}개 남음`
+              ? `이번 주 안건 ${completedDecisions}/${totalDecisions}`
               : "모든 결정을 마쳤어요"}
         </p>
+        {totalDecisions > 0 ? (
+          <span className="shrink-0 text-xs font-medium tabular-nums text-text-muted">
+            {remainingDecisions > 0 ? `${remainingDecisions}개 남음` : "검토 가능"}
+          </span>
+        ) : null}
       </div>
+      {totalDecisions > 0 ? (
+        <div
+          className="mb-2.5 flex gap-1"
+          role="progressbar"
+          aria-label="이번 주 안건 완료"
+          aria-valuemin={0}
+          aria-valuemax={totalDecisions}
+          aria-valuenow={completedDecisions}
+        >
+          {Array.from({ length: totalDecisions }, (_, index) => (
+            <span
+              key={index}
+              className={[
+                "h-1 flex-1 rounded-full",
+                index < completedDecisions ? "bg-action-primary" : "bg-white/10",
+              ].join(" ")}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      ) : null}
       {riskLabel ? (
         <p
           className={[
-            "mb-2 flex min-w-0 items-center gap-1.5 truncate text-[11px] font-medium",
+            "mb-2.5 flex min-w-0 items-start gap-1.5 text-xs font-medium leading-4",
             riskSeverity === "critical"
               ? "text-rose-300"
               : riskSeverity === "warning"
@@ -58,11 +85,13 @@ export function ActionDock({
                 : "text-sky-200",
           ].join(" ")}
         >
-          <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
-          <span className="truncate">{riskLabel}</span>
+          <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+          <span className="line-clamp-2">{riskLabel}</span>
         </p>
       ) : hintLabel ? (
-        <p className="mb-2 truncate text-[11px] text-cyan-200/85">{hintLabel}</p>
+        <p className="mb-2.5 line-clamp-2 text-xs leading-4 text-cyan-200">
+          {hintLabel}
+        </p>
       ) : null}
       {isQuietWeek ? (
         <div className="flex gap-2">
@@ -95,7 +124,9 @@ export function ActionDock({
           ) : (
             <ChevronRight className="size-4" aria-hidden="true" />
           )}
-          {isReviewReady ? "계획 검토" : "결정 계속하기"}
+          {isReviewReady
+            ? "계획 검토하고 진행"
+            : `안건 ${remainingDecisions}개 결정하기`}
         </Button>
       )}
     </section>

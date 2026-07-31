@@ -27,7 +27,15 @@ export function GameShell({
   return (
     <main className="mx-auto flex h-dvh w-full max-w-[1200px] flex-col overflow-hidden bg-surface-shell pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-text-primary shadow-[0_0_80px_rgba(2,6,23,0.72)] lg:h-[min(900px,100dvh)] lg:border-x lg:border-white/8">
       {topStatus}
-      {overviewBar}
+      <div
+        className={
+          activeSection === "company" || activeSection === "week"
+            ? "contents"
+            : "hidden lg:contents"
+        }
+      >
+        {overviewBar}
+      </div>
       <BottomNav
         selectedKey={activeSection}
         onSelectionChange={onSectionChange}

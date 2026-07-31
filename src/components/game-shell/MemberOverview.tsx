@@ -1,7 +1,6 @@
 import { Activity, ChevronRight, HeartPulse, ShieldAlert, Star } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
-import { TEMPERAMENT_PROFILES } from "@/data/balance";
 import { POSITION_LABELS } from "@/data/founding";
 import { traitLabels } from "@/data/memberTraits";
 import { useTraineeStore } from "@/stores/traineeStore";
@@ -77,7 +76,7 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                   <MemberPortrait traineeId={trainee.id} size="lg" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="flex items-center gap-1.5 truncate font-semibold text-text-primary">
+                  <h2 className="flex items-center gap-1.5 truncate text-[15px] font-semibold text-text-primary">
                     {trainee.name}
                     {maxPopularity > 0 && (trainee.popularity ?? 0) === maxPopularity ? (
                       <span
@@ -104,9 +103,6 @@ export function MemberOverview({ onSelectTrainee }: MemberOverviewProps) {
                           {label}
                         </span>
                       ))}
-                    <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5">
-                      {TEMPERAMENT_PROFILES[trainee.temperament ?? "steady"].label}
-                    </span>
                   </div>
                 </div>
                 <ChevronRight

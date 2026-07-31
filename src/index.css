@@ -20,7 +20,7 @@
   --color-surface-raised: #202c42;
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
-  --color-text-muted: #7f8da3;
+  --color-text-muted: #94a3b8;
   --color-action-primary: #ec4899;
   --color-action-secondary: #06b6d4;
   --color-state-success: #34d399;
@@ -58,6 +58,14 @@
   --shadow-raised:
     0 0 0 1px rgba(255, 255, 255, 0.09),
     0 18px 48px rgba(2, 6, 23, 0.34);
+  --shadow-chrome:
+    0 1px 0 rgba(255, 255, 255, 0.07),
+    0 12px 32px rgba(2, 6, 23, 0.24);
+  --shadow-dock:
+    0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 -18px 42px rgba(2, 6, 23, 0.42);
+  --radius-card: 1.5rem;
+  --radius-panel: 1rem;
 }
 
 * {
@@ -78,6 +86,11 @@ button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]) {
   cursor: pointer;
   touch-action: manipulation;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-action-secondary);
+  outline-offset: 2px;
 }
 
 html,
@@ -324,7 +337,7 @@ select {
 
 /* 모바일 바텀시트 등장. 데스크톱(sm+)에서는 센터 팝으로 바뀐다. */
 .animate-sheet-in {
-  animation: sheet-in 340ms var(--ease-drawer) both;
+  animation: sheet-in 280ms var(--ease-drawer) both;
 }
 
 @media (min-width: 640px) {
@@ -480,7 +493,7 @@ select {
   from {
     opacity: 0;
     transform: translateY(14px) scale(0.96);
-    filter: blur(6px);
+    filter: blur(3px);
   }
 
   to {

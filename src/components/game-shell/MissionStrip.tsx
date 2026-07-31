@@ -51,7 +51,7 @@ export function MissionStrip({
   return (
     <nav
       aria-label="운영 목표 브리핑"
-      className="relative z-20 shrink-0 bg-surface-panel/88 shadow-[0_1px_0_rgba(255,255,255,0.07),0_10px_24px_rgba(2,6,23,0.2)] backdrop-blur-xl"
+      className="relative z-20 shrink-0 bg-surface-panel/88 shadow-[var(--shadow-chrome)] backdrop-blur-xl"
     >
       {/* 오른쪽 엣지 마스크: 카드가 잘려 보이며 "더 있음"을 암시한다. */}
       <div className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-4 py-1.5 scroll-px-4 [mask-image:linear-gradient(90deg,black_calc(100%-24px),transparent)] [scrollbar-width:none] sm:gap-2 sm:py-2 [&::-webkit-scrollbar]:hidden">
@@ -59,7 +59,7 @@ export function MissionStrip({
         <MissionChip
           icon={Target}
           accent="text-cyan-300"
-          label={projectGoal ? "현재 프로젝트" : "다음 목표"}
+          label={projectGoal?.title ?? "다음 목표"}
           value={
             projectGoal ? (projectGoal.deadlineLabel ?? "진행 중") : "준비 중"
           }
@@ -171,7 +171,7 @@ function MissionChip({
       onPress={onPress}
       className={({ isFocusVisible, isHovered, isPressed }) =>
         [
-          "flex min-h-10 shrink-0 snap-start touch-manipulation items-center gap-1.5 rounded-xl bg-white/[0.045] px-2.5 shadow-[var(--shadow-surface)] outline-none sm:min-h-11 sm:gap-2 sm:px-3",
+          "flex min-h-11 shrink-0 snap-start touch-manipulation items-center gap-1.5 rounded-xl bg-white/[0.045] px-2.5 shadow-[var(--shadow-surface)] outline-none sm:gap-2 sm:px-3",
           "transition-[scale,background-color,box-shadow] duration-[var(--motion-press)] ease-out",
           isHovered ? "bg-white/[0.075] shadow-[var(--shadow-surface-hover)]" : "",
           isPressed ? "scale-[0.96] bg-white/[0.09]" : "scale-100",
@@ -211,7 +211,7 @@ function MissionChip({
       <span
         className={[
           "whitespace-nowrap text-[11px] font-medium text-text-secondary",
-          featured ? "" : "hidden sm:inline",
+          featured ? "" : "",
         ].join(" ")}
       >
         {label}

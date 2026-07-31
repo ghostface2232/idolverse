@@ -20,6 +20,7 @@ import { ActionDock } from "@/components/game-shell/ActionDock";
 import type { GameSection } from "@/components/game-shell/BottomNav";
 import { GameShell } from "@/components/game-shell/GameShell";
 import { GameWorldHost } from "@/components/game-shell/GameWorldHost";
+import { HomeBriefing } from "@/components/game-shell/HomeBriefing";
 import { MarketOverview } from "@/components/game-shell/MarketOverview";
 import { MemberOverview } from "@/components/game-shell/MemberOverview";
 import { MissionStrip } from "@/components/game-shell/MissionStrip";
@@ -628,6 +629,16 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const memberDetailTrainee =
     trainees.find((trainee) => trainee.id === memberDetailId) ?? null;
+  const teamAverageCondition =
+    trainees.length > 0
+      ? Math.round(
+          trainees.reduce((sum, trainee) => sum + trainee.condition, 0) /
+            trainees.length,
+        )
+      : 0;
+  const memberAttentionCount = trainees.filter(
+    (trainee) => trainee.injuryWeeks > 0 || trainee.condition < 50,
+  ).length;
   // 미션 스트립: 차트 최고 순위(진입한 차트 중 최소값)와 가장 가까운 라이벌 컴백.
   const bestChartRank = useMemo(() => {
     const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
@@ -714,6 +725,17 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         world={
           <div className="relative h-full min-h-0">
             <GameWorldHost active={activeSection === "company"} />
+            <HomeBriefing
+              groupName={groupName}
+              phase={currentPhase}
+              projectTitle={goalLanes.project?.title}
+              projectDeadline={goalLanes.project?.deadlineLabel}
+              averageCondition={teamAverageCondition}
+              attentionCount={memberAttentionCount}
+              totalDecisions={weeklyDecisions.length}
+              remainingDecisions={remainingDecisions}
+              riskSeverity={primaryRisk?.severity}
+            />
             {weekTickerActive && weeklyFlow.state === "report_ready" && weeklyFlow.report ? (
               <WeekTickerOverlay
                 report={weeklyFlow.report}

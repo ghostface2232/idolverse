@@ -55,12 +55,8 @@ export function Modal({
           ].join(" ")
         }
       >
-        <span
-          className="pointer-events-none absolute left-1/2 top-2 z-10 h-1 w-9 -translate-x-1/2 rounded-full bg-white/20 sm:hidden"
-          aria-hidden="true"
-        />
         <Dialog className="flex min-h-0 flex-col outline-none">
-          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 bg-surface-raised/76 px-5 pb-2.5 pt-4 shadow-[0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl sm:min-h-16 sm:py-3">
+          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 bg-surface-raised/76 px-5 py-3 shadow-[var(--shadow-chrome)] backdrop-blur-xl sm:min-h-16">
             <Heading slot="title" className="text-lg font-semibold text-text-primary">
               {title}
             </Heading>

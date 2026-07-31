@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
 import {
-  BriefcaseBusiness,
-  Building2,
   CalendarRange,
+  House,
+  SlidersHorizontal,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
 const NAV_ITEMS = [
-  { key: "company", label: "회사", icon: Building2, primary: false },
+  { key: "company", label: "홈", icon: House, primary: false },
   { key: "members", label: "멤버", icon: Users, primary: false },
   { key: "week", label: "이번 주", icon: CalendarRange, primary: true },
   { key: "market", label: "시장", icon: TrendingUp, primary: false },
-  { key: "more", label: "운영", icon: BriefcaseBusiness, primary: false },
+  { key: "more", label: "경영", icon: SlidersHorizontal, primary: false },
 ] as const;
 
 export type GameSection = (typeof NAV_ITEMS)[number]["key"];
@@ -40,7 +40,7 @@ export function BottomNav({
     >
       <TabList
         items={NAV_ITEMS}
-        className="order-2 grid grid-cols-5 bg-surface-panel/96 shadow-[0_-1px_0_rgba(255,255,255,0.08),0_-16px_36px_rgba(2,6,23,0.34)] backdrop-blur-xl lg:order-1 lg:flex lg:flex-col lg:border-r lg:border-white/8 lg:shadow-none"
+        className="order-2 grid grid-cols-5 bg-surface-panel/96 shadow-[var(--shadow-dock)] backdrop-blur-xl lg:order-1 lg:flex lg:flex-col lg:border-r lg:border-white/8 lg:shadow-none"
       >
         {(item) => {
           const Icon = item.icon;
@@ -50,7 +50,7 @@ export function BottomNav({
               id={item.key}
               className={({ isFocusVisible, isSelected, isPressed }) =>
                 [
-                  "group relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium outline-none",
+                  "group relative flex min-h-[4.25rem] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium outline-none",
                   "transition-[scale,color] duration-[var(--motion-state)] ease-out",
                   isSelected
                     ? item.primary
@@ -59,6 +59,7 @@ export function BottomNav({
                     : "text-text-muted hover:text-text-secondary",
                   isPressed ? "scale-[0.96]" : "scale-100",
                   isFocusVisible ? "ring-2 ring-inset ring-action-secondary" : "",
+                  isSelected ? "font-semibold" : "",
                   "lg:min-h-20 lg:w-full",
                 ].join(" ")
               }
@@ -69,7 +70,7 @@ export function BottomNav({
                     className={[
                       "relative grid place-items-center rounded-full",
                       "transition-[background-color,box-shadow] duration-[var(--motion-state)] ease-out",
-                      item.primary ? "h-9 w-14" : "h-7 w-12",
+                      item.primary ? "h-9 w-14" : "h-8 w-12",
                       isSelected && item.primary
                         ? "bg-action-primary text-white shadow-[0_6px_20px_rgba(236,72,153,0.32)]"
                         : isSelected
@@ -92,6 +93,15 @@ export function BottomNav({
                     ) : null}
                   </span>
                   <span className="truncate">{item.label}</span>
+                  {isSelected ? (
+                    <span
+                      className={[
+                        "absolute bottom-1 h-0.5 w-4 rounded-full",
+                        item.primary ? "bg-action-primary" : "bg-action-secondary",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+                  ) : null}
                 </>
               )}
             </Tab>

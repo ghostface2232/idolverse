@@ -13,7 +13,7 @@ export function radioTileClasses(
   }
   return [
     "border-white/12 bg-surface-shell/60 hover:border-brand-cyan/40",
-    groupHasSelection ? "opacity-60 hover:opacity-100" : "",
+    groupHasSelection ? "opacity-85 hover:opacity-100" : "",
   ]
     .filter(Boolean)
     .join(" ");

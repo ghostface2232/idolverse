@@ -26,7 +26,9 @@ export function MoreOverview({
     <section className="h-full overflow-y-auto p-4 sm:p-5">
       <div className="mx-auto max-w-xl">
       <SectionHeader
-        title="운영"
+        eyebrow="회사 경영"
+        title="경영"
+        description="스태프와 시설, 회사의 지출 구조를 관리합니다."
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <article className="rounded-3xl bg-surface-panel p-4 shadow-[var(--shadow-surface)]">
@@ -61,7 +63,7 @@ export function MoreOverview({
           </dl>
         </article>
       </div>
-      <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">운영 업무</h2>
+      <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">이번 주 경영 업무</h2>
       <div className="grid grid-cols-2 gap-3">
         <Button className="w-full gap-2" tone="secondary" onPress={onOpenStaff}>
           <Users className="size-4" aria-hidden="true" /> 인사 관리
