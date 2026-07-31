@@ -1,4 +1,5 @@
 import {
+  AWARD_DIGITAL_INDEX,
   COMPETITOR_SCALING_FACTOR,
   EVENT_COMPETITOR_SPAWN_CHANCE,
   GAME_BALANCE,
@@ -9,6 +10,11 @@ import {
   EVENT_COMPETITOR_ARCHETYPES,
 } from "@/data/competitors";
 import { createSeededRandom, pickUniqueItems } from "@/lib/seededRandom";
+import { awardChartScore } from "@/systems/awardsSystem";
+import {
+  competitorChartPower,
+  estimateChartRankFromPower,
+} from "@/systems/evaluationSystem";
 import type {
   BackgroundGroup,
   CompetitorGroup,
@@ -132,6 +138,19 @@ export function simulateCompetitorWeek(
     // 4주 뒤 소멸해 시상 주의 지표를 붕괴시키기 때문에 별도로 든다.
     if ((cumulativeWeek - 1) % GAME_BALANCE.weeksPerYear === 0) {
       rival.seasonBestQuality = rival.currentAlbum?.quality ?? 0;
+      rival.seasonBestChartRank = rival.currentAlbum
+        ? estimateChartRankFromPower(
+            competitorChartPower(rival.currentAlbum.quality, rival),
+          )
+        : undefined;
+      // 진행 중인 컴백의 차트 런은 남은 절반가량이 새해로 이월된 것으로
+      // 본다 — 플레이어의 늦은 발매가 다음 해 누적으로 넘어가는 것과 대칭.
+      rival.seasonChartPoints = rival.seasonBestChartRank
+        ? Math.round(
+            awardChartScore(rival.seasonBestChartRank) *
+              (AWARD_DIGITAL_INDEX.competitorRunWeeks / 2),
+          )
+        : 0;
     }
 
     const growth = 0.3 + random() * 0.4;
@@ -164,6 +183,22 @@ export function simulateCompetitorWeek(
           rival.seasonBestQuality ?? 0,
           quality,
         );
+        // 시상식 디지털 지표용 연중 차트 기록 — 플레이어의 주간 차트와
+        // 같은 축에서 경쟁하도록 같은 파워 공식으로 순위를 추정하고,
+        // 컴백 1회의 차트 런을 순위 점수 × 표준 런 주수로 누적한다.
+        const estimatedRank = estimateChartRankFromPower(
+          competitorChartPower(quality, rival),
+        );
+        rival.seasonBestChartRank = Math.min(
+          rival.seasonBestChartRank ?? 100,
+          estimatedRank,
+        );
+        rival.seasonChartPoints =
+          (rival.seasonChartPoints ?? 0) +
+          Math.round(
+            awardChartScore(estimatedRank) *
+              AWARD_DIGITAL_INDEX.competitorRunWeeks,
+          );
         comebacks.push(rival.name);
       }
     }

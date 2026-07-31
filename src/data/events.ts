@@ -543,6 +543,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "malicious-rumor",
     type: "negative",
+    isScandal: true,
     title: "악성 루머 확산",
     description: "근거 없는 루머가 커뮤니티와 숏폼 플랫폼을 통해 번지고 있습니다.",
     probability: 0.04,
@@ -572,6 +573,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "dating-scandal",
     type: "negative",
+    isScandal: true,
     title: "연애 스캔들 포착",
     description: "휴식 중 사적인 장면이 포착되어 팬덤이 흔들리고 있습니다.",
     probability: 0.03,
@@ -602,6 +604,85 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         description: "관계를 인정하고 사생활 존중을 호소합니다.",
         tradeoff: "팬층은 크게 흔들리지만 일부 대중 호감은 얻습니다.",
         effects: { fandomDisappointment: 25, industry: -5, public: 5 },
+      },
+    ],
+  },
+  {
+    // 멤버 혹사가 회사 밖으로 새어 나가는 순간 — 팬과 업계가 회사를
+    // 겨냥한다. minStress는 팀 최고 스트레스 기준이라, 한 명이라도
+    // 만성 소진 상태로 방치하면 논란의 재료가 된다.
+    id: "overwork-controversy",
+    type: "negative",
+    isScandal: true,
+    title: "멤버 혹사 논란",
+    description:
+      "지친 멤버들의 모습이 팬 커뮤니티에서 화제가 되며 회사의 일정 운영을 향한 비판이 커지고 있습니다.",
+    probability: 0.06,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+      minStress: 92,
+      minPublic: 30,
+    },
+    effects: {
+      public: -3,
+    },
+    choices: [
+      {
+        label: "전면 휴식을 선언한다",
+        description: "예정된 일정을 정리하고 멤버들의 회복을 최우선에 둡니다.",
+        tradeoff: "활동 공백이 생기지만 멤버와 팬의 신뢰를 지킵니다.",
+        effects: {
+          stress: -12,
+          condition: 8,
+          satisfaction: 6,
+          public: -3,
+          fandomDisappointment: -8,
+        },
+      },
+      {
+        label: "일정을 줄이고 인력을 보강한다",
+        description: "무리한 구간을 조정하고 현장 지원을 늘립니다.",
+        tradeoff: "비용이 들지만 활동을 이어가며 논란을 진정시킵니다.",
+        effects: { money: -40000000, stress: -6, fandomDisappointment: -5 },
+      },
+      {
+        label: "문제없다고 반박한다",
+        description: "멤버들의 컨디션은 관리되고 있다고 해명합니다.",
+        tradeoff: "일정은 지키지만 논란이 이어지고 멤버들의 마음이 상합니다.",
+        effects: { fandomDisappointment: 6, industry: -3, satisfaction: -4 },
+      },
+    ],
+  },
+  {
+    // 혹사는 멤버만 갈아 넣는 게 아니다 — 격무의 현장을 버티던 스태프가
+    // 먼저 떠나려 한다. 내부 악재라 스캔들 판정은 아니지만 제작이 흔들린다.
+    id: "staff-burnout-exodus",
+    type: "negative",
+    title: "격무에 지친 스태프 이탈 조짐",
+    description:
+      "쉼 없는 일정을 감당해 온 핵심 스태프가 번아웃을 호소하며 퇴사를 고민하고 있습니다.",
+    probability: 0.05,
+    conditions: {
+      phase: ["debut", "growth", "peak"],
+      minStress: 92,
+    },
+    effects: {
+      industry: -2,
+      albumSong: -3,
+      albumMarketing: -3,
+    },
+    choices: [
+      {
+        label: "위로금과 충원을 약속한다",
+        description: "즉시 보상하고 현장 인력을 보강합니다.",
+        tradeoff: "비용이 들지만 팀의 기반을 지킵니다.",
+        effects: { money: -35000000, industry: 1 },
+      },
+      {
+        label: "지금 인원으로 감내한다",
+        description: "빈자리를 남은 인력이 메웁니다.",
+        tradeoff: "비용은 없지만 제작이 흔들리고 피로가 더 쌓입니다.",
+        effects: { albumSong: -4, industry: -2, stress: 3 },
       },
     ],
   },
@@ -668,6 +749,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
   {
     id: "sns-controversy",
     type: "negative",
+    isScandal: true,
     title: "SNS 과거 발언 발굴",
     description: "멤버의 과거 SNS 게시물이 발굴되어 논란이 일고 있습니다.",
     probability: 0.03,

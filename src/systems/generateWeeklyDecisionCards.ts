@@ -1,5 +1,6 @@
 import {
   CHEMISTRY_CONFLICT_THRESHOLD,
+  CRISIS_CARD_COOLDOWN_WEEKS,
   DECISION_TRIGGER_THRESHOLDS,
   EMERGENCY_FINANCING,
   GAME_BALANCE,
@@ -69,6 +70,8 @@ export interface DecisionCardContext {
   activeCommercialContractDefinitionIds?: string[];
   activeCommercialContracts?: ActiveCommercialContract[];
   lastOpportunityWeek: number | null;
+  /** 위기 카드 루트별 마지막 제시 누적 주차. CRISIS_CARD_COOLDOWN_WEEKS 참조. */
+  crisisCardCooldowns?: Record<string, number>;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks: string[];
   projectDeadlineWeeks: number | null;
@@ -94,6 +97,7 @@ export interface DecisionContextState {
   activeCommercialContractDefinitionIds?: readonly string[];
   activeCommercialContracts?: readonly ActiveCommercialContract[];
   lastOpportunityWeek?: number | null;
+  crisisCardCooldowns?: Record<string, number>;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks?: readonly string[];
   projectDeadlineWeeks?: number | null;
@@ -164,6 +168,7 @@ export function buildDecisionCardContext(
     ],
     activeCommercialContracts: [...(state.activeCommercialContracts ?? [])],
     lastOpportunityWeek: state.lastOpportunityWeek ?? null,
+    crisisCardCooldowns: { ...(state.crisisCardCooldowns ?? {}) },
     emergencyFinancing: [...(state.emergencyFinancing ?? [])],
     competitorComebacks: [...(state.competitorComebacks ?? [])],
     projectDeadlineWeeks: state.projectDeadlineWeeks ?? null,
@@ -313,7 +318,28 @@ export function generateWeeklyDecisionCards(
     candidates.push({ priority: 72 + overworked.stress / 10, card: buildOverworkCard(overworked) });
   }
 
+  // 쿨다운: 최근에 이미 판단을 받은 위기 루트는 당분간 매니저가 후속을
+  // 맡는다. critical로 악화된 위기는 절반 주기로 빠르게 재소환된다 —
+  // 완전 우회로 두면 임계 위에 상주하는 지표(스트레스 90+)가 매주 카드를
+  // 다시 올려 쿨다운이 무의미해진다.
+  const cooldowns = ctx.crisisCardCooldowns ?? {};
+  const isCoolingDown = (card: WeeklyDecision) => {
+    const root = card.id.split(":")[0];
+    const baseCooldown = CRISIS_CARD_COOLDOWN_WEEKS[root];
+    if (!baseCooldown) return false;
+    const cooldownWeeks =
+      card.trigger?.severity === "critical"
+        ? Math.ceil(baseCooldown / 2)
+        : baseCooldown;
+    const lastShownWeek = cooldowns[root];
+    return (
+      lastShownWeek !== undefined &&
+      cumulativeWeek - lastShownWeek < cooldownWeeks
+    );
+  };
+
   const crisisCards = candidates
+    .filter(({ card }) => !isCoolingDown(card))
     .sort((a, b) => b.priority - a.priority || a.card.id.localeCompare(b.card.id))
     .slice(0, GAME_BALANCE.weeklyDecisionMaxCount)
     .map(({ card }) => card);

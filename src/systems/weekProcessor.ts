@@ -64,6 +64,7 @@ import {
 } from "@/systems/economySystem";
 import {
   evaluateAwards,
+  awardChartScore,
   buildContenderFromPlayer,
   buildContenderFromCompetitor,
   getPlayerAwardWins,
@@ -79,6 +80,9 @@ import {
   GAME_BALANCE,
   ALBUM_QUALITY_DECLINE_GAP,
   ALBUM_QUALITY_REPUTATION_THRESHOLD,
+  AWARD_DIGITAL_INDEX,
+  CRISIS_CARD_COOLDOWN_WEEKS,
+  MEMBER_SETTLEMENT,
   CAMPAIGN_FAILURE,
   COMEBACK_REQUIREMENTS,
   EMERGENCY_FINANCING,
@@ -316,6 +320,15 @@ export function processWeek(
       playerYearReleases.length > 0
         ? Math.max(...playerYearReleases.map((released) => released.quality))
         : 0;
+    // 디지털 지표의 차트 축 = 올해 매주 쌓아 온 차트 점수의 누적(실제
+    // 연말 시상의 연간 집계 방식). 이 항이 없던 시절에는 연중 차트 1위
+    // 기록이 시상에 아무 영향이 없었고, 발매 타이밍 전략도 무의미했다.
+    const yearChartScore = Math.min(
+      100,
+      ((snapshot.game.yearChartPoints ?? 0) /
+        AWARD_DIGITAL_INDEX.fullScorePoints) *
+        100,
+    );
     const contenders = [
       ...(playerDebutYear !== null && playerYearReleases.length > 0
         ? [
@@ -324,7 +337,9 @@ export function processWeek(
               snapshot.game.groupName,
               {
                 digitalIndex:
-                  fandomAxis.public * 0.6 + latestQuality * 0.4,
+                  fandomAxis.public * AWARD_DIGITAL_INDEX.publicWeight +
+                  latestQuality * AWARD_DIGITAL_INDEX.qualityWeight +
+                  yearChartScore * AWARD_DIGITAL_INDEX.chartWeight,
                 albumSalesIndex:
                   fandomAxis.fandom * 0.6 + fandomAxis.industry * 0.4,
                 fanVotes:
@@ -455,18 +470,25 @@ export function processWeek(
       );
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
-      const track = d.optionId.slice(
-        "strategic-".length,
-      ) as keyof typeof strategicExpansion;
-      if (
-        track in strategicExpansion &&
-        strategicExpansion[track] < STRATEGIC_EXPANSION.maxLevelPerTrack
-      ) {
-        strategicExpansion = {
-          ...strategicExpansion,
-          [track]: strategicExpansion[track] + 1,
-        };
+      if (d.optionId === "strategic-defer") {
+        // 보류도 검토를 마친 것이다. 갱신하지 않으면 같은 카드가 다음
+        // 주기까지 기다리지 않고 매주 다시 올라와, 보류 페널티(industry
+        // -1)가 사실상 주간 세금이 된다(초보 프로브에서 5년간 156회).
         lastStrategicExpansionWeek = cumulativeWeek;
+      } else {
+        const track = d.optionId.slice(
+          "strategic-".length,
+        ) as keyof typeof strategicExpansion;
+        if (
+          track in strategicExpansion &&
+          strategicExpansion[track] < STRATEGIC_EXPANSION.maxLevelPerTrack
+        ) {
+          strategicExpansion = {
+            ...strategicExpansion,
+            [track]: strategicExpansion[track] + 1,
+          };
+          lastStrategicExpansionWeek = cumulativeWeek;
+        }
       }
     }
     if (
@@ -652,6 +674,25 @@ export function processWeek(
 
   // ── 3. Training
   const albumConcept = album?.concept.mood ?? null;
+  // 광고·OST 일정을 소화하는 멤버는 그 주 훈련을 온전히 못 한다 —
+  // 예능 출연이 훈련을 건너뛰는 것과 같은 기회비용이다.
+  const contractSlotsByTrainee: Record<string, number> = {};
+  for (const contract of activeCommercialContracts) {
+    if (
+      contract.signedAtWeek > cumulativeWeek ||
+      contract.endsAtWeek < cumulativeWeek
+    ) {
+      continue;
+    }
+    const targets =
+      contract.targetTraineeIds.length > 0
+        ? contract.targetTraineeIds
+        : trainees.map((t) => t.id);
+    for (const traineeId of targets) {
+      contractSlotsByTrainee[traineeId] =
+        (contractSlotsByTrainee[traineeId] ?? 0) + contract.scheduleSlots;
+    }
+  }
   const beforeTraining = captureWeekDeltaState(getDeltaState());
   const trainingResult = processTrainingWeek(
     trainees,
@@ -660,6 +701,7 @@ export function processWeek(
     albumConcept,
     seed,
     { dormLevel: upgrades.dormLevel, studioLevel: upgrades.studioLevel },
+    contractSlotsByTrainee,
   );
   trainees = trainingResult.trainees;
   recordTransition(
@@ -1238,6 +1280,17 @@ export function processWeek(
     };
   }
 
+  // ── 7.9 연간 차트 누적(연말 시상 디지털 지표의 차트 축).
+  // 이번 주 최고 순위를 점수로 환산해 쌓는다 — 상위권 런이 길수록,
+  // 그리고 그 런이 올해 안에 있을수록 시상에 실린다. 연초(1주차) 리셋.
+  const weeklyBestChartRank = (() => {
+    const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
+    return ranks.length > 0 ? Math.min(...ranks) : null;
+  })();
+  const yearChartPoints =
+    (snapshot.game.currentWeek === 1 ? 0 : (snapshot.game.yearChartPoints ?? 0)) +
+    awardChartScore(weeklyBestChartRank);
+
   // ── 8. Random events
   const eventCtx: EventContext = {
     currentWeek: snapshot.game.currentWeek,
@@ -1386,6 +1439,30 @@ export function processWeek(
   if (decisionExpenseThisWeek > 0) {
     report.finance.expenses.decisionCosts = decisionExpenseThisWeek;
   }
+
+  // ── 6.5 멤버 정산: 활동 수익의 일정 비율은 멤버 몫이다. 계약 등급이
+  // 높을수록 배분율이 커진다 — 재계약 인상이 장기 비용으로 돌아오는
+  // 경로이자, 수입이 커지면 회사 지출도 함께 커지는 구조. 긴급 조달과
+  // 투자사 지원금은 수익이 아니므로 정산하지 않는다.
+  const settlementBase = Object.entries(report.finance.income).reduce(
+    (sum, [key, value]) =>
+      key === "emergencyFinancing" || key === "decisionSupport"
+        ? sum
+        : sum + value,
+    0,
+  );
+  const settlementShare = trainees.reduce(
+    (sum, trainee) =>
+      sum +
+      MEMBER_SETTLEMENT.baseSharePerMember +
+      (trainee.contract?.tier ?? 1) * MEMBER_SETTLEMENT.sharePerContractTier,
+    0,
+  );
+  const memberSettlement = Math.round(settlementBase * settlementShare);
+  if (memberSettlement > 0) {
+    money -= memberSettlement;
+    report.finance.expenses.memberSettlement = memberSettlement;
+  }
   const maturedFinancing = emergencyFinancing.filter(
     (record) => record.repaidAtWeek === null && record.dueWeek <= cumulativeWeek,
   );
@@ -1488,22 +1565,34 @@ export function processWeek(
     albumReleaseThisWeek: albumReleasedThisWeek,
     concertThisWeek,
     fanServiceThisWeek,
+    // negative 이벤트 전체가 아니라 대외 평판 스캔들(isScandal)만 센다 —
+    // 내부 악재(장비 고장, 스태프 이직 등)는 각 이벤트의 개별 효과로만
+    // 대가를 치르고, 업계 신뢰 -5·팬 실망 +15의 스캔들 판정은 받지 않는다.
     scandalThisWeek:
       vacationScandal !== null ||
-      rolledEvents.some((e) => e.template.type === "negative"),
+      rolledEvents.some((e) => e.template.isScandal === true),
     excessiveCommercial: excessiveCommercialPenalty > 0,
     // global은 0~100 클램프 지표 — 문턱도 같은 스케일이어야 한다.
+    // 순환에는 돌릴 만한 최신작이 필요하다(minAlbumQuality 게이트).
     spotifyStreaming:
-      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.spotifyStreaming,
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.spotifyStreaming &&
+      (latestReleasedAlbum?.quality ?? 0) >=
+        GLOBAL_ENGAGEMENT_THRESHOLDS.minAlbumQuality,
     youtubeActivity:
-      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.youtubeActivity,
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.youtubeActivity &&
+      (latestReleasedAlbum?.quality ?? 0) >=
+        GLOBAL_ENGAGEMENT_THRESHOLDS.minAlbumQuality,
     foreignMembers: trainees.filter((t) => t.nationality !== "korean"),
     latestAlbumQuality: latestReleasedAlbum?.quality ?? 0,
     musicQualityHigh:
       albumReleasedThisWeek &&
       (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
-    // 무대 탁월 판정 = 이번 주 음악방송 1위(7.6에서 확정된 값).
-    stageExcellent: musicShowWonThisWeek,
+    // 무대 탁월 판정 = 이번 주 음악방송 1위 + 위신을 만들 완성도. 팬덤
+    // 화력으로 딴 저품질 1위는 화제(public·fandom 보상)는 되어도 업계
+    // 신뢰(industry +4)까지 쌓아 주지는 않는다.
+    stageExcellent:
+      musicShowWonThisWeek &&
+      (latestReleasedAlbum?.quality ?? 0) >= ALBUM_QUALITY_REPUTATION_THRESHOLD,
     awardWin: playerWonAward,
     // 품질 하락은 발매 주에만 1회 판정: 직전 발매작보다 일정 폭 이상 낮으면
     // 업계 신뢰가 하락한다.
@@ -1869,9 +1958,9 @@ export function processWeek(
     const popularityDemand =
       (trainee.popularity ?? 0) >=
       contract.tier * 15 + MEMBER_CONTRACT.earlyTriggerPopularityMargin;
+    // 만성 소진은 인기와 무관하게 "이 조건으론 계속 못 한다"로 이어진다.
     const overworkDemand =
-      trainee.stress >= MEMBER_CONTRACT.overworkTriggerStress &&
-      (trainee.popularity ?? 0) >= MEMBER_CONTRACT.overworkTriggerPopularity;
+      trainee.stress >= MEMBER_CONTRACT.overworkTriggerStress;
     if (!popularityDemand && !overworkDemand) return trainee;
     report.warnings.push(
       popularityDemand
@@ -1926,6 +2015,7 @@ export function processWeek(
     ),
     activeCommercialContracts,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
+    crisisCardCooldowns: snapshot.game.crisisCardCooldowns,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,
     strategicExpansion,
@@ -1967,6 +2057,15 @@ export function processWeek(
   );
   if (nextDecisions.some((decision) => decision.id === "emergency-investor")) {
     lastInvestorDemandWeek = nextCumulativeWeek;
+  }
+  // 이번 주 제시된 위기 루트의 쿨다운 시계를 갱신한다.
+  const crisisCardCooldowns = { ...(snapshot.game.crisisCardCooldowns ?? {}) };
+  for (const decision of nextDecisions) {
+    if (decision.lane !== "crisis") continue;
+    const root = decision.id.split(":")[0];
+    if (CRISIS_CARD_COOLDOWN_WEEKS[root]) {
+      crisisCardCooldowns[root] = nextCumulativeWeek;
+    }
   }
 
   // ── Assemble new state
@@ -2016,6 +2115,8 @@ export function processWeek(
       lastOpportunityWeek: opportunityOffered
         ? nextCumulativeWeek
         : snapshot.game.lastOpportunityWeek,
+      crisisCardCooldowns,
+      yearChartPoints,
       emergencyFinancing,
       strategicExpansion,
       fiveYearReview,

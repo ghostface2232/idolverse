@@ -66,10 +66,11 @@ describe("M5 사람 — 인기·계약·이탈", () => {
     );
   });
 
-  it("과로하고 인기 있는 멤버는 협상을 앞당긴다", () => {
+  it("만성 소진 멤버는 인기와 무관하게 협상을 앞당긴다", () => {
     const snapshot = makeGameSnapshot({ week: 5 });
-    snapshot.trainee.trainees[0].popularity = 50;
-    snapshot.trainee.trainees[0].stress = 80;
+    // 인기 0의 무명 멤버 — 소진만으로 처우 재논의를 요구할 수 있어야 한다.
+    snapshot.trainee.trainees[0].popularity = 0;
+    snapshot.trainee.trainees[0].stress = MEMBER_CONTRACT.overworkTriggerStress;
     snapshot.trainee.trainees[0].contract = {
       tier: 1,
       nextRenegotiationWeek: 100,
@@ -83,6 +84,21 @@ describe("M5 사람 — 인기·계약·이탈", () => {
     expect(
       result.weekReport.warnings.some((warning) => warning.includes("앞당겨")),
     ).toBe(true);
+  });
+
+  it("일상적 강훈련 수준의 스트레스로는 협상이 앞당겨지지 않는다", () => {
+    const snapshot = makeGameSnapshot({ week: 5 });
+    snapshot.trainee.trainees[0].popularity = 0;
+    snapshot.trainee.trainees[0].stress =
+      MEMBER_CONTRACT.overworkTriggerStress - 10;
+    snapshot.trainee.trainees[0].contract = {
+      tier: 1,
+      nextRenegotiationWeek: 100,
+    };
+
+    const result = processWeek(snapshot, NO_DECISIONS);
+    const member = result.newState.trainee.trainees.find((t) => t.id === "t1");
+    expect(member?.contract.nextRenegotiationWeek).toBe(100);
   });
 
   it("조건 격차는 낮은 처우 멤버의 만족도를 갉아먹고 야심가가 더 민감하다", () => {

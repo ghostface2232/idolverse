@@ -295,6 +295,8 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
         ? null
         : (rest.campaignFailure ?? null),
     lastOpportunityWeek: rest.lastOpportunityWeek ?? null,
+    crisisCardCooldowns: rest.crisisCardCooldowns ?? {},
+    yearChartPoints: rest.yearChartPoints ?? 0,
     emergencyFinancing: rest.emergencyFinancing ?? [],
     strategicExpansion: rest.strategicExpansion ?? {
       production: 0,

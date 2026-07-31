@@ -95,8 +95,10 @@ describe("외부 활동 계약", () => {
       }),
     ]);
 
+    // 휴식일 없는 주로 계약 피로를 확인한다 — 휴식일은 이제 실제 회복
+    // 수단(-5/주)이라 계약 스트레스(+2)를 상쇄해 비교가 성립하지 않는다.
     const inactiveWeek = processWeek(signed.newState, {
-      trainingSchedule: { intensity: "normal", restDay: true },
+      trainingSchedule: { intensity: "normal", restDay: false },
       resolvedDecisions: [],
     });
     expect(inactiveWeek.weekReport.finance.income.commercialContracts).toBe(

@@ -3,6 +3,7 @@ import {
   CHART_POWER_WEIGHTS,
   PUBLIC_DECAY_RATE,
   RELEASE_MARKET_SWING,
+  RELEASE_QUALITY_EXPECTATION,
   SYNTHETIC_CHART_MARKET,
   TITLE_TRACK_TYPE_WEIGHTS,
 } from "@/data/balance";
@@ -144,6 +145,37 @@ function computeChartPower(
   return craftPower + reachPower * publicMult;
 }
 
+/**
+ * 경쟁 그룹의 차트 파워 — evaluateRelease가 차트 풀을 만들 때 쓰는 공식과
+ * 동일해야 한다. 시상식의 연중 차트 기록(seasonBestChartRank) 추정도 이
+ * 공식을 쓰므로, 풀 공식을 바꾸면 여기도 같이 바꿔야 대칭이 유지된다.
+ */
+export function competitorChartPower(
+  quality: number,
+  competitor: Pick<CompetitorGroup, "public" | "fandom" | "industry" | "global">,
+): number {
+  return (
+    quality * CHART_POWER_WEIGHTS.quality +
+    competitor.public * CHART_POWER_WEIGHTS.public +
+    (competitor.fandom / 100) * CHART_POWER_WEIGHTS.fandom +
+    competitor.industry * CHART_POWER_WEIGHTS.industry +
+    (competitor.global / 100) * CHART_POWER_WEIGHTS.global
+  );
+}
+
+/**
+ * 합성 시장 곡선의 역함수로 차트 순위를 추정한다. 실제 발매 평가처럼
+ * 노이즈·동시 컴백을 굴리지 않는 기대값 추정이라, 경쟁자의 연중 차트
+ * 기록처럼 "그 주에 실제 차트 풀이 만들어지지 않는" 시점의 지표에 쓴다.
+ */
+export function estimateChartRankFromPower(power: number): number {
+  const { entryCount, minPower, powerRange, curve } = SYNTHETIC_CHART_MARKET;
+  if (power >= minPower + powerRange) return 1;
+  if (power <= minPower) return 100;
+  const position = 1 - ((power - minPower) / powerRange) ** (1 / curve);
+  return Math.max(1, Math.min(100, Math.round(position * entryCount) + 1));
+}
+
 export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   const {
     albumQuality,
@@ -242,6 +274,19 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   let fandomDisappointmentDelta = 0;
   if (titleTrack.type === "bold" && varianceRoll < -5) {
     fandomDisappointmentDelta = 8;
+  }
+  // 코어 팬덤이 클수록 발매 완성도에 대한 기대가 높다. 기대에 못 미치는
+  // 발매는 실망을 쌓는다 — 스캔들 없이도 저품질 남발이 팬덤을 깎는 경로.
+  const qualityExpectation =
+    fandom * RELEASE_QUALITY_EXPECTATION.perFandomPoint;
+  if (albumQuality < qualityExpectation) {
+    fandomDisappointmentDelta += Math.min(
+      RELEASE_QUALITY_EXPECTATION.maxDisappointment,
+      Math.round(
+        (qualityExpectation - albumQuality) *
+          RELEASE_QUALITY_EXPECTATION.disappointmentScale,
+      ),
+    );
   }
 
   return {

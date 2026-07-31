@@ -1,4 +1,5 @@
 import {
+  COMMERCIAL_CONTRACTS,
   DORM_CONDITION_MULT,
   GAME_BALANCE,
   INDIVIDUAL_LESSON_GROWTH,
@@ -192,6 +193,8 @@ export function previewTraineeWeek(
   manager: Staff | null,
   albumConcept: ConceptMood | null,
   facilityLevels: FacilityLevels,
+  /** 이번 주 이 멤버가 소화 중인 외부 계약 일정 슬롯 수. */
+  contractSlots = 0,
 ): TraineeWeekPreview {
   const dormConditionMult = DORM_CONDITION_MULT[facilityLevels.dormLevel];
   const studioTrainingMult = STUDIO_TRAINING_MULT[facilityLevels.studioLevel];
@@ -265,6 +268,13 @@ export function previewTraineeWeek(
     schedule.focus,
   );
 
+  // 광고·OST 일정을 소화하는 주에는 연습실에 있는 시간 자체가 줄어든다 —
+  // 계약 수입의 기회비용이 훈련 성장에서 그대로 드러난다.
+  const contractScheduleMult = Math.max(
+    COMMERCIAL_CONTRACTS.minTrainingMult,
+    1 - contractSlots * COMMERCIAL_CONTRACTS.trainingLossPerSlot,
+  );
+
   const statGrowth: Partial<Record<TraineeStatKey, number>> = {};
   for (const stat of TRAINABLE_STATS) {
     const conceptBonus = computeConceptBonus(trainee, albumConcept, stat);
@@ -278,15 +288,27 @@ export function previewTraineeWeek(
       allocation[stat] *
       studioTrainingMult *
       restDayMult *
+      contractScheduleMult *
       potentialTaper(trainee.stats[stat], trainee.potential);
   }
 
   let stressDelta = STRESS_INCREASE_RATE[schedule.intensity];
   if (schedule.restDay) {
-    stressDelta = Math.max(0, stressDelta + STRESS_DECREASE_RATE.rest * 0.4);
+    // 바닥을 0으로 막으면 훈련 주간의 스트레스는 절대 내려가지 않는 래칫이
+    // 된다(이벤트·계약·활동의 유입은 계속 쌓이므로 전 구간이 만성 과로
+    // 상태로 수렴 — 2026-07 프로브에서 전 페르소나 스트레스 70~100 상주).
+    // 일반 강도 + 휴식일 = -5/주로, 외부 유입(계약 +2, 행사·사건)을 감당할
+    // 수 있는 지속 레버여야 한다. 강훈련 중의 휴식일은 완화까지만(7-8=-1),
+    // 성장 페널티(REST_DAY_GROWTH_MULT)는 그대로라 상시 휴식일이 지배
+    // 전략이 되지는 않는다.
+    stressDelta += STRESS_DECREASE_RATE.rest * 0.8;
   }
   const mentalResist = trainee.stats.mental / 200;
-  stressDelta *= 1 - mentalResist;
+  // 멘탈은 스트레스 유입에 대한 저항이다 — 회복(음수)까지 깎으면 멘탈이
+  // 높을수록 쉬어도 회복이 안 되는 역설이 생긴다.
+  if (stressDelta > 0) {
+    stressDelta *= 1 - mentalResist;
+  }
 
   return {
     mode: "training",
@@ -307,6 +329,8 @@ export function processTrainingWeek(
   albumConcept: ConceptMood | null,
   weekSeed: number,
   facilityLevels: FacilityLevels,
+  /** 멤버별 이번 주 외부 계약 일정 슬롯 수(weekProcessor가 집계). */
+  contractSlotsByTrainee: Record<string, number> = {},
 ): TrainingResult {
   const injuries: TrainingResult["injuries"] = [];
 
@@ -317,6 +341,7 @@ export function processTrainingWeek(
       manager,
       albumConcept,
       facilityLevels,
+      contractSlotsByTrainee[trainee.id] ?? 0,
     );
     const t = { ...trainee, stats: { ...trainee.stats } };
 

@@ -660,6 +660,17 @@ export interface CompetitorGroup {
    * 의존하면 시상 주마다 붕괴하므로 연간 기록을 별도로 든다.
    */
   seasonBestQuality?: number;
+  /**
+   * 올해 최고 차트 순위 추정치(1이 최고). 컴백 시 차트 파워 공식으로
+   * 합성 시장 대비 순위를 추정해 기록한다 — 시상식 디지털 지표가 연중
+   * 차트 성적을 반영하려면 경쟁자에게도 같은 축의 기록이 필요하다.
+   */
+  seasonBestChartRank?: number;
+  /**
+   * 올해 누적 차트 점수. 컴백 시 추정 순위 점수 × 표준 런 주수로 쌓고
+   * 연초에 리셋한다 — 플레이어의 주간 누적(yearChartPoints)과 같은 축이다.
+   */
+  seasonChartPoints?: number;
   activeWeeks: number;
   debutYear: number;
   strengths: string[];
@@ -757,6 +768,14 @@ export interface RandomEventTemplate {
   conditions: RandomEventCondition;
   effects: EffectMap;
   choices?: EventChoice[];
+  /**
+   * 대외 평판을 태우는 진짜 스캔들(루머·연애·논란)만 true. 장비 고장이나
+   * 스태프 이직 같은 내부 악재는 negative여도 스캔들 주간 판정(업계 신뢰
+   * -5, 팬 실망 +15)을 받지 않는다 — 구분이 없던 시절에는 negative 풀
+   * 전체가 매주 ~30% 확률로 스캔들 판정을 받아 업계 신뢰가 구조적으로
+   * 침몰하고 팬 실망이 상시 임계 위에 머물렀다.
+   */
+  isScandal?: boolean;
 }
 
 export interface PromotionActivity {
@@ -983,6 +1002,19 @@ export interface GameStoreState {
   campaignFailure: CampaignFailure | null;
   /** 마지막 기회 카드가 제시된 누적 주차. 수락 여부와 무관하게 빈도를 제어한다. */
   lastOpportunityWeek: number | null;
+  /**
+   * 위기 카드 루트(fandom-crisis, overwork 등)별 마지막 제시 누적 주차.
+   * 같은 위기가 임계 위에 머문다고 매주 카드를 다시 올리지 않기 위한
+   * 쿨다운 기준 — critical로 악화되면 쿨다운을 무시하고 즉시 올라온다.
+   */
+  crisisCardCooldowns?: Record<string, number>;
+  /**
+   * 올해 누적 차트 점수(연말 시상 디지털 지표의 차트 축). 매주 최고 차트
+   * 순위를 점수로 환산해 쌓고 연초에 리셋한다. 발매가 늦으면 차트 런이
+   * 다음 해로 이월되므로, 발매 시점이 올해 시상 반영분을 자연스럽게
+   * 결정한다.
+   */
+  yearChartPoints?: number;
   /** 긴급 대출/추가 투자 채무. 상환된 건도 연간 신규 조달 한도 계산을 위해 보존한다. */
   emergencyFinancing: EmergencyFinancingRecord[];
   /** 성장기 이후 회사가 구축한 장기 역량. 한 경로에 몰거나 여러 경로를 조합할 수 있다. */
