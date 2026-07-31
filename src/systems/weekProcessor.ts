@@ -112,6 +112,10 @@ import {
   diffWeekDeltaState,
   type WeekDeltaState,
 } from "@/systems/weekDelta";
+import {
+  canSignCommercialContract,
+  normalizeCommercialContract,
+} from "@/systems/commercialContractSystem";
 import type {
   Album,
   AlbumStoreState,
@@ -384,7 +388,7 @@ export function processWeek(
   let adContractsSigned = snapshot.game.adContractsSigned ?? 0;
   let activeCommercialContracts = [
     ...(snapshot.game.activeCommercialContracts ?? []),
-  ];
+  ].map(normalizeCommercialContract);
   let emergencyFinancing = [...(snapshot.game.emergencyFinancing ?? [])];
   let financingIncomeThisWeek = 0;
   let financingRepaymentThisWeek = 0;
@@ -399,6 +403,19 @@ export function processWeek(
   >();
   for (const d of decisions.resolvedDecisions) {
     const beforeDecision = captureWeekDeltaState(getDeltaState());
+    const selectedOption = snapshot.game.weeklyDecisions
+      .find((card) => card.id === d.cardId)
+      ?.options.find((option) => option.id === d.optionId);
+    if (selectedOption?.contractOffer) {
+      const eligibility = canSignCommercialContract(
+        activeCommercialContracts,
+        selectedOption.contractOffer,
+      );
+      if (!eligibility.allowed) {
+        report.warnings.push(eligibility.reason ?? "외부 계약을 체결할 수 없습니다");
+        continue;
+      }
+    }
     const decisionMoney = d.effects.money ?? 0;
     const isFinancingIncome =
       d.cardId === "financial-crisis" &&
@@ -416,12 +433,9 @@ export function processWeek(
     if (isAcceptedAdvertisingOpportunity(d.cardId, d.optionId)) {
       adContractsSigned += 1;
     }
-    const selectedOption = snapshot.game.weeklyDecisions
-      .find((card) => card.id === d.cardId)
-      ?.options.find((option) => option.id === d.optionId);
     if (selectedOption?.contractOffer) {
       const definitionId = d.cardId.split(":")[1] ?? d.cardId;
-      const offer = selectedOption.contractOffer;
+      const offer = normalizeCommercialContract(selectedOption.contractOffer);
       activeCommercialContracts.push({
         ...offer,
         id: `${definitionId}:${cumulativeWeek}`,
@@ -437,7 +451,7 @@ export function processWeek(
         adContractsSigned += 1;
       }
       report.warnings.push(
-        `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${formatKoreanWon(offer.weeklyIncome)}이 들어옵니다`,
+        `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${formatKoreanWon(offer.weeklyIncome)}이 들어오고, 일정 ${offer.scheduleSlots}칸을 사용합니다`,
       );
     }
     if (d.cardId === "strategic-expansion" && d.optionId.startsWith("strategic-")) {
@@ -586,6 +600,38 @@ export function processWeek(
       },
       2,
     );
+  }
+
+  // 진행 중인 외부 계약은 정산만 만드는 연금이 아니다. 참여 멤버의 매주
+  // 외부 일정을 먼저 잡고 피로를 누적시켜 해당 주의 팀 훈련에서 빠지게 한다.
+  const workingCommercialContracts = activeCommercialContracts.filter(
+    (contract) =>
+      contract.signedAtWeek <= cumulativeWeek && contract.endsAtWeek >= cumulativeWeek,
+  );
+  for (const contract of workingCommercialContracts) {
+    const targets = new Set(
+      contract.targetTraineeIds.length > 0
+        ? contract.targetTraineeIds
+        : trainees.map((trainee) => trainee.id),
+    );
+    trainees = trainees.map((trainee) => {
+      if (!targets.has(trainee.id)) return trainee;
+      // 개인 출연처럼 참여자가 지정된 계약은 그 멤버의 주간 팀 훈련까지
+      // 대체한다. 팀 단위 계약의 일정 칸은 여러 날에 분산되므로 피로와
+      // 컨디션 비용만 적용하고 한 주 전체 훈련을 없애지는 않는다.
+      const replacesTeamTraining = contract.targetTraineeIds.length > 0;
+      if (replacesTeamTraining) {
+        decisionActivityOverrides.set(trainee.id, "entertainment");
+      }
+      return {
+        ...trainee,
+        currentActivity: replacesTeamTraining
+          ? "entertainment"
+          : trainee.currentActivity,
+        stress: clamp(trainee.stress + contract.weeklyStress, 0, 100),
+        condition: clamp(trainee.condition - contract.scheduleSlots, 0, 100),
+      };
+    });
   }
 
   // 과도 상업활동은 수입 내역(콘서트 수익이 promotions 키로 섞임)이 아니라
@@ -1300,11 +1346,12 @@ export function processWeek(
     money += commercialContractIncome;
     report.finance.income.commercialContracts = commercialContractIncome;
   }
+
   const completedCommercialContracts = activeCommercialContracts.filter(
     (contract) => contract.endsAtWeek === cumulativeWeek,
   );
   for (const contract of completedCommercialContracts) {
-    report.warnings.push(`${contract.title} 계약이 종료됐습니다`);
+    report.warnings.push(`${withJosa(contract.title, "이/가")} 종료됐습니다`);
   }
   activeCommercialContracts = activeCommercialContracts.filter(
     (contract) => contract.endsAtWeek > cumulativeWeek,
@@ -1877,6 +1924,7 @@ export function processWeek(
     activeCommercialContractDefinitionIds: activeCommercialContracts.map(
       (contract) => contract.definitionId,
     ),
+    activeCommercialContracts,
     lastOpportunityWeek: snapshot.game.lastOpportunityWeek,
     emergencyFinancing,
     releasedAlbumCount: releasedAlbums.length,

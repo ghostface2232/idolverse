@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
+  COMMERCIAL_CONTRACTS,
   FACILITY_TIER_UNLOCKS,
   GAME_BALANCE,
   STAFF_HIRING,
@@ -50,6 +51,9 @@ interface CampaignSummary {
   minimumMoney: number;
   totalIncome: number;
   totalExpenses: number;
+  commercialContractIncome: number;
+  commercialFatigueExposure: number;
+  maxCommercialScheduleSlots: number;
   decisionCosts: number;
   financingBorrowed: number;
   financingRepaid: number;
@@ -365,6 +369,7 @@ function buildWeeklyDecisions(
   snapshot: GameSnapshot,
   profile: PlayerProfile,
   cumulativeWeek: number,
+  contractFirst = false,
 ): PlayerDecisions["resolvedDecisions"] {
   return snapshot.game.weeklyDecisions.flatMap((card) => {
     if (card.id === "strategic-expansion" && profile === "novice") return [];
@@ -380,8 +385,11 @@ function buildWeeklyDecisions(
     const strategicOption = strategicPreference
       .map((id) => card.options.find((candidate) => candidate.id === id))
       .find((candidate) => candidate !== undefined);
+    const contractOption = contractFirst && card.lane === "opportunity"
+      ? card.options.find((candidate) => candidate.contractOffer)
+      : undefined;
     const option =
-      strategicOption ??
+      contractOption ?? strategicOption ??
       (profile === "expert"
         ? [...card.options].sort(
             (left, right) =>
@@ -399,6 +407,7 @@ function buildWeeklyDecisions(
       if (snapshot.finance.money + (option.effects.money ?? 0) < reserve) return [];
     }
     if (
+      !contractOption &&
       profile !== "novice" &&
       card.lane === "opportunity" &&
       contextualEffectUtility(option.effects, snapshot) < 0
@@ -429,6 +438,7 @@ function buildPlayerDecisions(
   snapshot: GameSnapshot,
   profile: PlayerProfile,
   cumulativeWeek: number,
+  contractFirst = false,
 ): PlayerDecisions {
   const meanStress = average(snapshot.trainee.trainees.map((trainee) => trainee.stress));
   const inActivityPeriod = snapshot.game.activeProjects.some(
@@ -486,7 +496,12 @@ function buildPlayerDecisions(
                   ? weakestTeamStat(snapshot.trainee.trainees)
                   : undefined,
             },
-    resolvedDecisions: buildWeeklyDecisions(snapshot, profile, cumulativeWeek),
+    resolvedDecisions: buildWeeklyDecisions(
+      snapshot,
+      profile,
+      cumulativeWeek,
+      contractFirst,
+    ),
     promotionOrders,
   };
 }
@@ -758,11 +773,15 @@ function simulateCampaign(
   profile: PlayerProfile,
   seed: number,
   staffingPolicy: StaffingPolicy = "lean",
+  contractFirst = false,
 ): CampaignSummary {
   let snapshot = makeCampaign(profile, seed, staffingPolicy);
   let minimumMoney = snapshot.finance.money;
   let totalIncome = 0;
   let totalExpenses = 0;
+  let commercialContractIncome = 0;
+  let commercialFatigueExposure = 0;
+  let maxCommercialScheduleSlots = 0;
   let decisionCosts = 0;
   let financingBorrowed = 0;
   let financingRepaid = 0;
@@ -822,7 +841,12 @@ function simulateCampaign(
       comebackIndex++;
     }
 
-    const playerDecisions = buildPlayerDecisions(snapshot, profile, cumulativeWeek);
+    const playerDecisions = buildPlayerDecisions(
+      snapshot,
+      profile,
+      cumulativeWeek,
+      contractFirst,
+    );
     for (const decision of playerDecisions.resolvedDecisions) {
       const cost = Math.max(0, -(decision.effects.money ?? 0));
       if (cost === 0) continue;
@@ -836,12 +860,28 @@ function simulateCampaign(
     const result = processWeek(snapshot, playerDecisions);
     totalIncome += sumRecord(result.weekReport.finance.income);
     totalExpenses += sumRecord(result.weekReport.finance.expenses);
+    commercialContractIncome +=
+      result.weekReport.finance.income.commercialContracts ?? 0;
+    commercialFatigueExposure += snapshot.game.activeCommercialContracts.reduce(
+      (sum, contract) =>
+        sum +
+        contract.weeklyStress *
+          (contract.targetTraineeIds.length || snapshot.trainee.trainees.length),
+      0,
+    );
     decisionCosts += result.weekReport.finance.expenses.decisionCosts ?? 0;
     financingBorrowed += result.weekReport.finance.income.emergencyFinancing ?? 0;
     financingRepaid += result.weekReport.finance.expenses.financingRepayment ?? 0;
     injuries += result.weekReport.injuries.length;
     musicShowWins += musicShowWinsFromReport(result.weekReport);
     snapshot = result.newState;
+    maxCommercialScheduleSlots = Math.max(
+      maxCommercialScheduleSlots,
+      snapshot.game.activeCommercialContracts.reduce(
+        (sum, contract) => sum + contract.scheduleSlots,
+        0,
+      ),
+    );
     weeksPlayed++;
     minimumMoney = Math.min(minimumMoney, snapshot.finance.money);
 
@@ -876,6 +916,9 @@ function simulateCampaign(
     minimumMoney,
     totalIncome,
     totalExpenses,
+    commercialContractIncome,
+    commercialFatigueExposure,
+    maxCommercialScheduleSlots,
     decisionCosts,
     financingBorrowed,
     financingRepaid,
@@ -930,6 +973,9 @@ function compactReport(summaries: readonly CampaignSummary[]) {
     "minimumMoney",
     "totalIncome",
     "totalExpenses",
+    "commercialContractIncome",
+    "commercialFatigueExposure",
+    "maxCommercialScheduleSlots",
     "decisionCosts",
     "financingBorrowed",
     "financingRepaid",
@@ -1125,4 +1171,26 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
     expect(specialists.failedAtWeek).toBeNull();
     expect(lean.failedAtWeek).toBeNull();
   });
+
+  it("계약 우선 자동 플레이를 5년 돌려도 계약 수입이 지배 전략이 되지 않는다", () => {
+    const balanced = simulateCampaign("intermediate", 101, "lean", false);
+    const contractFirst = simulateCampaign("intermediate", 101, "lean", true);
+
+    if (process.env.BALANCE_REPORT === "1") {
+      console.log(JSON.stringify({ commercialContractComparison: { balanced, contractFirst } }, null, 2));
+    }
+
+    expect(contractFirst.weeksPlayed).toBe(GAME_BALANCE.weeksPerYear * 5);
+    expect(contractFirst.commercialContractIncome).toBeGreaterThan(
+      balanced.commercialContractIncome,
+    );
+    expect(contractFirst.maxCommercialScheduleSlots).toBeLessThanOrEqual(
+      COMMERCIAL_CONTRACTS.maxScheduleSlots,
+    );
+    expect(contractFirst.commercialFatigueExposure).toBeGreaterThan(
+      balanced.commercialFatigueExposure,
+    );
+    expect(contractFirst.averageMemberStats).toBeLessThan(balanced.averageMemberStats);
+    expect(contractFirst.averageAlbumQuality).toBeLessThan(balanced.averageAlbumQuality);
+  }, 10_000);
 });

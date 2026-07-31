@@ -12,7 +12,9 @@ import {
 } from "@/data/balance";
 import { OPPORTUNITY_DEFINITIONS } from "@/data/opportunities";
 import { createSeededRandom } from "@/lib/seededRandom";
+import { canSignCommercialContract } from "@/systems/commercialContractSystem";
 import type {
+  ActiveCommercialContract,
   EmergencyFinancingRecord,
   GamePhase,
   MemberTemperament,
@@ -65,6 +67,7 @@ export interface DecisionCardContext {
   fandomLoyalty: number;
   fandomDisappointment: number;
   activeCommercialContractDefinitionIds?: string[];
+  activeCommercialContracts?: ActiveCommercialContract[];
   lastOpportunityWeek: number | null;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks: string[];
@@ -89,6 +92,7 @@ export interface DecisionContextState {
   fandomLoyalty: number;
   fandomDisappointment: number;
   activeCommercialContractDefinitionIds?: readonly string[];
+  activeCommercialContracts?: readonly ActiveCommercialContract[];
   lastOpportunityWeek?: number | null;
   emergencyFinancing?: readonly EmergencyFinancingRecord[];
   competitorComebacks?: readonly string[];
@@ -158,6 +162,7 @@ export function buildDecisionCardContext(
     activeCommercialContractDefinitionIds: [
       ...(state.activeCommercialContractDefinitionIds ?? []),
     ],
+    activeCommercialContracts: [...(state.activeCommercialContracts ?? [])],
     lastOpportunityWeek: state.lastOpportunityWeek ?? null,
     emergencyFinancing: [...(state.emergencyFinancing ?? [])],
     competitorComebacks: [...(state.competitorComebacks ?? [])],
@@ -348,6 +353,10 @@ function buildOpportunityCard(
     );
   if (cumulativeWeek - lastOpportunityWeek < requiredGap) return null;
 
+  const activeCommercialContracts = ctx.activeCommercialContracts ?? [];
+  const isOfferAvailable = (option: WeeklyDecision["options"][number]) =>
+    !option.contractOffer ||
+    canSignCommercialContract(activeCommercialContracts, option.contractOffer).allowed;
   const isEligible = (definition: (typeof OPPORTUNITY_DEFINITIONS)[number]) =>
     definition.phases.includes(ctx.phase) &&
     (ctx.public ?? 0) >= (definition.minPublic ?? 0) &&
@@ -359,7 +368,8 @@ function buildOpportunityCard(
       (ctx.bestChartRank != null &&
         ctx.bestChartRank <= definition.minBestChartRank)) &&
     (!definition.uniqueWhileActive ||
-      !(ctx.activeCommercialContractDefinitionIds ?? []).includes(definition.id));
+      !(ctx.activeCommercialContractDefinitionIds ?? []).includes(definition.id)) &&
+    definition.options.some(isOfferAvailable);
   const phasePool = OPPORTUNITY_DEFINITIONS.filter(
     (definition) => isEligible(definition) && !definition.requiresRivalComeback,
   );
@@ -414,7 +424,7 @@ function buildOpportunityCard(
       [],
       interpolate(definition.triggerDescription),
     ),
-    options: definition.options.map((option) => ({
+    options: definition.options.filter(isOfferAvailable).map((option) => ({
       ...option,
       effects: { ...option.effects },
       ...(option.targetTraineeIds

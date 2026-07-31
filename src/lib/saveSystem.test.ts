@@ -76,6 +76,8 @@ describe("saveSystem 왕복", () => {
       state: "planning_ready",
       selectedDecisionIds: {},
       selectedTargetTraineeIds: {},
+      confirmedDecisionIds: [],
+      skippedDecisionIds: [],
       eventQueueIds: [],
       activeEventIndex: 0,
       resolutionId: null,
@@ -130,5 +132,26 @@ describe("saveSystem 왕복", () => {
     expect(captured.gameStore.investorComplianceCount).toBe(0);
     expect(captured.gameStore.lastInvestorDemandWeek).toBeNull();
     expect(captured.gameStore.adContractsSigned).toBe(0);
+  });
+
+  it("구버전 외부 계약을 불러오면 일정 점유와 주간 피로 기본값을 복구한다", () => {
+    const legacy = toGameStateSnapshot(makeGameSnapshot({ week: 20 }));
+    legacy.gameStore.activeCommercialContracts = [{
+      id: "legacy-ost",
+      definitionId: "ost-offer",
+      kind: "ost",
+      title: "구버전 OST 계약",
+      durationWeeks: 12,
+      weeklyIncome: 1_800_000,
+      signedAtWeek: 10,
+      endsAtWeek: 21,
+      targetTraineeIds: [],
+    } as unknown as GameStoreState["activeCommercialContracts"][number]];
+
+    hydrateGameState(legacy);
+
+    expect(captureGameState().gameStore.activeCommercialContracts[0]).toEqual(
+      expect.objectContaining({ scheduleSlots: 1, weeklyStress: 2 }),
+    );
   });
 });

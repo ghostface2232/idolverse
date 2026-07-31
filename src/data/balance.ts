@@ -546,6 +546,15 @@ export const OPPORTUNITY_PACING = {
   fatigueWarningStress: 50,
 } as const;
 
+/** 외부 계약은 고정비 없는 연금이 아니라, 매주 일정과 체력을 소비하는 선택이다. */
+export const COMMERCIAL_CONTRACTS = {
+  maxScheduleSlots: 2,
+  legacyDefaults: {
+    scheduleSlots: 1,
+    weeklyStress: 2,
+  },
+} as const;
+
 /**
  * 실패 정의: FM의 경질에 해당한다. 자금 마이너스가 이어지면 투자사가
  * 회수를 결정하고 캠페인이 끝난다. 위기 카드·런웨이 경고·주차 카운트다운이

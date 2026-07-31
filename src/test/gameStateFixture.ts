@@ -107,6 +107,8 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
         state: "planning_ready",
         selectedDecisionIds: {},
         selectedTargetTraineeIds: {},
+        confirmedDecisionIds: [],
+        skippedDecisionIds: [],
         eventQueueIds: [],
         activeEventIndex: 0,
         resolutionId: null,

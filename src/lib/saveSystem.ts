@@ -31,6 +31,7 @@ import type {
   StaffStoreState,
   TraineeStoreState,
 } from "@/types/game";
+import { normalizeCommercialContract } from "@/systems/commercialContractSystem";
 
 export const MAX_SAVE_SLOTS = 3;
 export const AUTO_SAVE_INTERVAL_WEEKS = 5;
@@ -282,7 +283,9 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     investorComplianceCount: rest.investorComplianceCount ?? 0,
     lastInvestorDemandWeek: rest.lastInvestorDemandWeek ?? null,
     adContractsSigned: rest.adContractsSigned ?? 0,
-    activeCommercialContracts: rest.activeCommercialContracts ?? [],
+    activeCommercialContracts: (rest.activeCommercialContracts ?? []).map(
+      normalizeCommercialContract,
+    ),
     commercialWeekStreak: rest.commercialWeekStreak ?? 0,
     insolvencyWeeks: rest.insolvencyWeeks ?? 0,
     // 5년 성과 미달은 더 이상 캠페인 종료 조건이 아니다. 과거 버전에서

@@ -465,6 +465,10 @@ export interface CommercialContractOffer {
   /** 계약 기간. 체결 주를 포함해 이 기간 동안 매주 정산한다. */
   durationWeeks: number;
   weeklyIncome: number;
+  /** 매주 회사와 멤버 일정에서 차지하는 외부 활동 칸. */
+  scheduleSlots: number;
+  /** 계약 기간 동안 참여 멤버에게 매주 누적되는 피로. */
+  weeklyStress: number;
 }
 
 export interface ActiveCommercialContract extends CommercialContractOffer {

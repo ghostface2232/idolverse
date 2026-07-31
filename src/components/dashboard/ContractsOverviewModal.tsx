@@ -5,7 +5,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { Modal } from "@/components/common/Modal";
-import { CONTRACT_TERM_WEEKS } from "@/data/balance";
+import { COMMERCIAL_CONTRACTS, CONTRACT_TERM_WEEKS } from "@/data/balance";
+import { getCommercialScheduleSlots } from "@/systems/commercialContractSystem";
 import { POSITION_LABELS } from "@/data/founding";
 import {
   getContractRemainingWeeks,
@@ -131,6 +132,7 @@ export function ContractsOverviewModal({
   onClose,
 }: ContractsOverviewModalProps) {
   const remainingWeeks = getContractRemainingWeeks(currentYear, currentWeek);
+  const occupiedCommercialSlots = getCommercialScheduleSlots(commercialContracts);
   const remainingRatio = Math.max(
     0,
     Math.min(1, remainingWeeks / CONTRACT_TERM_WEEKS),
@@ -177,7 +179,7 @@ export function ContractsOverviewModal({
                 외부 활동 계약
               </h2>
               <p className="mt-0.5 text-xs text-text-muted">
-                활동 공백에도 매주 정산되는 광고, 콘텐츠, 출연 계약입니다.
+                매주 일정과 멤버 체력을 쓰는 광고, 콘텐츠, 출연 계약입니다. 일정 {occupiedCommercialSlots}/{COMMERCIAL_CONTRACTS.maxScheduleSlots}칸 사용 중입니다.
               </p>
             </div>
           </div>
@@ -198,7 +200,7 @@ export function ContractsOverviewModal({
                         {contract.title}
                       </h3>
                       <p className="mt-1 text-xs text-text-muted">
-                        남은 {contractRemaining}주
+                        남은 {contractRemaining}주, 일정 {contract.scheduleSlots}칸, 주간 피로 +{contract.weeklyStress}
                       </p>
                     </div>
                     <span className="shrink-0 rounded-full bg-cyan-400/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-cyan-200">
