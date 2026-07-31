@@ -1958,9 +1958,9 @@ export function processWeek(
     const popularityDemand =
       (trainee.popularity ?? 0) >=
       contract.tier * 15 + MEMBER_CONTRACT.earlyTriggerPopularityMargin;
+    // 만성 소진은 인기와 무관하게 "이 조건으론 계속 못 한다"로 이어진다.
     const overworkDemand =
-      trainee.stress >= MEMBER_CONTRACT.overworkTriggerStress &&
-      (trainee.popularity ?? 0) >= MEMBER_CONTRACT.overworkTriggerPopularity;
+      trainee.stress >= MEMBER_CONTRACT.overworkTriggerStress;
     if (!popularityDemand && !overworkDemand) return trainee;
     report.warnings.push(
       popularityDemand

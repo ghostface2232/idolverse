@@ -344,8 +344,13 @@ export const MEMBER_CONTRACT = {
   renegotiationIntervalWeeks: 78, // 기본 1.5년 주기.
   /** 인기 조기 트리거: popularity ≥ tier×15 + 이 값이면 앞당겨 요구한다. */
   earlyTriggerPopularityMargin: 30,
-  overworkTriggerStress: 70, // 과로 조기 트리거(인기 40+ 필요).
-  overworkTriggerPopularity: 40,
+  // 만성 혹사는 인기와 무관하게 처우 재논의 요구로 이어진다. 인기는 요구
+  // "금액"(signing 산정)에만 반영되지 요구할 자격이 아니다 — 인기 게이트가
+  // 있던 시절에는 무명 멤버를 갈아 넣는 운영이 재계약 압박을 전혀 받지
+  // 않았다. 임계 85는 일상적 강훈련(70대)이 아니라 만성 소진 상태다 —
+  // 70으로 두면 게이트 제거와 겹쳐 전원이 상시 26주 주기가 되어 재계약
+  // 카드가 다시 스팸이 된다.
+  overworkTriggerStress: 85,
   earlyTriggerLeadWeeks: 26, // 성공 직후에도 협상이 반년보다 자주 반복되지는 않는다.
   signingBase: 10_000_000, // 조건 인상 계약금 = base + 인기×perPopularity.
   signingPerPopularity: 1_500_000,

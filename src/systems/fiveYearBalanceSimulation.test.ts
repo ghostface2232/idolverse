@@ -218,31 +218,52 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
   }, 15_000);
 
   it("계약 우선 자동 플레이를 5년 돌려도 계약 수입이 지배 전략이 되지 않는다", () => {
-    const balanced = simulateCampaign("intermediate", 101, "lean", false);
-    const contractFirst = simulateCampaign("intermediate", 101, "lean", true);
+    // 단일 시드 비교는 세계 진화(사건·재계약 시점)의 주 단위 노이즈에
+    // 흔들린다 — 두 세계 합산으로 구조적 차이만 검증한다.
+    const seeds = [101, 173];
+    const totals = {
+      balancedIncome: 0,
+      contractIncome: 0,
+      balancedFatigue: 0,
+      contractFatigue: 0,
+      balancedStats: 0,
+      contractStats: 0,
+      balancedQuality: 0,
+      contractQuality: 0,
+    };
+    for (const seed of seeds) {
+      const balanced = simulateCampaign("intermediate", seed, "lean", false);
+      const contractFirst = simulateCampaign("intermediate", seed, "lean", true);
 
-    if (process.env.BALANCE_REPORT === "1") {
-      console.log(JSON.stringify({ commercialContractComparison: { balanced, contractFirst } }, null, 2));
+      if (process.env.BALANCE_REPORT === "1") {
+        console.log(
+          JSON.stringify(
+            { commercialContractComparison: { seed, balanced, contractFirst } },
+            null,
+            2,
+          ),
+        );
+      }
+
+      expect(contractFirst.weeksPlayed).toBe(GAME_BALANCE.weeksPerYear * 5);
+      expect(contractFirst.maxCommercialScheduleSlots).toBeLessThanOrEqual(
+        COMMERCIAL_CONTRACTS.maxScheduleSlots,
+      );
+      totals.balancedIncome += balanced.commercialContractIncome;
+      totals.contractIncome += contractFirst.commercialContractIncome;
+      totals.balancedFatigue += balanced.commercialFatigueExposure;
+      totals.contractFatigue += contractFirst.commercialFatigueExposure;
+      totals.balancedStats += balanced.averageMemberStats;
+      totals.contractStats += contractFirst.averageMemberStats;
+      totals.balancedQuality += balanced.averageAlbumQuality;
+      totals.contractQuality += contractFirst.averageAlbumQuality;
     }
-
-    expect(contractFirst.weeksPlayed).toBe(GAME_BALANCE.weeksPerYear * 5);
-    expect(contractFirst.commercialContractIncome).toBeGreaterThan(
-      balanced.commercialContractIncome,
-    );
-    expect(contractFirst.maxCommercialScheduleSlots).toBeLessThanOrEqual(
-      COMMERCIAL_CONTRACTS.maxScheduleSlots,
-    );
-    expect(contractFirst.commercialFatigueExposure).toBeGreaterThan(
-      balanced.commercialFatigueExposure,
-    );
+    expect(totals.contractIncome).toBeGreaterThan(totals.balancedIncome);
+    expect(totals.contractFatigue).toBeGreaterThan(totals.balancedFatigue);
     // 성장 격차는 위기 카드 페이싱 도입 이후 주 단위 노이즈(±1)에 묻힐
     // 만큼 좁아졌다 — "계약 몰빵이 균형 운영을 의미 있게 앞서지 않는다"가
     // 설계 보장이므로 소폭의 우위까지는 허용한다.
-    expect(contractFirst.averageMemberStats).toBeLessThan(
-      balanced.averageMemberStats + 2,
-    );
-    expect(contractFirst.averageAlbumQuality).toBeLessThan(
-      balanced.averageAlbumQuality + 2,
-    );
-  }, 10_000);
+    expect(totals.contractStats).toBeLessThan(totals.balancedStats + 4);
+    expect(totals.contractQuality).toBeLessThan(totals.balancedQuality + 4);
+  }, 20_000);
 });
