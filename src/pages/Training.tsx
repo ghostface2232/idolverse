@@ -27,8 +27,10 @@ import { useFinanceStore } from "@/stores/financeStore";
 import { gameVanillaStore, useGameStore } from "@/stores/gameStore";
 import { useStaffStore } from "@/stores/staffStore";
 import { traineeVanillaStore, useTraineeStore } from "@/stores/traineeStore";
+import { toCumulativeWeek } from "@/systems/progressionSystem";
 import { getEffectiveSatisfaction } from "@/systems/satisfactionSystem";
 import {
+  countContractSlotsByTrainee,
   previewTraineeWeek,
   type TraineeWeekPreview,
 } from "@/systems/trainingSystem";
@@ -236,6 +238,11 @@ interface TrainingProps {
 export function Training({ onBack }: TrainingProps) {
   const trainees = useTraineeStore((s) => s.trainees);
   const trainingSchedule = useGameStore((s) => s.trainingSchedule);
+  const activeCommercialContracts = useGameStore(
+    (s) => s.activeCommercialContracts,
+  );
+  const currentYear = useGameStore((s) => s.currentYear);
+  const currentWeek = useGameStore((s) => s.currentWeek);
   const upgrades = useFinanceStore((s) => s.upgrades);
   const staff = useStaffStore((s) => s.staff);
   const currentAlbum = useAlbumStore((s) => s.currentAlbum);
@@ -243,6 +250,13 @@ export function Training({ onBack }: TrainingProps) {
 
   const manager = staff.find((member) => member.role === "manager") ?? null;
   const albumConcept = currentAlbum?.concept.mood ?? null;
+  // 광고·OST 일정 중인 멤버의 프리뷰가 실제 주간 처리와 같은 성장 페널티를
+  // 보여주도록, weekProcessor와 동일한 집계를 쓴다.
+  const contractSlotsByTrainee = countContractSlotsByTrainee(
+    activeCommercialContracts,
+    trainees.map((t) => t.id),
+    toCumulativeWeek(currentYear, currentWeek),
+  );
 
   const setIntensity = (intensity: TrainingIntensity) => {
     gameVanillaStore.getState().setTrainingSchedule({ intensity });
@@ -375,6 +389,7 @@ export function Training({ onBack }: TrainingProps) {
                 dormLevel: upgrades.dormLevel,
                 studioLevel: upgrades.studioLevel,
               },
+              contractSlotsByTrainee[trainee.id] ?? 0,
             );
             const activityWarning = ACTIVITY_OPTIONS.find(
               (opt) => opt.key === activity,

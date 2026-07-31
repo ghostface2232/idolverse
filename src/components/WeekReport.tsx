@@ -976,6 +976,7 @@ const FINANCE_EXPENSE_LABELS: Record<string, string> = {
   staffDevelopment: "스태프 육성",
   facilityInvestment: "시설 투자",
   strategicExpansion: "전략 확장 유지비",
+  memberSettlement: "멤버 정산",
   financingRepayment: "차입금 상환",
   decisionCosts: "주간 결정 비용",
 };

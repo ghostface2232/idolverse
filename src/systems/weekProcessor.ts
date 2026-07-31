@@ -8,6 +8,7 @@ import {
   generateWeeklyDecisionCards,
 } from "@/systems/generateWeeklyDecisionCards";
 import {
+  countContractSlotsByTrainee,
   processTrainingWeek,
   type TrainingSchedule,
 } from "@/systems/trainingSystem";
@@ -676,23 +677,11 @@ export function processWeek(
   const albumConcept = album?.concept.mood ?? null;
   // 광고·OST 일정을 소화하는 멤버는 그 주 훈련을 온전히 못 한다 —
   // 예능 출연이 훈련을 건너뛰는 것과 같은 기회비용이다.
-  const contractSlotsByTrainee: Record<string, number> = {};
-  for (const contract of activeCommercialContracts) {
-    if (
-      contract.signedAtWeek > cumulativeWeek ||
-      contract.endsAtWeek < cumulativeWeek
-    ) {
-      continue;
-    }
-    const targets =
-      contract.targetTraineeIds.length > 0
-        ? contract.targetTraineeIds
-        : trainees.map((t) => t.id);
-    for (const traineeId of targets) {
-      contractSlotsByTrainee[traineeId] =
-        (contractSlotsByTrainee[traineeId] ?? 0) + contract.scheduleSlots;
-    }
-  }
+  const contractSlotsByTrainee = countContractSlotsByTrainee(
+    activeCommercialContracts,
+    trainees.map((t) => t.id),
+    cumulativeWeek,
+  );
   const beforeTraining = captureWeekDeltaState(getDeltaState());
   const trainingResult = processTrainingWeek(
     trainees,
