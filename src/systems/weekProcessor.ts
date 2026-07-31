@@ -1493,10 +1493,15 @@ export function processWeek(
       rolledEvents.some((e) => e.template.type === "negative"),
     excessiveCommercial: excessiveCommercialPenalty > 0,
     // global은 0~100 클램프 지표 — 문턱도 같은 스케일이어야 한다.
+    // 순환에는 돌릴 만한 최신작이 필요하다(minAlbumQuality 게이트).
     spotifyStreaming:
-      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.spotifyStreaming,
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.spotifyStreaming &&
+      (latestReleasedAlbum?.quality ?? 0) >=
+        GLOBAL_ENGAGEMENT_THRESHOLDS.minAlbumQuality,
     youtubeActivity:
-      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.youtubeActivity,
+      fandomAxis.global > GLOBAL_ENGAGEMENT_THRESHOLDS.youtubeActivity &&
+      (latestReleasedAlbum?.quality ?? 0) >=
+        GLOBAL_ENGAGEMENT_THRESHOLDS.minAlbumQuality,
     foreignMembers: trainees.filter((t) => t.nationality !== "korean"),
     latestAlbumQuality: latestReleasedAlbum?.quality ?? 0,
     musicQualityHigh:

@@ -1,5 +1,6 @@
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
+  COMEBACK_REQUIREMENTS,
   FACILITY_TIER_UNLOCKS,
   GAME_BALANCE,
   STAFF_HIRING,
@@ -56,6 +57,7 @@ export interface CampaignSummary {
   seed: number;
   weeksPlayed: number;
   failedAtWeek: number | null;
+  startingMoney: number;
   endingMoney: number;
   minimumMoney: number;
   totalIncome: number;
@@ -94,6 +96,8 @@ export interface CampaignSummary {
   memberDepartures: number;
   firstDepartureWeek: number | null;
   facilityLevelTotal: number;
+  incomeBreakdown: Record<string, number>;
+  expenseBreakdown: Record<string, number>;
   yearly: Array<{
     year: number;
     money: number;
@@ -121,7 +125,23 @@ const TRAINABLE_STATS: TraineeStatKey[] = [
   "charm",
   "stamina",
 ];
-const NOVICE_COMEBACK_GAPS = [22, 37, 19, 31, 25] as const;
+
+/**
+ * 시상식 역산용 상수. 시상은 매년 50주차(weeksPerYear - 2)에 열리고, 후보
+ * 집계는 "그 해 1주차~시상 주 사이의 발매작"만 본다. 컴백 시작부터 발매까지
+ * 12주(COMEBACK_REQUIREMENTS.releaseWeek)가 걸리므로:
+ * - 발매가 50~52주차에 떨어지면 그 앨범은 어느 해 시상에도 집계되지 않는다
+ *   (시상 주 이후 발매는 올해 제외, 연초 기준 미달로 내년에도 제외).
+ * - 발매가 42~49주차에 떨어지면 품질이 집계되고 활동기 화력(public)이
+ *   심사 시점과 겹친다 — 컴백을 앞당길 가치가 있는 구간.
+ */
+const AWARDS_WEEK_OF_YEAR = GAME_BALANCE.weeksPerYear - 2;
+const RELEASE_LEAD_WEEKS = COMEBACK_REQUIREMENTS.releaseWeek;
+
+/** 지금 컴백을 시작하면 발매가 떨어질 연중 주차(1~52). */
+function projectedReleaseWeekOfYear(weekOfYear: number): number {
+  return ((weekOfYear + RELEASE_LEAD_WEEKS - 1) % GAME_BALANCE.weeksPerYear) + 1;
+}
 
 export function sumRecord(values: Record<string, number>): number {
   return Object.values(values).reduce((sum, value) => sum + value, 0);
@@ -380,22 +400,40 @@ function selectTargets(
 }
 
 /**
- * 초보 페르소나의 위기 대응: 카드마다 가장 유화적인(문제를 돈과 휴식으로
- * 달래는) 선택지를 id로 지목한다. 이전에는 "첫 번째 옵션"으로 구현했는데,
- * 그 방식은 카드 데이터의 옵션 정렬 순서에 묵시적으로 의존해서 데이터
- * 리팩토링만으로 초보 베이스라인이 조용히 달라질 수 있었다.
+ * 초보 페르소나의 카드 읽기: 처음 보는 플레이어는 카드에 표시된 즉각적이고
+ * 구체적인 효과(돈, 인지도, 팬덤, 만족도, 컨디션, 부상)만 보고 고른다.
+ * 스트레스 누적, 투자사 압박, 업계 평판 같은 간접적·장기적 비용은 아직 그
+ * 의미를 몰라 계산에 넣지 못한다 — 해당 키의 가중치가 0인 이유다. 반면 팬
+ * 실망은 위기 카드가 문구로 직접 설명해 주는 지표라 초보도 읽는다(다만
+ * 숙련보다 가볍게 느낀다). 현금은 수입 구조를 모르는 초보일수록 잔액이
+ * 줄어드는 것 자체를 무서워하므로 오히려 민감도가 높다 — 이 민감도가
+ * 없으면 초보가 매주 팬 행사에 2,500만원을 태우고 2억짜리 확장을 사다
+ * 2년 안에 파산한다(2026-07 프로브). 이 모델은 옵션 정렬 순서와 무관해서
+ * 카드 데이터 리팩토링에도 안정적이다.
  */
-const NOVICE_CRISIS_PREFERENCE: Record<string, string> = {
-  recontract: "raise",
-  injury: "full-rest",
-  conflict: "mediate",
-  "emergency-investor": "comply",
-  "financial-crisis": "emergency-loan",
-  "financing-repayment": "repay",
-  "fandom-crisis": "apology",
-  morale: "private-meeting",
-  overwork: "cancel-schedule",
+const NOVICE_VISIBLE_WEIGHTS: Partial<Record<keyof EffectMap, number>> = {
+  money: 1 / 4_000_000,
+  public: 2.5,
+  fandom: 2.5,
+  fandomLoyalty: 0.5,
+  fandomDisappointment: -1.0,
+  satisfaction: 1.2,
+  condition: 0.8,
+  chemistry: 1.0,
+  injuryWeeks: -5,
+  albumSong: 0.2,
+  albumVisual: 0.2,
+  albumChoreography: 0.2,
+  albumMarketing: 0.2,
 };
+
+function noviceVisibleUtility(effects: EffectMap): number {
+  return Object.entries(effects).reduce(
+    (score, [key, value]) =>
+      score + value * (NOVICE_VISIBLE_WEIGHTS[key as keyof EffectMap] ?? 0),
+    0,
+  );
+}
 
 /**
  * 혹사 페르소나의 위기 대응: 모든 위기에서 멤버에게 가장 가혹한(비용을
@@ -444,7 +482,6 @@ function pickPreferredOption(
 function buildWeeklyDecisions(
   snapshot: GameSnapshot,
   profile: PlayerProfile,
-  cumulativeWeek: number,
   contractFirst = false,
 ): PlayerDecisions["resolvedDecisions"] {
   const toResolved = (
@@ -470,18 +507,18 @@ function buildWeeklyDecisions(
       );
     }
     if (profile === "novice") {
-      if (card.id === "strategic-expansion") return [];
-      if (card.lane === "opportunity") {
-        if (cumulativeWeek % 2 !== 0) return [];
-        // 기회 카드의 옵션 순서는 "대표 제안 우선"으로 저작된 표기라서,
-        // 초보는 다른 제안과 비교하지 않고 첫 제안을 그대로 수락한다.
-        const option = card.options[0];
-        return option ? toResolved(card, option) : [];
+      // 모든 카드를 "보이는 좋은 숫자가 가장 큰" 옵션으로 고른다. 위기
+      // 카드는 반드시 하나를 고르고(가장 덜 나빠 보이는 것), 기회 카드는
+      // 이득이 보일 때만 수락한다 — 격주 수락 같은 인공 규칙은 없다.
+      const option = [...card.options].sort(
+        (left, right) =>
+          noviceVisibleUtility(right.effects) - noviceVisibleUtility(left.effects),
+      )[0];
+      if (!option) return [];
+      if (card.lane === "opportunity" && noviceVisibleUtility(option.effects) <= 0) {
+        return [];
       }
-      return toResolved(
-        card,
-        pickPreferredOption(card, NOVICE_CRISIS_PREFERENCE, profile),
-      );
+      return toResolved(card, option);
     }
 
     const strategicPreference =
@@ -542,8 +579,37 @@ function buildPlayerDecisions(
     // 매주 쌓이는 것이 이 페르소나의 핵심 압력이다.
     return {
       trainingSchedule: { intensity: "extreme", restDay: false },
-      resolvedDecisions: buildWeeklyDecisions(snapshot, profile, cumulativeWeek),
+      resolvedDecisions: buildWeeklyDecisions(snapshot, profile),
       promotionOrders: [],
+    };
+  }
+
+  if (profile === "novice") {
+    // 초보는 대시보드 수치가 아니라 "게임이 카드로 소리쳐야" 반응한다.
+    // 부상·과로·사기 카드가 뜬 주에만 휴식일을 넣고, 그 외에는 아무
+    // 조정 없이 기본 일정을 반복한다.
+    const healthAlarm = snapshot.game.weeklyDecisions.some((card) => {
+      const root = card.id.split(":")[0];
+      return root === "injury" || root === "overwork" || root === "morale";
+    });
+    const inActivityPeriod = snapshot.game.activeProjects.some(
+      (project) =>
+        project.kind === "comeback" &&
+        project.status !== "completed" &&
+        project.currentStageId === "activity",
+    );
+    return {
+      trainingSchedule: { intensity: "normal", restDay: healthAlarm },
+      resolvedDecisions: buildWeeklyDecisions(snapshot, profile),
+      promotionOrders:
+        inActivityPeriod && cumulativeWeek % 3 === 0
+          ? [
+              {
+                activityId: "varietyShow",
+                assignedMemberIds: [snapshot.trainee.trainees[0].id],
+              },
+            ]
+          : [],
     };
   }
 
@@ -581,34 +647,22 @@ function buildPlayerDecisions(
             ? "fanSign"
             : "smallConcert",
       });
-    } else if (profile === "novice" && cumulativeWeek % 3 === 0) {
-      promotionOrders.push({
-        activityId: "varietyShow",
-        assignedMemberIds: [snapshot.trainee.trainees[0].id],
-      });
     }
   }
 
   return {
     trainingSchedule:
-      profile === "novice"
-        ? { intensity: "normal", restDay: false }
-        : meanStress >= (profile === "expert" ? 48 : 60)
-          ? { intensity: "normal", restDay: true, focus: weakestTeamStat(snapshot.trainee.trainees) }
-          : {
-              intensity: profile === "expert" ? "hard" : "normal",
-              restDay: false,
-              focus:
-                profile === "expert" || cumulativeWeek % 2 === 0
-                  ? weakestTeamStat(snapshot.trainee.trainees)
-                  : undefined,
-            },
-    resolvedDecisions: buildWeeklyDecisions(
-      snapshot,
-      profile,
-      cumulativeWeek,
-      contractFirst,
-    ),
+      meanStress >= (profile === "expert" ? 48 : 60)
+        ? { intensity: "normal", restDay: true, focus: weakestTeamStat(snapshot.trainee.trainees) }
+        : {
+            intensity: profile === "expert" ? "hard" : "normal",
+            restDay: false,
+            focus:
+              profile === "expert" || cumulativeWeek % 2 === 0
+                ? weakestTeamStat(snapshot.trainee.trainees)
+                : undefined,
+          },
+    resolvedDecisions: buildWeeklyDecisions(snapshot, profile, contractFirst),
     promotionOrders,
   };
 }
@@ -724,23 +778,28 @@ function completeProjectChoices(snapshot: GameSnapshot, profile: PlayerProfile):
   if (!owner || !snapshot.album.currentAlbum) return snapshot;
 
   const candidates = snapshot.album.currentAlbum.titleTrackCandidates;
+  // 초보도 화면에 보이는 품질 숫자는 읽는다 — 가장 높은 숫자를 고른다.
+  // 트랙 타입(팬덤 확장·해외 공략)의 전략적 의미까지 읽는 건 숙련의 몫이고,
+  // 혹사는 아무거나(첫 후보) 던진다.
   const selected =
-    profile === "intermediate" || profile === "expert"
-      ? [...candidates].sort((left, right) => {
+    profile === "abusive"
+      ? candidates[0]
+      : [...candidates].sort((left, right) => {
           const strategicBonus = (type: string) =>
-            type === "global" && snapshot.fandom.global < 35
-              ? 8
-              : type === "fandom" && snapshot.fandom.fandom < 45
-                ? 6
-                : type === "bold" && snapshot.fandom.public < 40
-                  ? 4
-                  : 0;
-          return profile === "expert"
-            ? right.quality + strategicBonus(right.type) -
-                (left.quality + strategicBonus(left.type))
-            : right.quality - left.quality;
-        })[0]
-      : candidates[0];
+            profile !== "expert"
+              ? 0
+              : type === "global" && snapshot.fandom.global < 35
+                ? 8
+                : type === "fandom" && snapshot.fandom.fandom < 45
+                  ? 6
+                  : type === "bold" && snapshot.fandom.public < 40
+                    ? 4
+                    : 0;
+          return (
+            right.quality + strategicBonus(right.type) -
+            (left.quality + strategicBonus(left.type))
+          );
+        })[0];
   if (!selected) return snapshot;
 
   return {
@@ -854,7 +913,6 @@ function upgradeFacility(
 function applyFacilityPolicy(
   snapshot: GameSnapshot,
   profile: PlayerProfile,
-  cumulativeWeek: number,
 ): { snapshot: GameSnapshot; spend: number } {
   let next = snapshot;
   let spend = 0;
@@ -883,7 +941,12 @@ function applyFacilityPolicy(
     next.finance.upgrades.equipmentLevel < 2
   ) {
     buy("equipmentLevel");
-  } else if (profile === "novice" && cumulativeWeek === 130 && next.finance.money > 500_000_000) {
+  } else if (
+    profile === "novice" &&
+    next.finance.money > 500_000_000 &&
+    next.finance.upgrades.dormLevel < 2
+  ) {
+    // 초보는 잔액이 크게 쌓인 게 눈에 보이면 숙소부터 한 번 올려 준다.
     buy("dormLevel");
   }
   // abusive는 멤버 처우에 아무것도 투자하지 않는다.
@@ -896,13 +959,25 @@ function musicShowWinsFromReport(report: WeekReport): number {
   ).length;
 }
 
+export interface CampaignOptions {
+  /**
+   * 숙련 페르소나의 시상식 역산 스케줄링. 끄면 순수 16주 간격으로만
+   * 컴백한다 — "달력을 읽는 계획이 실제로 상을 더 가져오는가"를 검증하는
+   * 대조군 전용이며, 기본 숙련 플레이는 항상 켜져 있다.
+   */
+  awardPlanning?: boolean;
+}
+
 export function simulateCampaign(
   profile: PlayerProfile,
   seed: number,
   staffingPolicy: StaffingPolicy = "lean",
   contractFirst = false,
+  options: CampaignOptions = {},
 ): CampaignSummary {
+  const awardPlanning = options.awardPlanning ?? true;
   let snapshot = makeCampaign(profile, seed, staffingPolicy);
+  const startingMoney = snapshot.finance.money;
   let minimumMoney = snapshot.finance.money;
   let totalIncome = 0;
   let totalExpenses = 0;
@@ -913,13 +988,14 @@ export function simulateCampaign(
   let financingBorrowed = 0;
   let financingRepaid = 0;
   const decisionCostBreakdown: Record<string, number> = {};
+  const incomeBreakdown: Record<string, number> = {};
+  const expenseBreakdown: Record<string, number> = {};
   let facilitySpend = 0;
   let injuries = 0;
   let musicShowWins = 0;
   let weeksPlayed = 0;
   let comebackIndex = 0;
   let lastComebackStart = 0;
-  let nextNoviceStart = 21;
   let memberDepartures = 0;
   let firstDepartureWeek: number | null = null;
   const yearly: CampaignSummary["yearly"] = [];
@@ -931,7 +1007,7 @@ export function simulateCampaign(
       snapshot.game.currentWeek;
 
     snapshot = completeProjectChoices(snapshot, profile);
-    const facility = applyFacilityPolicy(snapshot, profile, cumulativeWeek);
+    const facility = applyFacilityPolicy(snapshot, profile);
     snapshot = facility.snapshot;
     facilitySpend += facility.spend;
 
@@ -940,18 +1016,36 @@ export function simulateCampaign(
       snapshot.game.activeProjects,
       snapshot.album.currentAlbum,
     );
+    const gap = cumulativeWeek - lastComebackStart;
+    const releaseWeekOfYear = projectedReleaseWeekOfYear(snapshot.game.currentWeek);
     const cadenceReady =
       profile === "expert"
-        ? lastComebackStart === 0 || cumulativeWeek - lastComebackStart >= 16
+        ? awardPlanning
+          ? // 시상식 역산: 발매가 어느 해 심사에도 집계되지 않는 사각지대
+            // (시상 주 이후, 50~52주차)로 떨어질 타이밍이면 몇 주 미루고
+            // 연초 발매로 넘긴다. 심사 직전(42~49주차)으로 주기를 당기는
+            // 압축 스프린트는 프로브 결과 오히려 해로웠다 — 사이클 압축이
+            // 팬 실망·충성도를 갉아 투표 지표(MAMA 30%)를 깎기 때문.
+            // 현 시상 체계는 연중 차트 성적을 안 보므로(50주차 public
+            // 스냅샷 + 그 해 최고 품질) 달력의 이득은 낭비 회피까지다.
+            releaseWeekOfYear < AWARDS_WEEK_OF_YEAR &&
+            (lastComebackStart === 0 || gap >= 16)
+          : lastComebackStart === 0 || gap >= 16
         : profile === "intermediate"
-          ? lastComebackStart === 0 || cumulativeWeek - lastComebackStart >= 21
-          : profile === "abusive"
-            // 혹사 운영은 쉬는 기간 없이 가능한 즉시 다음 활동을 강행한다.
-            ? true
-            : cumulativeWeek >= nextNoviceStart;
+          ? lastComebackStart === 0 || gap >= 21
+          : // 초보는 "돈이 모이면 바로 쓴다" — 예약금 계산 없이 컴백 버튼이
+            // 열리고 예산이 맞으면 즉시 시작한다. 혹사도 같은 즉시 강행이지만
+            // 동기가 다르다(멤버 소모 전제의 무휴식 회전).
+            true;
     const budget = COMEBACK_BUDGET_TIERS_BY_ID.get(comebackBudgetTier(profile))!;
     const reserve =
-      profile === "expert" ? 260_000_000 : profile === "intermediate" ? 160_000_000 : 80_000_000;
+      profile === "expert"
+        ? 260_000_000
+        : profile === "intermediate"
+          ? 160_000_000
+          : profile === "novice"
+            ? 20_000_000
+            : 80_000_000;
     if (
       comebackAvailable &&
       cadenceReady &&
@@ -964,11 +1058,6 @@ export function simulateCampaign(
         comebackIndex,
       );
       lastComebackStart = cumulativeWeek;
-      if (profile === "novice") {
-        nextNoviceStart =
-          cumulativeWeek +
-          NOVICE_COMEBACK_GAPS[comebackIndex % NOVICE_COMEBACK_GAPS.length];
-      }
       comebackIndex++;
     }
 
@@ -991,6 +1080,12 @@ export function simulateCampaign(
     const result = processWeek(snapshot, playerDecisions);
     totalIncome += sumRecord(result.weekReport.finance.income);
     totalExpenses += sumRecord(result.weekReport.finance.expenses);
+    for (const [key, value] of Object.entries(result.weekReport.finance.income)) {
+      incomeBreakdown[key] = (incomeBreakdown[key] ?? 0) + value;
+    }
+    for (const [key, value] of Object.entries(result.weekReport.finance.expenses)) {
+      expenseBreakdown[key] = (expenseBreakdown[key] ?? 0) + value;
+    }
     commercialContractIncome +=
       result.weekReport.finance.income.commercialContracts ?? 0;
     commercialFatigueExposure += snapshot.game.activeCommercialContracts.reduce(
@@ -1050,6 +1145,7 @@ export function simulateCampaign(
       ? (snapshot.game.campaignFailure.year - 1) * GAME_BALANCE.weeksPerYear +
         snapshot.game.campaignFailure.week
       : null,
+    startingMoney,
     endingMoney: snapshot.finance.money,
     minimumMoney,
     totalIncome,
@@ -1089,6 +1185,8 @@ export function simulateCampaign(
     remainingMembers: snapshot.trainee.trainees.length,
     memberDepartures,
     firstDepartureWeek,
+    incomeBreakdown,
+    expenseBreakdown,
     facilityLevelTotal:
       upgrades.dormLevel + upgrades.studioLevel + upgrades.equipmentLevel,
     yearly,

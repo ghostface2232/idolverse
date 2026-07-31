@@ -170,6 +170,33 @@ describe("초보와 숙련 플레이어의 5년 폐루프 밸런스", () => {
     expect(lean.failedAtWeek).toBeNull();
   });
 
+  it("숙련의 시상식 역산 스케줄은 최소한 손해가 아니어야 한다", () => {
+    // 2026-07 프로브 기록: 현 시상 체계(50주차 public 스냅샷 + 그 해 최고
+    // 품질)는 발매 타이밍을 보상하지 않는다 — 사각지대(50~52주차 발매) 회피는
+    // 사실상 무발동이고, 심사 직전으로 주기를 당기는 압축 스프린트는 팬
+    // 실망·충성도를 갉아 투표 지표를 깎아 오히려 대상을 잃었다. 그래서 이
+    // 테스트는 "계획이 이긴다"가 아니라 "계획이 손해를 만들면 안 된다"를
+    // 고정한다. 시상 지표에 연중 차트 성적 같은 달력 갈고리가 생기면
+    // 부등호를 우위 검증으로 올려야 한다.
+    const seeds = [29, 101, 173];
+    let planningAwards = 0;
+    let naiveAwards = 0;
+    let planningDaesang = 0;
+    let naiveDaesang = 0;
+    for (const seed of seeds) {
+      const planning = simulateCampaign("expert", seed);
+      const naive = simulateCampaign("expert", seed, "lean", false, {
+        awardPlanning: false,
+      });
+      planningAwards += planning.awards;
+      naiveAwards += naive.awards;
+      planningDaesang += planning.daesangAwards;
+      naiveDaesang += naive.daesangAwards;
+    }
+    expect(planningAwards).toBeGreaterThanOrEqual(naiveAwards);
+    expect(planningDaesang).toBeGreaterThanOrEqual(naiveDaesang);
+  }, 15_000);
+
   it("계약 우선 자동 플레이를 5년 돌려도 계약 수입이 지배 전략이 되지 않는다", () => {
     const balanced = simulateCampaign("intermediate", 101, "lean", false);
     const contractFirst = simulateCampaign("intermediate", 101, "lean", true);

@@ -31,6 +31,12 @@ describe("혹사 운영의 손실 경로", () => {
       expect(abusive.firstDepartureWeek!).toBeLessThan(
         GAME_BALANCE.weeksPerYear * 5,
       );
+      // 경제 계약: 최악의 운영이 초기 투자금을 불려서는 안 된다. 이전에는
+      // global 참여 순환이 품질과 무관하게 자기 강화되어(40만 넘으면 +4/주
+      // 영구 유지) 팬덤 0·품질 19의 앨범 남발로도 스트리밍만으로 5년 순증
+      // 흑자였다. 품질 게이트(minAlbumQuality)와 품질 유지 상한 조정 후에는
+      // 순손실이어야 하고, 이 부등호가 다시 뒤집히면 관대함이 재발한 것이다.
+      expect(abusive.endingMoney).toBeLessThan(abusive.startingMoney);
     }
   }, 15_000);
 

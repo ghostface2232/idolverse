@@ -489,8 +489,12 @@ export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inact
 export const AUDIENCE_QUALITY_RETENTION = {
   coreBase: 65,
   coreQualityScale: 0.35,
-  globalBase: 55,
-  globalQualityScale: 0.45,
+  // 해외 팬덤은 코어보다 관성이 약하다 — 유입도 이탈도 콘텐츠 품질에 가장
+  // 민감하다. base 55이던 시절에는 품질 0의 결과물로도 global 55가 영구
+  // 유지됐고, 그 위에 아래 참여 순환(+4/주)이 얹혀 "품질 19 앨범을 남발하는
+  // 최악의 런"이 스트리밍만으로 5년 순증 흑자였다(2026-07 혹사 프로브).
+  globalBase: 30,
+  globalQualityScale: 0.7,
   gapPerErosionPoint: 8,
   maxWeeklyErosion: 3,
 } as const;
@@ -514,6 +518,11 @@ export const EXCESSIVE_COMMERCIAL_STREAK_WEEKS = 3;
 export const GLOBAL_ENGAGEMENT_THRESHOLDS = {
   spotifyStreaming: 40, // 이 이상이면 해외 스트리밍 순환이 유지되는 것으로 본다.
   youtubeActivity: 20, // 이 이상이면 유튜브발 해외 노출이 살아 있는 것으로 본다.
+  // 순환이 살아 있으려면 돌릴 콘텐츠가 있어야 한다. 이 품질 미만의 최신작만
+  // 남은 팀은 global 수치가 높아도 참여 순환 보너스를 받지 못한다 — global이
+  // global을 낳는 자기 강화 루프(한번 40을 넘으면 품질과 무관하게 +4/주
+  // 영구 유지)를 끊는 게이트다.
+  minAlbumQuality: 40,
 } as const;
 
 /**
