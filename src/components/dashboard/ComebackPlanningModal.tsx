@@ -17,6 +17,10 @@ import {
   GENRE_DATA,
   GENRES,
 } from "@/data/concepts";
+import {
+  calculatePositionFitness,
+  positionFitnessToRating,
+} from "@/data/founding";
 import { traitLabels } from "@/data/memberTraits";
 import { calculateFandomExpectation } from "@/systems/albumSystem";
 import type {
@@ -308,33 +312,61 @@ export function ComebackPlanningModal({
               isDisabled={isSaving}
               className="mt-2 space-y-1.5"
             >
-              {trainees.map((trainee) => (
-                <Radio
-                  key={trainee.id}
-                  value={trainee.id}
-                  className={({ isSelected, isPressed }) =>
-                    [
-                      "flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl border-2 px-3 py-2 outline-none transition duration-150 ease-out",
-                      isPressed ? "scale-[0.98]" : "scale-100",
-                      radioTileClasses(isSelected, centerTraineeId !== null),
-                    ].join(" ")
-                  }
-                >
-                  <MemberPortrait
-                    traineeId={trainee.id}
-                    size="md"
-                    outfit="stage"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-xs">
-                    <span className="font-semibold text-text-primary">
-                      {trainee.name}
+              {trainees.map((trainee) => {
+                const isPositionCenter = trainee.position === "center";
+                const centerRating = positionFitnessToRating(
+                  calculatePositionFitness(trainee.stats, "center"),
+                );
+
+                return (
+                  <Radio
+                    key={trainee.id}
+                    value={trainee.id}
+                    className={({ isSelected, isPressed }) =>
+                      [
+                        "flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl border-2 px-3 py-2 outline-none transition duration-150 ease-out",
+                        isPressed ? "scale-[0.98]" : "scale-100",
+                        radioTileClasses(isSelected, centerTraineeId !== null),
+                      ].join(" ")
+                    }
+                  >
+                    <MemberPortrait
+                      traineeId={trainee.id}
+                      size="md"
+                      outfit="stage"
+                    />
+                    <span className="min-w-0 flex-1 text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <span className="truncate font-semibold text-text-primary">
+                          {trainee.name}
+                        </span>
+                        {isPositionCenter ? (
+                          <span className="shrink-0 rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
+                            현재 센터
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="mt-0.5 block truncate text-text-muted">
+                        {traitLabels(trainee).join("·")}
+                      </span>
                     </span>
-                    <span className="ml-2 text-text-muted">
-                      {traitLabels(trainee).join("·")}
+                    <span
+                      className="shrink-0 text-right text-[11px] leading-4"
+                      title="비주얼·매력 스탯 기준의 센터 포지션 적합도입니다"
+                    >
+                      <span className="block text-[10px] text-text-muted">
+                        센터 적합도
+                      </span>
+                      <span className="tracking-[0.08em] text-amber-300">
+                        {"★".repeat(centerRating)}
+                        <span className="text-white/20">
+                          {"★".repeat(5 - centerRating)}
+                        </span>
+                      </span>
                     </span>
-                  </span>
-                </Radio>
-              ))}
+                  </Radio>
+                );
+              })}
             </RadioGroup>
             <p className="mt-1.5 text-[11px] text-text-muted">
               선택하지 않으면 포지션 센터가 그대로 섭니다.
