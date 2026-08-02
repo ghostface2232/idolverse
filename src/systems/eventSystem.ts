@@ -21,6 +21,7 @@ export interface EventContext {
   global: number;
   industry: number;
   hasSecurity: boolean;
+  hasAlbumInProduction: boolean;
   trainees: readonly Trainee[];
 }
 
@@ -110,6 +111,8 @@ function matchesConditions(
   }
 
   if (c.requiresSecurity === false && ctx.hasSecurity) return false;
+
+  if (c.requiresAlbumInProduction && !ctx.hasAlbumInProduction) return false;
 
   if (c.lowChemistryPair) {
     if (!hasLowChemistryPair(ctx.trainees)) return false;

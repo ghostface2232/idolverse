@@ -15,6 +15,7 @@ import {
 import type {
   ConceptMood,
   EffectMap,
+  EventStaffChange,
   FinanceStoreActions,
   GameEvent,
   Genre,
@@ -22,6 +23,8 @@ import type {
   Staff,
   StaffTrainingId,
 } from "@/types/game";
+import { generateStaffCandidates } from "@/systems/recruitSystem";
+import { hashSeed } from "@/data/voiceLines";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
@@ -223,7 +226,14 @@ function resolveEventChoice(
   const signedAdContract =
     pendingEvent.id.startsWith("event-brand-ad-offer-") && choiceIndex === 0;
   const before = captureWeekDeltaState(toWeekDeltaState(snapshot));
-  const nextSnapshot = applySnapshotEffects(snapshot, effects);
+  let nextSnapshot = applySnapshotEffects(snapshot, effects);
+  if (choice?.staffChange) {
+    nextSnapshot = applyStaffChangeToSnapshot(
+      nextSnapshot,
+      choice.staffChange,
+      event.id,
+    );
+  }
   const eventDeltas = diffWeekDeltaState(
     before,
     captureWeekDeltaState(toWeekDeltaState(nextSnapshot)),
@@ -272,6 +282,67 @@ function resolveEventChoice(
       effects,
       choice,
       deltas: eventDeltas,
+    },
+  };
+}
+
+/**
+ * 이벤트 선택의 구조적 스태프 변화를 스냅샷에 적용한다. 대상은 항상
+ * "핵심 스태프"(최고 능력자)이고, 월급 변화는 고정비(staffSalary)와 주간
+ * 환산치까지 함께 갱신해 경영 탭과 결산이 즉시 달라진 조직을 반영한다.
+ */
+function applyStaffChangeToSnapshot(
+  snapshot: GameSnapshot,
+  change: EventStaffChange,
+  eventId: string,
+): GameSnapshot {
+  const staffList = snapshot.staff.staff;
+  if (staffList.length === 0) return snapshot;
+
+  const target = [...staffList].sort((a, b) => b.ability - a.ability)[0];
+
+  let nextStaffList: Staff[];
+  if (change.kind === "raise-salary") {
+    const raisedSalary =
+      Math.round((target.salary * (1 + change.percent / 100)) / 100_000) *
+      100_000;
+    nextStaffList = staffList.map((member) =>
+      member.id === target.id ? { ...member, salary: raisedSalary } : member,
+    );
+  } else {
+    // 신입은 같은 역할·더 낮은 능력 풀에서 뽑는다. 생성기의 월급은 능력에서
+    // 파생되지만 협상 편차가 있으므로 기존 월급을 상한으로 한 번 더 눌러
+    // "더 싸고 더 낮은" 계약을 보장한다.
+    const seed = hashSeed(`staff-change:${eventId}:${target.id}`);
+    const [junior] = generateStaffCandidates(
+      target.role,
+      seed,
+      1,
+      Math.max(30, target.ability - 8),
+    );
+    if (!junior) return snapshot;
+    nextStaffList = [
+      ...staffList.filter((member) => member.id !== target.id),
+      {
+        ...junior,
+        id: `staff-replacement-${seed}`,
+        salary: Math.min(junior.salary, Math.max(100_000, target.salary - 100_000)),
+      },
+    ];
+  }
+
+  const fixedCosts = {
+    ...snapshot.finance.fixedCosts,
+    staffSalary: nextStaffList.reduce((sum, member) => sum + member.salary, 0),
+  };
+
+  return {
+    ...snapshot,
+    staff: { staff: nextStaffList },
+    finance: {
+      ...snapshot.finance,
+      fixedCosts,
+      weeklyFixedTotal: calculateWeeklyFixedTotal(fixedCosts),
     },
   };
 }

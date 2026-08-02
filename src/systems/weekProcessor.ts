@@ -1294,6 +1294,7 @@ export function processWeek(
     global: fandomAxis.global,
     industry: fandomAxis.industry,
     hasSecurity: upgrades.hasSecurity,
+    hasAlbumInProduction: album !== null,
     trainees,
   };
   const rolledEvents = rollRandomEvents(eventCtx, seed + 2);

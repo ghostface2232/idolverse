@@ -67,6 +67,43 @@ describe("durable weekly workflow", () => {
     );
   });
 
+  it("스태프 잔류 선택은 핵심 스태프의 월급과 고정비를 실제로 올린다", async () => {
+    const event = prepareStaffPoachingFocus();
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    await applyEventChoiceAndSave(event, 0, "user", 1);
+
+    const committed = captureGameState();
+    const key = committed.staffStore.staff.find(
+      (member) => member.id === "staff-key",
+    );
+    expect(key?.salary).toBe(6_000_000); // 5,000,000 × 1.2
+    expect(committed.financeStore.fixedCosts.staffSalary).toBe(9_000_000);
+  });
+
+  it("스태프 재편 선택은 핵심 스태프를 더 싼 신입으로 실제로 교체한다", async () => {
+    const event = prepareStaffPoachingFocus();
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    await applyEventChoiceAndSave(event, 1, "user", 1);
+
+    const committed = captureGameState();
+    const staff = committed.staffStore.staff;
+    expect(staff).toHaveLength(2);
+    expect(staff.some((member) => member.id === "staff-key")).toBe(false);
+    const junior = staff.find((member) => member.role === "producer");
+    expect(junior).toBeDefined();
+    expect(junior!.ability).toBeLessThan(70);
+    expect(junior!.salary).toBeLessThan(5_000_000);
+    expect(committed.financeStore.fixedCosts.staffSalary).toBe(
+      staff.reduce((sum, member) => sum + member.salary, 0),
+    );
+  });
+
   it("차트 공개 해결과 큐 이동을 한 번의 저장으로 commit한다", async () => {
     const event = prepareChartRevealFocus();
     saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
@@ -375,6 +412,65 @@ function prepareEventFocus() {
     resolved: false,
   };
   const snapshot = makeGameSnapshot({ week: 6 });
+  snapshot.event.pendingEvents = [event];
+  snapshot.game.weeklyFlow = {
+    state: "event_focus",
+    selectedDecisionIds: {},
+    selectedTargetTraineeIds: {},
+    eventQueueIds: [event.id],
+    activeEventIndex: 0,
+    resolutionId: "weekly-resolution:y1:w5",
+    report: null,
+  };
+  hydrateGameState(toGameStateSnapshot(snapshot));
+  return event;
+}
+
+function prepareStaffPoachingFocus() {
+  const event: GameEvent = {
+    id: "event-staff-poaching-y1-w6",
+    type: "scandal",
+    title: "핵심 스태프 이직 위기",
+    description: "외부에서 스태프를 빼가려 한다.",
+    choices: [
+      {
+        label: "연봉 인상으로 붙잡는다",
+        description: "월급을 올려 잔류시킨다.",
+        tradeoff: "테스트",
+        effects: { money: -10000000 },
+        staffChange: { kind: "raise-salary", percent: 20 },
+      },
+      {
+        label: "보내고 신입으로 재편한다",
+        description: "신입으로 교체한다.",
+        tradeoff: "테스트",
+        effects: { industry: -3 },
+        staffChange: { kind: "replace-with-junior" },
+      },
+    ],
+    resolved: false,
+  };
+  const snapshot = makeGameSnapshot({ week: 6 });
+  snapshot.staff.staff = [
+    {
+      id: "staff-key",
+      name: "핵심 스태프",
+      role: "producer",
+      ability: 70,
+      salary: 5_000_000,
+    },
+    {
+      id: "staff-side",
+      name: "보조 스태프",
+      role: "marketer",
+      ability: 40,
+      salary: 3_000_000,
+    },
+  ];
+  snapshot.finance.fixedCosts = {
+    ...snapshot.finance.fixedCosts,
+    staffSalary: 8_000_000,
+  };
   snapshot.event.pendingEvents = [event];
   snapshot.game.weeklyFlow = {
     state: "event_focus",

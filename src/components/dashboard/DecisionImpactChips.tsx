@@ -2,6 +2,7 @@ import type {
   CommercialContractOffer,
   EffectKey,
   EffectMap,
+  EventStaffChange,
   TraineeActivity,
 } from "@/types/game";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
@@ -42,6 +43,7 @@ interface ImpactSource {
   effects: EffectMap;
   contractOffer?: CommercialContractOffer;
   activityOverride?: TraineeActivity;
+  staffChange?: EventStaffChange;
 }
 
 interface DecisionImpactChipsProps {
@@ -107,6 +109,27 @@ function buildImpactChips(option: ImpactSource): ImpactChip[] {
       label: `매주 피로 +${option.contractOffer.weeklyStress}`,
       tone: "negative",
     });
+  }
+
+  if (option.staffChange) {
+    if (option.staffChange.kind === "raise-salary") {
+      chips.push({
+        id: "staff-raise",
+        label: `핵심 스태프 월급 +${option.staffChange.percent}% (고정비)`,
+        tone: "negative",
+      });
+    } else {
+      chips.push({
+        id: "staff-replace",
+        label: "핵심 스태프 퇴사 · 신입 합류",
+        tone: "danger",
+      });
+      chips.push({
+        id: "staff-replace-cost",
+        label: "월 고정비 감소",
+        tone: "positive",
+      });
+    }
   }
 
   if (option.activityOverride) {

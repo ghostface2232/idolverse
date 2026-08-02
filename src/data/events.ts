@@ -392,6 +392,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     conditions: {
       minIndustry: 25,
       phase: ["training", "debut", "growth"],
+      // 곡 계약의 대가(albumSong)는 제작 중인 앨범에만 실린다 — 앨범이
+      // 없으면 거액을 내고도 아무 효과가 없는 선택지가 된다.
+      requiresAlbumInProduction: true,
     },
     effects: {
       albumSong: 12,
@@ -673,10 +676,11 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "위로금과 충원을 약속한다",
-        description: "즉시 보상하고 현장 인력을 보강합니다.",
-        tradeoff: "비용이 들지만 팀의 기반을 지킵니다.",
-        effects: { money: -35000000, industry: 1 },
+        label: "위로금과 처우 개선을 약속한다",
+        description: "즉시 위로금을 지급하고 핵심 스태프의 월급을 올립니다.",
+        tradeoff: "일시 비용에 더해 매주 고정비가 늘지만 팀의 기반을 지킵니다.",
+        effects: { money: -20000000, industry: 1 },
+        staffChange: { kind: "raise-salary", percent: 10 },
       },
       {
         label: "지금 인원으로 감내한다",
@@ -702,15 +706,17 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     choices: [
       {
         label: "연봉 인상으로 붙잡는다",
-        description: "즉시 보상안을 제시해 잔류시킵니다.",
-        tradeoff: "현금흐름이 나빠지지만 운영 안정성을 지킵니다.",
-        effects: { money: -30000000, industry: 1 },
+        description: "핵심 스태프의 월급을 올려 잔류시킵니다.",
+        tradeoff: "일시 협상 비용에 더해 매주 고정비가 늘지만 운영 안정성을 지킵니다.",
+        effects: { money: -10000000, industry: 1 },
+        staffChange: { kind: "raise-salary", percent: 20 },
       },
       {
-        label: "보내고 구조를 재편한다",
-        description: "손실을 감수하고 체제를 슬림하게 만듭니다.",
-        tradeoff: "단기 효율이 떨어지지만 비용 부담은 없습니다.",
-        effects: { money: 0, industry: -3, public: -1 },
+        label: "보내고 신입으로 재편한다",
+        description: "핵심 스태프를 보내고 월급이 낮은 신입을 같은 역할로 들입니다.",
+        tradeoff: "역량과 평판이 떨어지지만 매주 고정비가 줄어듭니다.",
+        effects: { industry: -3, public: -1, satisfaction: -3 },
+        staffChange: { kind: "replace-with-junior" },
       },
     ],
   },
@@ -1187,6 +1193,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     conditions: {
       phase: ["debut", "growth", "peak"],
       minFandom: 15,
+      // "공개 전 신곡"이 전제인 이벤트 — 제작 중인 앨범이 없으면 서사도
+      // 앨범 효과(albumMarketing)도 성립하지 않는다.
+      requiresAlbumInProduction: true,
     },
     effects: {
       stress: 4,

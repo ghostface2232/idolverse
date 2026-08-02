@@ -699,11 +699,27 @@ export interface KPopNews {
   type: KPopNewsType;
 }
 
+/**
+ * 이벤트 선택이 스태프 조직에 가하는 구조적 변화. 수치 효과(effects)와 달리
+ * 실제 인원·월급(고정비)이 바뀐다. 대상은 항상 "핵심 스태프"(최고 능력자)다.
+ */
+export type EventStaffChange =
+  | {
+      /** 핵심 스태프가 떠나고, 능력·월급이 더 낮은 신입이 같은 역할로 합류한다. */
+      kind: "replace-with-junior";
+    }
+  | {
+      /** 핵심 스태프의 월급을 인상해 잔류시킨다 — 매주 고정비가 영구히 늘어난다. */
+      kind: "raise-salary";
+      percent: number;
+    };
+
 export interface EventChoice {
   label: string;
   description: string;
   tradeoff: string;
   effects: EffectMap;
+  staffChange?: EventStaffChange;
 }
 
 export interface GameEvent {
@@ -757,6 +773,12 @@ export interface RandomEventCondition {
   requiresSecurity?: boolean;
   requiresVacation?: boolean;
   lowChemistryPair?: boolean;
+  /**
+   * 앨범 진행도(album*) 효과를 가진 이벤트 전용. 제작 중인 앨범이 없으면
+   * 효과가 조용히 증발해 "돈 내고 아무것도 못 받는" 선택지가 되므로,
+   * 발생 자체를 제작 중일 때로 제한한다.
+   */
+  requiresAlbumInProduction?: boolean;
 }
 
 export interface RandomEventTemplate {
