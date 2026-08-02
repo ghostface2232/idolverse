@@ -586,7 +586,34 @@ export function processWeek(
     industry: fandomAxis.industry,
   };
 
+  // 같은 활동은 한 활동기에 한 번만 연다 — 초대형 콘서트를 매주 반복해
+  // 피로 약간만 내고 수억을 회수하는 루프를 막는 구조적 제한이다.
+  const promotionProjectIndex = activeProjects.findIndex(
+    (project) =>
+      project.kind === "comeback" &&
+      project.status !== "completed" &&
+      project.currentStageId === "activity",
+  );
+  const usedPromotionIds = new Set(
+    promotionProjectIndex >= 0
+      ? activeProjects[promotionProjectIndex].usedPromotionIds ?? []
+      : [],
+  );
+
   for (let i = 0; i < promotionOrders.length; i++) {
+    if (
+      promotionProjectIndex >= 0 &&
+      usedPromotionIds.has(promotionOrders[i].activityId)
+    ) {
+      const duplicateName =
+        PROMOTION_ACTIVITIES.find(
+          (activity) => activity.id === promotionOrders[i].activityId,
+        )?.name ?? "프로모션";
+      report.warnings.push(
+        `${duplicateName}: 이번 활동기에 이미 진행해 다시 열 수 없습니다`,
+      );
+      continue;
+    }
     const beforePromotion = captureWeekDeltaState(getDeltaState());
     const result = executePromotion(
       promotionOrders[i],
@@ -596,6 +623,13 @@ export function processWeek(
       seed + 60 + i,
     );
     if (!result) continue;
+    // 요구 조건 미충족(빈 결과)은 실행으로 치지 않는다.
+    if (
+      promotionProjectIndex >= 0 &&
+      (result.cost > 0 || Object.keys(result.effects).length > 0)
+    ) {
+      usedPromotionIds.add(promotionOrders[i].activityId);
+    }
 
     report.promotionResults.push(result);
     promotionTotalIncome += result.income;
@@ -623,6 +657,13 @@ export function processWeek(
       },
       2,
     );
+  }
+
+  if (promotionProjectIndex >= 0) {
+    activeProjects[promotionProjectIndex] = {
+      ...activeProjects[promotionProjectIndex],
+      usedPromotionIds: [...usedPromotionIds],
+    };
   }
 
   // 진행 중인 외부 계약은 정산만 만드는 연금이 아니다. 참여 멤버의 매주

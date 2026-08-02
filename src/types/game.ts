@@ -279,6 +279,11 @@ export interface ProjectInstance {
   completedAtWeek?: number;
   /** 이 프로젝트가 발매한 앨범. 음악방송·정산 단계가 발매 결과를 참조한다. */
   releasedAlbumId?: string;
+  /**
+   * 이번 활동기에 이미 진행한 프로모션. 같은 활동은 활동기당 1회만 열린다 —
+   * 초대형 콘서트를 매주 반복해 리스크 없이 수억을 회수하는 루프를 막는다.
+   */
+  usedPromotionIds?: PromotionActivityId[];
   /** 데뷔 프로젝트의 일정 선택. 없으면 표준(20주) 일정으로 본다. */
   scheduleTierId?: DebutScheduleTierId;
 }

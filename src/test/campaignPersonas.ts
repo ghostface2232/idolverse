@@ -31,6 +31,7 @@ import type {
   ConceptMood,
   EffectMap,
   Genre,
+  PromotionActivityId,
   Staff,
   Trainee,
   TraineeStatKey,
@@ -620,17 +621,22 @@ function buildPlayerDecisions(
   }
 
   const meanStress = average(snapshot.trainee.trainees.map((trainee) => trainee.stress));
-  const inActivityPeriod = snapshot.game.activeProjects.some(
+  const activityPeriodProject = snapshot.game.activeProjects.find(
     (project) =>
       project.kind === "comeback" &&
       project.status !== "completed" &&
       project.currentStageId === "activity",
   );
+  const inActivityPeriod = activityPeriodProject !== undefined;
+  // 같은 활동은 활동기당 1회만 열리므로, 선호 순서에서 아직 안 쓴 활동을 고른다.
+  const usedActivityIds = new Set(activityPeriodProject?.usedPromotionIds ?? []);
+  const firstUnused = (candidates: PromotionActivityId[]) =>
+    candidates.find((candidate) => !usedActivityIds.has(candidate)) ?? null;
   const promotionOrders: PlayerDecisions["promotionOrders"] = [];
 
   if (inActivityPeriod) {
     if (profile === "expert") {
-      const activityId =
+      const preferred =
         snapshot.game.currentPhase !== "debut" && snapshot.fandom.fandom >= 35
           ? "smallConcert"
           : snapshot.fandom.fandom >= 15 && snapshot.fandom.fandomLoyalty < 75
@@ -638,21 +644,33 @@ function buildPlayerDecisions(
             : snapshot.fandom.public < 55
               ? "varietyShow"
               : "youtubeContent";
-      promotionOrders.push({
-        activityId,
-        assignedMemberIds: [
-          [...snapshot.trainee.trainees].sort(
-            (left, right) => right.stats.charm - left.stats.charm,
-          )[0].id,
-        ],
-      });
+      const activityId = firstUnused([
+        preferred,
+        "fanSign",
+        "varietyShow",
+        "youtubeContent",
+        "liveBroadcast",
+        "fanCafeEvent",
+      ]);
+      if (activityId) {
+        promotionOrders.push({
+          activityId,
+          assignedMemberIds: [
+            [...snapshot.trainee.trainees].sort(
+              (left, right) => right.stats.charm - left.stats.charm,
+            )[0].id,
+          ],
+        });
+      }
     } else if (profile === "intermediate" && cumulativeWeek % 2 === 0) {
-      promotionOrders.push({
-        activityId:
-          snapshot.fandom.fandom < 45
-            ? "fanSign"
-            : "smallConcert",
-      });
+      const activityId = firstUnused([
+        snapshot.fandom.fandom < 45 ? "fanSign" : "smallConcert",
+        "youtubeContent",
+        "liveBroadcast",
+      ]);
+      if (activityId) {
+        promotionOrders.push({ activityId });
+      }
     }
   }
 

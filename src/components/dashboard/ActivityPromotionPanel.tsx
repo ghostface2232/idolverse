@@ -46,6 +46,8 @@ interface ActivityPromotionPanelProps {
   selectedId: PromotionActivityId | null;
   money: number;
   activityWeeksLeft: number;
+  /** 이번 활동기에 이미 진행한 활동 — 같은 활동은 활동기당 1회만 열린다. */
+  usedActivityIds?: readonly PromotionActivityId[];
   disabled?: boolean;
   onSelect: (id: PromotionActivityId | null) => void;
 }
@@ -59,6 +61,7 @@ export function ActivityPromotionPanel({
   selectedId,
   money,
   activityWeeksLeft,
+  usedActivityIds = [],
   disabled = false,
   onSelect,
 }: ActivityPromotionPanelProps) {
@@ -72,7 +75,7 @@ export function ActivityPromotionPanel({
           활동기 프로모션
         </h3>
         <span className="text-[11px] tabular-nums text-text-muted">
-          활동 종료까지 {activityWeeksLeft}주 · 주당 1건
+          활동 종료까지 {activityWeeksLeft}주 · 주당 1건 · 같은 활동은 1회만
         </span>
       </div>
 
@@ -81,15 +84,18 @@ export function ActivityPromotionPanel({
           const cost = activity.cost * PROMOTION_COST_UNIT;
           const income = (activity.income ?? 0) * PROMOTION_COST_UNIT;
           const affordable = cost <= money;
+          const alreadyUsed = usedActivityIds.includes(activity.id);
           const isSelected = selectedId === activity.id;
           return (
             <button
               key={activity.id}
               type="button"
-              disabled={disabled || !affordable}
+              disabled={disabled || !affordable || alreadyUsed}
               className={[
                 "min-h-11 w-full rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.98] [word-break:keep-all]",
-                !affordable || disabled ? "cursor-not-allowed opacity-45" : "",
+                !affordable || disabled || alreadyUsed
+                  ? "cursor-not-allowed opacity-45"
+                  : "",
                 radioTileClasses(isSelected, selectedId !== null),
               ].join(" ")}
               onClick={() => onSelect(isSelected ? null : activity.id)}
@@ -99,12 +105,22 @@ export function ActivityPromotionPanel({
                   {activity.name}
                 </span>
                 <span className="flex items-center gap-2 text-[11px] tabular-nums">
-                  {cost > 0 ? <MoneyDisplay amount={-cost} size="sm" /> : null}
-                  {income > 0 ? (
-                    <span className="text-emerald-300">
-                      기대 수익 <MoneyDisplay amount={income} size="sm" />
+                  {alreadyUsed ? (
+                    <span className="rounded-md bg-white/[0.08] px-1.5 py-0.5 font-semibold text-text-muted">
+                      이번 활동기 진행 완료
                     </span>
-                  ) : null}
+                  ) : (
+                    <>
+                      {cost > 0 ? (
+                        <MoneyDisplay amount={-cost} size="sm" />
+                      ) : null}
+                      {income > 0 ? (
+                        <span className="text-emerald-300">
+                          기대 수익 <MoneyDisplay amount={income} size="sm" />
+                        </span>
+                      ) : null}
+                    </>
+                  )}
                 </span>
               </span>
               <span className="mt-0.5 block text-pretty text-[11px] leading-4 text-text-muted">

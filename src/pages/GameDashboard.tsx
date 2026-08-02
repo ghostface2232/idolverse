@@ -684,6 +684,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           selectedId={promotionId}
           money={money}
           activityWeeksLeft={activityWeeksLeft}
+          usedActivityIds={activityProject.usedPromotionIds ?? []}
           disabled={isAdvancing}
           onSelect={setPromotionId}
         />
