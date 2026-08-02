@@ -43,10 +43,13 @@ export function GameShell({
       >
         <div
           className={[
+            // commandPanel이 없으면 데스크톱에서도 flex-col을 유지한다 —
+            // block으로 바꾸면 자식 section의 flex-1이 무효가 되어 높이가
+            // 0으로 붕괴해 이번 주 화면이 빈 화면이 된다.
             "flex h-full min-h-0 flex-col",
             commandPanel
               ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,400px)]"
-              : "lg:block",
+              : "",
           ].join(" ")}
         >
           <section className="relative min-h-0 flex-1 overflow-hidden bg-surface-world">

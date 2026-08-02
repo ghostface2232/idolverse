@@ -352,7 +352,9 @@ export function DecisionCardDeck({
               value={option.id}
               className={({ isFocusVisible, isPressed, isSelected }) =>
                 [
-                  "group min-h-16 rounded-2xl border-2 px-3 py-2.5",
+                  // block 필수 — react-aria Radio는 label(inline)로 렌더되어
+                  // border·패딩이 라인 박스 단위로 쪼개질 수 있다.
+                  "group block min-h-16 rounded-2xl border-2 px-3 py-2.5",
                   "transition-[scale,background-color,border-color,box-shadow,opacity] duration-[var(--motion-state)] ease-out",
                   radioTileClasses(isSelected, Boolean(selectedOptionId)),
                   isPressed ? "scale-[0.96]" : "scale-100",

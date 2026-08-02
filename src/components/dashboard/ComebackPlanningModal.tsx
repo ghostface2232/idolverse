@@ -213,7 +213,9 @@ export function ComebackPlanningModal({
                       value={candidate}
                       className={({ isSelected, isPressed }) =>
                         [
-                          "min-h-11 cursor-pointer rounded-2xl border-2 p-3 outline-none transition duration-150 ease-out",
+                          // block 필수 — react-aria Radio는 label(inline)로
+                          // 렌더되어 border·패딩이 라인 박스 단위로 쪼개질 수 있다.
+                          "block min-h-11 cursor-pointer rounded-2xl border-2 p-3 outline-none transition duration-150 ease-out",
                           isPressed ? "scale-[0.96]" : "scale-100",
                           radioTileClasses(isSelected, mood !== null),
                         ].join(" ")

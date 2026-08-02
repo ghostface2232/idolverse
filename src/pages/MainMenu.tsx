@@ -84,7 +84,9 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
           onClose={() => setIsSaveOpen(false)}
           className="max-w-md"
         >
-          <div className="-mx-4 -my-6">
+          {/* 모달 좌우 패딩(px-5)만 일부 상쇄해 카드 폭을 넓히고,
+              상하는 모달 자체 패딩(py-5)을 그대로 살린다. */}
+          <div className="-mx-4">
             <SaveSlots
               userId={userId}
               onNewGame={onNewGame}

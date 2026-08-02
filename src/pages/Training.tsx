@@ -353,7 +353,10 @@ export function Training({ onBack }: TrainingProps) {
             >
               <span
                 className={[
-                  "absolute top-1 h-5 w-5 rounded-full bg-text-primary transition-transform",
+                  // left-0 필수 — absolute에 기준 좌표가 없으면 static
+                  // position이 브라우저 계산에 따라 밀려 노브가 pill 밖으로
+                  // 나간다.
+                  "absolute left-0 top-1 h-5 w-5 rounded-full bg-text-primary transition-transform",
                   trainingSchedule.restDay ? "translate-x-6" : "translate-x-1",
                 ].join(" ")}
               />

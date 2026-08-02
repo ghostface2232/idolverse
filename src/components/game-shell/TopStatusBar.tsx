@@ -1,5 +1,4 @@
 import { Bell } from "lucide-react";
-import { Button } from "@/components/common/Button";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
 
@@ -45,24 +44,29 @@ export function TopStatusBar({
             className="max-w-[9.5rem] truncate px-2.5 sm:max-w-none sm:px-3"
           />
         </button>
-        <Button
-          tone="ghost"
-          static
-          className="relative size-11 !min-h-11 !min-w-11 shrink-0 rounded-xl bg-white/[0.06] !px-0 !py-0 text-text-primary shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96]"
+        {/* 히트 영역은 44px을 유지하되, 시각 칩은 자금 pill과 비슷한
+            높이(size-8)로 줄여 상단바 요소들과 체급을 맞춘다. 자금 버튼과
+            같은 네이티브 버튼 패턴을 쓴다(Button ghost는 자체 배경·그림자가
+            있어 칩이 커 보인다). */}
+        <button
+          type="button"
+          className="grid min-h-11 min-w-11 shrink-0 place-items-center transition-transform active:scale-[0.96]"
           aria-label={`알림 열기${alertCount > 0 ? `, ${alertCount}개` : ""}`}
-          onPress={onOpenNotifications}
+          onClick={onOpenNotifications}
         >
-          <Bell
-            className="size-5 shrink-0 text-slate-100"
-            strokeWidth={2.2}
-            aria-hidden="true"
-          />
-          {alertCount > 0 ? (
-            <span className="absolute -right-0.5 -top-0.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-action-primary px-1 text-[9px] font-bold leading-none text-white shadow-[0_0_0_2px_var(--color-surface-shell)]">
-              {alertCount > 99 ? "99+" : alertCount}
-            </span>
-          ) : null}
-        </Button>
+          <span className="relative grid size-8 place-items-center rounded-full bg-white/[0.06] shadow-[var(--shadow-surface)]">
+            <Bell
+              className="size-4 shrink-0 text-slate-100"
+              strokeWidth={2.2}
+              aria-hidden="true"
+            />
+            {alertCount > 0 ? (
+              <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-action-primary px-1 text-[9px] font-bold leading-none text-white shadow-[0_0_0_2px_var(--color-surface-shell)]">
+                {alertCount > 99 ? "99+" : alertCount}
+              </span>
+            ) : null}
+          </span>
+        </button>
       </div>
     </header>
   );
