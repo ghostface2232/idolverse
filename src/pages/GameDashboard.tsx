@@ -890,6 +890,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
             onOpenFinance={() => setFinanceOpen(true)}
             onOpenStaff={() => setCompanyModal("staff")}
             onOpenFacilities={() => setCompanyModal("facility")}
+            onExitToMenu={onExit}
           />
         ) : null}
       </GameShell>

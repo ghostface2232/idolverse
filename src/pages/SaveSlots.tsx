@@ -115,7 +115,9 @@ export function SaveSlots({
   return (
     <main
       className={[
-        "mx-auto flex w-full max-w-md flex-col gap-4",
+        // embedded: 모달 콘텐츠 p-1(4px)과 합쳐 사방 8px — 카드 간격(gap-2)과
+        // 같은 값으로 통일한다. 카드 R16은 모달 R24 − 8px 오프셋.
+        "mx-auto flex w-full max-w-md flex-col gap-2",
         embedded ? "px-1 py-1" : "min-h-screen px-4 py-6",
       ].join(" ")}
     >
@@ -134,12 +136,14 @@ export function SaveSlots({
         </p>
       ) : null}
 
-      <section className="space-y-4">
+      <section className="space-y-2">
         {isLoading ? (
-          <Card className="text-center text-sm text-slate-300">저장 슬롯 확인 중…</Card>
+          <Card variant="panel" className="text-center text-sm text-slate-300">
+            저장 슬롯 확인 중…
+          </Card>
         ) : (
           saves.map((save) => (
-            <Card key={save.slotNumber} className="space-y-4">
+            <Card key={save.slotNumber} variant="panel" className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.22em] text-brand-cyan">
@@ -161,13 +165,13 @@ export function SaveSlots({
 
               {save.hasData ? (
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl bg-slate-950/50 p-3">
+                  <div className="rounded-lg bg-slate-950/50 p-3">
                     <p className="text-slate-500">진행 주차</p>
                     <p className="mt-1 text-slate-100">
                       {save.playedWeeks?.toLocaleString("ko-KR")}주
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-slate-950/50 p-3">
+                  <div className="rounded-lg bg-slate-950/50 p-3">
                     <p className="text-slate-500">마지막 저장</p>
                     <p className="mt-1 text-slate-100">
                       {formatSavedAt(save.updatedAt)}

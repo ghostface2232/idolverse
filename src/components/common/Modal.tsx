@@ -14,6 +14,12 @@ interface ModalProps {
   onClose: () => void | Promise<void>;
   footer?: ReactNode;
   className?: string;
+  /**
+   * 콘텐츠 영역 패딩 오버라이드. 자체 카드 여백을 가진 콘텐츠(SaveSlots 등)를
+   * 음수 마진 없이 담을 때 쓴다 — 음수 마진은 스크롤 컨테이너의 하단
+   * 패딩과 셈이 맞지 않는다.
+   */
+  contentClassName?: string;
   isCloseDisabled?: boolean;
 }
 
@@ -23,6 +29,7 @@ export function Modal({
   onClose,
   footer,
   className = "",
+  contentClassName = "px-5 py-5",
   isCloseDisabled = false,
 }: ModalProps) {
   return (
@@ -70,7 +77,9 @@ export function Modal({
               <X className="size-5" aria-hidden="true" />
             </Button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${contentClassName}`}
+          >
             {children}
           </div>
           {footer ? (

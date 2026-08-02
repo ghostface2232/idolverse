@@ -83,17 +83,15 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
           title="이어하기"
           onClose={() => setIsSaveOpen(false)}
           className="max-w-md"
+          contentClassName="p-1"
         >
-          {/* 모달 좌우 패딩(px-5)만 일부 상쇄해 카드 폭을 넓히고,
-              상하는 모달 자체 패딩(py-5)을 그대로 살린다. */}
-          <div className="-mx-4">
-            <SaveSlots
-              userId={userId}
-              onNewGame={onNewGame}
-              onLoadGame={onLoadGame}
-              embedded
-            />
-          </div>
+          {/* SaveSlots embedded의 p-1(4px)과 합쳐 네 방향 8px 여백. */}
+          <SaveSlots
+            userId={userId}
+            onNewGame={onNewGame}
+            onLoadGame={onLoadGame}
+            embedded
+          />
         </Modal>
       ) : null}
 

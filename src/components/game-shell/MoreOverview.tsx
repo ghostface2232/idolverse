@@ -2,6 +2,7 @@ import {
   Bell,
   Building,
   ChevronRight,
+  DoorOpen,
   Landmark,
   Users,
   WalletCards,
@@ -19,6 +20,8 @@ interface MoreOverviewProps {
   onOpenFinance: () => void;
   onOpenStaff: () => void;
   onOpenFacilities: () => void;
+  /** 메인 화면(세이브 슬롯·새 게임)으로 나간다. 진행은 자동 저장돼 있다. */
+  onExitToMenu: () => void;
 }
 
 export function MoreOverview({
@@ -26,6 +29,7 @@ export function MoreOverview({
   onOpenFinance,
   onOpenStaff,
   onOpenFacilities,
+  onExitToMenu,
 }: MoreOverviewProps) {
   const companyName = useGameStore((state) => state.companyName);
   const investorType = useGameStore((state) => state.investorType);
@@ -94,39 +98,39 @@ export function MoreOverview({
         </button>
       </div>
       <h2 className="mb-2 mt-5 text-sm font-semibold text-text-primary">이번 주 경영 업무</h2>
-      <div className="grid gap-2.5">
-        <Button
-          className="w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
-          tone="secondary"
-          onPress={onOpenStaff}
+      {/* 스태프·시설은 상단 요약과 같은 카드 언어로 좌우 배치한다.
+          소식 기록은 성격이 달라(행동이 아니라 열람) 행 버튼으로 구분한다. */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <button
+          type="button"
+          className="rounded-3xl bg-surface-panel p-4 text-left shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96]"
+          onClick={onOpenStaff}
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-cyan-400/10 text-cyan-200">
+          <span className="grid size-9 place-items-center rounded-xl bg-cyan-400/10 text-cyan-200">
             <Users className="size-4.5" aria-hidden="true" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">스태프 관리</span>
-            <span className="mt-0.5 block text-xs font-normal text-text-muted">
-              채용과 교육 계획을 조정합니다.
-            </span>
+          <span className="mt-2.5 block text-sm font-semibold text-text-primary">
+            스태프 관리
           </span>
-          <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
-        </Button>
-        <Button
-          className="w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
-          tone="secondary"
-          onPress={onOpenFacilities}
+          <span className="mt-0.5 block text-xs leading-5 text-text-muted [word-break:keep-all]">
+            채용과 교육 계획을 조정합니다.
+          </span>
+        </button>
+        <button
+          type="button"
+          className="rounded-3xl bg-surface-panel p-4 text-left shadow-[var(--shadow-surface)] transition-transform active:scale-[0.96]"
+          onClick={onOpenFacilities}
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-pink-400/10 text-pink-200">
+          <span className="grid size-9 place-items-center rounded-xl bg-pink-400/10 text-pink-200">
             <Building className="size-4.5" aria-hidden="true" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">시설 투자</span>
-            <span className="mt-0.5 block text-xs font-normal text-text-muted">
-              연습실과 숙소 환경을 개선합니다.
-            </span>
+          <span className="mt-2.5 block text-sm font-semibold text-text-primary">
+            시설 투자
           </span>
-          <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
-        </Button>
+          <span className="mt-0.5 block text-xs leading-5 text-text-muted [word-break:keep-all]">
+            연습실과 숙소 환경을 개선합니다.
+          </span>
+        </button>
       </div>
       <Button
         className="mt-2.5 w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
@@ -144,6 +148,25 @@ export function MoreOverview({
         </span>
         <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
       </Button>
+      <div className="mt-6 border-t border-white/8 pt-4">
+        <Button
+          className="w-full !justify-start gap-3 !px-3.5 !py-3 text-left"
+          tone="ghost"
+          onPress={onExitToMenu}
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-text-secondary">
+            <DoorOpen className="size-4.5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">메인 화면으로 나가기</span>
+            <span className="mt-0.5 block text-xs font-normal leading-5 text-text-muted [word-break:keep-all]">
+              진행 상황은 자동 저장됩니다. 세이브 슬롯과 새 게임은 메인
+              화면에서 열 수 있습니다.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />
+        </Button>
+      </div>
       </div>
     </section>
   );

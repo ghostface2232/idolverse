@@ -284,7 +284,8 @@ export function Training({ onBack }: TrainingProps) {
 
   return (
     <TabPanel title="트레이닝" onBack={onBack}>
-      <div className="space-y-4">
+      {/* 다른 섹션(멤버·시장·경영·이번 주)과 같은 최대 폭. */}
+      <div className="mx-auto max-w-xl space-y-4">
       <Card className="space-y-4">
         <div>
           <p className="text-sm text-text-secondary">훈련 강도</p>
