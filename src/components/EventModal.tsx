@@ -52,8 +52,8 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
     if (choices.length === 0 && !event.resolved) {
       setSaving(true);
       try {
+        // onResolve가 해결과 큐 이동을 한 번의 저장으로 처리한다.
         await onResolve(null);
-        await onClose();
       } catch (error) {
         console.error("Event resolution save failed.", error);
         setErrorMessage("확인한 내용을 저장하지 못했습니다. 다시 시도해 주세요.");
@@ -162,7 +162,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
                   aria-checked={isSelected}
                   disabled={saving}
                   className={[
-                    "min-h-16 w-full rounded-2xl border-2 px-3 py-3 text-left",
+                    "min-h-20 w-full rounded-2xl border-2 px-3 py-4 text-left",
                     "transition-[scale,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-out active:scale-[0.96]",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-secondary disabled:cursor-not-allowed disabled:opacity-50",
                     radioTileClasses(
@@ -172,20 +172,20 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
                   ].join(" ")}
                   onClick={() => handleSelect(index)}
                 >
-                  <span className="flex items-start gap-3">
+                  <span className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
                       className={[
-                        "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
+                        "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
                         isSelected
                           ? "border-brand-cyan bg-brand-cyan text-slate-950"
-                          : "border-border-strong bg-surface-shell text-transparent",
+                          : "border-white/30 bg-white/[0.06] text-transparent",
                       ].join(" ")}
                     >
                       <Check className="size-3.5" strokeWidth={3} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-text-primary [word-break:keep-all]">
+                      <span className="block text-lg font-semibold leading-7 text-text-primary [word-break:keep-all]">
                         {choice.label}
                       </span>
                       <DecisionImpactChips option={choice} className="mt-2" />

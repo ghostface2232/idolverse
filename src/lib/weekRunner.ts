@@ -276,6 +276,7 @@ function resolveEventChoice(
   };
 }
 
+/** 이벤트 선택 해결과 큐 이동을 한 번의 저장으로 원자적으로 확정한다. */
 export async function applyEventChoiceAndSave(
   event: GameEvent,
   choiceIndex: number,
@@ -287,10 +288,11 @@ export async function applyEventChoiceAndSave(
     event,
     choiceIndex,
   );
+  const nextSnapshot = advanceWeeklyEventSnapshot(resolution.nextSnapshot);
   const saved = await saveGame(
     userId,
     slotNumber,
-    toPersistedSnapshot(resolution.nextSnapshot),
+    toPersistedSnapshot(nextSnapshot),
   );
   hydrateGameState(saved.gameState);
   return resolution.result;

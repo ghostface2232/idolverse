@@ -363,19 +363,23 @@ export function DecisionCardDeck({
               }
             >
               {({ isSelected }) => (
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <span
-                    className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full transition-[background-color,color] duration-[var(--motion-state)] ease-out ${
-                      isSelected ? "bg-brand-cyan text-slate-950" : "bg-white/[0.06] text-transparent"
+                    className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition-[background-color,border-color,color] duration-[var(--motion-state)] ease-out ${
+                      isSelected
+                        ? "border-brand-cyan bg-brand-cyan text-slate-950"
+                        : "border-white/30 bg-white/[0.06] text-transparent"
                     }`}
                     aria-hidden="true"
                   >
                     <Check className="size-3" strokeWidth={3} />
                   </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-text-primary">{option.label}</span>
-                      <DecisionImpactChips option={option} className="mt-2" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-lg font-semibold leading-7 text-text-primary [word-break:keep-all]">
+                      {option.label}
                     </span>
+                    <DecisionImpactChips option={option} className="mt-2" />
+                  </span>
                 </div>
               )}
             </Radio>

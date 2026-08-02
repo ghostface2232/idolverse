@@ -61,7 +61,7 @@ export function DecisionImpactChips({
         <span
           key={chip.id}
           className={[
-            "inline-flex min-h-8 items-center rounded-full px-3 py-1.5 text-xs font-semibold leading-5 shadow-[inset_0_0_0_1px_currentColor]",
+            "inline-flex min-h-8 items-center rounded-full px-3 py-1.5 text-xs font-semibold leading-5",
             chip.tone === "positive"
               ? "bg-emerald-400/10 text-emerald-200"
               : chip.tone === "danger"
