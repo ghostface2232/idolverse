@@ -126,6 +126,10 @@ export function WeekReport({
 
   const netHistory = buildNetHistory(incomeHistory, expenseHistory, 12);
 
+  // 연출(차트 공개·음악방송) 이벤트는 결산 뒤에 열리는 오버레이가 공개한다.
+  // 결산에 제목("음악방송 1위" 등)이 먼저 보이면 스포일러라 목록에서 뺀다.
+  const visibleEvents = report.events.filter((event) => !event.presentation);
+
   const isQuietWeek =
     memberGrowthRows.length === 0 &&
     fandomChips.length === 0 &&
@@ -228,14 +232,16 @@ export function WeekReport({
         {/* ── 핵심 숫자: 요약을 가장 먼저 ─────────────────────── */}
         <div className="grid grid-cols-2 gap-2">
           <StatTile
-            label="순수익"
+            label="이번 주 순수익"
             value={`${net >= 0 ? "+" : "-"}${formatKoreanWon(Math.abs(net))}`}
             tone={net >= 0 ? "good" : "bad"}
+            hint={`수입 ${formatKoreanWon(incomeTotal)} · 지출 ${formatKoreanWon(expenseTotal)}`}
           />
           <StatTile
             label="회사 잔액"
             value={`${money < 0 ? "-" : ""}${formatKoreanWon(Math.abs(money))}`}
             tone={money < 0 ? "bad" : "neutral"}
+            hint="누적 보유 자금"
           />
           <StatTile
             label="코어 팬덤"
@@ -392,10 +398,10 @@ export function WeekReport({
         ) : null}
 
         {/* ── 소식·뉴스·경쟁 동향 ────────────────────────────── */}
-        {report.events.length > 0 ? (
+        {visibleEvents.length > 0 ? (
           <ReportCard title="이번 주 주요 소식">
             <ul className="space-y-2">
-              {report.events.map((event) => (
+              {visibleEvents.map((event) => (
                 <li key={event.id} className="flex items-center gap-2.5">
                   <SceneThumb scene={sceneForEvent(event)} variant="chip" />
                   <span className="min-w-0 flex-1 text-xs text-text-secondary [word-break:keep-all]">
@@ -564,9 +570,15 @@ function resolveHero({
     };
   }
 
-  if (report.events.length > 0) {
-    const event = report.events[0];
-    return { scene: sceneForEvent(event), label: "이번 주 헤드라인", text: event.title };
+  // 연출 이벤트 제목("음악방송 1위" 등)은 헤드라인으로도 쓰지 않는다 —
+  // 결과 공개는 결산 뒤의 오버레이 몫이다.
+  const headlineEvent = report.events.find((event) => !event.presentation);
+  if (headlineEvent) {
+    return {
+      scene: sceneForEvent(headlineEvent),
+      label: "이번 주 헤드라인",
+      text: headlineEvent.title,
+    };
   }
 
   if (statGrowth >= 1) {
@@ -754,10 +766,12 @@ function StatTile({
   label,
   value,
   tone,
+  hint,
 }: {
   label: string;
   value: string;
   tone: "good" | "bad" | "neutral";
+  hint?: string;
 }) {
   const valueColor =
     tone === "good"
@@ -772,6 +786,11 @@ function StatTile({
       <p className={`mt-1 text-lg font-semibold tabular-nums ${valueColor}`}>
         {value}
       </p>
+      {hint ? (
+        <p className="mt-0.5 text-[11px] tabular-nums text-text-muted [word-break:keep-all]">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -1025,7 +1044,7 @@ function FinanceSection({
         />
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-white/8 pt-2.5">
-        <span className="text-xs text-text-muted">순수익</span>
+        <span className="text-xs text-text-muted">이번 주 순수익</span>
         <span
           className={[
             "text-sm font-semibold tabular-nums",

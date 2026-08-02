@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { PresentationDialog } from "@/components/common/PresentationDialog";
 import { AlbumArt } from "@/components/visual/AlbumArt";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
+import { useNumberScramble } from "@/lib/useNumberScramble";
 
 type ChartRevealCommand = PresentationEvents["chartReveal"];
 
@@ -11,47 +12,39 @@ interface ChartRevealOverlayProps {
   onComplete: (eventId: string) => void | Promise<void>;
 }
 
-function buildCountdown(finalRank: number): number[] {
-  return [...new Set([100, 50, 20, 10, finalRank])]
-    .filter((rank) => rank >= finalRank)
-    .sort((a, b) => b - a);
-}
-
 export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
   const [command, setCommand] = useState<ChartRevealCommand | null>(null);
-  const [step, setStep] = useState(0);
+  const [fastForward, setFastForward] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(
     () =>
       presentationBus.on("chartReveal", (next) => {
         setCommand(next);
-        setStep(0);
+        setFastForward(false);
       }),
     [],
   );
 
-  const countdown = useMemo(
-    () => (command ? buildCountdown(command.rank) : []),
-    [command],
-  );
-  const isFinal = command ? step >= countdown.length - 1 : false;
-
-  useEffect(() => {
-    if (!command || isFinal) return;
-    const timer = window.setTimeout(
-      () => setStep((current) => Math.min(current + 1, countdown.length - 1)),
-      460,
-    );
-    return () => window.clearTimeout(timer);
-  }, [command, countdown.length, isFinal, step]);
+  const rank = command?.rank ?? 1;
+  // 순위는 100위권을 훑다가 진짜 순위로 좁혀 내려온다 — 목표보다 좋은
+  // 순위가 먼저 스쳐 보이면 안착이 실망으로 읽히므로 위쪽으로만 흔든다.
+  const { value: displayedRank, settled } = useNumberScramble(rank, {
+    durationMs: 3000,
+    maxOffset: Math.max(12, 100 - rank),
+    min: 1,
+    direction: "above",
+    active: command !== null && !fastForward,
+  });
 
   if (!command) return null;
+
+  const isFinal = settled;
 
   const finish = async () => {
     if (saving) return;
     if (!isFinal) {
-      setStep(countdown.length - 1);
+      setFastForward(true);
       return;
     }
     setSaving(true);
@@ -63,19 +56,21 @@ export function ChartRevealOverlay({ onComplete }: ChartRevealOverlayProps) {
     }
   };
 
-  const displayedRank = countdown[step] ?? command.rank;
-
   return (
     <PresentationDialog label="차트 진입 순위 공개">
         <div className="overflow-hidden rounded-[22px] bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.24),transparent_45%),linear-gradient(180deg,#111b31,#0f172a)] px-5 py-8 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-cyan">
             {command.chartName}
           </p>
-          <div key={displayedRank} className="chart-rank-sweep mt-7">
+          <div key={isFinal ? "final" : "rolling"} className={isFinal ? "chart-rank-sweep mt-7" : "mt-7"}>
             <p className="text-[11px] tracking-[0.2em] text-text-muted">
               신규 진입
             </p>
-            <p className="mt-1 text-8xl font-black leading-none tabular-nums text-white">
+            <p
+              className={`mt-1 text-8xl font-black leading-none tabular-nums transition-colors duration-300 ${
+                isFinal ? "text-white" : "text-white/70"
+              }`}
+            >
               {displayedRank}
             </p>
             <p className="mt-2 text-sm font-semibold text-pink-300">위</p>

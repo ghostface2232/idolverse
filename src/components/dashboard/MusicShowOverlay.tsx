@@ -5,6 +5,7 @@ import { PresentationDialog } from "@/components/common/PresentationDialog";
 import { GroupBadge } from "@/components/visual/GroupBadge";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { presentationBus, type PresentationEvents } from "@/game/EventBus";
+import { useNumberScramble } from "@/lib/useNumberScramble";
 import { useGameStore } from "@/stores/gameStore";
 import { useTraineeStore } from "@/stores/traineeStore";
 
@@ -33,14 +34,32 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
     [],
   );
 
+  // 점수는 실제 값 주변을 빠르게 흔들다가 서서히 안착한다 — 안착 전까지는
+  // 두 후보 중 누가 앞서는지 계속 뒤집혀 보여 긴장감을 만든다.
+  const scrambleActive = command !== null && step === "scores";
+  const playerReveal = useNumberScramble(command?.playerScore ?? 0, {
+    durationMs: 2400,
+    maxOffset: Math.max(12, Math.round((command?.playerScore ?? 0) * 0.35)),
+    active: scrambleActive,
+  });
+  const rivalReveal = useNumberScramble(command?.rivalScore ?? 0, {
+    durationMs: 2200,
+    maxOffset: Math.max(12, Math.round((command?.rivalScore ?? 0) * 0.35)),
+    active: scrambleActive,
+  });
+  const scoresSettled = playerReveal.settled && rivalReveal.settled;
+
   useEffect(() => {
-    if (!command || step === "result") return;
-    const timer = window.setTimeout(
-      () => setStep((current) => (current === "candidates" ? "scores" : "result")),
-      900,
-    );
+    if (!command || step !== "candidates") return;
+    const timer = window.setTimeout(() => setStep("scores"), 900);
     return () => window.clearTimeout(timer);
   }, [command, step]);
+
+  useEffect(() => {
+    if (!command || step !== "scores" || !scoresSettled) return;
+    const timer = window.setTimeout(() => setStep("result"), 550);
+    return () => window.clearTimeout(timer);
+  }, [command, step, scoresSettled]);
 
   if (!command) return null;
 
@@ -76,7 +95,8 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
             <ContenderCard
               name={command.trackTitle}
               subName={groupName}
-              score={command.playerScore}
+              score={playerReveal.value}
+              settled={playerReveal.settled}
               showScore={showScores}
               highlighted={isFinal && command.won}
               isPlayer
@@ -98,7 +118,8 @@ export function MusicShowOverlay({ onComplete }: MusicShowOverlayProps) {
             />
             <ContenderCard
               name={command.rivalName}
-              score={command.rivalScore}
+              score={rivalReveal.value}
+              settled={rivalReveal.settled}
               showScore={showScores}
               highlighted={isFinal && !command.won}
               visual={
@@ -144,6 +165,7 @@ function ContenderCard({
   name,
   subName,
   score,
+  settled,
   showScore,
   highlighted,
   isPlayer = false,
@@ -152,6 +174,7 @@ function ContenderCard({
   name: string;
   subName?: string;
   score: number;
+  settled: boolean;
   showScore: boolean;
   highlighted: boolean;
   isPlayer?: boolean;
@@ -177,7 +200,7 @@ function ContenderCard({
       ) : null}
       <p
         className={`mt-2.5 text-3xl font-black tabular-nums transition-opacity duration-300 ${
-          showScore ? "opacity-100" : "opacity-0"
+          showScore ? (settled ? "opacity-100" : "opacity-70") : "opacity-0"
         } ${isPlayer ? "text-cyan-200" : "text-slate-200"}`}
       >
         {showScore ? score.toLocaleString("ko-KR") : "····"}

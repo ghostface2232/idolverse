@@ -975,9 +975,9 @@ export function processWeek(
       { kind: "album", id: released.id, label: `${released.title} 발매` },
       6,
     );
-    report.warnings.push(
-      `${label}: ${released.title}, 멜론 ${release.chartRank}위 진입`,
-    );
+    // 진입 순위는 결산에 싣지 않는다 — 차트 공개 연출이 결산 뒤에 오므로
+    // 여기서 순위를 쓰면 공개 카운트다운의 긴장이 사라진다.
+    report.warnings.push(`${label}: ${released.title} — 첫 차트 순위 집계 중`);
     report.deltas.push({
       id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
       source: { kind: "album", id: released.id, label },
@@ -1184,9 +1184,9 @@ export function processWeek(
       }
 
       if (comebackResult.musicShowEvaluated) {
-        report.warnings.push(
-          comebackResult.project.evaluations.musicShow.summary,
-        );
+        // 승패 요약은 결산에 싣지 않는다 — 결산이 음악방송 연출(위클리
+        // 스테이지)보다 먼저 열리므로, 여기 실으면 결과가 스포일된다.
+        // 기록은 project.evaluations.musicShow와 연출 이벤트가 보존한다.
         if (
           comebackResult.events.some(
             (projectEvent) =>
