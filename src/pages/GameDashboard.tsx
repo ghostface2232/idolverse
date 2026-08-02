@@ -37,7 +37,6 @@ import {
   type ComebackBudgetTierId,
 } from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
-import { DEFAULT_AUTO_SAVE_SLOT } from "@/lib/saveSystem";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import {
   acknowledgeWeeklyReportAndSave,
@@ -46,9 +45,11 @@ import {
   completePresentationEventAndSave,
   completePositionReviewAndSave,
   completeTitleTrackSelectionAndSave,
+  closeStaffRecruitmentAndSave,
   hireStaffAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  startStaffRecruitmentAndSave,
   trainStaffAndSave,
   upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
@@ -78,10 +79,14 @@ import type {
   Genre,
   PromotionActivityId,
   Staff,
+  StaffRecruitmentPost,
+  StaffRole,
   StaffTrainingId,
   WeeklyDecisionTrigger,
 } from "@/types/game";
 import type { PlayerDecisions } from "@/systems/weekProcessor";
+
+const EMPTY_RECRUITMENT_POSTS: StaffRecruitmentPost[] = [];
 
 const SEASON_LABELS = {
   spring: "봄",
@@ -100,10 +105,12 @@ type OverviewModal = "goals" | "contracts" | null;
 
 interface GameDashboardProps {
   userId: string;
+  /** 이 세션이 읽고 쓰는 활성 세이브 슬롯 */
+  slotNumber: number;
   onExit: () => void;
 }
 
-export function GameDashboard({ userId, onExit }: GameDashboardProps) {
+export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps) {
   const [activeSection, setActiveSection] = useState<GameSection>("company");
   const [weekView, setWeekView] = useState<"decisions" | "training">("decisions");
   const [overviewModal, setOverviewModal] = useState<OverviewModal>(null);
@@ -138,11 +145,13 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const milestonesAchieved = useGameStore((state) => state.milestonesAchieved);
   const awardHistory = useGameStore((state) => state.awardHistory);
   const strategicExpansion = useGameStore((state) => state.strategicExpansion);
-  const campaignSeed = useGameStore((state) => state.campaignSeed);
   const campaignFailure = useGameStore((state) => state.campaignFailure);
   const insolvencyWeeks = useGameStore((state) => state.insolvencyWeeks);
   const groupName = useGameStore((state) => state.groupName);
   const staff = useStaffStore((state) => state.staff);
+  const staffRecruitmentPosts = useStaffStore(
+    (state) => state.recruitmentPosts ?? EMPTY_RECRUITMENT_POSTS,
+  );
   const facilityUpgrades = useFinanceStore((state) => state.upgrades);
   const activeProjects = useGameStore((state) => state.activeProjects);
   const trainees = useTraineeStore((state) => state.trainees);
@@ -288,7 +297,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           promotionOrders: promotionId ? [{ activityId: promotionId }] : [],
         },
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
 
       setPromotionId(null);
@@ -315,6 +324,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     autoAdvance,
     promotionId,
     userId,
+    slotNumber,
   ]);
 
   const handleResolveEvent = async (
@@ -327,7 +337,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         event,
         choiceIndex ?? -1,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
     } catch (error) {
       console.error("Event choice save failed.", error);
@@ -340,14 +350,14 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     setIsWorkflowSaving(true);
     setWorkflowError(null);
     try {
-      await acknowledgeWeeklyReportAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+      await acknowledgeWeeklyReportAndSave(userId, slotNumber);
     } catch (error) {
       console.error("Weekly report save failed.", error);
       setWorkflowError("결산 확인을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setIsWorkflowSaving(false);
     }
-  }, [isWorkflowSaving, userId]);
+  }, [isWorkflowSaving, userId, slotNumber]);
 
   // R5: 조용한 주 자동 진행. 결정 카드·프로젝트 결정·활동기·파산 카운트다운·
   // 열린 모달이 없을 때만 주가 흐르고, 무언가 생기면 그 자리에서 멈춘다.
@@ -404,7 +414,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
   const handleCloseEvent = async () => {
     setWorkflowError(null);
     try {
-      await advanceWeeklyEventAndSave(userId, DEFAULT_AUTO_SAVE_SLOT);
+      await advanceWeeklyEventAndSave(userId, slotNumber);
     } catch (error) {
       console.error("Event advance save failed.", error);
       setWorkflowError("이벤트 진행을 저장하지 못했습니다. 다시 시도해 주세요.");
@@ -417,7 +427,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       await completePresentationEventAndSave(
         eventId,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
     } catch (error) {
       console.error("Presentation event save failed.", error);
@@ -441,7 +451,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         plan.budgetTierId,
         plan.centerTraineeId,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
       setComebackPlanningOpen(false);
     } catch (error) {
@@ -463,7 +473,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         positionReviewProject.id,
         assignments,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
     } catch (error) {
       console.error("Position review save failed.", error);
@@ -482,7 +492,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         titleTrackProject.id,
         trackId,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
     } catch (error) {
       console.error("Title track selection save failed.", error);
@@ -497,10 +507,38 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     setIsCompanySaving(true);
     setWorkflowError(null);
     try {
-      await hireStaffAndSave(candidate, userId, DEFAULT_AUTO_SAVE_SLOT);
+      await hireStaffAndSave(candidate, userId, slotNumber);
     } catch (error) {
       console.error("Staff hire save failed.", error);
       setWorkflowError("스태프 변경을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsCompanySaving(false);
+    }
+  };
+
+  const handleStartStaffRecruitment = async (role: StaffRole) => {
+    if (isCompanySaving) return;
+    setIsCompanySaving(true);
+    setWorkflowError(null);
+    try {
+      await startStaffRecruitmentAndSave(role, userId, slotNumber);
+    } catch (error) {
+      console.error("Staff recruitment start failed.", error);
+      setWorkflowError("모집 공고를 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsCompanySaving(false);
+    }
+  };
+
+  const handleCloseStaffRecruitment = async (role: StaffRole) => {
+    if (isCompanySaving) return;
+    setIsCompanySaving(true);
+    setWorkflowError(null);
+    try {
+      await closeStaffRecruitmentAndSave(role, userId, slotNumber);
+    } catch (error) {
+      console.error("Staff recruitment close failed.", error);
+      setWorkflowError("공고 마감을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setIsCompanySaving(false);
     }
@@ -518,7 +556,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
         staffId,
         trainingId,
         userId,
-        DEFAULT_AUTO_SAVE_SLOT,
+        slotNumber,
       );
     } catch (error) {
       console.error("Staff training save failed.", error);
@@ -536,7 +574,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
     setIsCompanySaving(true);
     setWorkflowError(null);
     try {
-      await upgradeFacilityAndSave(target, userId, DEFAULT_AUTO_SAVE_SLOT);
+      await upgradeFacilityAndSave(target, userId, slotNumber);
     } catch (error) {
       console.error("Facility upgrade save failed.", error);
       setWorkflowError("시설 투자를 저장하지 못했습니다. 다시 시도해 주세요.");
@@ -887,12 +925,13 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       {companyModal === "staff" ? (
         <StaffManagementModal
           staff={staff}
+          recruitmentPosts={staffRecruitmentPosts}
           money={money}
-          industry={fandomIndustry}
-          campaignSeed={campaignSeed}
           cumulativeWeek={toCumulativeWeek(currentYear, currentWeek)}
           isSaving={isCompanySaving}
           errorMessage={workflowError}
+          onStartRecruitment={handleStartStaffRecruitment}
+          onCloseRecruitment={handleCloseStaffRecruitment}
           onHire={handleHireStaff}
           onTrain={handleTrainStaff}
           onClose={() => {

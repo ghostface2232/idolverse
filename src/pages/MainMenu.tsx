@@ -6,8 +6,9 @@ import { SaveSlots } from "@/pages/SaveSlots";
 
 interface MainMenuProps {
   userId: string;
-  onNewGame: () => void;
-  onLoadGame: () => void;
+  /** 슬롯을 지정하지 않으면 기본 슬롯에서 새 게임을 시작한다. */
+  onNewGame: (slotNumber?: number) => void;
+  onLoadGame: (slotNumber: number) => void;
 }
 
 const starClasses = [
@@ -50,7 +51,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
         </div>
 
         <div className="space-y-3">
-          <Button className="w-full text-base" onClick={onNewGame}>
+          <Button className="w-full text-base" onClick={() => onNewGame()}>
             새 게임 시작
           </Button>
           <Button

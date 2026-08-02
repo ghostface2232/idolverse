@@ -4,6 +4,8 @@ import {
   calculateAlbumRevenue,
   processWeeklyFinances,
 } from "@/systems/economySystem";
+import { calculateFirstWeekSales } from "@/systems/albumSystem";
+import { ALBUM_SALES, STRATEGIC_EXPANSION } from "@/data/balance";
 import { initialFinanceState } from "@/stores/financeStore";
 import { updateFandom, type WeeklyFandomContext } from "@/systems/fandomSystem";
 
@@ -44,6 +46,53 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
     );
     expect(calculateAlbumRevenue(sales, 5)).toBe(0);
     expect(calculateAlbumLifetimeRevenue(sales)).toBe(sales * 1200);
+  });
+
+  it("평균 이하 완성도의 앨범은 판매 효율이 깎여 저품질 다작이 수익을 내지 못한다", () => {
+    const fandom = 57;
+    // knee 이상 품질은 선형 판매 그대로다.
+    expect(calculateFirstWeekSales(80, fandom)).toBe(
+      Math.round(
+        80 *
+          (ALBUM_SALES.baseSalesPerQuality +
+            fandom * ALBUM_SALES.salesPerFandomPoint),
+      ),
+    );
+    // knee 미만 품질은 같은 팬덤에서 선형 예상치보다 훨씬 적게 팔린다.
+    const linear = (quality: number) =>
+      Math.round(
+        quality *
+          (ALBUM_SALES.baseSalesPerQuality +
+            fandom * ALBUM_SALES.salesPerFandomPoint),
+      );
+    expect(calculateFirstWeekSales(27, fandom)).toBeLessThan(linear(27) * 0.6);
+    // 품질이 오르면 판매도 단조 증가한다 — 절벽이 역전을 만들지 않는다.
+    expect(calculateFirstWeekSales(49, fandom)).toBeLessThan(
+      calculateFirstWeekSales(50, fandom),
+    );
+    expect(calculateFirstWeekSales(10, fandom)).toBeLessThan(
+      calculateFirstWeekSales(27, fandom),
+    );
+  });
+
+  it("전략 확장 수익 트랙은 축이 높으면 유지비를 넘는다 — 상시 적자 함정이 아니다", () => {
+    const fandomTrack = STRATEGIC_EXPANSION.tracks.fandom;
+    const globalTrack = STRATEGIC_EXPANSION.tracks.global;
+    // 축 85(엔드게임 체급) 기준으로 레벨당 주간 수익이 유지비를 넘어야 한다.
+    expect(85 * fandomTrack.weeklyRevenuePerPoint).toBeGreaterThan(
+      fandomTrack.weeklyUpkeepPerLevel,
+    );
+    expect(85 * globalTrack.weeklyRevenuePerPoint).toBeGreaterThan(
+      globalTrack.weeklyUpkeepPerLevel,
+    );
+    // 반대로 축 50(성장 중반)에서는 아직 적자다 — 공짜 수익원이 아니라
+    // 체급이 갖춰졌을 때만 여는 장기 투자로 남는다.
+    expect(50 * fandomTrack.weeklyRevenuePerPoint).toBeLessThan(
+      fandomTrack.weeklyUpkeepPerLevel,
+    );
+    expect(50 * globalTrack.weeklyRevenuePerPoint).toBeLessThan(
+      globalTrack.weeklyUpkeepPerLevel,
+    );
   });
 
   it("계획 화면에서 이미 결제한 비용은 결산에 보이되 두 번 차감하지 않는다", () => {

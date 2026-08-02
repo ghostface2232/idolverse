@@ -1062,6 +1062,7 @@ const FINANCE_EXPENSE_LABELS: Record<string, string> = {
   promotions: "활동 비용",
   productionBudget: "앨범 제작비",
   staffDevelopment: "스태프 육성",
+  staffRecruitment: "스태프 모집",
   facilityInvestment: "시설 투자",
   strategicExpansion: "사업 유지비",
   memberSettlement: "멤버 정산",

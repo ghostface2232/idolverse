@@ -6,9 +6,11 @@ import { radioTileClasses } from "@/components/common/selectionTokens";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import {
   ALL_POSITIONS,
+  getPositionRelevantStatKeys,
   isRequiredPosition,
   POSITION_LABELS,
 } from "@/data/founding";
+import { STAT_LABELS } from "@/data/traineeStats";
 import {
   evaluatePositionTrials,
   type PositionTrialCandidateResult,
@@ -220,8 +222,20 @@ export function PositionReviewModal({
                                     </span>
                                   ) : null}
                                 </span>
-                                <span className="mt-1 block text-xs text-text-muted">
-                                  기초 적합도 {candidateResult.baseRating}/5
+                                <span className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs tabular-nums text-text-muted">
+                                  {getPositionRelevantStatKeys(position).map(
+                                    (key) => (
+                                      <span key={key} className="whitespace-nowrap">
+                                        {STAT_LABELS[key]}{" "}
+                                        <span className="text-text-secondary">
+                                          {trainee.stats[key]}
+                                        </span>
+                                      </span>
+                                    ),
+                                  )}
+                                  <span className="whitespace-nowrap">
+                                    기초 적합도 {candidateResult.baseRating}/5
+                                  </span>
                                 </span>
                               </span>
                             </span>

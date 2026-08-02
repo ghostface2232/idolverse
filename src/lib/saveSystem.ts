@@ -359,7 +359,15 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
     },
     false,
   );
-  staffVanillaStore.setState(gameState.staffStore, false);
+  // setState는 merge라 구버전 세이브(공고 필드 없음)를 열 때 직전 세션의
+  // 모집 공고가 새지 않도록 명시적으로 백필한다.
+  staffVanillaStore.setState(
+    {
+      ...gameState.staffStore,
+      recruitmentPosts: gameState.staffStore.recruitmentPosts ?? [],
+    },
+    false,
+  );
   albumVanillaStore.setState(gameState.albumStore, false);
   fandomVanillaStore.setState(gameState.fandomStore, false);
   competitorVanillaStore.setState(gameState.competitorStore, false);

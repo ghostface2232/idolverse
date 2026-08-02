@@ -265,6 +265,10 @@ export const STAFF_MARKET = {
   industryScale: 0.5, // 풀 상한 = 창단 상한(60) + 업계 신뢰 × 이 값.
   candidatesPerRole: 3,
   replaceTeamSatisfactionPenalty: -4,
+  // 상시 시장이 아니라 모집 과정을 거친다: 공고를 내고, 기간이 지나면
+  // 후보 명단이 도착하고, 그중에서 교체·영입을 결정한다.
+  recruitmentWeeks: 2,
+  recruitmentPostingCost: 3_000_000,
 } as const;
 
 // ── M5 「사람」: 개인 인기도·성격·재계약 ─────────────────────────────
@@ -524,6 +528,20 @@ export const INDUSTRY_SATURATION = {
  * 최신 앨범 품질이 높을수록 강한 팬덤을 유지할 수 있고, 천장을 넘은 수치는
  * 한 주에 조금씩만 내려가므로 한 번의 실험작이 팬덤을 즉시 붕괴시키지는 않는다.
  */
+/**
+ * 첫 주 음반 판매. 실제 시장에서 완성도가 평균 이하인 앨범은 코어 팬덤
+ * 일부만 구매해 판매가 급감한다 — 선형 판매였던 시절에는 품질 27 앨범을
+ * 5년간 21장 남발하는 런이 제작비를 전부 회수하며 흑자를 냈다(2026-08
+ * 5년 밸런스 프로브). qualityKnee 아래에서는 판매 효율이 비례로 깎이고,
+ * minEfficiency가 바닥이다. knee 이상 품질은 이전과 동일하다.
+ */
+export const ALBUM_SALES = {
+  baseSalesPerQuality: 600,
+  salesPerFandomPoint: 25,
+  qualityKnee: 50,
+  minEfficiency: 0.4,
+} as const;
+
 export const AUDIENCE_QUALITY_RETENTION = {
   // base 65이던 시절에는 품질 0의 결과물로도 코어 65가 영구 보존됐다 —
   // 혹사 프로브에서 팬덤이 정확히 상한(65+0.35×q)에 앉아 저품질 다작이
@@ -923,18 +941,23 @@ export const STRATEGIC_EXPANSION = {
   reviewIntervalWeeks: 52,
   maxLevelPerTrack: 3,
   levelCosts: [200_000_000, 350_000_000, 550_000_000],
+  // 수익 트랙은 해당 축이 높을 때(팬덤 ~72, 해외 ~71 이상) 유지비를 넘는다.
+  // 이전 값(수익 10k/12k, 유지비 1.0M/1.5M)은 축 100에서도 유지비를 못 넘는
+  // 상시 적자 함정이었다(2026-08 5년 밸런스 프로브: 확장 수익 3.3억 vs
+  // 유지비 4.7억). 실제 팬 플랫폼·해외 사업은 규모가 되면 흑자 사업이다 —
+  // 대신 레벨 비용(2~5.5억)이 있어 장기 투자로만 회수된다.
   tracks: {
     production: {
-      weeklyUpkeepPerLevel: 1_200_000,
+      weeklyUpkeepPerLevel: 1_000_000,
       weeklyAlbumProgress: { song: 0.2, visual: 0.1, choreography: 0.15 },
     },
     fandom: {
-      weeklyUpkeepPerLevel: 1_000_000,
-      weeklyRevenuePerPoint: 10_000,
+      weeklyUpkeepPerLevel: 800_000,
+      weeklyRevenuePerPoint: 11_000,
     },
     global: {
-      weeklyUpkeepPerLevel: 1_500_000,
-      weeklyRevenuePerPoint: 12_000,
+      weeklyUpkeepPerLevel: 1_200_000,
+      weeklyRevenuePerPoint: 17_000,
     },
   },
 } as const;

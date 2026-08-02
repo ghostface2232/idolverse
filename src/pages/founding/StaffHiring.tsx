@@ -11,6 +11,7 @@ import {
   STAFF_ROLE_ORDER,
 } from "@/data/founding";
 import { getStaffProfileByName } from "@/data/staffProfiles";
+import { getWeeklyStaffSalary } from "@/utils/staffSalary";
 import { FOUNDING_STAFF_ABILITY_CAP } from "@/data/balance";
 import { generateStaffCandidates } from "@/systems/recruitSystem";
 import { useStaffStore } from "@/stores/staffStore";
@@ -257,7 +258,9 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
               <span className="text-slate-50">{confirmTarget.name}</span>
               (주급{" "}
               <span className="text-emerald-300">
-                {formatKoreanWon(confirmTarget.salary, { symbol: true })}
+                {formatKoreanWon(getWeeklyStaffSalary(confirmTarget.salary), {
+                  symbol: true,
+                })}
               </span>
               )을 채용합니다. 변경에 추가 비용은 없습니다.
             </p>
@@ -265,7 +268,9 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
             <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
               <span className="text-slate-50">{confirmTarget.name}</span>의 주급{" "}
               <span className="text-emerald-300">
-                {formatKoreanWon(confirmTarget.salary, { symbol: true })}
+                {formatKoreanWon(getWeeklyStaffSalary(confirmTarget.salary), {
+                  symbol: true,
+                })}
               </span>
               이 주간 고정비에 추가됩니다.
             </p>

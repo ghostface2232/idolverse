@@ -5,6 +5,7 @@ import { radioTileClasses } from "@/components/common/selectionTokens";
 import { StatBar } from "@/components/common/StatBar";
 import { StaffPotentialStars } from "@/components/staff/StaffPotentialStars";
 import { getStaffProfileClassNames } from "@/data/staffProfiles";
+import { getWeeklyStaffSalary } from "@/utils/staffSalary";
 import type { Staff } from "@/types/game";
 import { assetUrl } from "@/utils/assets";
 
@@ -66,7 +67,10 @@ export function StaffCandidateCard({
                 <p className="mt-1 text-xs text-slate-400">{staff.specialty}</p>
               )}
             </div>
-            <MoneyDisplay amount={staff.salary} size="sm" />
+            <span className="flex shrink-0 items-baseline gap-1 text-xs text-slate-400">
+              주급
+              <MoneyDisplay amount={getWeeklyStaffSalary(staff.salary)} size="sm" />
+            </span>
           </div>
 
           <StatBar label="능력" value={staff.ability} />

@@ -1,4 +1,5 @@
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
+import { STAFF_ROLE_LABELS } from "@/data/founding";
 import { advanceWeekState } from "@/systems/advanceWeek";
 import { applyEffects } from "@/systems/applyEffects";
 import { withJosa } from "@/utils/josa";
@@ -2152,6 +2153,16 @@ export function processWeek(
   const { pendingExpenses: _settledExpenses, ...settledFinance } =
     snapshot.finance;
 
+  // 스태프 모집 공고: 완료 주에 도달하면 후보 명단 도착을 알린다.
+  const recruitmentPosts = snapshot.staff.recruitmentPosts ?? [];
+  for (const post of recruitmentPosts) {
+    if (post.completesAtWeek === nextCumulativeWeek) {
+      report.highlights.push(
+        `${STAFF_ROLE_LABELS[post.role]} 모집 공고에 후보 명단이 도착했습니다. 인사 관리에서 확인해 주세요.`,
+      );
+    }
+  }
+
   const newState: GameSnapshot = {
     game: {
       ...advancedGame,
@@ -2192,7 +2203,7 @@ export function processWeek(
       ].slice(-STATE_PRUNE_LIMITS.notifications),
     },
     trainee: { trainees },
-    staff: { staff: grownStaff },
+    staff: { ...snapshot.staff, staff: grownStaff },
     album: {
       ...snapshot.album,
       currentAlbum: album,

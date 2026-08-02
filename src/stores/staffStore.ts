@@ -4,6 +4,7 @@ import type { StaffStore, StaffStoreState } from "@/types/game";
 
 export const initialStaffState: StaffStoreState = {
   staff: [],
+  recruitmentPosts: [],
 };
 
 export const staffVanillaStore = createStore<StaffStore>()((set) => ({

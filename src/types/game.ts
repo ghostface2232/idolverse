@@ -587,6 +587,21 @@ export interface Staff {
   specialty?: string;
   profileImagePath?: string;
   profileSpriteIndex?: number;
+  /** 마지막으로 훈련을 진행한 누적 주. 훈련은 1주에 인당 1회만 가능하다. */
+  lastTrainedAtWeek?: number;
+}
+
+/** 스태프 모집 공고. 역할당 1건만 열 수 있고, 완료 주가 되면 후보를 만난다. */
+export interface StaffRecruitmentPost {
+  role: StaffRole;
+  /** 공고를 낸 누적 주 */
+  startedAtWeek: number;
+  /** 이 누적 주부터 후보 명단이 도착한다 */
+  completesAtWeek: number;
+  /** 후보 명단은 이 시드에서 결정적으로 파생된다 */
+  candidateSeed: number;
+  /** 공고 시점의 인재 풀 상한(업계 신뢰 반영) */
+  poolCap: number;
 }
 
 export interface TitleTrack {
@@ -1107,6 +1122,8 @@ export type TraineeStore = TraineeStoreState & TraineeStoreActions;
 
 export interface StaffStoreState {
   staff: Staff[];
+  /** 진행 중이거나 후보가 도착한 스태프 모집 공고 목록 */
+  recruitmentPosts?: StaffRecruitmentPost[];
 }
 
 export interface StaffStoreActions {

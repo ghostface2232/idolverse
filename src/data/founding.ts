@@ -219,6 +219,15 @@ export const POSITION_FITNESS_WEIGHTS: Record<Position, Partial<Record<TraineeSt
   producing: { stamina: 0.4, vocal: 0.3, mental: 0.3 },
 };
 
+/** 포지션 적합도 계산에 실제 반영되는 능력치 키를 가중치 높은 순으로 반환한다. */
+export function getPositionRelevantStatKeys(position: Position): TraineeStatKey[] {
+  return (
+    Object.entries(POSITION_FITNESS_WEIGHTS[position]) as [TraineeStatKey, number][]
+  )
+    .sort((a, b) => b[1] - a[1])
+    .map(([key]) => key);
+}
+
 export const POSITION_LABELS: Record<Position, string> = {
   leader: "리더",
   mainVocal: "메인보컬",

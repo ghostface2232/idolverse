@@ -5,6 +5,7 @@ import {
   RECRUIT_STAT_BANDS,
   STAFF_GROWTH,
   STAFF_HIRING,
+  STAFF_MARKET,
   TEMPERAMENT_PROFILES,
 } from "@/data/balance";
 import { pickStaffProfiles, STAFF_PROFILES } from "@/data/staffProfiles";
@@ -27,6 +28,7 @@ import type {
   MemberTemperament,
   Nationality,
   Staff,
+  StaffRecruitmentPost,
   StaffRole,
   Trainee,
 } from "@/types/game";
@@ -281,4 +283,16 @@ export function generateStaffCandidates(
   }
 
   return candidates;
+}
+
+/** 모집 공고에서 파생되는 후보 명단. 시드가 같으면 언제 조회해도 같다. */
+export function getRecruitmentPostCandidates(
+  post: StaffRecruitmentPost,
+): Staff[] {
+  return generateStaffCandidates(
+    post.role,
+    post.candidateSeed,
+    STAFF_MARKET.candidatesPerRole,
+    post.poolCap,
+  );
 }

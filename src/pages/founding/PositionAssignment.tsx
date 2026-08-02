@@ -9,10 +9,12 @@ import { PositionSlot } from "@/components/founding/PositionSlot";
 import {
   ALL_POSITIONS,
   calculateRelativePositionPotentialRatings,
+  getPositionRelevantStatKeys,
   isRequiredPosition,
   POSITION_LABELS,
   REQUIRED_POSITIONS,
 } from "@/data/founding";
+import { STAT_LABELS } from "@/data/traineeStats";
 import { useFoundingStore, foundingVanillaStore } from "@/stores/foundingStore";
 import { traineeVanillaStore, useTraineeStore } from "@/stores/traineeStore";
 import { gameVanillaStore } from "@/stores/gameStore";
@@ -314,13 +316,14 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               const isHere = heldPositions.includes(selectingPosition);
               const potentialRating =
                 potentialRatingsByPosition.get(selectingPosition)?.[trainee.id] ?? 3;
+              const relevantStatKeys = getPositionRelevantStatKeys(selectingPosition);
 
               return (
                 <button
                   key={trainee.id}
                   type="button"
                   className={[
-                    "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition duration-150 ease-out active:scale-[0.96]",
+                    "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition duration-150 ease-out active:scale-[0.96]",
                     radioTileClasses(
                       isHere,
                       Boolean(assignments[selectingPosition]),
@@ -328,15 +331,25 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                   ].join(" ")}
                   onClick={() => handleAssign(trainee.id)}
                 >
-                  <div className="flex items-baseline gap-2">
-                    <PixelText className="text-base text-slate-50 [text-shadow:none]">
-                      {trainee.name}
-                    </PixelText>
-                    {heldPositions.length > 0 && (
-                      <span className="text-xs text-slate-400">
-                        ({heldPositions.map((p) => POSITION_LABELS[p]).join(", ")})
-                      </span>
-                    )}
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex items-baseline gap-2">
+                      <PixelText className="text-base text-slate-50 [text-shadow:none]">
+                        {trainee.name}
+                      </PixelText>
+                      {heldPositions.length > 0 && (
+                        <span className="text-xs text-slate-400">
+                          ({heldPositions.map((p) => POSITION_LABELS[p]).join(", ")})
+                        </span>
+                      )}
+                    </div>
+                    <span className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] tabular-nums text-slate-400">
+                      {relevantStatKeys.map((key) => (
+                        <span key={key} className="whitespace-nowrap">
+                          {STAT_LABELS[key]}{" "}
+                          <span className="text-slate-200">{trainee.stats[key]}</span>
+                        </span>
+                      ))}
+                    </span>
                   </div>
                   <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
                     팀 내 적합도
@@ -346,9 +359,10 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               );
             })}
             <p className="px-1 pt-1 text-[11px] leading-5 text-slate-400">
-              별은 현재 멤버끼리 비교한 상대 평가입니다. 역할에 맞는 분야별
-              강점을 중심으로 성장 잠재력을 함께 보며, 비슷한 후보는 같은 별을
-              받을 수 있습니다.
+              이름 아래 수치는 이 포지션에 반영되는 현재 능력치입니다. 별은
+              현재 멤버끼리 비교한 상대 평가입니다. 역할에 맞는 분야별 강점을
+              중심으로 성장 잠재력을 함께 보며, 비슷한 후보는 같은 별을 받을 수
+              있습니다.
             </p>
             <button
               type="button"

@@ -10,11 +10,12 @@ import {
   loadGame,
   type SaveSlotSummary,
 } from "@/lib/saveSystem";
+import { clearActiveSession, readActiveSession } from "@/lib/sessionResume";
 
 interface SaveSlotsProps {
   userId: string;
-  onLoadGame: () => void;
-  onNewGame: () => void;
+  onLoadGame: (slotNumber: number) => void;
+  onNewGame: (slotNumber: number) => void;
   embedded?: boolean;
 }
 
@@ -86,7 +87,7 @@ export function SaveSlots({
         return;
       }
 
-      onLoadGame();
+      onLoadGame(slotNumber);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "진행 기록을 불러오지 못했습니다.");
     }
@@ -99,6 +100,10 @@ export function SaveSlots({
 
     try {
       await deleteSave(userId, deleteTarget.slotNumber);
+      // 삭제한 슬롯이 복원 대상이었다면 새로고침이 빈 게임을 열지 않게 지운다.
+      if (readActiveSession(userId) === deleteTarget.slotNumber) {
+        clearActiveSession();
+      }
       setSaves(await listSaves(userId));
       setDeleteTarget(null);
       setMessage("저장 슬롯을 삭제했습니다.");
@@ -182,7 +187,10 @@ export function SaveSlots({
                     </Button>
                   </>
                 ) : (
-                  <Button className="col-span-2" onClick={onNewGame}>
+                  <Button
+                    className="col-span-2"
+                    onClick={() => onNewGame(save.slotNumber)}
+                  >
                     새 게임 시작
                   </Button>
                 )}

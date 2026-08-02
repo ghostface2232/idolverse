@@ -1,4 +1,5 @@
 import {
+  ALBUM_SALES,
   CONCEPT_SYNERGY_BONUS,
   EQUIPMENT_ALBUM_MULT,
   FANDOM_EXPECTATION_RISKY,
@@ -221,6 +222,22 @@ export interface FinalizeAlbumReleaseInput {
  * 데뷔(M2)와 컴백(M4)이 같은 공식을 쓰므로 차트 개봉 연출이 어느 쪽이든
  * 같은 chartRank를 신뢰할 수 있다.
  */
+/**
+ * 첫 주 음반 판매량. 평균 이하 완성도(qualityKnee 미만)는 판매 효율이
+ * 비례로 깎인다 — 저품질 다작이 제작비를 회수하는 루프를 막는다.
+ */
+export function calculateFirstWeekSales(quality: number, fandom: number): number {
+  const qualityEfficiency = Math.max(
+    ALBUM_SALES.minEfficiency,
+    Math.min(1, quality / ALBUM_SALES.qualityKnee),
+  );
+  return Math.round(
+    quality *
+      qualityEfficiency *
+      (ALBUM_SALES.baseSalesPerQuality + fandom * ALBUM_SALES.salesPerFandomPoint),
+  );
+}
+
 export function finalizeAlbumRelease(
   input: FinalizeAlbumReleaseInput,
 ): { album: Album; releaseResult: ReleaseResult } {
@@ -260,7 +277,7 @@ export function finalizeAlbumRelease(
       performance: {
         chartPeak: releaseResult.chartRank,
         chartPower: releaseResult.chartPower,
-        firstWeekSales: Math.round(quality * (600 + input.fandom.fandom * 25)),
+        firstWeekSales: calculateFirstWeekSales(quality, input.fandom.fandom),
         totalStreams: Math.round(releaseResult.chartPower * 125000),
         fanGrowth: releaseResult.fandomDelta,
       },

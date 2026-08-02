@@ -128,6 +128,7 @@ export function makeGameSnapshot(options: FixtureOptions = {}): GameSnapshot {
           salary: 42000000,
         },
       ],
+      recruitmentPosts: [],
     },
     album: { currentAlbum: null, releasedAlbums: [], conceptHistory: [] },
     fandom: {

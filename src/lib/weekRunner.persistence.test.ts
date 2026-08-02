@@ -16,14 +16,19 @@ import {
 } from "@/lib/saveSystem";
 import {
   applyEventChoiceAndSave,
+  closeStaffRecruitmentAndSave,
   completePresentationEventAndSave,
   completeTitleTrackSelectionAndSave,
+  hireStaffAndSave,
   runWeekAndSave,
   startComebackProjectAndSave,
+  startStaffRecruitmentAndSave,
   trainStaffAndSave,
   upgradeFacilityAndSave,
 } from "@/lib/weekRunner";
-import { COMEBACK_BUDGET_TIERS_BY_ID } from "@/data/balance";
+import { getRecruitmentPostCandidates } from "@/systems/recruitSystem";
+import { toCumulativeWeek } from "@/systems/progressionSystem";
+import { COMEBACK_BUDGET_TIERS_BY_ID, STAFF_MARKET } from "@/data/balance";
 import { getStaffTraining } from "@/data/staffTraining";
 import {
   DEBUT_PROJECT,
@@ -325,6 +330,163 @@ describe("durable weekly workflow", () => {
     ).rejects.toThrow("Not enough money");
     expect(saveGameMock).not.toHaveBeenCalled();
     expect(captureGameState()).toEqual(before);
+  });
+
+  it("같은 주에는 같은 스태프를 두 번 훈련할 수 없다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const manager = snapshot.staff.staff[0];
+    manager.ability = 20;
+    manager.potentialCap = 80;
+    manager.trainingCounts = {};
+    manager.lastTrainedAtWeek = toCumulativeWeek(1, 10);
+    snapshot.finance.money = 100_000_000;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    await expect(
+      trainStaffAndSave(manager.id, "leadership-workshop", "user", 1),
+    ).rejects.toThrow("already trained this week");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
+  });
+
+  it("지난주에 훈련했다면 이번 주에는 다시 훈련할 수 있고, 훈련 주가 기록된다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const manager = snapshot.staff.staff[0];
+    manager.ability = 20;
+    manager.potentialCap = 80;
+    manager.trainingCounts = {};
+    manager.lastTrainedAtWeek = toCumulativeWeek(1, 9);
+    snapshot.finance.money = 100_000_000;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    const result = await trainStaffAndSave(
+      manager.id,
+      "leadership-workshop",
+      "user",
+      1,
+    );
+
+    expect(result.abilityGain).toBeGreaterThan(0);
+    expect(captureGameState().staffStore.staff[0].lastTrainedAtWeek).toBe(
+      toCumulativeWeek(1, 10),
+    );
+  });
+
+  it("모집 공고는 공고비를 차감하고 완료 주가 기록된 공고를 남긴다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    snapshot.finance.money = 100_000_000;
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    const post = await startStaffRecruitmentAndSave("producer", "user", 1);
+
+    const committed = captureGameState();
+    expect(committed.financeStore.money).toBe(
+      100_000_000 - STAFF_MARKET.recruitmentPostingCost,
+    );
+    expect(committed.staffStore.recruitmentPosts).toEqual([post]);
+    expect(post.completesAtWeek).toBe(
+      toCumulativeWeek(1, 10) + STAFF_MARKET.recruitmentWeeks,
+    );
+
+    // 같은 역할의 공고는 중복해서 낼 수 없다.
+    await expect(
+      startStaffRecruitmentAndSave("producer", "user", 1),
+    ).rejects.toThrow("already open");
+  });
+
+  it("후보 명단이 도착하기 전에는 채용할 수 없다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const cumulativeWeek = toCumulativeWeek(1, 10);
+    snapshot.staff.recruitmentPosts = [
+      {
+        role: "producer",
+        startedAtWeek: cumulativeWeek,
+        completesAtWeek: cumulativeWeek + STAFF_MARKET.recruitmentWeeks,
+        candidateSeed: 1234,
+        poolCap: 70,
+      },
+    ];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    const before = captureGameState();
+
+    const candidate = getRecruitmentPostCandidates(
+      snapshot.staff.recruitmentPosts[0],
+    )[0];
+    await expect(hireStaffAndSave(candidate, "user", 1)).rejects.toThrow(
+      "completed recruitment post",
+    );
+    // 공고 자체가 없는 역할도 채용할 수 없다.
+    await expect(
+      hireStaffAndSave({ ...candidate, role: "marketer" }, "user", 1),
+    ).rejects.toThrow("completed recruitment post");
+    expect(saveGameMock).not.toHaveBeenCalled();
+    expect(captureGameState()).toEqual(before);
+  });
+
+  it("도착한 공고의 후보를 채용하면 공고가 닫히고 명단 밖 인물은 거부된다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const cumulativeWeek = toCumulativeWeek(1, 10);
+    const post = {
+      role: "producer" as const,
+      startedAtWeek: cumulativeWeek - STAFF_MARKET.recruitmentWeeks,
+      completesAtWeek: cumulativeWeek,
+      candidateSeed: 1234,
+      poolCap: 70,
+    };
+    snapshot.staff.recruitmentPosts = [post];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    // 명단에 없는 인물은 거부한다.
+    const outsider = {
+      ...getRecruitmentPostCandidates(post)[0],
+      id: "staff-forged",
+    };
+    await expect(hireStaffAndSave(outsider, "user", 1)).rejects.toThrow(
+      "not part of this recruitment post",
+    );
+
+    const candidate = getRecruitmentPostCandidates(post)[0];
+    await hireStaffAndSave(candidate, "user", 1);
+
+    const committed = captureGameState();
+    expect(
+      committed.staffStore.staff.some((member) => member.id === candidate.id),
+    ).toBe(true);
+    expect(committed.staffStore.recruitmentPosts).toEqual([]);
+  });
+
+  it("공고 마감은 채용 없이 공고만 제거한다", async () => {
+    const snapshot = makeGameSnapshot({ week: 10 });
+    const cumulativeWeek = toCumulativeWeek(1, 10);
+    snapshot.staff.recruitmentPosts = [
+      {
+        role: "producer",
+        startedAtWeek: cumulativeWeek - 2,
+        completesAtWeek: cumulativeWeek,
+        candidateSeed: 1234,
+        poolCap: 70,
+      },
+    ];
+    hydrateGameState(toGameStateSnapshot(snapshot));
+    saveGameMock.mockImplementation(async (_userId, _slotNumber, gameState) =>
+      createSavedResult(gameState),
+    );
+
+    await closeStaffRecruitmentAndSave("producer", "user", 1);
+
+    const committed = captureGameState();
+    expect(committed.staffStore.recruitmentPosts).toEqual([]);
+    expect(committed.staffStore.staff).toHaveLength(1);
   });
 
   it("이정표 언락 전에는 시설 3단계 업그레이드를 거부한다", async () => {

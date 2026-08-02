@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
@@ -6,27 +6,31 @@ import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { StaffPotentialStars } from "@/components/staff/StaffPotentialStars";
 import { StaffPortrait } from "@/components/visual/StaffPortrait";
-import {
-  FOUNDING_STAFF_ABILITY_CAP,
-  STAFF_MARKET,
-} from "@/data/balance";
+import { STAFF_MARKET } from "@/data/balance";
 import { STAFF_ROLE_LABELS, STAFF_ROLE_ORDER } from "@/data/founding";
 import { getStaffTrainingsForRole } from "@/data/staffTraining";
-import { generateStaffCandidates } from "@/systems/recruitSystem";
+import { getRecruitmentPostCandidates } from "@/systems/recruitSystem";
+import { getWeeklyStaffSalary } from "@/utils/staffSalary";
 import {
   getTrainingFamiliarity,
   type StaffTrainingResult,
 } from "@/systems/staffTrainingSystem";
-import type { Staff, StaffTrainingId } from "@/types/game";
+import type {
+  Staff,
+  StaffRecruitmentPost,
+  StaffRole,
+  StaffTrainingId,
+} from "@/types/game";
 
 interface StaffManagementModalProps {
   staff: readonly Staff[];
+  recruitmentPosts: readonly StaffRecruitmentPost[];
   money: number;
-  industry: number;
-  campaignSeed: number;
   cumulativeWeek: number;
   isSaving: boolean;
   errorMessage?: string | null;
+  onStartRecruitment: (role: StaffRole) => void | Promise<void>;
+  onCloseRecruitment: (role: StaffRole) => void | Promise<void>;
   onHire: (candidate: Staff) => void | Promise<void>;
   onTrain: (
     staffId: string,
@@ -36,52 +40,43 @@ interface StaffManagementModalProps {
 }
 
 /**
- * 상시 스태프 시장(M5). 후보는 매주 회전하고, 풀 상한은 업계 신뢰와 함께
- * 열린다. 교체는 팀 만족도로 대가를 치른다.
+ * 인사 관리(M5). 교체·영입은 모집 공고를 내고 후보 명단이 도착한 뒤에
+ * 결정한다. 교체는 팀 만족도로 대가를 치른다.
  */
 export function StaffManagementModal({
   staff,
+  recruitmentPosts,
   money,
-  industry,
-  campaignSeed,
   cumulativeWeek,
   isSaving,
   errorMessage,
+  onStartRecruitment,
+  onCloseRecruitment,
   onHire,
   onTrain,
   onClose,
 }: StaffManagementModalProps) {
   const [expandedRole, setExpandedRole] = useState<Staff["role"] | null>(null);
   const [trainingFeedback, setTrainingFeedback] = useState<string | null>(null);
-  const poolCap = Math.round(
-    FOUNDING_STAFF_ABILITY_CAP + industry * STAFF_MARKET.industryScale,
-  );
-  const candidatesByRole = useMemo(
-    () =>
-      STAFF_ROLE_ORDER.map((role, index) => ({
-        role,
-        candidates: generateStaffCandidates(
-          role,
-          campaignSeed + cumulativeWeek * 7 + index,
-          STAFF_MARKET.candidatesPerRole,
-          poolCap,
-        ),
-      })),
-    [campaignSeed, cumulativeWeek, poolCap],
-  );
 
   return (
     <Modal title="인사 관리" onClose={onClose} isCloseDisabled={isSaving}>
       <div className="space-y-4 text-sm [word-break:keep-all]">
         <p className="text-pretty text-xs leading-5 text-text-muted">
-          업계 신뢰가 오르면 더 좋은 인재가 찾아오고, 함께해 온 스태프를
-          내보내면 멤버들의 만족도가 눈에 띄게 떨어집니다.
+          교체·영입은 모집 공고를 내고 후보 명단이 도착한 뒤 결정할 수
+          있습니다. 업계 신뢰가 오르면 더 좋은 인재가 찾아오고, 함께해 온
+          스태프를 내보내면 멤버들의 만족도가 눈에 띄게 떨어집니다.
         </p>
 
-        {candidatesByRole.map(({ role, candidates }) => {
+        {STAFF_ROLE_ORDER.map((role) => {
           const current = staff.find((member) => member.role === role);
           const isExpanded = expandedRole === role;
           const trainings = getStaffTrainingsForRole(role);
+          const post = recruitmentPosts.find((entry) => entry.role === role);
+          const postReady = post ? cumulativeWeek >= post.completesAtWeek : false;
+          const candidates = post && postReady
+            ? getRecruitmentPostCandidates(post)
+            : [];
           return (
             <section key={role}>
               <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
@@ -123,7 +118,20 @@ export function StaffManagementModal({
                   </span>
                 )}
                 <span className="flex shrink-0 items-center gap-1 text-[11px] text-text-muted">
-                  {isExpanded ? "접기" : "후보·훈련"}
+                  {post ? (
+                    <span
+                      className={
+                        postReady
+                          ? "rounded-full bg-action-secondary/15 px-2 py-0.5 text-cyan-200"
+                          : "rounded-full bg-white/[0.06] px-2 py-0.5"
+                      }
+                    >
+                      {postReady
+                        ? "후보 도착"
+                        : `모집 중 · ${post.completesAtWeek - cumulativeWeek}주 남음`}
+                    </span>
+                  ) : null}
+                  {isExpanded ? "접기" : "모집·훈련"}
                   <ChevronDown
                     className={`size-4 transition-transform duration-150 ${
                       isExpanded ? "rotate-180" : ""
@@ -138,14 +146,16 @@ export function StaffManagementModal({
                   {current ? (
                     <div className="mt-1.5 rounded-xl border border-action-secondary/25 bg-action-secondary/5 p-2.5">
                       <p className="px-1 text-xs leading-5 text-text-muted">
-                        비용을 들여 새 경험을 쌓게 하되, 같은 활동을 반복하면
-                        효과가 줄어듭니다.
+                        비용을 들여 새 경험을 쌓게 하되, 훈련은 1주에 1회만
+                        진행할 수 있고 같은 활동을 반복하면 효과가 줄어듭니다.
                       </p>
                       <div className="mt-2 space-y-1.5">
                         {trainings.map((training) => {
                           const count =
                             current.trainingCounts?.[training.id] ?? 0;
                           const canAfford = money >= training.cost;
+                          const trainedThisWeek =
+                            current.lastTrainedAtWeek === cumulativeWeek;
                           return (
                             <div
                               key={training.id}
@@ -169,7 +179,9 @@ export function StaffManagementModal({
                               <Button
                                 tone="secondary"
                                 className="min-h-11 shrink-0 px-3 py-1.5 text-xs"
-                                isDisabled={isSaving || !canAfford}
+                                isDisabled={
+                                  isSaving || !canAfford || trainedThisWeek
+                                }
                                 onPress={async () => {
                                   setTrainingFeedback(null);
                                   const result = await onTrain(
@@ -186,7 +198,11 @@ export function StaffManagementModal({
                                   );
                                 }}
                               >
-                                {canAfford ? "진행" : "자금 부족"}
+                                {trainedThisWeek
+                                  ? "이번 주 완료"
+                                  : canAfford
+                                    ? "진행"
+                                    : "자금 부족"}
                               </Button>
                             </div>
                           );
@@ -203,53 +219,99 @@ export function StaffManagementModal({
                     </div>
                   ) : null}
 
-                  <div className="mt-1.5 space-y-1.5">
-                    {candidates.map((candidate) => {
-                      return (
-                        <div
-                          key={candidate.id}
-                          className="flex items-center justify-between gap-2 rounded-xl bg-surface-shell/50 px-3 py-2"
-                        >
-                          <span className="flex min-w-0 items-center gap-2.5">
-                            <StaffPortrait
-                              profileImagePath={candidate.profileImagePath}
-                              profileSpriteIndex={candidate.profileSpriteIndex}
-                              size="md"
-                            />
-                            <span className="min-w-0 text-xs">
-                              <span className="block truncate font-semibold text-text-primary">
-                                {candidate.name}
-                                <span className="ml-2 font-normal tabular-nums text-text-muted">
-                                  능력 {Math.floor(candidate.ability)}
-                                </span>
-                              </span>
-                              <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                <StaffPotentialStars
-                                  staff={candidate}
-                                  showLabel={false}
+                  {!post ? (
+                    <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl bg-surface-shell/50 px-3 py-2.5">
+                      <p className="min-w-0 text-xs leading-5 text-text-muted">
+                        공고를 내면 {STAFF_MARKET.recruitmentWeeks}주 뒤 후보
+                        명단이 도착합니다. 공고비{" "}
+                        <MoneyDisplay
+                          amount={STAFF_MARKET.recruitmentPostingCost}
+                          size="sm"
+                        />
+                      </p>
+                      <Button
+                        tone="secondary"
+                        className="min-h-11 shrink-0 px-3 py-1.5 text-xs"
+                        isDisabled={
+                          isSaving || money < STAFF_MARKET.recruitmentPostingCost
+                        }
+                        onPress={() => void onStartRecruitment(role)}
+                      >
+                        {money >= STAFF_MARKET.recruitmentPostingCost
+                          ? "모집 공고 내기"
+                          : "자금 부족"}
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {post && !postReady ? (
+                    <p className="mt-1.5 rounded-xl bg-surface-shell/50 px-3 py-2.5 text-xs leading-5 text-text-muted">
+                      후보를 모집하고 있습니다. {post.completesAtWeek - cumulativeWeek}
+                      주 뒤 명단이 도착합니다.
+                    </p>
+                  ) : null}
+
+                  {post && postReady ? (
+                    <>
+                      <div className="mt-1.5 space-y-1.5">
+                        {candidates.map((candidate) => {
+                          return (
+                            <div
+                              key={candidate.id}
+                              className="flex items-center justify-between gap-2 rounded-xl bg-surface-shell/50 px-3 py-2"
+                            >
+                              <span className="flex min-w-0 items-center gap-2.5">
+                                <StaffPortrait
+                                  profileImagePath={candidate.profileImagePath}
+                                  profileSpriteIndex={candidate.profileSpriteIndex}
+                                  size="md"
                                 />
-                                <span className="text-text-muted">
-                                  주급{" "}
-                                  <MoneyDisplay
-                                    amount={candidate.salary}
-                                    size="sm"
-                                  />
+                                <span className="min-w-0 text-xs">
+                                  <span className="block truncate font-semibold text-text-primary">
+                                    {candidate.name}
+                                    <span className="ml-2 font-normal tabular-nums text-text-muted">
+                                      능력 {Math.floor(candidate.ability)}
+                                    </span>
+                                  </span>
+                                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                    <StaffPotentialStars
+                                      staff={candidate}
+                                      showLabel={false}
+                                    />
+                                    <span className="text-text-muted">
+                                      주급{" "}
+                                      <MoneyDisplay
+                                        amount={getWeeklyStaffSalary(
+                                          candidate.salary,
+                                        )}
+                                        size="sm"
+                                      />
+                                    </span>
+                                  </span>
                                 </span>
                               </span>
-                            </span>
-                          </span>
-                          <Button
-                            tone="secondary"
-                            className="min-h-11 shrink-0 px-3 py-1.5 text-xs"
-                            isDisabled={isSaving || money <= 0}
-                            onPress={() => void onHire(candidate)}
-                          >
-                            {current ? "교체" : "영입"}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
+                              <Button
+                                tone="secondary"
+                                className="min-h-11 shrink-0 px-3 py-1.5 text-xs"
+                                isDisabled={isSaving || money <= 0}
+                                onPress={() => void onHire(candidate)}
+                              >
+                                {current ? "교체" : "영입"}
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={isSaving}
+                        className="mt-1.5 w-full rounded-xl bg-surface-shell/40 px-3 py-2 text-center text-xs text-text-muted transition-colors duration-150 hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-45"
+                        onClick={() => void onCloseRecruitment(role)}
+                      >
+                        마음에 드는 후보가 없어 공고를 마감합니다
+                      </button>
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </section>

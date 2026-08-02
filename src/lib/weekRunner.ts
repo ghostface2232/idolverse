@@ -21,14 +21,20 @@ import type {
   Genre,
   Position,
   Staff,
+  StaffRecruitmentPost,
+  StaffRole,
   StaffTrainingId,
 } from "@/types/game";
-import { generateStaffCandidates } from "@/systems/recruitSystem";
+import {
+  generateStaffCandidates,
+  getRecruitmentPostCandidates,
+} from "@/systems/recruitSystem";
 import { hashSeed } from "@/data/voiceLines";
 import { isRequiredPosition, REQUIRED_POSITIONS } from "@/data/founding";
 import {
   COMEBACK_BUDGET_TIERS_BY_ID,
   FACILITY_TIER_UNLOCKS,
+  FOUNDING_STAFF_ABILITY_CAP,
   STAFF_MARKET,
   type ComebackBudgetTierId,
 } from "@/data/balance";
@@ -708,8 +714,108 @@ export async function completeTitleTrackSelectionAndSave(
 }
 
 /**
- * 스태프 교체(M5 재모집): 같은 역할의 기존 스태프를 내보내고 새 인재를
- * 들인다. 오래 함께한 스태프의 교체는 팀 만족도로 대가를 치른다.
+ * 스태프 모집 공고를 낸다. 공고비를 내고 일정 기간이 지나면 후보 명단이
+ * 도착하며, 역할당 공고는 1건만 열 수 있다.
+ */
+export async function startStaffRecruitmentAndSave(
+  role: StaffRole,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+    throw new WeeklyResolutionConflictError(
+      "Staff recruitment is only allowed while planning the week.",
+    );
+  }
+  const posts = snapshot.staff.recruitmentPosts ?? [];
+  if (posts.some((post) => post.role === role)) {
+    throw new WeeklyResolutionConflictError(
+      "A recruitment post for this role is already open.",
+    );
+  }
+  if (snapshot.finance.money < STAFF_MARKET.recruitmentPostingCost) {
+    throw new WeeklyResolutionConflictError(
+      "Not enough money for the recruitment posting.",
+    );
+  }
+  const cumulativeWeek = toCumulativeWeek(
+    snapshot.game.currentYear,
+    snapshot.game.currentWeek,
+  );
+  const poolCap = Math.round(
+    FOUNDING_STAFF_ABILITY_CAP +
+      snapshot.fandom.industry * STAFF_MARKET.industryScale,
+  );
+  const newPost: StaffRecruitmentPost = {
+    role,
+    startedAtWeek: cumulativeWeek,
+    completesAtWeek: cumulativeWeek + STAFF_MARKET.recruitmentWeeks,
+    candidateSeed: hashSeed(
+      `staff-recruitment-${role}-${snapshot.game.campaignSeed}-${cumulativeWeek}`,
+    ),
+    poolCap,
+  };
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    staff: { ...snapshot.staff, recruitmentPosts: [...posts, newPost] },
+    finance: {
+      ...snapshot.finance,
+      money: snapshot.finance.money - STAFF_MARKET.recruitmentPostingCost,
+      pendingExpenses: {
+        ...(snapshot.finance.pendingExpenses ?? {}),
+        staffRecruitment:
+          (snapshot.finance.pendingExpenses?.staffRecruitment ?? 0) +
+          STAFF_MARKET.recruitmentPostingCost,
+      },
+    },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+  return newPost;
+}
+
+/** 채용 없이 공고를 마감한다. 공고비는 돌려받지 못한다. */
+export async function closeStaffRecruitmentAndSave(
+  role: StaffRole,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  if (snapshot.game.weeklyFlow.state !== "planning_ready") {
+    throw new WeeklyResolutionConflictError(
+      "Staff recruitment is only allowed while planning the week.",
+    );
+  }
+  const posts = snapshot.staff.recruitmentPosts ?? [];
+  if (!posts.some((post) => post.role === role)) {
+    throw new WeeklyResolutionConflictError(
+      "No recruitment post is open for this role.",
+    );
+  }
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    staff: {
+      ...snapshot.staff,
+      recruitmentPosts: posts.filter((post) => post.role !== role),
+    },
+  };
+  const saved = await saveGame(
+    userId,
+    slotNumber,
+    toPersistedSnapshot(nextSnapshot),
+  );
+  hydrateGameState(saved.gameState);
+}
+
+/**
+ * 스태프 교체(M5 재모집): 모집 공고로 도착한 후보 중에서 골라 같은 역할의
+ * 기존 스태프를 내보내고 새 인재를 들인다. 채용이 확정되면 공고는 닫히고,
+ * 오래 함께한 스태프의 교체는 팀 만족도로 대가를 치른다.
  */
 export async function hireStaffAndSave(
   newStaff: Staff,
@@ -720,6 +826,26 @@ export async function hireStaffAndSave(
   if (snapshot.game.weeklyFlow.state !== "planning_ready") {
     throw new WeeklyResolutionConflictError(
       "Staff changes are only allowed while planning the week.",
+    );
+  }
+  const posts = snapshot.staff.recruitmentPosts ?? [];
+  const post = posts.find((entry) => entry.role === newStaff.role);
+  const cumulativeWeek = toCumulativeWeek(
+    snapshot.game.currentYear,
+    snapshot.game.currentWeek,
+  );
+  if (!post || cumulativeWeek < post.completesAtWeek) {
+    throw new WeeklyResolutionConflictError(
+      "Hiring requires a completed recruitment post for this role.",
+    );
+  }
+  if (
+    !getRecruitmentPostCandidates(post).some(
+      (candidate) => candidate.id === newStaff.id,
+    )
+  ) {
+    throw new WeeklyResolutionConflictError(
+      "The candidate is not part of this recruitment post.",
     );
   }
   const replacing = snapshot.staff.staff.find(
@@ -749,7 +875,11 @@ export async function hireStaffAndSave(
 
   const nextSnapshot: GameSnapshot = {
     ...snapshot,
-    staff: { staff: staffList },
+    staff: {
+      ...snapshot.staff,
+      staff: staffList,
+      recruitmentPosts: posts.filter((entry) => entry.role !== newStaff.role),
+    },
     trainee: { trainees },
     finance: {
       ...snapshot.finance,
@@ -784,16 +914,32 @@ export async function trainStaffAndSave(
   if (!staff || !training) {
     throw new WeeklyResolutionConflictError("Staff or training could not be found.");
   }
+  const cumulativeWeek = toCumulativeWeek(
+    snapshot.game.currentYear,
+    snapshot.game.currentWeek,
+  );
+  // 훈련은 1주에 인당 1회만 — 자금만 있으면 한 주에 능력을 몰아 올리는
+  // 루프를 막는다.
+  if (staff.lastTrainedAtWeek === cumulativeWeek) {
+    throw new WeeklyResolutionConflictError(
+      "This staff member has already trained this week.",
+    );
+  }
   if (snapshot.finance.money < training.cost) {
     throw new WeeklyResolutionConflictError("Not enough money for staff training.");
   }
 
   const result = applyStaffTraining(staff, trainingId);
+  const trainedStaff: Staff = {
+    ...result.staff,
+    lastTrainedAtWeek: cumulativeWeek,
+  };
   const nextSnapshot: GameSnapshot = {
     ...snapshot,
     staff: {
+      ...snapshot.staff,
       staff: snapshot.staff.staff.map((member) =>
-        member.id === staffId ? result.staff : member,
+        member.id === staffId ? trainedStaff : member,
       ),
     },
     finance: {
