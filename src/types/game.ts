@@ -1303,6 +1303,12 @@ export interface FinanceStoreState {
    */
   cumulativeIncome?: number;
   cumulativeExpense?: number;
+  /**
+   * 직전 주간 결산이 끝난 시점의 잔액. 다음 결산에서 실제 순자산 변동
+   * (money − lastReportMoney)과 장부 합계의 차액을 '기타 변동'으로 회수해
+   * 리포트의 순수익이 항상 실측 잔액 변동과 일치하게 만든다.
+   */
+  lastReportMoney?: number;
 }
 
 export interface FinanceStoreActions {

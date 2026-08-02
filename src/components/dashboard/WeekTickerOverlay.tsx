@@ -77,22 +77,14 @@ export function WeekTickerOverlay({
 
   return (
     // 화면 전체를 덮는다(fixed) — 연출 중에는 상단바의 갱신된 수치가 미리
-    // 보이거나 배경 버튼이 눌리면 안 된다. 월드 연출은 중앙의 투명 띠로
-    // 계속 보이고, 상단바·하단 독 영역만 블러로 가린다.
+    // 보이거나 배경 버튼이 눌리면 안 된다. 배경 전체를 블러로 가려
+    // 뒤쪽의 구체적인 내용이 읽히지 않게 하고, 연출 요소만 또렷이 남긴다.
     <button
       type="button"
       aria-label="주간 진행 연출 건너뛰기"
-      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-between bg-gradient-to-b from-slate-950/55 via-transparent to-slate-950/72 px-4 pb-24 pt-16 text-left"
+      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-between bg-gradient-to-b from-slate-950/60 via-slate-950/35 to-slate-950/72 px-4 pb-24 pt-16 text-left backdrop-blur-md"
       onClick={skip}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-slate-950/70 backdrop-blur-md"
-      />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-slate-950/70 backdrop-blur-md"
-      />
       <div className="relative flex flex-col items-center gap-2">
         <div className="flex items-center gap-1.5 rounded-2xl bg-slate-950/78 px-3 py-2 shadow-[var(--shadow-surface)] backdrop-blur-sm">
           <span className="mr-1 text-[11px] font-semibold tabular-nums text-text-muted">

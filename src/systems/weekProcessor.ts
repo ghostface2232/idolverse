@@ -2188,6 +2188,20 @@ export function processWeek(
   // 주간 수입·지출 내역은 최근 1년치만 남기고, 전 기간 지표(투자금 회수 등)를
   // 위한 누계는 별도 필드로 이월한다. 누계가 없는 구버전 세이브는 프루닝 전
   // 전체 내역 합산으로 백필한다.
+  // 순자산 정합: 이벤트 효과·주간 사이 사건 대응처럼 장부 항목에 잡히지 않은
+  // 잔액 변동을 '기타 변동(misc)'으로 회수한다. 이렇게 해야 리포트의
+  // 순수익(수입−지출)이 실제 주간 잔액 변동과 항상 일치한다.
+  if (snapshot.finance.lastReportMoney != null) {
+    const explainedNet =
+      sumBreakdown(report.finance.income) - sumBreakdown(report.finance.expenses);
+    const residual = money - snapshot.finance.lastReportMoney - explainedNet;
+    if (residual >= 1) {
+      report.finance.income.misc = (report.finance.income.misc ?? 0) + residual;
+    } else if (residual <= -1) {
+      report.finance.expenses.misc =
+        (report.finance.expenses.misc ?? 0) - residual;
+    }
+  }
   const incomeTotalThisWeek = sumBreakdown(report.finance.income);
   const expenseTotalThisWeek = sumBreakdown(report.finance.expenses);
   const cumulativeIncome =
@@ -2278,6 +2292,7 @@ export function processWeek(
     finance: {
       ...settledFinance,
       money,
+      lastReportMoney: money,
       incomeHistory: [
         ...snapshot.finance.incomeHistory,
         { week: snapshot.game.currentWeek, breakdown: report.finance.income },

@@ -33,6 +33,7 @@ const INCOME_LABELS: Record<string, string> = {
   strategicExpansion: "팬 사업·글로벌 사업",
   emergencyFinancing: "긴급 자금 조달",
   decisionSupport: "협상·지원금",
+  misc: "이벤트·기타 수입",
 };
 
 const EXPENSE_LABELS: Record<string, string> = {
@@ -48,6 +49,7 @@ const EXPENSE_LABELS: Record<string, string> = {
   memberSettlement: "멤버 정산",
   financingRepayment: "자금 상환",
   decisionCosts: "이번 주 선택 비용",
+  misc: "이벤트·기타 지출",
 };
 
 const RECURRING_INCOME_KEYS = new Set([
