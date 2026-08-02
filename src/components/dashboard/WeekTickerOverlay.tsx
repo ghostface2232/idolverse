@@ -76,13 +76,24 @@ export function WeekTickerOverlay({
   const albumIncome = report.finance.income.album ?? 0;
 
   return (
+    // 화면 전체를 덮는다(fixed) — 연출 중에는 상단바의 갱신된 수치가 미리
+    // 보이거나 배경 버튼이 눌리면 안 된다. 월드 연출은 중앙의 투명 띠로
+    // 계속 보이고, 상단바·하단 독 영역만 블러로 가린다.
     <button
       type="button"
       aria-label="주간 진행 연출 건너뛰기"
-      className="absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-between bg-gradient-to-b from-slate-950/55 via-transparent to-slate-950/72 px-4 pb-20 pt-5 text-left"
+      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-between bg-gradient-to-b from-slate-950/55 via-transparent to-slate-950/72 px-4 pb-24 pt-16 text-left"
       onClick={skip}
     >
-      <div className="flex flex-col items-center gap-2">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-slate-950/70 backdrop-blur-md"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-slate-950/70 backdrop-blur-md"
+      />
+      <div className="relative flex flex-col items-center gap-2">
         <div className="flex items-center gap-1.5 rounded-2xl bg-slate-950/78 px-3 py-2 shadow-[var(--shadow-surface)] backdrop-blur-sm">
           <span className="mr-1 text-[11px] font-semibold tabular-nums text-text-muted">
             {report.week}주차
@@ -124,7 +135,7 @@ export function WeekTickerOverlay({
         </div>
       </div>
 
-      <div className="flex w-full max-w-sm flex-col items-center gap-1.5">
+      <div className="relative flex w-full max-w-sm flex-col items-center gap-1.5">
         {albumIncome > 0 ? (
           <div className="mb-2 w-full rounded-2xl bg-slate-950/86 px-4 py-3 shadow-[var(--shadow-raised)] backdrop-blur-md">
             <div className="flex items-center justify-between gap-3">
