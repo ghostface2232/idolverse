@@ -1,8 +1,14 @@
 import { useMemo, useState } from "react";
+import { Check } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import { DecisionImpactChips } from "@/components/dashboard/DecisionImpactChips";
 import { MemberPortrait } from "@/components/visual/MemberPortrait";
 import { SpeakerBubble } from "@/components/visual/SpeakerBubble";
+import { hashSeed, MEMBER_VOICE_LINES, pickLine } from "@/data/voiceLines";
+import { useGameStore } from "@/stores/gameStore";
+import { weeklyFlowSelectors } from "@/stores/weeklyFlowSelectors";
 import { traitLabels } from "@/data/memberTraits";
 import {
   ALL_POSITIONS,
@@ -117,6 +123,30 @@ export function TraineeDetail({
   onClose,
 }: TraineeDetailProps) {
   const [tab, setTab] = useState<DetailTab>("stats");
+  const flow = useGameStore(weeklyFlowSelectors.flow);
+  const weeklyDecisions = useGameStore((state) => state.weeklyDecisions);
+  const currentWeek = useGameStore((state) => state.currentWeek);
+  const selectWeeklyDecision = useGameStore(
+    (state) => state.selectWeeklyDecision,
+  );
+  const confirmWeeklyDecision = useGameStore(
+    (state) => state.confirmWeeklyDecision,
+  );
+
+  // 이 멤버가 원인인 이번 주 안건. 계획 단계에서만 여기서 바로 처리할 수 있다.
+  const isPlanningPhase =
+    flow.state === "planning_ready" ||
+    flow.state === "planning_active" ||
+    flow.state === "review_ready";
+  const skippedIds = new Set(flow.skippedDecisionIds ?? []);
+  const confirmedIds = new Set(flow.confirmedDecisionIds ?? []);
+  const memberDecisions = isPlanningPhase
+    ? weeklyDecisions.filter(
+        (card) =>
+          !skippedIds.has(card.id) &&
+          card.trigger?.entityIds.includes(trainee.id),
+      )
+    : [];
 
   const radarPath = useMemo(
     () =>
@@ -151,6 +181,14 @@ export function TraineeDetail({
     effectiveSatisfaction,
     conflictPartner ? conflictPartner.name : null,
   );
+
+  const voiceSeed = hashSeed(`detail:${trainee.id}:${currentWeek}`);
+  const attentionStatusLine =
+    trainee.injuryWeeks > 0
+      ? pickLine(MEMBER_VOICE_LINES.injured, voiceSeed)
+      : trainee.condition < 50 || trainee.stress >= 75
+        ? pickLine(MEMBER_VOICE_LINES.tired, voiceSeed)
+        : comment;
 
   const angleStep = (Math.PI * 2) / STAT_KEYS.length;
 
@@ -189,6 +227,125 @@ export function TraineeDetail({
             </div>
           </div>
         </div>
+
+        {memberDecisions.length > 0 ? (
+          <section
+            aria-label="관리 필요 안건"
+            className="space-y-3 rounded-3xl bg-state-danger/[0.06] p-3.5 ring-1 ring-state-danger/25 [word-break:keep-all]"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-200">
+              관리 필요
+            </p>
+            <SpeakerBubble
+              portrait={<MemberPortrait traineeId={trainee.id} size="md" />}
+              name={trainee.name}
+              role={
+                trainee.position ? POSITION_LABELS[trainee.position] : undefined
+              }
+              tone="warning"
+            >
+              {attentionStatusLine}
+            </SpeakerBubble>
+
+            {memberDecisions.map((card) => {
+              const selectedOptionId = flow.selectedDecisionIds[card.id] ?? null;
+              const selectedOption = card.options.find(
+                (option) => option.id === selectedOptionId,
+              );
+              const isConfirmed =
+                confirmedIds.has(card.id) && Boolean(selectedOption);
+              const needsTargetPick = Boolean(selectedOption?.targetSelection);
+
+              return (
+                <div key={card.id} className="space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {card.title}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-text-secondary">
+                      {card.summary}
+                    </p>
+                  </div>
+
+                  <div
+                    aria-label={`${card.title} 대응 선택`}
+                    className="space-y-2"
+                    role="radiogroup"
+                  >
+                    {card.options.map((option) => {
+                      const isSelected = selectedOptionId === option.id;
+
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={[
+                            "w-full rounded-2xl border-2 px-3 py-3 text-left",
+                            "transition-[scale,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-out active:scale-[0.96]",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-secondary",
+                            radioTileClasses(
+                              isSelected,
+                              selectedOptionId !== null,
+                            ),
+                          ].join(" ")}
+                          onClick={() => selectWeeklyDecision(card.id, option.id)}
+                        >
+                          <span className="flex items-center gap-3">
+                            <span
+                              aria-hidden="true"
+                              className={[
+                                "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
+                                isSelected
+                                  ? "border-brand-cyan bg-brand-cyan text-slate-950"
+                                  : "border-white/30 bg-white/[0.06] text-transparent",
+                              ].join(" ")}
+                            >
+                              <Check className="size-3.5" strokeWidth={3} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-base font-semibold leading-6 text-text-primary">
+                                {option.label}
+                              </span>
+                              <DecisionImpactChips
+                                option={option}
+                                className="mt-2"
+                              />
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {isConfirmed ? (
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-state-success">
+                      <Check className="size-3.5" aria-hidden="true" />
+                      이번 주 계획에 반영했습니다
+                    </p>
+                  ) : needsTargetPick ? (
+                    <p className="text-xs text-text-muted">
+                      참여 멤버 선택이 필요한 안건이라 '이번 주' 탭에서
+                      마무리해 주세요.
+                    </p>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      tone="secondary"
+                      isDisabled={selectedOptionId === null}
+                      onPress={() => confirmWeeklyDecision(card.id)}
+                    >
+                      {selectedOptionId === null
+                        ? "대응을 선택해 주세요"
+                        : "이 대응으로 확정"}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </section>
+        ) : null}
 
         <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="멤버 상세 보기">
           {DETAIL_TABS.map((item) => {
