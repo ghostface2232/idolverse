@@ -495,6 +495,40 @@ export async function saveGame(
 /** DB가 응답하지 않을 때 무한 스피너 대신 에러를 띄우기 위한 조회 시한. */
 const SAVE_QUERY_TIMEOUT_MS = 15_000;
 
+/**
+ * 새 캠페인이 기존 세이브가 남아 있는 슬롯을 덮어쓰기 전에 호출한다.
+ * 로컬 상태는 revision 0에서 다시 시작하지만 DB는 비증가 revision을
+ * 거부하므로, 서버의 현재 save_revision을 코디네이터에 시드하지 않으면
+ * 창단 직후 저장부터 전부 거부된다. 직전 캠페인의 지문 캐시도 함께 비운다.
+ */
+export async function prepareSlotForNewCampaign(
+  userId: string,
+  slotNumber: number,
+) {
+  assertValidSlotNumber(slotNumber);
+  const key = saveQueueKey(userId, slotNumber);
+  lastSavedFingerprints.delete(key);
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("saves")
+    .select("save_revision")
+    .eq("user_id", userId)
+    .eq("slot_number", slotNumber)
+    .abortSignal(AbortSignal.timeout(SAVE_QUERY_TIMEOUT_MS))
+    .maybeSingle<Pick<SaveRow, "save_revision">>();
+
+  if (error) {
+    throw error;
+  }
+  if (data) {
+    saveCoordinator.noteLoadedRevision(
+      key,
+      normalizeSaveRevision(data.save_revision),
+    );
+  }
+}
+
 export async function loadGame(userId: string, slotNumber: number) {
   assertValidSlotNumber(slotNumber);
 

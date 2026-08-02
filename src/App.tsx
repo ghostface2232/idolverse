@@ -5,6 +5,7 @@ import {
   captureGameState,
   DEFAULT_AUTO_SAVE_SLOT,
   loadGame,
+  prepareSlotForNewCampaign,
   saveGame,
 } from "@/lib/saveSystem";
 import {
@@ -25,7 +26,8 @@ const GameDashboard = lazy(() =>
 );
 
 export default function App() {
-  return <AuthGuard>{(user) => <AppShell user={user} />}</AuthGuard>;
+  // key=user.id: 계정이 바뀌면 화면·활성 슬롯·복원 시도 여부를 전부 초기화한다.
+  return <AuthGuard>{(user) => <AppShell key={user.id} user={user} />}</AuthGuard>;
 }
 
 function AppShell({ user }: { user: User }) {
@@ -95,12 +97,15 @@ function AppShell({ user }: { user: User }) {
       <FoundingFlow
         onComplete={() => {
           // 창단 직후에도 새로고침으로 진행이 날아가지 않게 즉시 1회 저장한다.
-          // 실패해도 게임 진입은 막지 않는다 — 이후 모든 행동이 다시 저장한다.
-          void saveGame(user.id, activeSlot, captureGameState()).catch(
-            (error: unknown) => {
+          // 새 캠페인은 revision 0에서 시작하므로, 기존 세이브가 남은 슬롯이면
+          // 서버 revision을 먼저 시드해야 이 저장(과 이후 저장)이 거부되지
+          // 않는다. 실패해도 게임 진입은 막지 않는다.
+          const foundedState = captureGameState();
+          void prepareSlotForNewCampaign(user.id, activeSlot)
+            .then(() => saveGame(user.id, activeSlot, foundedState))
+            .catch((error: unknown) => {
               console.error("Post-founding save failed.", error);
-            },
-          );
+            });
           enterGame(activeSlot);
         }}
         onCancel={() => setScreen("menu")}
@@ -124,7 +129,11 @@ function AppShell({ user }: { user: User }) {
     <MainMenu
       userId={user.id}
       onNewGame={(slotNumber) => {
-        setActiveSlot(slotNumber ?? DEFAULT_AUTO_SAVE_SLOT);
+        const target = slotNumber ?? DEFAULT_AUTO_SAVE_SLOT;
+        setActiveSlot(target);
+        // 창단 완료 시점의 시드를 미리 데워둔다. 실패는 무시한다 —
+        // 창단 완료 저장 직전에 한 번 더 시드한다.
+        void prepareSlotForNewCampaign(user.id, target).catch(() => undefined);
         setScreen("newGame");
       }}
       onLoadGame={enterGame}
