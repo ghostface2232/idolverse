@@ -81,6 +81,41 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     },
   },
   {
+    // 활동기 긴급 개입 1: 음악방송 1위 대결의 팬투표 축을 이번 주에 밀어
+    // 올린다(weekProcessor가 fanRally 주문을 감지해 투표 보너스를 싣는다).
+    // 차트 리빌을 본 뒤 "이번 주 승부수"로 당기는 레버다.
+    id: "fanRally",
+    name: "팬덤 총공 지휘",
+    cost: 800,
+    duration: 1,
+    successFactors: ["teamwork"],
+    effects: {
+      fandomLoyalty: 3,
+      stress: 2,
+    },
+    requirements: {
+      phase: "debut+",
+      minFandom: 15,
+    },
+    sideEffect: "이번 주 음악방송 팬투표 화력이 크게 오릅니다",
+  },
+  {
+    // 활동기 긴급 개입 2: 이번 주 차트 자연 하락을 완만하게 만든다
+    // (weekProcessor가 streamingPush 주문을 감지해 감쇠를 줄인다).
+    id: "streamingPush",
+    name: "스트리밍 스퍼트",
+    cost: 1500,
+    duration: 1,
+    effects: {
+      public: 2,
+    },
+    requirements: {
+      phase: "debut+",
+      minPublic: 15,
+    },
+    sideEffect: "이번 주 차트 하락세가 눈에 띄게 완만해집니다",
+  },
+  {
     id: "fanCafeEvent",
     name: "멤버십 이벤트",
     cost: 300, // 작은 운영비는 들지만 반복 가능한 충성도 유지 수단이어야 한다.

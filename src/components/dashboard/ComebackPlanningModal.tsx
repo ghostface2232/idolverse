@@ -23,6 +23,7 @@ import {
 } from "@/data/founding";
 import { traitLabels } from "@/data/memberTraits";
 import { calculateFandomExpectation } from "@/systems/albumSystem";
+import type { TrendForecast } from "@/systems/calendarSystem";
 import type {
   CalendarStoreState,
   ConceptMood,
@@ -34,6 +35,10 @@ import { josa } from "@/utils/josa";
 interface ComebackPlanningModalProps {
   conceptHistory: readonly ConceptMood[];
   marketTrend: CalendarStoreState["marketTrend"];
+  /** 다음 시즌 트렌드 예보. 정보이지 보장이 아니다. */
+  forecast: TrendForecast | null;
+  /** 예정된 라이벌 컴백(가까운 순). 발매 주 경합을 미리 읽는 근거. */
+  upcomingRivalComebacks: ReadonlyArray<{ name: string; weeksUntil: number }>;
   trainees: readonly Trainee[];
   money: number;
   isSaving: boolean;
@@ -106,9 +111,18 @@ function expectationBadge(
   return { label: "안정", tone: "bg-emerald-400/12 text-emerald-200" };
 }
 
+const FORECAST_SEASON_LABELS = {
+  spring: "봄",
+  summer: "여름",
+  fall: "가을",
+  winter: "겨울",
+} as const;
+
 export function ComebackPlanningModal({
   conceptHistory,
   marketTrend,
+  forecast,
+  upcomingRivalComebacks,
   trainees,
   money,
   isSaving,
@@ -188,9 +202,65 @@ export function ComebackPlanningModal({
         {stepIndex === 0 ? (
           <>
             <p className="text-pretty leading-6 text-text-secondary">
-              컨셉을 정하면 16주 컴백 사이클이 시작됩니다. 지금까지의 색을
-              지킬지, 바꿀지 정해 주세요.
+              컨셉을 정하면 16주 컴백 사이클이 시작됩니다. 시장을 읽고
+              베팅해 주세요 — 발매는 약 12주 뒤입니다.
             </p>
+
+            <section className="rounded-2xl bg-surface-shell/72 p-3">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
+                시장 브리핑
+              </h3>
+              <ul className="mt-2 space-y-1.5 text-xs leading-5 text-text-secondary">
+                <li>
+                  현재{" "}
+                  <span className="font-semibold text-text-primary">
+                    {CONCEPT_MOOD_DATA[marketTrend.hotMood].label}
+                  </span>{" "}
+                  무드·
+                  <span className="font-semibold text-text-primary">
+                    {GENRE_DATA[marketTrend.hotGenre].label}
+                  </span>{" "}
+                  강세,{" "}
+                  <span className="text-text-muted">
+                    {CONCEPT_MOOD_DATA[marketTrend.coldMood].label} 약세
+                  </span>
+                </li>
+                {forecast ? (
+                  <li>
+                    {FORECAST_SEASON_LABELS[forecast.season]} 시즌 예보(약{" "}
+                    {forecast.weeksUntil}주 뒤):{" "}
+                    <span className="font-semibold text-text-primary">
+                      {CONCEPT_MOOD_DATA[forecast.hotMood].label}
+                    </span>{" "}
+                    ·{" "}
+                    <span className="font-semibold text-text-primary">
+                      {GENRE_DATA[forecast.hotGenre].label}
+                    </span>{" "}
+                    강세 예상
+                    <span className="text-text-muted">
+                      {" "}
+                      — 예보는 빗나갈 수 있습니다
+                    </span>
+                  </li>
+                ) : null}
+                {upcomingRivalComebacks.length > 0 ? (
+                  <li>
+                    라이벌 컴백 예정:{" "}
+                    {upcomingRivalComebacks
+                      .slice(0, 3)
+                      .map(
+                        (comeback) =>
+                          `${comeback.name}(${comeback.weeksUntil}주 뒤)`,
+                      )
+                      .join(", ")}
+                  </li>
+                ) : (
+                  <li className="text-text-muted">
+                    예고된 라이벌 컴백이 없는 조용한 구간입니다
+                  </li>
+                )}
+              </ul>
+            </section>
 
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">

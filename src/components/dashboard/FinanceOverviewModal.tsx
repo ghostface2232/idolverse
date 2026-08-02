@@ -39,6 +39,8 @@ const EXPENSE_LABELS: Record<string, string> = {
   fixedCosts: "고정 운영비",
   promotions: "활동 비용",
   productionBudget: "앨범 제작비",
+  mvProduction: "MV 제작비",
+  marketingCampaign: "마케팅 캠페인",
   staffDevelopment: "스태프 육성",
   staffRecruitment: "스태프 모집",
   facilityInvestment: "시설 투자",

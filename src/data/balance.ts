@@ -180,6 +180,134 @@ export const COMEBACK_BUDGET_TIERS_BY_ID = new Map(
   COMEBACK_BUDGET_TIERS.map((tier) => [tier.id, tier]),
 );
 
+/**
+ * MV 제작 방향. 발매 전 촬영 시점(집중 연습 구간)에 결정한다.
+ * 각 방향은 제작 진행도의 다른 축을 밀고, 발매 주에 팬덤 4축의 다른 축으로
+ * 회수된다 — "어떤 시장에 보여줄 영상인가"가 곧 전략 선언이 되게 한다.
+ */
+export const MV_DIRECTIONS = [
+  {
+    id: "practical",
+    label: "실속 촬영",
+    cost: 0,
+    progress: { visual: 4, choreography: 0, marketing: 0 },
+    release: {},
+    summary: "예산을 아끼는 무난한 결과물. 화제성은 기대하기 어렵습니다.",
+  },
+  {
+    id: "performance",
+    label: "퍼포먼스 집중",
+    cost: 25_000_000,
+    progress: { visual: 5, choreography: 12, marketing: 0 },
+    release: { public: 3, industry: 1 },
+    summary: "안무 원테이크와 무대 중심 연출. 대중과 업계가 실력을 봅니다.",
+  },
+  {
+    id: "cinematic",
+    label: "시네마틱 세계관",
+    cost: 45_000_000,
+    progress: { visual: 14, choreography: 0, marketing: 5 },
+    release: { fandom: 2, fandomLoyalty: 3 },
+    summary: "서사와 미장센에 투자하는 고비용 영상. 코어 팬덤이 깊어집니다.",
+  },
+  {
+    id: "viral",
+    label: "글로벌 바이럴",
+    cost: 30_000_000,
+    progress: { visual: 4, choreography: 0, marketing: 12 },
+    release: { global: 5, public: 1 },
+    summary: "쇼츠·챌린지 최적화 편집. 해외 플랫폼에 먼저 닿습니다.",
+  },
+] as const;
+
+export const MV_DIRECTIONS_BY_ID = new Map(
+  MV_DIRECTIONS.map((direction) => [direction.id, direction]),
+);
+
+/**
+ * 발매 전 마케팅 캠페인. 한정 포인트를 4채널에 배분하는 결정 자체가
+ * "이번 활동이 어느 축을 노리는가"의 선언이다. 포인트당 즉시 마케팅
+ * 진행도가 오르고, 발매 주에 채널별 축으로 회수된다.
+ */
+export const MARKETING_PLAN = {
+  maxTotalPoints: 6,
+  maxPerChannel: 3,
+  costPerPoint: 6_000_000,
+  /** 포인트당 앨범 마케팅 진행도. */
+  progressPerPoint: 3,
+} as const;
+
+export const MARKETING_CHANNELS = [
+  {
+    id: "sns",
+    label: "SNS 바이럴",
+    summary: "화제성과 대중 인지도를 끌어올립니다",
+    releasePerPoint: { public: 1 },
+  },
+  {
+    id: "broadcast",
+    label: "방송 푸시",
+    summary: "방송 노출을 확보해 업계 신뢰를 쌓습니다",
+    releasePerPoint: { industry: 1 },
+  },
+  {
+    id: "fanpower",
+    label: "팬덤 화력",
+    summary: "팬 이벤트·공동구매로 코어 팬덤을 결집합니다",
+    releasePerPoint: { fandom: 1 },
+  },
+  {
+    id: "global",
+    label: "글로벌 플랫폼",
+    summary: "해외 플랫폼 광고로 글로벌 팬을 넓힙니다",
+    releasePerPoint: { global: 1 },
+  },
+] as const;
+
+export const MARKETING_CHANNELS_BY_ID = new Map(
+  MARKETING_CHANNELS.map((channel) => [channel.id, channel]),
+);
+
+/**
+ * 파트·무대 노출 분배. 집중은 완성도와 푸시 멤버의 개인 성장을,
+ * 균등은 팀 만족과 케미를 산다 — 안전한 배분은 없다.
+ */
+export const PART_ASSIGNMENT = {
+  ace: {
+    /** 밀어주는 멤버 수의 허용 범위. */
+    minPush: 1,
+    maxPush: 2,
+    progress: { song: 8, choreography: 5 },
+    pushSatisfaction: 4,
+    pushPopularity: 3,
+    othersSatisfaction: -3,
+  },
+  balanced: {
+    progress: { song: 3, choreography: 2 },
+    allSatisfaction: 2,
+    pairChemistry: 2,
+  },
+} as const;
+
+/**
+ * 다음 시즌 트렌드 예보의 적중률. 예보는 정보이지 보장이 아니다 —
+ * 빗나간 예보를 읽고 베팅한 컴백이 이 게임의 니어미스를 만든다.
+ */
+export const TREND_FORECAST = {
+  accuracy: 0.7,
+} as const;
+
+/**
+ * 잠복 플래그(덮어둔 사건)의 격발 규칙. 평시에는 낮은 확률로 잠들어 있다가
+ * 컴백 발매·활동기(세간의 주목이 최대인 구간)에 배율이 붙는다 —
+ * "그때 덮은 게 하필 컴백 주에" 구조가 선택의 장기 비용을 만든다.
+ */
+export const DORMANT_FLAG = {
+  comebackWindowMult: 5,
+  /** 보안팀 보유 시 격발 확률 배율(관리력이 잠복 리스크도 낮춘다). */
+  securityMult: 0.6,
+} as const;
+
 // 음악방송 1위 대결의 보상. 승리는 활동기의 정점이어야 하고,
 // 패배는 다음 주 결정을 바꿀 만큼만 아프고 회복 불가능해서는 안 된다.
 // 승리의 만족도 보너스는 이 효과(satisfaction)가 유일한 경로다 — 주간 만족도
@@ -193,6 +321,17 @@ export const MUSIC_SHOW_OUTCOME = {
   // 누적(다년 사이클)이 체급을 만들게 한다.
   win: { fandom: 3, public: 3, industry: 1, satisfaction: 6 },
   lose: { fandomLoyalty: 2, stress: 3 },
+} as const;
+
+/**
+ * 활동기 긴급 개입 레버(FM의 경기 중 지시에 해당). 차트인 후에도 플레이어가
+ * 추이를 보고 이번 주 승부를 굽힐 수 있어야 활동기가 관전이 아닌 조종이 된다.
+ */
+export const ACTIVITY_INTERVENTION = {
+  /** 팬덤 총공(fanRally) 주간의 음악방송 팬투표 가산점. */
+  fanRallyVoteBonus: 14,
+  /** 스트리밍 스퍼트(streamingPush) 주간의 차트 감쇠 배율. */
+  streamingPushDecayMult: 0.35,
 } as const;
 
 // 음악방송은 음원 파워만의 무대가 아니라 팬덤 화력이 결정력을 갖는 무대다.
@@ -437,6 +576,31 @@ export const INJURY_STAMINA_FACTOR = 0.00006; // Applied to (100 - stamina): sta
 export const INJURY_STRESS_FACTOR = 0.00014; // Stress remains the clearest player-controlled lever: +1.4%p weekly risk at stress 100.
 export const INJURY_RISK_WARNING_THRESHOLD = 0.008;
 export const INJURY_RISK_CRITICAL_THRESHOLD = 0.016;
+
+/**
+ * 훈련 강도별 부상 위험 배율. 강도가 성장만 올리고 위험을 안 올리면
+ * 고강도가 지배 선택이 된다 — 강훈련은 성장·돌파와 부상을 함께 거는
+ * 가시적 도박이어야 한다(주간 결정의 푸시-유어-럭 축).
+ */
+export const INJURY_INTENSITY_MULT: Record<TrainingIntensity, number> = {
+  normal: 1,
+  hard: 2.5,
+  extreme: 5,
+};
+
+/**
+ * 훈련 돌파(breakthrough): 고강도 훈련이 가끔 터뜨리는 급성장.
+ * 위험(부상)과 대박(돌파)이 같은 선택에 걸려 있어야 "이번 주도 강훈련으로
+ * 밀어붙일까"가 매주 살아 있는 질문이 된다. 확률은 UI에 그대로 노출한다.
+ */
+export const TRAINING_BREAKTHROUGH = {
+  chance: { normal: 0, hard: 0.08, extreme: 0.15 } satisfies Record<
+    TrainingIntensity,
+    number
+  >,
+  /** 돌파 시 포커스 스탯(미지정 시 최약 스탯)에 더해지는 추가 성장. */
+  bonusGrowth: 2.5,
+} as const;
 
 export const CHEMISTRY_JOINT_TRAINING_GAIN = 2; // Shared practice should improve team feel slowly, not instantly.
 export const CHEMISTRY_CONFLICT_THRESHOLD = -50; // Below this, conflict is severe enough to justify explicit events.

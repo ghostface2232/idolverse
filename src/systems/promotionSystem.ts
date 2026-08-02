@@ -107,6 +107,29 @@ export function listAvailablePromotions(
   );
 }
 
+/**
+ * 비활동기(인터루드) 주간에 열리는 운영 활동. 콘서트·팬사인회 같은
+ * 활동기 전용 대형 이벤트는 제외하고, 팬덤 유지·인지도 관리형 활동만
+ * 큐레이션한다 — "조용한 주"를 능동적 운영 주간으로 바꾸는 목록이다.
+ * 과도한 상업 활동 반복은 checkExcessiveCommercial이 그대로 견제한다.
+ */
+const INTERLUDE_ACTIVITY_IDS: ReadonlySet<PromotionActivityId> = new Set([
+  "varietyShow",
+  "youtubeContent",
+  "liveBroadcast",
+  "fanCafeEvent",
+]);
+
+export function listInterludePromotions(
+  ctx: PromotionContext,
+): PromotionActivity[] {
+  return PROMOTION_ACTIVITIES.filter(
+    (activity) =>
+      INTERLUDE_ACTIVITY_IDS.has(activity.id) &&
+      checkRequirements(activity, ctx),
+  );
+}
+
 function averageStat(
   trainees: readonly Trainee[],
   stat: TraineeStatKey | "teamwork" | "visualStyle",

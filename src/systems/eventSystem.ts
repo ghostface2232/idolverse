@@ -1,6 +1,8 @@
-import { RANDOM_EVENT_POOL } from "@/data/events";
+import { DORMANT_FLAG } from "@/data/balance";
+import { DORMANT_DETONATION_TEMPLATES, RANDOM_EVENT_POOL } from "@/data/events";
 import { createSeededRandom } from "@/lib/seededRandom";
 import type {
+  DormantFlag,
   EffectMap,
   EventChoice,
   GameEvent,
@@ -43,6 +45,50 @@ export function instantiateEvent(
     choices: template.choices,
     resolved: false,
   };
+}
+
+export interface DormantFlagRollResult {
+  /** 이번 주 격발되지 않고 살아남은 플래그. */
+  remaining: DormantFlag[];
+  /** 격발된 플래그의 사건 인스턴스. 랜덤 이벤트와 같은 경로로 적용된다. */
+  detonated: RolledEvent[];
+}
+
+/**
+ * 잠복 플래그 주간 롤. 평시엔 weeklyChance, 컴백 창(발매·활동기)에는
+ * 배율이 붙는다. 격발되면 플래그는 소거되고 통보형 사건이 하나 나온다.
+ */
+export function rollDormantFlags(input: {
+  flags: readonly DormantFlag[];
+  inComebackWindow: boolean;
+  hasSecurity: boolean;
+  cumulativeWeek: number;
+  seed: number;
+}): DormantFlagRollResult {
+  const random = createSeededRandom(input.seed);
+  const remaining: DormantFlag[] = [];
+  const detonated: RolledEvent[] = [];
+
+  for (const flag of input.flags) {
+    let chance = flag.weeklyChance;
+    if (input.inComebackWindow) chance *= DORMANT_FLAG.comebackWindowMult;
+    if (input.hasSecurity) chance *= DORMANT_FLAG.securityMult;
+
+    if (random() < chance) {
+      const template = DORMANT_DETONATION_TEMPLATES[flag.kind];
+      detonated.push({
+        template,
+        gameEvent: instantiateEvent(
+          template,
+          `dormant:${flag.id}:w${input.cumulativeWeek}`,
+        ),
+      });
+    } else {
+      remaining.push(flag);
+    }
+  }
+
+  return { remaining, detonated };
 }
 
 export function rollRandomEvents(

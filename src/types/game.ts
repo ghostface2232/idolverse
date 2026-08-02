@@ -132,7 +132,9 @@ export type PromotionActivityId =
   | "smallConcert"
   | "midConcert"
   | "largeConcert"
-  | "domeConcert";
+  | "domeConcert"
+  | "fanRally"
+  | "streamingPush";
 export type AwardShowId = "mma" | "mama" | "goldenDisk";
 export type AwardCategory = "rookie" | "bonsang" | "daesang" | "popularity";
 export type CompetitorTemplateId =
@@ -618,6 +620,29 @@ export interface AlbumPerformance {
   firstWeekSales: number;
   totalStreams: number;
   fanGrowth: number;
+  /**
+   * 발매 성적의 요인별 분해(트렌드 적중, 시즌 적합, 경쟁, 제작 선택).
+   * 니어미스가 "다음에 당길 레버"로 읽히게 하는 학습 피드백이다.
+   */
+  attribution?: string[];
+}
+
+/** MV 제작 방향. 촬영 예산과 함께 발매 성과의 축을 결정한다. */
+export type MvDirectionId = "practical" | "performance" | "cinematic" | "viral";
+
+/** 마케팅 캠페인 채널. 각 채널은 4축 팬덤의 다른 축을 민다. */
+export type MarketingChannelId = "sns" | "broadcast" | "fanpower" | "global";
+
+/** 발매 전 마케팅 캠페인의 채널별 투입 포인트. */
+export type MarketingPlanAllocation = Partial<
+  Record<MarketingChannelId, number>
+>;
+
+/** 타이틀 파트·무대 노출 분배. 집중은 완성도를, 균등은 팀을 지킨다. */
+export interface AlbumPartAssignment {
+  mode: "ace" | "balanced";
+  /** 집중 분배에서 밀어주는 멤버(1~2인). 균등 분배에서는 비어 있다. */
+  pushTraineeIds: string[];
 }
 
 export interface Album {
@@ -647,6 +672,12 @@ export interface Album {
     composer?: boolean;
     choreographer?: boolean;
   };
+  /** MV 제작 방향. 결정 전에는 null/undefined. */
+  mvDirection?: MvDirectionId | null;
+  /** 발매 전 마케팅 캠페인 배분. 결정 전에는 null/undefined. */
+  marketingPlan?: MarketingPlanAllocation | null;
+  /** 파트·노출 분배 결정. 결정 전에는 null/undefined. */
+  partAssignment?: AlbumPartAssignment | null;
   quality: number;
   /** 기획 착수 때 확정된 제작비. 음반 정산 회수율을 설명하는 기준이다. */
   productionCost?: number;
@@ -734,12 +765,38 @@ export type EventStaffChange =
       percent: number;
     };
 
+/** 잠복 플래그의 종류. 덮어둔 사건이 최악의 타이밍에 터지는 축이다. */
+export type DormantFlagKind = "dating-coverup" | "overwork-coverup";
+
+/**
+ * 이벤트 선택이 남기는 잠복 결과. 즉시 정산되지 않고 매주 낮은 확률로
+ * 굴려지다가, 컴백 발매·활동기(주목이 최대인 구간)에는 격발 확률에 배율이
+ * 붙는다 — "그때 덮은 게 하필 지금" 구조.
+ */
+export interface DormantFlag {
+  id: string;
+  kind: DormantFlagKind;
+  createdAtWeek: number;
+  /** 평시 주간 격발 확률(0..1). */
+  weeklyChance: number;
+}
+
+/** 이벤트 선택지가 잠복 플래그를 남길 때의 명세. */
+export interface EventFlagChange {
+  add: {
+    kind: DormantFlagKind;
+    weeklyChance: number;
+  };
+}
+
 export interface EventChoice {
   label: string;
   description: string;
   tradeoff: string;
   effects: EffectMap;
   staffChange?: EventStaffChange;
+  /** 이 선택이 남기는 잠복 플래그. weekRunner가 해결 시점에 적재한다. */
+  flag?: EventFlagChange;
 }
 
 export interface GameEvent {
@@ -962,6 +1019,8 @@ export interface ComebackSettlementReport {
   musicShowWins: number | null;
   /** 정산 시점의 투자사 조건 대비 현황 요약. */
   investorNotes: string[];
+  /** 발매 성적의 요인별 분해. 구버전 리포트에는 없다. */
+  attribution?: string[];
   /** 다음 사이클을 여는 질문(컨셉 히스토리 기반). */
   nextHook: string;
 }
@@ -1034,6 +1093,8 @@ export interface GameStoreState {
   adContractsSigned: number;
   /** 광고·OST·앰배서더 등 현재 정산 중인 외부 계약. */
   activeCommercialContracts: ActiveCommercialContract[];
+  /** 덮어둔 사건들. 매주 굴려지다 컴백 창에서 배율이 붙어 터진다. 구버전 세이브에는 없다. */
+  dormantFlags?: DormantFlag[];
   /**
    * 상업형 활동(팬사인회·유튜브·라이브)이 이어진 연속 주 수.
    * 과도 상업활동 판정은 수입 내역(콘서트 수익이 섞임)이 아니라

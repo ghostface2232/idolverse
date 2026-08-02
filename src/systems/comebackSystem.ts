@@ -2,15 +2,20 @@ import { withJosa } from "@/utils/josa";
 import {
   COMEBACK_BUDGET_TIERS,
   COMEBACK_BUDGET_TIERS_BY_ID,
+  MARKETING_CHANNELS_BY_ID,
   MUSIC_SHOW_CANDIDACY,
   MUSIC_SHOW_OUTCOME,
   MUSIC_SHOW_SCORE,
+  MV_DIRECTIONS_BY_ID,
   BACKGROUND_CHART_POWER_SCALE,
   type ComebackBudgetTierId,
 } from "@/data/balance";
 import {
   COMEBACK_PROJECT,
+  MARKETING_PLAN_DECISION_ID,
   MOOD_ALBUM_TITLES,
+  MV_DIRECTION_DECISION_ID,
+  PART_ASSIGNMENT_DECISION_ID,
 } from "@/data/comebackProject";
 import { CONCEPT_MOOD_DATA, SEASON_MOOD_FIT } from "@/data/concepts";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
@@ -42,6 +47,7 @@ import type {
   GameEvent,
   GamePhase,
   Genre,
+  MarketingChannelId,
   ProjectInstance,
   Season,
   Staff,
@@ -187,6 +193,8 @@ export interface ComebackProjectWeekInput {
   calendar: CalendarStoreState;
   equipmentLevel: 1 | 2 | 3 | 4;
   conceptHistory: ConceptMood[];
+  /** 이번 주 팬덤 총공(fanRally) 등으로 얻은 음악방송 팬투표 가산점. */
+  fanVoteBonus?: number;
 }
 
 /** 투자사 요약은 weekProcessor가 채운다 — 여기서는 조건 정보를 갖고 있지 않다. */
@@ -364,6 +372,95 @@ export function evaluateMusicShow(input: MusicShowInput): MusicShowBattle {
   };
 }
 
+/** MV 방향·마케팅 배분이 발매 주에 회수하는 팬덤 4축 효과의 합. */
+export function buildProductionReleaseEffects(album: Album): Record<string, number> {
+  const effects: Record<string, number> = {};
+  const add = (map: Record<string, number>, mult = 1) => {
+    for (const [key, value] of Object.entries(map)) {
+      effects[key] = (effects[key] ?? 0) + value * mult;
+    }
+  };
+  if (album.mvDirection) {
+    const direction = MV_DIRECTIONS_BY_ID.get(album.mvDirection);
+    if (direction) add(direction.release as Record<string, number>);
+  }
+  if (album.marketingPlan) {
+    for (const [channelId, points] of Object.entries(album.marketingPlan)) {
+      const channel = MARKETING_CHANNELS_BY_ID.get(
+        channelId as MarketingChannelId,
+      );
+      if (channel && points) {
+        add(channel.releasePerPoint as Record<string, number>, points);
+      }
+    }
+  }
+  return effects;
+}
+
+/**
+ * 발매 성적의 요인별 분해를 사람이 읽는 문장으로 만든다. 아깝게 진 순위가
+ * "다음에 당길 레버"로 읽히는 것이 목적이라, 중립 요인은 싣지 않는다.
+ */
+export function buildAttributionLines(
+  album: Album,
+  releaseResult: ReleaseResult,
+  trainees: readonly Trainee[],
+): string[] {
+  const lines: string[] = [];
+  const { trendMult, seasonMult, luckMult, rivalsAhead } =
+    releaseResult.attribution;
+  const pct = (mult: number) => Math.round((mult - 1) * 100);
+
+  if (pct(trendMult) !== 0) {
+    lines.push(
+      pct(trendMult) > 0
+        ? `시장 트렌드 적중 +${pct(trendMult)}%`
+        : `시장 트렌드 역풍 ${pct(trendMult)}%`,
+    );
+  }
+  if (pct(seasonMult) !== 0) {
+    lines.push(
+      pct(seasonMult) > 0
+        ? `시즌 적합 +${pct(seasonMult)}%`
+        : `시즌 불리 ${pct(seasonMult)}%`,
+    );
+  }
+  if (Math.abs(pct(luckMult)) >= 5) {
+    lines.push(
+      pct(luckMult) > 0
+        ? `발매 주 운이 따랐습니다 +${pct(luckMult)}%`
+        : `발매 주 운이 나빴습니다 ${pct(luckMult)}%`,
+    );
+  }
+  if (rivalsAhead.length > 0) {
+    lines.push(`동시기 경쟁: ${rivalsAhead.join(", ")}에 밀렸습니다`);
+  }
+  if (album.mvDirection) {
+    const direction = MV_DIRECTIONS_BY_ID.get(album.mvDirection);
+    if (direction && direction.id !== "practical") {
+      lines.push(`MV ${direction.label} 연출이 반응을 얻었습니다`);
+    }
+  }
+  const marketingPoints = album.marketingPlan
+    ? Object.values(album.marketingPlan).reduce(
+        (sum, points) => sum + (points ?? 0),
+        0,
+      )
+    : 0;
+  if (marketingPoints > 0) {
+    lines.push(`마케팅 캠페인 ${marketingPoints}포인트가 초동을 밀었습니다`);
+  }
+  if (album.partAssignment?.mode === "ace") {
+    const names = album.partAssignment.pushTraineeIds
+      .map((id) => trainees.find((trainee) => trainee.id === id)?.name)
+      .filter(Boolean);
+    if (names.length > 0) {
+      lines.push(`${names.join("·")} 푸시 전략이 무대의 인상을 만들었습니다`);
+    }
+  }
+  return lines;
+}
+
 function buildSettlement(
   project: ProjectInstance,
   released: Album | undefined,
@@ -397,6 +494,7 @@ function buildSettlement(
     musicShowWins: project.evaluations.musicShow
       ? project.evaluations.musicShow.score
       : null,
+    attribution: released?.performance?.attribution ?? [],
     nextHook,
   };
 }
@@ -458,6 +556,30 @@ export function processComebackProjectWeek(
     };
   }
 
+  // 제작 결정 3종: 각 스테이지 창이 열리면 결정이 열리고, 앨범에 값이
+  // 실리면 닫힌다. 발매 전까지 미루면 그 축의 보너스 없이 발매된다.
+  if (ownsCurrentAlbum && album?.titleTrack) {
+    const productionDecisions: Array<[string, string, boolean]> = [
+      [
+        PART_ASSIGNMENT_DECISION_ID,
+        "part-assignment",
+        Boolean(album.partAssignment),
+      ],
+      [MV_DIRECTION_DECISION_ID, "practice", Boolean(album.mvDirection)],
+      [MARKETING_PLAN_DECISION_ID, "teaser", Boolean(album.marketingPlan)],
+    ];
+    for (const [decisionId, stageId, decided] of productionDecisions) {
+      if (relativeWeek < stageWindowStart(stageId)) continue;
+      project = {
+        ...project,
+        decisionStatuses: {
+          ...project.decisionStatuses,
+          [decisionId]: decided ? "completed" : "available",
+        },
+      };
+    }
+  }
+
   const events: ComebackProjectWeekResult["events"] =
     advanced.spawnedEventIds.map((eventId) =>
       buildComebackEvent(eventId, input, album),
@@ -487,9 +609,31 @@ export function processComebackProjectWeek(
       market: input.calendar.marketTrend,
     });
     const centerNote = describeCenterFit(album, input.trainees);
-    releasedAlbum = released.album;
+    const attribution = buildAttributionLines(
+      album,
+      released.releaseResult,
+      input.trainees,
+    );
+    releasedAlbum = {
+      ...released.album,
+      performance: released.album.performance
+        ? { ...released.album.performance, attribution }
+        : released.album.performance,
+    };
     releaseResult = released.releaseResult;
-    project = { ...project, releasedAlbumId: released.album.id };
+    project = {
+      ...project,
+      releasedAlbumId: released.album.id,
+      // 미뤄진 제작 결정은 발매와 함께 닫힌다 — 보너스 없이 나간 발매다.
+      decisionStatuses: {
+        ...project.decisionStatuses,
+        [PART_ASSIGNMENT_DECISION_ID]: "completed",
+        [MV_DIRECTION_DECISION_ID]: "completed",
+        [MARKETING_PLAN_DECISION_ID]: "completed",
+      },
+    };
+    // MV 방향·마케팅 캠페인은 발매 주에 팬덤 4축으로 회수된다.
+    const productionEffects = buildProductionReleaseEffects(album);
     album = null;
     events.push({
       event: {
@@ -508,7 +652,7 @@ export function processComebackProjectWeek(
           chartPower: released.releaseResult.chartPower,
         },
       },
-      effects: {},
+      effects: productionEffects,
     });
   }
 
@@ -528,7 +672,9 @@ export function processComebackProjectWeek(
       const battle = evaluateMusicShow({
         playerPower: released?.performance?.chartPower ?? 0,
         playerFanVote:
-          input.fandom.fandom * 0.6 + input.fandom.fandomLoyalty * 0.4,
+          input.fandom.fandom * 0.6 +
+          input.fandom.fandomLoyalty * 0.4 +
+          (input.fanVoteBonus ?? 0),
         competitors: input.competitors,
         eventRivals: input.eventRivals,
         backgroundGroups: input.backgroundGroups,

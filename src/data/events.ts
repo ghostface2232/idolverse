@@ -1,4 +1,4 @@
-import type { RandomEventTemplate } from "@/types/game";
+import type { DormantFlagKind, RandomEventTemplate } from "@/types/game";
 
 /** 프로젝트가 결정론적으로 스폰하는 사건. 확률 풀과 분리해 RNG 순서를 보존한다. */
 export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
@@ -1333,4 +1333,112 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
       },
     ],
   },
+  {
+    // 잠복 플래그 이벤트: "묻는다"는 공짜가 아니라 시한폭탄이다.
+    // 격발은 DORMANT_DETONATION_TEMPLATES와 weekProcessor의 컴백 창 배율이 맡는다.
+    id: "dating-tip-report",
+    type: "negative",
+    title: "데스크에 들어온 열애 제보",
+    description:
+      "한 매체 기자가 멤버의 열애 정황을 잡았다며 회사의 입장을 물어왔습니다. 아직 보도 전입니다.",
+    probability: 0.025,
+    conditions: {
+      minPublic: 20,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {},
+    choices: [
+      {
+        label: "조용히 묻는다",
+        description: "기자와 조율해 보도를 막고, 당사자에게는 아무 말도 하지 않습니다.",
+        tradeoff: "지금은 아무 일도 없지만, 언젠가 최악의 타이밍에 터질 수 있습니다.",
+        effects: { satisfaction: 2 },
+        flag: { add: { kind: "dating-coverup", weeklyChance: 0.02 } },
+      },
+      {
+        label: "당사자에게 정리를 요구한다",
+        description: "멤버를 불러 상황을 확인하고 관계 정리를 요구합니다.",
+        tradeoff: "불씨는 꺼지지만 멤버의 마음이 상합니다.",
+        effects: { satisfaction: -5, stress: 4 },
+      },
+      {
+        label: "선제적으로 공개한다",
+        description: "보도가 나가기 전에 회사가 먼저 공식 인정합니다.",
+        tradeoff: "당장의 충격은 있지만 뒤탈이 없고, 솔직함이 코어 팬의 신뢰로 남습니다.",
+        effects: { public: -3, fandomDisappointment: 5, fandomLoyalty: 4 },
+      },
+    ],
+  },
+  {
+    id: "health-warning-hidden",
+    type: "negative",
+    title: "정기 검진의 이상 신호",
+    description:
+      "정기 검진에서 멤버 한 명의 과로 신호가 잡혔습니다. 의료진은 휴식을 권고하지만, 일정표는 이미 꽉 차 있습니다.",
+    probability: 0.03,
+    conditions: {
+      minStress: 55,
+      phase: ["debut", "growth", "peak"],
+    },
+    effects: {},
+    choices: [
+      {
+        label: "일정을 강행한다",
+        description: "권고를 덮어두고 예정된 스케줄을 그대로 소화합니다.",
+        tradeoff: "지금의 흐름은 지키지만, 건강 이상이 공개되면 회사가 숨겼다는 사실도 함께 드러납니다.",
+        effects: { condition: -3 },
+        flag: { add: { kind: "overwork-coverup", weeklyChance: 0.025 } },
+      },
+      {
+        label: "일부 일정을 중단하고 공표한다",
+        description: "휴식이 필요하다는 사실을 공개하고 일정을 조정합니다.",
+        tradeoff: "당장의 노출 기회를 잃지만 멤버와 팬의 신뢰를 지킵니다.",
+        effects: { public: -2, industry: 1, stress: -6, condition: 8, fandomLoyalty: 2 },
+      },
+    ],
+  },
 ];
+
+/**
+ * 잠복 플래그의 격발 이벤트. 랜덤 풀이 아니라 weekProcessor가 플래그 롤에
+ * 성공(=격발)했을 때 직접 인스턴스화한다. 선택지가 없는 통보형 사건이다 —
+ * 막을 기회는 플래그를 만들던 그 순간에 이미 지나갔다.
+ */
+export const DORMANT_DETONATION_TEMPLATES: Record<
+  DormantFlagKind,
+  RandomEventTemplate
+> = {
+  "dating-coverup": {
+    id: "dormant-dating-expose",
+    type: "negative",
+    isScandal: true,
+    title: "묻어둔 열애설, 결국 터졌다",
+    description:
+      "예전에 조용히 덮었던 열애 제보가 다른 매체를 통해 보도됐습니다. 회사가 알고도 숨겼다는 정황까지 함께 실렸습니다.",
+    probability: 0,
+    conditions: {},
+    effects: {
+      public: -5,
+      fandomLoyalty: -8,
+      fandomDisappointment: 12,
+      stress: 6,
+    },
+  },
+  "overwork-coverup": {
+    id: "dormant-overwork-expose",
+    type: "negative",
+    isScandal: true,
+    title: "무리한 스케줄 강행 논란",
+    description:
+      "건강 이상 권고를 덮고 일정을 강행했다는 내부 증언이 보도됐습니다. 팬덤과 업계가 회사의 관리 책임을 묻고 있습니다.",
+    probability: 0,
+    conditions: {},
+    effects: {
+      public: -4,
+      industry: -5,
+      fandomDisappointment: 8,
+      condition: -8,
+      stress: 5,
+    },
+  },
+};

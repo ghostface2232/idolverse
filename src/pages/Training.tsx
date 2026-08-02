@@ -48,8 +48,16 @@ const INTENSITY_OPTIONS: {
   description: string;
 }[] = [
   { key: "normal", label: "보통", description: "무리 없는 페이스로 꾸준히 갑니다" },
-  { key: "hard", label: "강화", description: "성장은 빠르지만 피로가 쌓입니다" },
-  { key: "extreme", label: "극한", description: "성과는 크지만 몸과 마음이 버텨줘야 합니다" },
+  {
+    key: "hard",
+    label: "강화",
+    description: "성장이 빠르고 가끔 돌파가 터지지만, 부상 위험도 함께 올라갑니다",
+  },
+  {
+    key: "extreme",
+    label: "극한",
+    description: "돌파 확률이 가장 높지만 부상 위험도 몇 배로 뜁니다 — 몸과 마음이 버텨줘야 합니다",
+  },
 ];
 
 const FOCUS_OPTIONS: {
@@ -118,12 +126,19 @@ function statusIcon(
   return { Icon: X, tone: "text-state-danger", title: `${withJosa(noun, "이/가")} 좋지 않습니다` };
 }
 
+function formatChance(probability: number): string {
+  const pct = probability * 100;
+  return pct >= 1 ? `${Math.round(pct)}%` : `${pct.toFixed(1)}%`;
+}
+
 function injuryRiskLabel(probability: number): string | null {
-  // 확률 수치를 그대로 노출하지 않고 트레이너의 어조로 옮긴다.
+  // 위험이 실제로 의미 있는 구간부터는 확률을 그대로 보여준다 — 고강도
+  // 훈련은 플레이어가 눈으로 확률을 보고 거는 도박이어야 한다.
   if (probability <= 0) return null;
   if (probability < INJURY_RISK_WARNING_THRESHOLD) return null;
-  if (probability < INJURY_RISK_CRITICAL_THRESHOLD) return "몸에 무리가 갈 수 있어 보입니다";
-  return "이대로면 부상이 걱정됩니다";
+  if (probability < INJURY_RISK_CRITICAL_THRESHOLD)
+    return `부상 위험 ${formatChance(probability)} — 몸에 무리가 갈 수 있어 보입니다`;
+  return `부상 위험 ${formatChance(probability)} — 이대로면 부상이 걱정됩니다`;
 }
 
 // 정확한 성장/델타 수치는 사전 공개하지 않는다(결과로만 힌트). 매니저의
@@ -281,6 +296,29 @@ export function Training({ onBack }: TrainingProps) {
   const intensityDescription =
     INTENSITY_OPTIONS.find((o) => o.key === trainingSchedule.intensity)
       ?.description ?? "";
+  // 강도 선택이 곧 도박 선택이 되도록, 현재 스케줄의 확률을 팀 단위로 요약한다.
+  const trainingModePreviews = trainees
+    .map((trainee) =>
+      previewTraineeWeek(
+        trainee,
+        {
+          intensity: trainingSchedule.intensity,
+          focus: trainingSchedule.focus ?? undefined,
+          restDay: trainingSchedule.restDay,
+        },
+        manager,
+        albumConcept,
+        { dormLevel: upgrades.dormLevel, studioLevel: upgrades.studioLevel },
+        contractSlotsByTrainee[trainee.id] ?? 0,
+      ),
+    )
+    .filter((preview) => preview.mode === "training");
+  const teamBreakthroughChance =
+    trainingModePreviews[0]?.breakthroughChance ?? 0;
+  const teamMaxInjuryProbability = trainingModePreviews.reduce(
+    (max, preview) => Math.max(max, preview.injuryProbability),
+    0,
+  );
 
   return (
     <TabPanel title="트레이닝" onBack={onBack}>
@@ -311,6 +349,25 @@ export function Training({ onBack }: TrainingProps) {
           <p className="mt-2 text-[11px] text-text-muted [word-break:keep-all]">
             {intensityDescription}
           </p>
+          {trainingModePreviews.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+              <span className="rounded-lg bg-brand-cyan/12 px-2 py-1 text-cyan-200">
+                돌파 확률 {formatChance(teamBreakthroughChance)}
+              </span>
+              <span
+                className={[
+                  "rounded-lg px-2 py-1",
+                  teamMaxInjuryProbability >= INJURY_RISK_CRITICAL_THRESHOLD
+                    ? "bg-state-danger/15 text-red-200"
+                    : teamMaxInjuryProbability >= INJURY_RISK_WARNING_THRESHOLD
+                      ? "bg-state-warning/15 text-amber-200"
+                      : "bg-white/[0.05] text-text-secondary",
+                ].join(" ")}
+              >
+                부상 위험 최고 {formatChance(teamMaxInjuryProbability)}
+              </span>
+            </div>
+          ) : null}
         </div>
 
         <div>

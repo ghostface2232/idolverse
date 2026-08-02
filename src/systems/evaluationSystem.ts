@@ -76,6 +76,18 @@ export interface ChartEntry {
   isPlayer: boolean;
 }
 
+/** 발매 성적을 움직인 요인 분해. 니어미스를 학습 가능한 피드백으로 만든다. */
+export interface ReleaseAttribution {
+  /** 트렌드 적중/역풍 배율(1.0이 중립). */
+  trendMult: number;
+  /** 시즌 적합 배율(1.0이 중립). */
+  seasonMult: number;
+  /** 발매 주 운 배율(1.0이 중립). */
+  luckMult: number;
+  /** 차트에서 플레이어보다 위에 선 실명 경쟁 그룹(합성 시장 제외). */
+  rivalsAhead: string[];
+}
+
 export interface ReleaseResult {
   chartRank: number;
   chartPower: number;
@@ -84,6 +96,7 @@ export interface ReleaseResult {
   globalDelta: number;
   industryDelta: number;
   fandomDisappointmentDelta: number;
+  attribution: ReleaseAttribution;
 }
 
 export interface PlatformChartPositions {
@@ -251,6 +264,14 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
 
   chartPool.sort((a, b) => b.power - a.power);
   const chartRank = Math.min(100, chartPool.findIndex((e) => e.isPlayer) + 1);
+  // 합성 시장(MARKET-*)이 아닌, 실제 이름을 가진 경쟁자 중 플레이어 위에
+  // 선 팀만 어트리뷰션에 싣는다 — "누구에게 밀렸는가"가 다음 발매 타이밍
+  // 결정의 근거가 된다.
+  const rivalsAhead = chartPool
+    .slice(0, Math.max(0, chartRank - 1))
+    .filter((entry) => !entry.isPlayer && !entry.name.startsWith("MARKET-"))
+    .slice(0, 3)
+    .map((entry) => entry.name);
 
   const typeWeights = TITLE_TRACK_TYPE_WEIGHTS[titleTrack.type];
   const fandomMult = typeWeights.fandom;
@@ -297,6 +318,12 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
     globalDelta: Math.max(0, globalDelta),
     industryDelta: Math.max(0, industryDelta),
     fandomDisappointmentDelta,
+    attribution: {
+      trendMult: swing.trendMult,
+      seasonMult: swing.seasonMult,
+      luckMult: swing.luckMult,
+      rivalsAhead,
+    },
   };
 }
 

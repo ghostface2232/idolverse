@@ -942,6 +942,18 @@ function ComebackSettlementSection({
           이번 활동으로 팬덤이 {Math.round(settlement.fanGrowth)}만큼 늘었습니다.
         </p>
       ) : null}
+      {settlement.attribution && settlement.attribution.length > 0 ? (
+        <div className="mt-3 rounded-xl bg-surface-raised/60 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-action-secondary">
+            성적을 움직인 요인
+          </p>
+          <ul className="mt-1.5 space-y-1 text-xs leading-5 text-text-secondary [word-break:keep-all]">
+            {settlement.attribution.map((line) => (
+              <li key={line}>· {line}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {settlement.investorNotes.length > 0 ? (
         <ul className="mt-3 space-y-1 text-xs text-text-muted [word-break:keep-all]">
           {settlement.investorNotes.map((note) => (
@@ -1061,6 +1073,8 @@ const FINANCE_EXPENSE_LABELS: Record<string, string> = {
   fixedCosts: "고정 운영비",
   promotions: "활동 비용",
   productionBudget: "앨범 제작비",
+  mvProduction: "MV 제작비",
+  marketingCampaign: "마케팅 캠페인",
   staffDevelopment: "스태프 육성",
   staffRecruitment: "스태프 모집",
   facilityInvestment: "시설 투자",

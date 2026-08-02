@@ -404,11 +404,17 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
  * 저장(주 결산 직후의 자동 저장 등)은 업서트 없이 직전 결과를 돌려준다 —
  * 전체 스냅샷 upsert가 잦은 구조에서 무료 티어 DB 부하를 줄이는 완충 장치.
  */
+interface SaveGameResult {
+  row: Omit<SaveRow, "save_data">;
+  gameState: GameStateSnapshot;
+  saveRevision: number;
+}
+
 const lastSavedFingerprints = new Map<
   string,
   {
     fingerprint: string;
-    result: Awaited<ReturnType<typeof saveGame>>;
+    result: SaveGameResult;
   }
 >();
 
@@ -423,7 +429,7 @@ export async function saveGame(
   userId: string,
   slotNumber: number,
   gameState: GameStateSnapshot,
-) {
+): Promise<SaveGameResult> {
   assertValidSlotNumber(slotNumber);
   const key = saveQueueKey(userId, slotNumber);
   const baseRevision = gameState.gameStore.saveRevision ?? 0;

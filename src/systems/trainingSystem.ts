@@ -3,6 +3,7 @@ import {
   DORM_CONDITION_MULT,
   GAME_BALANCE,
   INDIVIDUAL_LESSON_GROWTH,
+  INJURY_INTENSITY_MULT,
   INJURY_PROBABILITY_BASE,
   INJURY_STAMINA_FACTOR,
   INJURY_STRESS_FACTOR,
@@ -13,6 +14,7 @@ import {
   STRESS_INCREASE_RATE,
   STUDIO_TRAINING_MULT,
   TRAINING_BASE_GROWTH,
+  TRAINING_BREAKTHROUGH,
   TRAINING_INTENSITY_MULTIPLIER,
 } from "@/data/balance";
 import { createSeededRandom } from "@/lib/seededRandom";
@@ -34,6 +36,12 @@ export interface TrainingSchedule {
 export interface TrainingResult {
   trainees: Trainee[];
   injuries: { traineeId: string; traineeName: string; weeks: number }[];
+  /** 고강도 훈련의 돌파 급성장. 부상과 같은 도박의 앞면이다. */
+  breakthroughs: {
+    traineeId: string;
+    traineeName: string;
+    stat: TraineeStatKey;
+  }[];
 }
 
 const TRAINABLE_STATS: TraineeStatKey[] = [
@@ -153,12 +161,15 @@ function computeManagerFocusAllocation(
 export function computeInjuryProbability(
   stamina: number,
   stress: number,
+  intensity: TrainingIntensity = "normal",
 ): number {
-  return Math.max(
-    0,
-    INJURY_PROBABILITY_BASE +
-      (100 - stamina) * INJURY_STAMINA_FACTOR +
-      stress * INJURY_STRESS_FACTOR,
+  return (
+    Math.max(
+      0,
+      INJURY_PROBABILITY_BASE +
+        (100 - stamina) * INJURY_STAMINA_FACTOR +
+        stress * INJURY_STRESS_FACTOR,
+    ) * INJURY_INTENSITY_MULT[intensity]
   );
 }
 
@@ -186,6 +197,8 @@ export interface TraineeWeekPreview {
   conditionDelta: number;
   /** 이번 주 부상 확률(0..1). 훈련 활동에만 적용된다. */
   injuryProbability: number;
+  /** 이번 주 돌파(급성장) 확률(0..1). 고강도 훈련에만 붙는다. */
+  breakthroughChance: number;
 }
 
 /**
@@ -237,6 +250,7 @@ export function previewTraineeWeek(
       stressDelta: STRESS_DECREASE_RATE.rest * 0.3,
       conditionDelta: 0,
       injuryProbability: 0,
+      breakthroughChance: 0,
     };
   }
 
@@ -247,6 +261,7 @@ export function previewTraineeWeek(
       stressDelta: 2,
       conditionDelta: 0,
       injuryProbability: 0,
+      breakthroughChance: 0,
     };
   }
 
@@ -265,6 +280,7 @@ export function previewTraineeWeek(
       stressDelta: 2,
       conditionDelta: 0,
       injuryProbability: 0,
+      breakthroughChance: 0,
     };
   }
 
@@ -282,6 +298,7 @@ export function previewTraineeWeek(
       stressDelta: rate,
       conditionDelta: 10 * dormConditionMult,
       injuryProbability: 0,
+      breakthroughChance: 0,
     };
   }
 
@@ -349,7 +366,12 @@ export function previewTraineeWeek(
     injuryProbability: computeInjuryProbability(
       trainee.stats.stamina,
       clamp01(trainee.stress + stressDelta),
+      schedule.intensity,
     ),
+    // 휴식일을 낀 주는 몸을 사리는 주 — 돌파도 걸리지 않는다.
+    breakthroughChance: schedule.restDay
+      ? 0
+      : TRAINING_BREAKTHROUGH.chance[schedule.intensity],
   };
 }
 
@@ -364,6 +386,7 @@ export function processTrainingWeek(
   contractSlotsByTrainee: Record<string, number> = {},
 ): TrainingResult {
   const injuries: TrainingResult["injuries"] = [];
+  const breakthroughs: TrainingResult["breakthroughs"] = [];
 
   const updated = trainees.map((trainee, idx) => {
     const preview = previewTraineeWeek(
@@ -396,11 +419,23 @@ export function processTrainingWeek(
         t.injuryWeeks = 1 + Math.floor(injuryRandom() * 3);
         t.condition = clamp01(t.condition - 15);
         injuries.push({ traineeId: t.id, traineeName: t.name, weeks: t.injuryWeeks });
+      } else if (preview.breakthroughChance > 0) {
+        // 부상을 피한 주에만 돌파가 걸린다 — 같은 도박의 앞면과 뒷면.
+        const breakthroughRandom = createSeededRandom(injurySeed + 47);
+        if (breakthroughRandom() < preview.breakthroughChance) {
+          const stat = schedule.focus ?? findWeakestStat(t);
+          t.stats[stat] = clampStat(
+            t.stats[stat] +
+              TRAINING_BREAKTHROUGH.bonusGrowth *
+                potentialTaper(t.stats[stat], t.potential),
+          );
+          breakthroughs.push({ traineeId: t.id, traineeName: t.name, stat });
+        }
       }
     }
 
     return t;
   });
 
-  return { trainees: updated, injuries };
+  return { trainees: updated, injuries, breakthroughs };
 }

@@ -3,6 +3,13 @@ import type { ConceptMood, ProjectDefinition } from "@/types/game";
 
 export const COMEBACK_PROJECT_ID = "comeback-project";
 
+/** 파트·무대 노출 분배 결정(파트 분배 스테이지). */
+export const PART_ASSIGNMENT_DECISION_ID = "partAssignment";
+/** MV 제작 방향 결정(집중 연습 스테이지 = 촬영 시점). */
+export const MV_DIRECTION_DECISION_ID = "mvDirection";
+/** 발매 전 마케팅 캠페인 배분 결정(티저 스테이지). */
+export const MARKETING_PLAN_DECISION_ID = "marketingPlan";
+
 /**
  * 컴백을 16주짜리 열 단계 사이클로 편집한다. 데뷔(M2)의 projectSystem
  * 프레임을 그대로 사용하며, allowsOverlap으로 발매 이후 활동기에
@@ -41,12 +48,14 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
     {
       id: "part-assignment",
       title: "파트 분배",
+      // 파트 분배는 이벤트가 아니라 플레이어의 실제 결정이다
+      // (PART_ASSIGNMENT_DECISION_ID) — 분쟁 이벤트만 변수로 남긴다.
       summary: "확정된 타이틀의 파트와 무대 동선을 멤버에게 배분한다",
       weekWindow: [7, 7],
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
-      eventIds: ["comeback-part-assignment", "comeback-part-dispute"],
+      eventIds: ["comeback-part-dispute"],
       eventPickCount: 1,
       unlocks: "집중 연습",
     },

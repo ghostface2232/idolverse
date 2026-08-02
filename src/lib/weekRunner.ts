@@ -13,12 +13,16 @@ import {
   type WeekDeltaState,
 } from "@/systems/weekDelta";
 import type {
+  AlbumPartAssignment,
   ConceptMood,
   EffectMap,
   EventStaffChange,
   FinanceStoreActions,
   GameEvent,
   Genre,
+  MarketingChannelId,
+  MarketingPlanAllocation,
+  MvDirectionId,
   Position,
   Staff,
   StaffRecruitmentPost,
@@ -35,9 +39,18 @@ import {
   COMEBACK_BUDGET_TIERS_BY_ID,
   FACILITY_TIER_UNLOCKS,
   FOUNDING_STAFF_ABILITY_CAP,
+  MARKETING_CHANNELS_BY_ID,
+  MARKETING_PLAN,
+  MV_DIRECTIONS_BY_ID,
+  PART_ASSIGNMENT,
   STAFF_MARKET,
   type ComebackBudgetTierId,
 } from "@/data/balance";
+import {
+  MARKETING_PLAN_DECISION_ID,
+  MV_DIRECTION_DECISION_ID,
+  PART_ASSIGNMENT_DECISION_ID,
+} from "@/data/comebackProject";
 import {
   calculateWeeklyFixedTotal,
   financeVanillaStore,
@@ -239,6 +252,29 @@ function resolveEventChoice(
       choice.staffChange,
       event.id,
     );
+  }
+  if (choice?.flag) {
+    // 선택이 남기는 잠복 플래그 — 지금은 조용하지만 weekProcessor의 주간
+    // 롤에서 언젠가(특히 컴백 창에서) 격발된다.
+    const createdAtWeek = toCumulativeWeek(
+      nextSnapshot.game.currentYear,
+      nextSnapshot.game.currentWeek,
+    );
+    nextSnapshot = {
+      ...nextSnapshot,
+      game: {
+        ...nextSnapshot.game,
+        dormantFlags: [
+          ...(nextSnapshot.game.dormantFlags ?? []),
+          {
+            id: `${choice.flag.add.kind}:${event.id}`,
+            kind: choice.flag.add.kind,
+            createdAtWeek,
+            weeklyChance: choice.flag.add.weeklyChance,
+          },
+        ],
+      },
+    };
   }
   const eventDeltas = diffWeekDeltaState(
     before,
@@ -710,6 +746,312 @@ export async function completeTitleTrackSelectionAndSave(
     slotNumber,
     toPersistedSnapshot(nextSnapshot),
   );
+  hydrateGameState(saved.gameState);
+}
+
+function clampStat(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * MV 제작 방향 결정. 촬영비를 내고 제작 진행도를 즉시 밀어 올리며,
+ * 방향별 발매 효과는 발매 주에 회수된다(comebackSystem).
+ */
+export async function completeMvDirectionAndSave(
+  projectId: string,
+  directionId: MvDirectionId,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  const project = snapshot.game.activeProjects.find(
+    (candidate) => candidate.id === projectId,
+  );
+  if (project?.decisionStatuses[MV_DIRECTION_DECISION_ID] !== "available") {
+    throw new WeeklyResolutionConflictError("MV direction is not available.");
+  }
+  const album = snapshot.album.currentAlbum;
+  const direction = MV_DIRECTIONS_BY_ID.get(directionId);
+  if (!album || !direction) {
+    throw new WeeklyResolutionConflictError("Unknown MV direction.");
+  }
+  if (snapshot.finance.money < direction.cost) {
+    throw new WeeklyResolutionConflictError(
+      "Not enough money for the selected MV direction.",
+    );
+  }
+
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: snapshot.game.activeProjects.map((candidate) =>
+        candidate.id === projectId
+          ? {
+              ...candidate,
+              decisionStatuses: {
+                ...candidate.decisionStatuses,
+                [MV_DIRECTION_DECISION_ID]: "completed",
+              },
+            }
+          : candidate,
+      ),
+    },
+    album: {
+      ...snapshot.album,
+      currentAlbum: {
+        ...album,
+        mvDirection: direction.id,
+        progress: {
+          ...album.progress,
+          visual: clampStat(album.progress.visual + direction.progress.visual, 0, 100),
+          choreography: clampStat(
+            album.progress.choreography + direction.progress.choreography,
+            0,
+            100,
+          ),
+          marketing: clampStat(
+            album.progress.marketing + direction.progress.marketing,
+            0,
+            100,
+          ),
+        },
+      },
+    },
+    finance: {
+      ...snapshot.finance,
+      money: snapshot.finance.money - direction.cost,
+      pendingExpenses: {
+        ...(snapshot.finance.pendingExpenses ?? {}),
+        mvProduction:
+          (snapshot.finance.pendingExpenses?.mvProduction ?? 0) + direction.cost,
+      },
+    },
+  };
+  const saved = await saveGame(userId, slotNumber, toPersistedSnapshot(nextSnapshot));
+  hydrateGameState(saved.gameState);
+}
+
+/**
+ * 발매 전 마케팅 캠페인 배분. 포인트당 비용을 내고 마케팅 진행도를 즉시
+ * 올리며, 채널별 팬덤 효과는 발매 주에 회수된다(comebackSystem).
+ */
+export async function completeMarketingPlanAndSave(
+  projectId: string,
+  allocation: MarketingPlanAllocation,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  const project = snapshot.game.activeProjects.find(
+    (candidate) => candidate.id === projectId,
+  );
+  if (project?.decisionStatuses[MARKETING_PLAN_DECISION_ID] !== "available") {
+    throw new WeeklyResolutionConflictError("Marketing plan is not available.");
+  }
+  const album = snapshot.album.currentAlbum;
+  if (!album) {
+    throw new WeeklyResolutionConflictError("There is no album in production.");
+  }
+  const entries = Object.entries(allocation) as Array<
+    [string, number | undefined]
+  >;
+  let totalPoints = 0;
+  for (const [channelId, points] of entries) {
+    if (!MARKETING_CHANNELS_BY_ID.has(channelId as MarketingChannelId)) {
+      throw new WeeklyResolutionConflictError(
+        `Unknown marketing channel: ${channelId}.`,
+      );
+    }
+    const value = points ?? 0;
+    if (
+      !Number.isInteger(value) ||
+      value < 0 ||
+      value > MARKETING_PLAN.maxPerChannel
+    ) {
+      throw new WeeklyResolutionConflictError("Invalid channel allocation.");
+    }
+    totalPoints += value;
+  }
+  if (totalPoints > MARKETING_PLAN.maxTotalPoints) {
+    throw new WeeklyResolutionConflictError(
+      "The allocation exceeds the campaign point cap.",
+    );
+  }
+  const cost = totalPoints * MARKETING_PLAN.costPerPoint;
+  if (snapshot.finance.money < cost) {
+    throw new WeeklyResolutionConflictError(
+      "Not enough money for the marketing campaign.",
+    );
+  }
+
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: snapshot.game.activeProjects.map((candidate) =>
+        candidate.id === projectId
+          ? {
+              ...candidate,
+              decisionStatuses: {
+                ...candidate.decisionStatuses,
+                [MARKETING_PLAN_DECISION_ID]: "completed",
+              },
+            }
+          : candidate,
+      ),
+    },
+    album: {
+      ...snapshot.album,
+      currentAlbum: {
+        ...album,
+        marketingPlan: { ...allocation },
+        progress: {
+          ...album.progress,
+          marketing: clampStat(
+            album.progress.marketing +
+              totalPoints * MARKETING_PLAN.progressPerPoint,
+            0,
+            100,
+          ),
+        },
+      },
+    },
+    finance: {
+      ...snapshot.finance,
+      money: snapshot.finance.money - cost,
+      pendingExpenses: {
+        ...(snapshot.finance.pendingExpenses ?? {}),
+        marketingCampaign:
+          (snapshot.finance.pendingExpenses?.marketingCampaign ?? 0) + cost,
+      },
+    },
+  };
+  const saved = await saveGame(userId, slotNumber, toPersistedSnapshot(nextSnapshot));
+  hydrateGameState(saved.gameState);
+}
+
+/**
+ * 파트·무대 노출 분배 결정. 집중은 완성도와 푸시 멤버를, 균등은 팀 만족과
+ * 케미를 산다 — 멤버별 만족·인기·케미가 즉시 움직이는 실질 결정이다.
+ */
+export async function completePartAssignmentAndSave(
+  projectId: string,
+  assignment: AlbumPartAssignment,
+  userId: string,
+  slotNumber = DEFAULT_AUTO_SAVE_SLOT,
+) {
+  const snapshot = buildGameSnapshot();
+  const project = snapshot.game.activeProjects.find(
+    (candidate) => candidate.id === projectId,
+  );
+  if (project?.decisionStatuses[PART_ASSIGNMENT_DECISION_ID] !== "available") {
+    throw new WeeklyResolutionConflictError("Part assignment is not available.");
+  }
+  const album = snapshot.album.currentAlbum;
+  if (!album) {
+    throw new WeeklyResolutionConflictError("There is no album in production.");
+  }
+
+  const pushIds = assignment.mode === "ace" ? assignment.pushTraineeIds : [];
+  if (assignment.mode === "ace") {
+    const memberIds = new Set(
+      snapshot.trainee.trainees.map((trainee) => trainee.id),
+    );
+    if (
+      pushIds.length < PART_ASSIGNMENT.ace.minPush ||
+      pushIds.length > PART_ASSIGNMENT.ace.maxPush ||
+      new Set(pushIds).size !== pushIds.length ||
+      pushIds.some((id) => !memberIds.has(id))
+    ) {
+      throw new WeeklyResolutionConflictError("Invalid push member selection.");
+    }
+  }
+
+  const trainees =
+    assignment.mode === "ace"
+      ? snapshot.trainee.trainees.map((trainee) =>
+          pushIds.includes(trainee.id)
+            ? {
+                ...trainee,
+                satisfaction: clampStat(
+                  trainee.satisfaction + PART_ASSIGNMENT.ace.pushSatisfaction,
+                  0,
+                  100,
+                ),
+                popularity: clampStat(
+                  (trainee.popularity ?? 0) + PART_ASSIGNMENT.ace.pushPopularity,
+                  0,
+                  100,
+                ),
+              }
+            : {
+                ...trainee,
+                satisfaction: clampStat(
+                  trainee.satisfaction + PART_ASSIGNMENT.ace.othersSatisfaction,
+                  0,
+                  100,
+                ),
+              },
+        )
+      : snapshot.trainee.trainees.map((trainee) => ({
+          ...trainee,
+          satisfaction: clampStat(
+            trainee.satisfaction + PART_ASSIGNMENT.balanced.allSatisfaction,
+            0,
+            100,
+          ),
+          chemistry: Object.fromEntries(
+            Object.entries(trainee.chemistry).map(([otherId, value]) => [
+              otherId,
+              clampStat(value + PART_ASSIGNMENT.balanced.pairChemistry, -100, 100),
+            ]),
+          ),
+        }));
+
+  const progressBoost =
+    assignment.mode === "ace"
+      ? PART_ASSIGNMENT.ace.progress
+      : PART_ASSIGNMENT.balanced.progress;
+
+  const nextSnapshot: GameSnapshot = {
+    ...snapshot,
+    game: {
+      ...snapshot.game,
+      activeProjects: snapshot.game.activeProjects.map((candidate) =>
+        candidate.id === projectId
+          ? {
+              ...candidate,
+              decisionStatuses: {
+                ...candidate.decisionStatuses,
+                [PART_ASSIGNMENT_DECISION_ID]: "completed",
+              },
+            }
+          : candidate,
+      ),
+    },
+    trainee: { trainees },
+    album: {
+      ...snapshot.album,
+      currentAlbum: {
+        ...album,
+        partAssignment: {
+          mode: assignment.mode,
+          pushTraineeIds: [...pushIds],
+        },
+        progress: {
+          ...album.progress,
+          song: clampStat(album.progress.song + progressBoost.song, 0, 100),
+          choreography: clampStat(
+            album.progress.choreography + progressBoost.choreography,
+            0,
+            100,
+          ),
+        },
+      },
+    },
+  };
+  const saved = await saveGame(userId, slotNumber, toPersistedSnapshot(nextSnapshot));
   hydrateGameState(saved.gameState);
 }
 

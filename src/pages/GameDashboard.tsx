@@ -14,6 +14,9 @@ import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
 import { StaffManagementModal } from "@/components/dashboard/StaffManagementModal";
 import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
 import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
+import { MvDirectionModal } from "@/components/dashboard/MvDirectionModal";
+import { MarketingPlanModal } from "@/components/dashboard/MarketingPlanModal";
+import { PartAssignmentModal } from "@/components/dashboard/PartAssignmentModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import { TrainingSummaryCard } from "@/components/dashboard/TrainingSummaryCard";
 import { WeekTickerOverlay } from "@/components/dashboard/WeekTickerOverlay";
@@ -37,11 +40,19 @@ import {
   type ComebackBudgetTierId,
 } from "@/data/balance";
 import { TITLE_TRACK_SELECTION_DECISION_ID } from "@/data/debutProject";
+import {
+  MARKETING_PLAN_DECISION_ID,
+  MV_DIRECTION_DECISION_ID,
+  PART_ASSIGNMENT_DECISION_ID,
+} from "@/data/comebackProject";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import {
   acknowledgeWeeklyReportAndSave,
   advanceWeeklyEventAndSave,
   applyEventChoiceAndSave,
+  completeMarketingPlanAndSave,
+  completeMvDirectionAndSave,
+  completePartAssignmentAndSave,
   completePresentationEventAndSave,
   completePositionReviewAndSave,
   completeTitleTrackSelectionAndSave,
@@ -72,11 +83,18 @@ import {
   toCumulativeWeek,
 } from "@/systems/progressionSystem";
 import { canStartComebackProject } from "@/systems/comebackSystem";
-import { listAvailablePromotions } from "@/systems/promotionSystem";
+import { forecastNextSeasonTrend } from "@/systems/calendarSystem";
+import {
+  listAvailablePromotions,
+  listInterludePromotions,
+} from "@/systems/promotionSystem";
 import type {
+  AlbumPartAssignment,
   ConceptMood,
   GameEvent,
   Genre,
+  MarketingPlanAllocation,
+  MvDirectionId,
   PromotionActivityId,
   Staff,
   StaffRecruitmentPost,
@@ -121,6 +139,8 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
   const [isWorkflowSaving, setIsWorkflowSaving] = useState(false);
   const [isPositionReviewSaving, setIsPositionReviewSaving] = useState(false);
   const [isTitleTrackSaving, setIsTitleTrackSaving] = useState(false);
+  const [isProductionDecisionSaving, setIsProductionDecisionSaving] =
+    useState(false);
   const [comebackPlanningOpen, setComebackPlanningOpen] = useState(false);
   const [isComebackSaving, setIsComebackSaving] = useState(false);
   const [promotionId, setPromotionId] = useState<PromotionActivityId | null>(
@@ -219,6 +239,31 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
         : [],
     [activityProject, currentPhase, fandomPublic, fandomCore, fandomIndustry],
   );
+  // 인터루드(비활동기) 운영 활동: 데뷔 후, 활동기 프로젝트가 없는 주에 열린다.
+  // "조용한 주"가 능동적 운영 주간이 되는 통로다.
+  const interludePromotions = useMemo(
+    () =>
+      !activityProject &&
+      releasedAlbums.length > 0 &&
+      (currentPhase === "debut" ||
+        currentPhase === "growth" ||
+        currentPhase === "peak")
+        ? listInterludePromotions({
+            phase: currentPhase,
+            public: fandomPublic,
+            fandom: fandomCore,
+            industry: fandomIndustry,
+          })
+        : [],
+    [
+      activityProject,
+      releasedAlbums.length,
+      currentPhase,
+      fandomPublic,
+      fandomCore,
+      fandomIndustry,
+    ],
+  );
   const activityWeeksLeft = activityProject
     ? Math.max(
         0,
@@ -234,6 +279,18 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
   const titleTrackProject = activeProjects.find(
     (project) =>
       project.decisionStatuses[TITLE_TRACK_SELECTION_DECISION_ID] === "available",
+  );
+  const partAssignmentProject = activeProjects.find(
+    (project) =>
+      project.decisionStatuses[PART_ASSIGNMENT_DECISION_ID] === "available",
+  );
+  const mvDirectionProject = activeProjects.find(
+    (project) =>
+      project.decisionStatuses[MV_DIRECTION_DECISION_ID] === "available",
+  );
+  const marketingPlanProject = activeProjects.find(
+    (project) =>
+      project.decisionStatuses[MARKETING_PLAN_DECISION_ID] === "available",
   );
   const displayedWeekReport =
     weeklyFlow.state === "report_ready" && !isAdvancing && !weekTickerActive
@@ -364,6 +421,9 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
   const hasBlockingOverlay =
     Boolean(positionReviewProject) ||
     Boolean(titleTrackProject) ||
+    Boolean(partAssignmentProject) ||
+    Boolean(mvDirectionProject) ||
+    Boolean(marketingPlanProject) ||
     Boolean(campaignFailure) ||
     comebackPlanningOpen ||
     companyModal !== null ||
@@ -499,6 +559,67 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
       setWorkflowError("타이틀곡 결정을 저장하지 못했습니다. 다시 시도해 주세요.");
     } finally {
       setIsTitleTrackSaving(false);
+    }
+  };
+
+  const handleCompleteMvDirection = async (directionId: MvDirectionId) => {
+    if (!mvDirectionProject || isProductionDecisionSaving) return;
+    setIsProductionDecisionSaving(true);
+    setWorkflowError(null);
+    try {
+      await completeMvDirectionAndSave(
+        mvDirectionProject.id,
+        directionId,
+        userId,
+        slotNumber,
+      );
+    } catch (error) {
+      console.error("MV direction save failed.", error);
+      setWorkflowError("MV 제작 방향을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsProductionDecisionSaving(false);
+    }
+  };
+
+  const handleCompleteMarketingPlan = async (
+    allocation: MarketingPlanAllocation,
+  ) => {
+    if (!marketingPlanProject || isProductionDecisionSaving) return;
+    setIsProductionDecisionSaving(true);
+    setWorkflowError(null);
+    try {
+      await completeMarketingPlanAndSave(
+        marketingPlanProject.id,
+        allocation,
+        userId,
+        slotNumber,
+      );
+    } catch (error) {
+      console.error("Marketing plan save failed.", error);
+      setWorkflowError("마케팅 캠페인을 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsProductionDecisionSaving(false);
+    }
+  };
+
+  const handleCompletePartAssignment = async (
+    assignment: AlbumPartAssignment,
+  ) => {
+    if (!partAssignmentProject || isProductionDecisionSaving) return;
+    setIsProductionDecisionSaving(true);
+    setWorkflowError(null);
+    try {
+      await completePartAssignmentAndSave(
+        partAssignmentProject.id,
+        assignment,
+        userId,
+        slotNumber,
+      );
+    } catch (error) {
+      console.error("Part assignment save failed.", error);
+      setWorkflowError("파트 분배를 저장하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsProductionDecisionSaving(false);
     }
   };
 
@@ -692,18 +813,28 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
     const ranks = Object.values(chartPositions).filter((rank) => rank > 0);
     return ranks.length > 0 ? Math.min(...ranks) : null;
   }, [chartPositions]);
-  const nextRivalComeback = useMemo(() => {
+  const upcomingRivalComebackList = useMemo(() => {
     const cumulativeWeek = toCumulativeWeek(currentYear, currentWeek);
-    const upcoming = upcomingCompetitorComebacks
+    return upcomingCompetitorComebacks
       .filter((comeback) => comeback.week >= cumulativeWeek)
-      .sort((left, right) => left.week - right.week)[0];
-    return upcoming
-      ? {
-          name: upcoming.competitorName,
-          weeksUntil: upcoming.week - cumulativeWeek,
-        }
-      : null;
+      .sort((left, right) => left.week - right.week)
+      .map((comeback) => ({
+        name: comeback.competitorName,
+        weeksUntil: comeback.week - cumulativeWeek,
+      }));
   }, [upcomingCompetitorComebacks, currentYear, currentWeek]);
+  const nextRivalComeback = upcomingRivalComebackList[0] ?? null;
+  const campaignSeed = useGameStore((state) => state.campaignSeed);
+  const trendForecast = useMemo(
+    () =>
+      forecastNextSeasonTrend({
+        currentYear,
+        currentWeek,
+        currentSeason,
+        campaignSeed: campaignSeed ?? 0,
+      }),
+    [currentYear, currentWeek, currentSeason, campaignSeed],
+  );
   const plan = (
     <div className="space-y-3">
       {workflowError ? <Alert message={workflowError} /> : null}
@@ -723,6 +854,19 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           money={money}
           activityWeeksLeft={activityWeeksLeft}
           usedActivityIds={activityProject.usedPromotionIds ?? []}
+          disabled={isAdvancing}
+          onSelect={setPromotionId}
+        />
+      ) : null}
+      {interludePromotions.length > 0 &&
+      (weeklyFlow.state === "planning_ready" ||
+        weeklyFlow.state === "planning_active" ||
+        weeklyFlow.state === "review_ready") ? (
+        <ActivityPromotionPanel
+          activities={interludePromotions}
+          selectedId={promotionId}
+          money={money}
+          mode="interlude"
           disabled={isAdvancing}
           onSelect={setPromotionId}
         />
@@ -994,6 +1138,8 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
         <ComebackPlanningModal
           conceptHistory={conceptHistory}
           marketTrend={marketTrend}
+          forecast={trendForecast}
+          upcomingRivalComebacks={upcomingRivalComebackList}
           trainees={trainees}
           money={money}
           isSaving={isComebackSaving}
@@ -1025,6 +1171,52 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           isSaving={isTitleTrackSaving}
           errorMessage={workflowError}
           onConfirm={handleCompleteTitleTrackSelection}
+        />
+      ) : null}
+
+      {weeklyFlow.state === "planning_ready" &&
+      !positionReviewProject &&
+      !titleTrackProject &&
+      partAssignmentProject &&
+      currentAlbum ? (
+        <PartAssignmentModal
+          albumTitle={currentAlbum.title}
+          trackTitle={currentAlbum.titleTrack?.name ?? "타이틀곡"}
+          trainees={trainees}
+          isSaving={isProductionDecisionSaving}
+          errorMessage={workflowError}
+          onConfirm={handleCompletePartAssignment}
+        />
+      ) : null}
+
+      {weeklyFlow.state === "planning_ready" &&
+      !positionReviewProject &&
+      !titleTrackProject &&
+      !partAssignmentProject &&
+      mvDirectionProject &&
+      currentAlbum ? (
+        <MvDirectionModal
+          albumTitle={currentAlbum.title}
+          money={money}
+          isSaving={isProductionDecisionSaving}
+          errorMessage={workflowError}
+          onConfirm={handleCompleteMvDirection}
+        />
+      ) : null}
+
+      {weeklyFlow.state === "planning_ready" &&
+      !positionReviewProject &&
+      !titleTrackProject &&
+      !partAssignmentProject &&
+      !mvDirectionProject &&
+      marketingPlanProject &&
+      currentAlbum ? (
+        <MarketingPlanModal
+          albumTitle={currentAlbum.title}
+          money={money}
+          isSaving={isProductionDecisionSaving}
+          errorMessage={workflowError}
+          onConfirm={handleCompleteMarketingPlan}
         />
       ) : null}
 

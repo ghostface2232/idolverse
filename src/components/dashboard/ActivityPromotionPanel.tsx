@@ -49,10 +49,13 @@ interface ActivityPromotionPanelProps {
   activities: readonly PromotionActivity[];
   selectedId: PromotionActivityId | null;
   money: number;
-  activityWeeksLeft: number;
+  /** 활동기 모드에서만 의미가 있다 — 인터루드 모드에서는 무시된다. */
+  activityWeeksLeft?: number;
   /** 이번 활동기에 이미 진행한 활동 — 같은 활동은 활동기당 1회만 열린다. */
   usedActivityIds?: readonly PromotionActivityId[];
   disabled?: boolean;
+  /** 활동기 프로모션(기본) 또는 비활동기 운영 활동. 헤더 문구가 달라진다. */
+  mode?: "activity" | "interlude";
   onSelect: (id: PromotionActivityId | null) => void;
 }
 
@@ -64,9 +67,10 @@ export function ActivityPromotionPanel({
   activities,
   selectedId,
   money,
-  activityWeeksLeft,
+  activityWeeksLeft = 0,
   usedActivityIds = [],
   disabled = false,
+  mode = "activity",
   onSelect,
 }: ActivityPromotionPanelProps) {
   if (activities.length === 0) return null;
@@ -76,10 +80,12 @@ export function ActivityPromotionPanel({
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
           <Sparkle className="size-3.5" aria-hidden="true" />
-          활동기 프로모션
+          {mode === "interlude" ? "이번 주 운영 활동" : "활동기 프로모션"}
         </h3>
         <span className="text-[11px] tabular-nums text-text-muted">
-          활동 종료까지 {activityWeeksLeft}주 · 주당 1건 · 같은 활동은 1회만
+          {mode === "interlude"
+            ? "주당 1건 · 팬덤과 인지도를 지키는 비활동기 운영"
+            : `활동 종료까지 ${activityWeeksLeft}주 · 주당 1건 · 같은 활동은 1회만`}
         </span>
       </div>
 

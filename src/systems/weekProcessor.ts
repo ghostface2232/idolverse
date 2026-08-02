@@ -1,5 +1,6 @@
 import { PROMOTION_ACTIVITIES } from "@/data/promotions";
 import { STAFF_ROLE_LABELS } from "@/data/founding";
+import { STAT_LABELS } from "@/data/traineeStats";
 import { advanceWeekState } from "@/systems/advanceWeek";
 import { applyEffects } from "@/systems/applyEffects";
 import { withJosa } from "@/utils/josa";
@@ -37,6 +38,7 @@ import {
   spawnRookieGroup,
 } from "@/systems/competitorSystem";
 import {
+  rollDormantFlags,
   rollRandomEvents,
   rollVacationScandal,
   type EventContext,
@@ -80,6 +82,7 @@ import {
 } from "@/systems/progressionSystem";
 import {
   GAME_BALANCE,
+  ACTIVITY_INTERVENTION,
   ALBUM_QUALITY_DECLINE_GAP,
   ALBUM_QUALITY_REPUTATION_THRESHOLD,
   AWARD_DIGITAL_INDEX,
@@ -752,6 +755,14 @@ export function processWeek(
       ),
     );
   }
+  if (trainingResult.breakthroughs.length > 0) {
+    report.highlights.push(
+      ...trainingResult.breakthroughs.map(
+        (breakthrough) =>
+          `${withJosa(breakthrough.traineeName, "이/가")} 훈련에서 벽을 넘었습니다 — ${STAT_LABELS[breakthrough.stat]} 실력이 눈에 띄게 뛰었습니다`,
+      ),
+    );
+  }
 
   // ── 4. Chemistry
   const beforeChemistry = captureWeekDeltaState(getDeltaState());
@@ -1184,6 +1195,11 @@ export function processWeek(
         calendar: snapshot.calendar,
         equipmentLevel: upgrades.equipmentLevel,
         conceptHistory,
+        fanVoteBonus: promotionOrders.some(
+          (order) => order.activityId === "fanRally",
+        )
+          ? ACTIVITY_INTERVENTION.fanRallyVoteBonus
+          : 0,
       });
       const previousStageId = candidate.currentStageId;
       activeProjects[index] = comebackResult.project;
@@ -1302,9 +1318,15 @@ export function processWeek(
     weeksAfterLatestRelease > 0
   ) {
     const decay = weeklyChartDecay(weeksAfterLatestRelease, seed + 91);
+    // 스트리밍 스퍼트(긴급 개입): 이번 주 자연 하락을 완만하게 만든다.
+    const decayMult = promotionOrders.some(
+      (order) => order.activityId === "streamingPush",
+    )
+      ? ACTIVITY_INTERVENTION.streamingPushDecayMult
+      : 1;
     const decayRank = (rank: number, delta: number) => {
       if (rank <= 0) return 0;
-      const next = rank - delta;
+      const next = rank - Math.round(delta * decayMult);
       return next > 100 ? 0 : Math.max(1, next);
     };
     chartPositions = {
@@ -1348,6 +1370,32 @@ export function processWeek(
     trainees,
   };
   const rolledEvents = rollRandomEvents(eventCtx, seed + 2);
+
+  // 잠복 플래그 격발 롤: 컴백 창(발매·활동기)에는 배율이 붙는다 —
+  // 예전에 덮은 사건이 하필 가장 주목받는 주에 터지는 구조.
+  const inComebackWindow = activeProjects.some(
+    (project) =>
+      project.kind === "comeback" &&
+      project.status !== "completed" &&
+      (project.currentStageId === "release" ||
+        project.currentStageId === "activity"),
+  );
+  const dormantRoll = rollDormantFlags({
+    flags: snapshot.game.dormantFlags ?? [],
+    inComebackWindow,
+    hasSecurity: upgrades.hasSecurity,
+    cumulativeWeek,
+    seed: seed + 7,
+  });
+  rolledEvents.push(...dormantRoll.detonated);
+  if (dormantRoll.detonated.length > 0) {
+    report.warnings.push(
+      ...dormantRoll.detonated.map(
+        (detonation) => `${detonation.gameEvent.title} — 덮어둔 일이 결국 드러났습니다`,
+      ),
+    );
+  }
+
   for (const re of rolledEvents) {
     report.events.push(re.gameEvent);
     // base effects는 이벤트 자체의 영향(예: 루머로 인한 피해)이고,
@@ -2173,6 +2221,7 @@ export function processWeek(
       lastInvestorDemandWeek,
       adContractsSigned,
       activeCommercialContracts,
+      dormantFlags: dormantRoll.remaining,
       insolvencyWeeks,
       campaignFailure,
       lastOpportunityWeek: opportunityOffered
