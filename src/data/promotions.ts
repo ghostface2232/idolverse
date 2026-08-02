@@ -8,7 +8,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     duration: 1, // 주 단위 루프에서 1주 슬롯으로 보는 편이 관리하기 쉽다.
     successFactors: ["vocal", "dance", "visual"],
     effects: {
-      public: 5,
+      public: 3,
       fandom: 2,
       industry: 1,
     },
@@ -23,7 +23,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     duration: 1, // 한 주간의 집중 스케줄로 처리하는 것이 의사결정에 명확하다.
     successFactors: ["charm"],
     effects: {
-      public: 8,
+      public: 5,
       fandom: -1,
     },
     requirements: {
@@ -52,7 +52,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     cost: 1000, // 오프라인 운영비가 들어가므로 무상 활동보다 약간 비싸게 둔다.
     duration: 1, // 짧은 단기 팬 관리 루프에 적합하다.
     effects: {
-      fandom: 5,
+      fandom: 4,
       fandomLoyalty: 3,
     },
     requirements: {
@@ -97,7 +97,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     cost: 15000, // 소극장은 첫 유료 라이브 단계로 부담을 제한한다.
     duration: 2, // 준비와 후속 회복까지 고려하면 2주가 적절하다.
     effects: {
-      fandom: 8,
+      fandom: 6,
       fandomLoyalty: 6,
       public: 2,
       condition: -4, // 공연은 전원의 체력을 쓴다. 무비용 반복을 막는 실질 대가.
@@ -114,7 +114,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     cost: 45000, // 중극장은 운영이 본격적으로 무거워져야 한다.
     duration: 2, // 여전히 짧은 투어 단위로 처리할 수 있게 한다.
     effects: {
-      fandom: 12,
+      fandom: 9,
       fandomLoyalty: 8,
       public: 4,
       industry: 2,

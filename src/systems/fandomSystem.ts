@@ -1,9 +1,11 @@
 import {
   AUDIENCE_QUALITY_RETENTION,
+  AUDIENCE_SATURATION,
   FANDOM_DISAPPOINTMENT_COMMERCIAL,
   FANDOM_DISAPPOINTMENT_SCANDAL,
   FANDOM_LEAVE_THRESHOLD,
   INDUSTRY_REPUTATION,
+  INDUSTRY_SATURATION,
   PUBLIC_DECAY_RATE,
 } from "@/data/balance";
 import type { Nationality, Trainee } from "@/types/game";
@@ -55,6 +57,33 @@ function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
 }
 
+/**
+ * 청중 축 상승분에 적용하는 시장 포화 배율(AUDIENCE_SATURATION 참조).
+ * 주간 팬덤 갱신과 applyEffects의 모든 상승 경로가 이 하나를 공유해야
+ * 프로모션·음방 승리 같은 원액 효과가 포화를 우회하지 못한다.
+ */
+export function audienceGainMultiplier(current: number): number {
+  return saturationMultiplier(current, AUDIENCE_SATURATION);
+}
+
+/** 업계 평판 상승분 전용 배율(INDUSTRY_SATURATION 참조). */
+export function industryGainMultiplier(current: number): number {
+  return saturationMultiplier(current, INDUSTRY_SATURATION);
+}
+
+function saturationMultiplier(
+  current: number,
+  curve: { softStart: number; hardCap: number; exponent: number },
+): number {
+  if (current <= curve.softStart) return 1;
+  const linear = clamp(
+    (curve.hardCap - current) / (curve.hardCap - curve.softStart),
+    0,
+    1,
+  );
+  return linear ** curve.exponent;
+}
+
 export function updateFandom(
   current: Fandom4Axis,
   ctx: WeeklyFandomContext,
@@ -65,8 +94,8 @@ export function updateFandom(
   let iDelta = 0;
   let dDelta = 0;
 
-  if (ctx.hadVarietyAppearance) pDelta += 4;
-  if (ctx.hadViralEvent) pDelta += 8;
+  if (ctx.hadVarietyAppearance) pDelta += 3;
+  if (ctx.hadViralEvent) pDelta += 6;
   if (ctx.isActive && ctx.chartRank !== null && ctx.chartRank <= 10) pDelta += 2;
   if (ctx.isActive && ctx.chartRank !== null && ctx.chartRank <= 3) pDelta += 2;
   if (!ctx.isActive) pDelta += PUBLIC_DECAY_RATE;
@@ -98,7 +127,7 @@ export function updateFandom(
   }
 
   const dampPositive = (delta: number, currentValue: number) =>
-    delta > 0 ? delta * Math.max(0.2, 1 - currentValue / 120) : delta;
+    delta > 0 ? delta * audienceGainMultiplier(currentValue) : delta;
   pDelta = Math.round(dampPositive(pDelta, current.public));
   fDelta = Math.round(dampPositive(fDelta, current.fandom));
   gDelta = Math.round(dampPositive(gDelta, current.global));
@@ -142,6 +171,10 @@ export function updateFandom(
   ) {
     iDelta += 1;
   }
+  iDelta =
+    iDelta > 0
+      ? Math.round(iDelta * industryGainMultiplier(current.industry))
+      : iDelta;
   if (ctx.scandalThisWeek) iDelta -= 5;
   if (ctx.qualityDecline) iDelta -= 3;
   // 위신 신호가 없는 주에는 업계 신뢰가 바닥값 위에서 천천히 내려온다 —

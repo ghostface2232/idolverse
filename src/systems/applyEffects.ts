@@ -1,5 +1,9 @@
 import type { Album, EffectKey, EffectMap, Trainee } from "@/types/game";
-import type { Fandom4Axis } from "@/systems/fandomSystem";
+import {
+  audienceGainMultiplier,
+  industryGainMultiplier,
+  type Fandom4Axis,
+} from "@/systems/fandomSystem";
 
 /**
  * 효과가 적용되는 모든 게임 상태의 단면.
@@ -157,7 +161,12 @@ export function applyEffects(
         fandom.global = applyDiminishedAudienceEffect(fandom.global, value);
         break;
       case "industry":
-        fandom.industry = clamp(fandom.industry + value, 0, 100);
+        fandom.industry = clamp(
+          fandom.industry +
+            (value > 0 ? value * industryGainMultiplier(fandom.industry) : value),
+          0,
+          100,
+        );
         break;
       case "investorPressure":
         investorPressureWeeks =
@@ -276,10 +285,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+// 상승분은 시장 포화 배율(AUDIENCE_SATURATION)을 거친다 — 하락은 원액.
+// 주간 팬덤 갱신(fandomSystem)과 같은 곡선을 공유해, 프로모션·음방 승리
+// 같은 효과 맵 경로가 포화를 우회해 최상위 체급을 조기 달성하지 못하게 한다.
 function applyDiminishedAudienceEffect(current: number, delta: number): number {
   const adjusted =
-    delta > 0 && current > 75
-      ? delta * clamp((95 - current) / 20, 0, 1)
-      : delta;
+    delta > 0 ? delta * audienceGainMultiplier(current) : delta;
   return clamp(current + adjusted, 0, 100);
 }

@@ -264,8 +264,8 @@ export function evaluateRelease(input: ReleaseInput): ReleaseResult {
   // 발매 한 번의 팬덤 보상은 작게 — 팬덤 100은 여러 해의 누적이어야 한다
   // (기성 역전 3~7년차 페이싱). 활동기 음방 승리·콘서트가 나머지를 쌓는다.
   const fandomDelta = Math.round((2 + qualityFactor * 2) * fandomMult + varianceRoll * 0.3);
-  const publicDelta = Math.round((2 + qualityFactor * 5) * publicMult + varianceRoll);
-  const globalDelta = Math.round((1 + qualityFactor * 3) * globalMult);
+  const publicDelta = Math.round((2 + qualityFactor * 4) * publicMult + varianceRoll);
+  const globalDelta = Math.round((1 + qualityFactor * 2.5) * globalMult);
   const industryDelta = Math.round(1 + qualityFactor * 2);
 
   const rankPenalty = Math.max(0, (chartRank - 3) * 0.5);

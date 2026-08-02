@@ -99,7 +99,7 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
     expect(result.axis.fandomDisappointment).toBeGreaterThan(40);
   });
 
-  it("팬덤은 100을 넘지 않는다", () => {
+  it("팬덤은 100을 넘지 않고, 포화 상한 위에서는 활동으로 더 오르지 않는다", () => {
     const result = updateFandom(
       {
         public: 50,
@@ -111,7 +111,10 @@ describe("경제·팬덤 캘리브레이션 (R6)", () => {
       },
       { ...QUIET_WEEK, concertThisWeek: true, fanServiceThisWeek: true },
     );
-    expect(result.axis.fandom).toBe(100);
+    // AUDIENCE_SATURATION.hardCap(95) 초과 구간은 상승 배율이 0이다 —
+    // 콘서트·팬서비스를 쌓아도 99 위로는 오르지 못한다.
+    expect(result.axis.fandom).toBeLessThanOrEqual(99);
+    expect(result.axis.fandom).toBeGreaterThan(90);
   });
 
   it("음악 품질이 낮으면 반복 활동으로 얻은 코어·해외 팬덤을 상한에서 유지할 수 없다", () => {

@@ -188,7 +188,10 @@ export const MUSIC_SHOW_OUTCOME = {
   // industry는 1로 낮춘다 — 무대 탁월(stageExcellent, 품질 조건부 +4)과
   // 합쳐 승리당 +7이던 시절에는 중급 플레이(승수 ~29)도 업계 신뢰가
   // 포화되어 대상 자격 게이트(minIndustry 75)가 무력화됐다.
-  win: { fandom: 4, public: 5, industry: 1, satisfaction: 6 },
+  // public 5·fandom 4이던 시절에는 활동기 연속 승리만으로 첫 사이클에
+  // 대중성이 최상위 구간까지 치솟았다 — 승리는 반복 보상이므로 원액을 줄이고
+  // 누적(다년 사이클)이 체급을 만들게 한다.
+  win: { fandom: 3, public: 3, industry: 1, satisfaction: 6 },
   lose: { fandomLoyalty: 2, stress: 3 },
 } as const;
 
@@ -399,8 +402,8 @@ export const INDIVIDUAL_LESSON_GROWTH = 1.4;
 export const VARIETY_OUTCOME = {
   viralChance: 0.2,
   dudChance: 0.25,
-  viralPublicBonus: 6,
-  viralGlobalBonus: 3,
+  viralPublicBonus: 4,
+  viralGlobalBonus: 2,
 } as const;
 
 export const TRAINING_INTENSITY_MULTIPLIER: Record<TrainingIntensity, number> = {
@@ -489,6 +492,33 @@ export const SATISFACTION_RECOVERY_BELOW_BASELINE = 0.5;
 export const CONTRACT_SENTIMENT_SATISFIED_MIN = 65; // 계약 브리핑에서 확실한 만족으로 읽히는 구간. 기준점 근처의 일시적 호감과 구분한다.
 
 export const PUBLIC_DECAY_RATE = -2; // Casual attention should fade every inactive week.
+
+/**
+ * 청중 축(public·fandom·global·industry) 상승분의 시장 포화 곡선.
+ * softStart 이하는 원액, hardCap에서 0으로 선형 감쇠한다. 종전에는 75까지
+ * 전액이 들어가 첫 앨범 한 사이클(활동 8~10주)만으로 초보 런조차 public
+ * ~90(국민 아이돌 구간)에 도달했다(2026-08 페이싱 프로브). 체급이 높을수록
+ * 같은 활동의 신규 유입이 줄어야 최상위 구간이 다년 누적의 보상으로 남는다.
+ */
+export const AUDIENCE_SATURATION = {
+  softStart: 30,
+  hardCap: 95,
+  // 선형(지수 1)로는 숙련 런이 첫 해에 품질 유지 천장(코어 ~87)까지 닿았다.
+  // 지수를 올려 중·상위 구간을 더 끈적하게 만든다 — 상위 체급은 연 단위 누적.
+  exponent: 1.5,
+} as const;
+
+/**
+ * 업계 평판 전용 포화 곡선. 청중 축과 달리 주간 자연 하락(INDUSTRY_REPUTATION
+ * regression)이 이미 있어서, 같은 지수 곡선을 쓰면 대상 자격 게이트
+ * (AWARD_REQUIREMENTS daesang minIndustry 75)에 숙련 런도 닿지 못한다.
+ * 완만한 선형으로 두어 "지속적인 위신 신호 = 70~80대 유지"가 성립하게 한다.
+ */
+export const INDUSTRY_SATURATION = {
+  softStart: 60,
+  hardCap: 95,
+  exponent: 1,
+} as const;
 /**
  * 반복 노출만으로 코어·해외 팬덤 100을 유지하지 못하게 하는 음악 신뢰도 천장.
  * 최신 앨범 품질이 높을수록 강한 팬덤을 유지할 수 있고, 천장을 넘은 수치는
