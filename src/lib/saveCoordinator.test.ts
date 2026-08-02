@@ -41,6 +41,37 @@ describe("SaveCoordinator", () => {
     await expect(recovered).resolves.toEqual({ value: 3, revision: 3 });
   });
 
+  it("진행 중 저장이 있으면 대기 저장을 최신 스냅샷 하나로 병합한다", async () => {
+    const coordinator = new SaveCoordinator();
+    const executed: string[] = [];
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
+    const first = coordinator.enqueue("user:1", 0, async () => {
+      await firstGate;
+      executed.push("first");
+      return "first";
+    });
+    // 진행 중(first) 뒤로 두 건이 더 들어오면, 앞선 대기(second)는 최신
+    // 스냅샷(third)으로 교체되고 두 호출 모두 third의 결과로 해소된다.
+    const second = coordinator.enqueue("user:1", 0, async () => {
+      executed.push("second");
+      return "second";
+    });
+    const third = coordinator.enqueue("user:1", 0, async () => {
+      executed.push("third");
+      return "third";
+    });
+
+    releaseFirst();
+    await expect(first).resolves.toEqual({ value: "first", revision: 1 });
+    await expect(second).resolves.toEqual({ value: "third", revision: 2 });
+    await expect(third).resolves.toEqual({ value: "third", revision: 2 });
+    expect(executed).toEqual(["first", "third"]);
+  });
+
   it("로드한 서버 revision보다 낮은 스냅샷을 기준으로 삼지 않는다", async () => {
     const coordinator = new SaveCoordinator();
     coordinator.noteLoadedRevision("user:1", 9);

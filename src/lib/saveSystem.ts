@@ -113,15 +113,6 @@ function deserializeGameState(value: unknown): GameStateSnapshot {
   return value as unknown as GameStateSnapshot;
 }
 
-function readSavedCompanyName(saveData: unknown) {
-  if (!isRecord(saveData) || !isRecord(saveData.gameStore)) {
-    return null;
-  }
-
-  const companyName = saveData.gameStore.companyName;
-  return typeof companyName === "string" ? companyName : null;
-}
-
 function extractGameStoreState(): GameStoreState {
   const {
     advanceWeek: _advanceWeek,
@@ -400,6 +391,26 @@ export function hydrateGameState(gameState: GameStateSnapshot) {
   eventVanillaStore.setState(gameState.eventStore, false);
 }
 
+/**
+ * 슬롯별 직전 성공 저장의 내용 지문(리비전 제외). 같은 내용을 다시 쓰려는
+ * 저장(주 결산 직후의 자동 저장 등)은 업서트 없이 직전 결과를 돌려준다 —
+ * 전체 스냅샷 upsert가 잦은 구조에서 무료 티어 DB 부하를 줄이는 완충 장치.
+ */
+const lastSavedFingerprints = new Map<
+  string,
+  {
+    fingerprint: string;
+    result: Awaited<ReturnType<typeof saveGame>>;
+  }
+>();
+
+function computeSaveFingerprint(state: GameStateSnapshot): string {
+  return JSON.stringify({
+    ...state,
+    gameStore: { ...state.gameStore, saveRevision: 0 },
+  });
+}
+
 export async function saveGame(
   userId: string,
   slotNumber: number,
@@ -408,6 +419,11 @@ export async function saveGame(
   assertValidSlotNumber(slotNumber);
   const key = saveQueueKey(userId, slotNumber);
   const baseRevision = gameState.gameStore.saveRevision ?? 0;
+  const fingerprint = computeSaveFingerprint(gameState);
+  const cached = lastSavedFingerprints.get(key);
+  if (cached && cached.fingerprint === fingerprint) {
+    return cached.result;
+  }
   const coordinated = await saveCoordinator.enqueue(
     key,
     baseRevision,
@@ -449,15 +465,27 @@ export async function saveGame(
 
       if (error) throw error;
 
-      return { row: data, gameState: serializableState };
+      return {
+        row: data,
+        gameState: serializableState,
+        fingerprint: computeSaveFingerprint(gameState),
+      };
     },
   );
 
-  return {
-    ...coordinated.value,
+  const { fingerprint: savedFingerprint, ...value } = coordinated.value;
+  const result = {
+    ...value,
     saveRevision: coordinated.revision,
   };
+  // 대기 병합으로 다른 호출의 결과를 받았을 수 있으므로, 실제로 쓰인
+  // 스냅샷의 지문을 기록한다.
+  lastSavedFingerprints.set(key, { fingerprint: savedFingerprint, result });
+  return result;
 }
+
+/** DB가 응답하지 않을 때 무한 스피너 대신 에러를 띄우기 위한 조회 시한. */
+const SAVE_QUERY_TIMEOUT_MS = 15_000;
 
 export async function loadGame(userId: string, slotNumber: number) {
   assertValidSlotNumber(slotNumber);
@@ -468,6 +496,7 @@ export async function loadGame(userId: string, slotNumber: number) {
     .select("save_data, save_revision")
     .eq("user_id", userId)
     .eq("slot_number", slotNumber)
+    .abortSignal(AbortSignal.timeout(SAVE_QUERY_TIMEOUT_MS))
     .maybeSingle<Pick<SaveRow, "save_data" | "save_revision">>();
 
   if (error) {
@@ -501,14 +530,31 @@ export async function loadGame(userId: string, slotNumber: number) {
 
 export async function listSaves(userId: string): Promise<SaveSlotSummary[]> {
   const supabase = getSupabaseClient();
+  // save_data 전문은 절대 내려받지 않는다 — 세이브 JSON은 수 MB까지 자라
+  // 슬롯 목록(이어하기)이 열리지 않는 원인이 됐다. 회사명만 JSON 경로로
+  // 뽑아 요약 컬럼들과 함께 가져온다.
   const { data, error } = await supabase
     .from("saves")
     .select(
-      "slot_number, save_data, save_name, played_weeks, current_phase, group_name, save_revision, updated_at",
+      "slot_number, save_name, played_weeks, current_phase, group_name, save_revision, updated_at, company_name:save_data->gameStore->>companyName",
     )
     .eq("user_id", userId)
     .order("slot_number", { ascending: true })
-    .returns<SaveRow[]>();
+    .abortSignal(AbortSignal.timeout(SAVE_QUERY_TIMEOUT_MS))
+    .returns<
+      Array<
+        Pick<
+          SaveRow,
+          | "slot_number"
+          | "save_name"
+          | "played_weeks"
+          | "current_phase"
+          | "group_name"
+          | "save_revision"
+          | "updated_at"
+        > & { company_name: string | null }
+      >
+    >();
 
   if (error) {
     throw error;
@@ -524,7 +570,7 @@ export async function listSaves(userId: string): Promise<SaveSlotSummary[]> {
       slotNumber,
       saveName: row?.save_name ?? null,
       groupName: row?.group_name ?? null,
-      companyName: row ? readSavedCompanyName(row.save_data) : null,
+      companyName: row?.company_name ?? null,
       playedWeeks: row?.played_weeks ?? null,
       currentPhase: row?.current_phase ?? null,
       updatedAt: row?.updated_at ?? null,
@@ -549,6 +595,7 @@ export async function deleteSave(userId: string, slotNumber: number) {
   }
 
   saveCoordinator.forget(saveQueueKey(userId, slotNumber));
+  lastSavedFingerprints.delete(saveQueueKey(userId, slotNumber));
 }
 
 export async function autoSave(
