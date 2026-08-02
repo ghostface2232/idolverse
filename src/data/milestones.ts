@@ -87,7 +87,7 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   },
   {
     id: "small-concert-open",
-    title: "첫 팬콘 매진권",
+    title: "첫 팬콘 체급",
     category: "promotion",
     requirements: [
       { metric: "fandom", target: smallConcertReq.minFandom ?? 35, label: "팬덤" },

@@ -200,11 +200,11 @@ export function ContractsOverviewModal({
                         {contract.title}
                       </h3>
                       <p className="mt-1 text-xs text-text-muted">
-                        남은 {contractRemaining}주, 일정 {contract.scheduleSlots}칸, 주간 피로 +{contract.weeklyStress}
+                        남은 {contractRemaining}주, 일정 {contract.scheduleSlots}칸, 매주 피로 +{contract.weeklyStress}
                       </p>
                     </div>
                     <span className="shrink-0 rounded-full bg-cyan-400/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-cyan-200">
-                      주 {formatKoreanWon(contract.weeklyIncome)}
+                      매주 {formatKoreanWon(contract.weeklyIncome)}
                     </span>
                   </div>
                 </article>

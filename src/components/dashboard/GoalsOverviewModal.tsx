@@ -151,7 +151,7 @@ export function GoalsOverviewModal({
             <GoalItem item={lanes.project} emphasized />
           ) : (
             <p className="rounded-2xl bg-surface-shell/68 px-4 py-5 text-sm text-text-muted shadow-[var(--shadow-surface)]">
-              진행 중인 프로젝트가 없습니다. 다음 이정표를 준비하고 있습니다.
+              진행 중인 프로젝트가 없습니다. 다음 목표를 준비하고 있습니다.
             </p>
           )}
         </section>

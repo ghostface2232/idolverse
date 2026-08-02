@@ -92,19 +92,19 @@ describe("progressionSystem", () => {
         strategicExpansion: { production: 0, fandom: 0, global: 0 },
       },
     });
-    expect(lanes.weekly.title).toContain("한 주");
+    expect(lanes.weekly.title).toContain("이번 주 계획");
     expect(lanes.project).not.toBeNull();
     expect(lanes.project?.unlocks).toBeTruthy();
     expect(lanes.longTerm.some((item) => item.id === "investor:cond-1")).toBe(true);
     const contract = lanes.longTerm.find((item) => item.id === "contract-term");
-    expect(contract?.deadlineLabel).toBe(`W-${CONTRACT_TERM_WEEKS - 4}`);
+    expect(contract?.deadlineLabel).toBe(`${CONTRACT_TERM_WEEKS - 4}주 남음`);
     expect(lanes.fiveYearReview?.items).toHaveLength(5);
-    expect(lanes.fiveYearReview?.deadlineLabel).toBe("W-256");
+    expect(lanes.fiveYearReview?.deadlineLabel).toBe("256주 남음");
     expect(
       lanes.fiveYearReview?.items.find(
         (item) => item.id === "five-year:business",
       )?.detailLines,
-    ).toEqual(["보유 자금 1억/10억", "앨범 0/8"]);
+    ).toEqual(["보유 자금 1억 원/10억 원", "발매 앨범 수 0/8"]);
   });
 
   it("주간 처리에서 이정표 달성이 기록·통지되고 상태에 영속화된다", () => {
@@ -119,7 +119,7 @@ describe("progressionSystem", () => {
     expect(achievedIds).toContain("fan-cafe-open");
     expect(achievedIds).toContain("fan-sign-open");
     expect(
-      result.weekReport.warnings.some((w) => w.includes("이정표 달성")),
+      result.weekReport.highlights.some((w) => w.includes("이정표 달성")),
     ).toBe(true);
     expect(
       result.weekReport.deltas.some((d) => d.source.kind === "milestone"),

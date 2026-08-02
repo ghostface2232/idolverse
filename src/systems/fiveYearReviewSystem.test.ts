@@ -72,7 +72,7 @@ describe("5년 경영 평가", () => {
     const business = progress.find((route) => route.route === "business")!;
     expect(business.criteria.map((criterion) => criterion.label)).toEqual([
       "보유 자금",
-      "앨범",
+      "발매 앨범 수",
     ]);
     expect(business.ratio).toBeCloseTo(0.31);
 

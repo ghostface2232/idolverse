@@ -15,7 +15,7 @@ export const DEBUT_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     id: "debut-position-evaluation",
     type: "neutral",
     title: "첫 포지션 선발전 예고",
-    description: "6주차에 포지션 선발전을 엽니다. 가배정 역할에 맞춰 훈련하며 컨디션과 팀워크를 준비해야 합니다.",
+    description: "6주차에 포지션 선발전을 엽니다. 가배정 역할에 맞춰 훈련하며 컨디션과 팀 케미를 다잡아야 합니다.",
     probability: 0,
     conditions: { phase: "training" },
     effects: {},
@@ -160,13 +160,13 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     effects: {},
     choices: [
       {
-        label: "에이스에게 집중",
+        label: "에이스에게 집중한다",
         description: "가장 완성도 높은 멤버에게 핵심 파트를 몰아줍니다.",
         tradeoff: "무대 완성도는 오르지만 파트가 적은 멤버들의 만족도가 떨어집니다.",
         effects: { albumSong: 5, albumChoreography: 3, satisfaction: -4 },
       },
       {
-        label: "고르게 분배",
+        label: "고르게 분배한다",
         description: "전원의 분량을 균형 있게 맞춥니다.",
         tradeoff: "팀 분위기는 좋아지지만 임팩트 있는 순간이 줄어듭니다.",
         effects: { satisfaction: 4, chemistry: 3, albumSong: 1 },
@@ -183,13 +183,13 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     effects: { stress: 4 },
     choices: [
       {
-        label: "밤샘 재녹음",
+        label: "밤새워 재녹음한다",
         description: "이번 주 안에 손상 구간을 다시 녹음합니다.",
         tradeoff: "퀄리티는 지키지만 멤버들의 피로가 쌓입니다.",
         effects: { albumSong: 6, stress: 6, condition: -4 },
       },
       {
-        label: "백업 테이크 사용",
+        label: "백업 테이크로 간다",
         description: "보관 중이던 예비 테이크로 대체합니다.",
         tradeoff: "일정은 지키지만 곡 완성도가 조금 떨어집니다.",
         effects: { albumSong: -3, satisfaction: 2 },
@@ -206,13 +206,13 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     effects: {},
     choices: [
       {
-        label: "고난도 시안",
+        label: "고난도 시안을 택한다",
         description: "화제성을 노리고 어려운 동선을 채택합니다.",
         tradeoff: "무대 임팩트가 크지만 연습 부담과 부상 위험이 있습니다.",
         effects: { albumChoreography: 7, stress: 5, condition: -3 },
       },
       {
-        label: "안정형 시안",
+        label: "안정형 시안을 택한다",
         description: "전원이 소화 가능한 완성형 동선을 택합니다.",
         tradeoff: "안정적인 라이브가 가능하지만 화제성은 낮습니다.",
         effects: { albumChoreography: 4, satisfaction: 2 },
@@ -270,7 +270,7 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
     effects: { stress: 4 },
     choices: [
       {
-        label: "세트를 복구해 재촬영",
+        label: "세트를 복구해 재촬영한다",
         description: "일정을 늘려서라도 기획한 장면을 살립니다.",
         tradeoff: "영상 완성도는 지키지만 멤버들 피로가 쌓입니다.",
         effects: { albumVisual: 6, stress: 5, condition: -3 },
@@ -334,7 +334,7 @@ export const COMEBACK_PROJECT_EVENT_POOL: RandomEventTemplate[] = [
       {
         label: "팬들에게 비하인드를 전한다",
         description: "당시 상황과 멤버들의 대처를 솔직하게 공유합니다.",
-        tradeoff: "팬덤 결속은 깊어지지만 사고 자체는 더 오래 회자됩니다.",
+        tradeoff: "팬덤 충성도는 깊어지지만 사고 자체는 더 오래 회자됩니다.",
         effects: { fandomLoyalty: 4, public: 1 },
       },
     ],
@@ -371,7 +371,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "viral-performance-cut",
     type: "positive",
     title: "바이럴 직캠 폭발",
-    description: "한 멤버의 무대 직캠이 급속도로 퍼지며 팀 전체 인지도가 오르고 있습니다.",
+    description: "한 멤버의 무대 직캠이 급속도로 퍼지며 팀 전체 대중 인지도가 오르고 있습니다.",
     probability: 0.08,
     conditions: {
       minWeek: 4,
@@ -440,7 +440,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "hidden-talent-found",
     type: "positive",
     title: "숨겨진 재능 발견",
-    description: "주목받지 못했던 멤버의 특별한 재능이 드러나 팀의 활용 폭이 넓어졌습니다.",
+    description: "주목받지 못했던 멤버의 특별한 재능이 드러나 팀이 쓸 수 있는 카드가 하나 늘었습니다.",
     probability: 0.05,
     conditions: {
       phase: ["training", "debut", "growth"],
@@ -471,7 +471,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "fan-challenge-viral",
     type: "positive",
     title: "팬 챌린지 바이럴",
-    description: "팬이 만든 틱톡 챌린지가 폭발적으로 확산되며 곡이 재조명되고 있습니다.",
+    description: "팬이 만든 숏폼 챌린지가 폭발적으로 확산되며 곡이 재조명되고 있습니다.",
     probability: 0.05,
     conditions: {
       minFandom: 25,
@@ -562,7 +562,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "즉시 대응 자료 배포",
+        label: "즉시 대응 자료를 배포한다",
         description: "법무/홍보 비용을 써서 빠르게 정리합니다.",
         tradeoff: "돈은 들지만 피해를 최소화합니다.",
         effects: { money: -25000000, public: 1, fandomDisappointment: -5 },
@@ -592,7 +592,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "자금 투입하여 수습",
+        label: "돈을 써서 총력 수습한다",
         description: "법무, 기사 관리, 현장 대응 인력을 총동원합니다.",
         tradeoff: "돈은 크게 빠지지만 팬 충격을 가장 줄입니다.",
         // 수습 대응은 실망을 낮춰야 한다(+5는 설명과 정반대였다).
@@ -605,7 +605,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         effects: { money: 0, fandomDisappointment: 15, public: 10 },
       },
       {
-        label: "공식 인정",
+        label: "공식 인정한다",
         description: "관계를 인정하고 사생활 존중을 호소합니다.",
         tradeoff: "팬층은 크게 흔들리지만 일부 대중 호감은 얻습니다.",
         effects: { fandomDisappointment: 25, industry: -5, public: 5 },
@@ -621,7 +621,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     isScandal: true,
     title: "멤버 혹사 논란",
     description:
-      "지친 멤버들의 모습이 팬 커뮤니티에서 화제가 되며 회사의 일정 운영을 향한 비판이 커지고 있습니다.",
+      "지친 멤버들의 모습이 팬 커뮤니티에서 화제가 되며 회사 스케줄 운영을 두고 비판이 커지고 있습니다.",
     probability: 0.04,
     conditions: {
       phase: ["debut", "growth", "peak"],
@@ -680,7 +680,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
       {
         label: "위로금과 처우 개선을 약속한다",
         description: "즉시 위로금을 지급하고 핵심 스태프의 월급을 올립니다.",
-        tradeoff: "일시 비용에 더해 매주 고정비가 늘지만 팀의 기반을 지킵니다.",
+        tradeoff: "당장 목돈이 나가고 주간 고정비도 늘지만 팀의 기반을 지킵니다.",
         effects: { money: -20000000, industry: 1 },
         staffChange: { kind: "raise-salary", percent: 10 },
       },
@@ -709,7 +709,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
       {
         label: "연봉 인상으로 붙잡는다",
         description: "핵심 스태프의 월급을 올려 잔류시킵니다.",
-        tradeoff: "일시 협상 비용에 더해 매주 고정비가 늘지만 운영 안정성을 지킵니다.",
+        tradeoff: "당장 목돈이 나가고 주간 고정비도 늘지만 운영 안정성을 지킵니다.",
         effects: { money: -10000000, industry: 1 },
         staffChange: { kind: "raise-salary", percent: 20 },
       },
@@ -726,7 +726,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "member-conflict",
     type: "negative",
     title: "멤버 갈등 폭발",
-    description: "케미가 나쁜 멤버 쌍의 갈등이 공개적으로 드러날 조짐을 보이고 있습니다.",
+    description: "연습실에서 부딪히던 두 사람의 감정이 밖으로 새어 나갈 조짐을 보이고 있습니다.",
     probability: 0.04,
     conditions: {
       lowChemistryPair: true,
@@ -742,7 +742,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "sasaeng-issue",
     type: "negative",
     title: "사생팬 문제",
-    description: "숙소와 동선을 집요하게 추적하는 사생 문제가 발생했습니다.",
+    description: "숙소와 동선을 집요하게 추적하는 사생팬이 나타났습니다.",
     probability: 0.03,
     conditions: {
       minFame: 30,
@@ -772,19 +772,19 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "즉시 사과문 발표",
+        label: "즉시 사과문을 발표한다",
         description: "빠르게 인정하고 반성의 뜻을 전합니다.",
         tradeoff: "사태가 빨리 진정되지만 이미지에 흠집이 남습니다.",
         effects: { money: -10000000, fandomDisappointment: -3, industry: 1 },
       },
       {
-        label: "맥락 해명",
+        label: "맥락을 해명한다",
         description: "당시 상황과 맥락을 설명하는 입장문을 냅니다.",
         tradeoff: "해명이 먹히면 피해가 줄지만 실패하면 더 커집니다.",
         effects: { money: -15000000, public: -2, fandomDisappointment: -1 },
       },
       {
-        label: "무대응",
+        label: "대응하지 않는다",
         description: "관심이 옮겨가길 기다립니다.",
         tradeoff: "비용은 없지만 여론이 장기간 불안정해집니다.",
         effects: { fandomDisappointment: 12, public: -8, industry: -2 },
@@ -808,13 +808,13 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "즉시 휴식 부여",
+        label: "즉시 휴식을 부여한다",
         description: "해당 멤버를 당분간 일정에서 제외합니다.",
         tradeoff: "컨디션은 회복되지만 팀 활동에 공백이 생깁니다.",
         effects: { condition: 15, satisfaction: 8, public: -3 },
       },
       {
-        label: "일정 축소 후 유지",
+        label: "일정을 줄여서 유지한다",
         description: "부담을 줄이되 완전히 빠지지는 않게 합니다.",
         tradeoff: "공백은 최소화하지만 악화 위험이 남아 있습니다.",
         effects: { condition: 5, satisfaction: 2, stress: 3 },
@@ -853,7 +853,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
       {
         label: "출연시킨다",
         description: "단기 화제성을 노리고 팀 훈련 공백을 감수합니다.",
-        tradeoff: "대중성은 오르지만 해당 멤버 훈련과 팀 케미가 손해를 봅니다.",
+        tradeoff: "대중 인지도는 오르지만 해당 멤버 훈련과 팀 케미가 손해를 봅니다.",
         effects: { public: 8, chemistry: -3, condition: -2 },
       },
       {
@@ -885,7 +885,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         effects: { global: 8, money: -15000000, condition: -3 },
       },
       {
-        label: "국내 활동 유지",
+        label: "국내 활동을 유지한다",
         description: "이번 주는 국내 지표를 지킵니다.",
         tradeoff: "해외 성장 속도는 느려집니다.",
         effects: { public: 2, global: -1 },
@@ -908,7 +908,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     choices: [
       {
         label: "수락한다",
-        description: "콘텐츠를 통해 팬덤과 대중성을 동시에 노립니다.",
+        description: "콘텐츠를 통해 팬덤과 대중 인지도를 동시에 노립니다.",
         tradeoff: "촬영 일정이 훈련과 겹치고 사생활 노출 부담이 있습니다.",
         effects: { fandom: 6, public: 5, global: 3, condition: -4, stress: 5 },
       },
@@ -991,7 +991,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "정기 콘텐츠로 확대",
+        label: "정기 콘텐츠로 확대한다",
         description: "매주 고정 라이브 코너로 만듭니다.",
         tradeoff: "팬덤과의 거리는 좁혀지지만 멤버들 체력 부담이 늘어납니다.",
         effects: { fandom: 5, fandomLoyalty: 4, condition: -3, stress: 3 },
@@ -1034,7 +1034,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "정정 공지와 사과",
+        label: "정정 공지와 함께 사과한다",
         description: "빠르게 수정본을 올리고 짧게 사과합니다.",
         tradeoff: "제작비가 조금 들지만 깔끔하게 마무리됩니다.",
         effects: { money: -10000000, fandomDisappointment: -2, industry: 1 },
@@ -1204,19 +1204,19 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     },
     choices: [
       {
-        label: "정식 선공개로 전환",
+        label: "정식 선공개로 전환한다",
         description: "유출본보다 좋은 화질의 연습 영상을 공식 공개합니다.",
         tradeoff: "화제성을 우리 쪽으로 가져오지만 기획했던 공개 순서가 무너집니다.",
         effects: { albumMarketing: 4, public: 3, stress: 2 },
       },
       {
-        label: "유포자 법적 대응",
+        label: "유포자에게 법적 대응한다",
         description: "법무팀을 통해 유출 경로를 추적하고 삭제를 요청합니다.",
         tradeoff: "돈이 들지만 재발을 막고 팬들을 안심시킵니다.",
         effects: { money: -20000000, fandomDisappointment: -2, industry: 1 },
       },
       {
-        label: "무대응",
+        label: "대응하지 않는다",
         description: "공개일까지 그대로 둡니다.",
         tradeoff: "비용은 없지만 김이 빠지고 보안에 대한 실망이 남습니다.",
         effects: { albumMarketing: -3, fandomDisappointment: 4, stress: 2 },
@@ -1241,7 +1241,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     id: "fan-gift-policy",
     type: "neutral",
     title: "팬 선물 정책 논의",
-    description: "고가의 팬 선물이 늘면서 정리된 원칙이 필요해졌습니다. 어떤 결정이든 반응이 갈릴 것입니다.",
+    description: "고가의 팬 선물이 늘면서 정리된 원칙이 필요해졌습니다. 어느 쪽을 택해도 말이 나옵니다.",
     probability: 0.03,
     conditions: {
       minFandom: 25,
@@ -1255,7 +1255,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         effects: { fandomDisappointment: 4, industry: 2, public: 2 },
       },
       {
-        label: "손편지만 받는 절충안",
+        label: "손편지만 받기로 절충한다",
         description: "물건 대신 편지와 응원만 받기로 합니다.",
         tradeoff: "팬들과의 정서적 연결은 지키지만 현장 관리 부담이 늘어납니다.",
         effects: { fandomLoyalty: 3, stress: 2 },

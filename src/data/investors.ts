@@ -15,7 +15,7 @@ export const INVESTOR_TREND_FIT_SCORING = {
 export const INVESTOR_COMPANIES: InvestorCompany[] = [
   {
     id: "nextbeat",
-    name: "넥스트비트",
+    name: "넥스트비트랩스",
     type: "it",
     description:
       "숏폼 플랫폼과 자체 음원 스트리밍을 운영하는 디지털 중심 기업",
@@ -34,15 +34,15 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 40000,
         deadlineWeeks: 52,
         description: "1년 안에 주요 SNS 합산 팔로워 4만 달성",
-        penalty: "디지털 마케팅 지원이 중단되고 다음 라운드 검토가 보류된다.",
+        penalty: "디지털 마케팅 지원이 중단되고 다음 라운드 검토가 보류됩니다.",
       },
       {
         id: "nextbeat-streams",
         metric: "spotifyStreams",
         target: 120000,
         deadlineWeeks: 78,
-        description: "1년 반 안에 스포티파이 누적 12만 스트리밍 달성",
-        penalty: "자체 플레이리스트 편성이 끊기고 성과 추적 보고가 강화된다.",
+        description: "1년 반 안에 스포티파이 누적 스트리밍 12만 회 달성",
+        penalty: "자체 플레이리스트 편성이 끊기고 성과 추적 보고가 강화됩니다.",
       },
     ],
     penaltyEffects: [
@@ -72,14 +72,14 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         description: "숏폼·비하인드 디지털 콘텐츠 제작비 전액 보조",
       },
     ],
-    personality: "차갑고 숫자 중심적이지만, 목표를 달성하면 확실히 밀어준다.",
+    personality: "차갑고 숫자 중심적이지만, 목표를 달성하면 확실히 밀어줍니다.",
   },
   {
     id: "crownmusic-ent",
     name: "크라운뮤직 엔터테인먼트",
     type: "entertainment",
     description:
-      "방송 네트워크와 선배 아티스트 IP를 보유한 대형 엔터테인먼트 그룹",
+      "방송 네트워크와 선배 아티스트 IP를 보유한 대형 엔터테인먼트 그룹. 우리와 같은 시장에서 뛰는 그룹도 여럿 데리고 있는 회사입니다.",
     fundAmount: 900000000,
     conditions: [
       // 1위 후보권(차트 25위 이내) 진입이 2년차 컴백부터 현실적 목표이므로
@@ -91,7 +91,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: "1위 1회",
         deadlineWeeks: 104,
         description: "2년 안에 음악방송 1위 1회 달성",
-        penalty: "방송 편성 우대가 약화되고 협업 라인이 닫힌다.",
+        penalty: "방송 편성 우대가 약화되고 컬래버 라인이 닫힙니다.",
       },
       {
         id: "crownmusic-award",
@@ -99,7 +99,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: "신인상 이상",
         deadlineWeeks: 104,
         description: "2년차 연말까지 시상식 신인상 이상 수상",
-        penalty: "연말 특별 무대와 외부 네트워크 협의 우선순위가 내려간다.",
+        penalty: "연말 특별 무대와 외부 네트워크 협의 우선순위가 내려갑니다.",
       },
     ],
     penaltyEffects: [
@@ -111,7 +111,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       {
         type: "collaborationBlock",
         severity: "medium",
-        description: "선배 아티스트 및 사내 프로듀서 협업 차단",
+        description: "선배 아티스트 및 사내 프로듀서 컬래버 차단",
       },
     ],
     bonusEffects: [
@@ -124,7 +124,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         description: "소속 아티스트와 합동 콘서트 및 컬래버 무대 기회 제공",
       },
     ],
-    personality: "관계와 전통을 중시하며, 무대 성과를 숫자보다 높게 평가한다.",
+    personality: "관계와 전통을 중시하며, 무대 성과를 숫자보다 높게 평가합니다.",
   },
   {
     id: "summit-capital",
@@ -144,7 +144,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 0,
         deadlineWeeks: 78,
         description: "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
-        penalty: "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
+        penalty: "경영 간섭이 시작되고 활동 우선순위가 왜곡됩니다.",
       },
       {
         id: "summit-payback",
@@ -152,7 +152,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 500000000,
         deadlineWeeks: 156,
         description: "3년 안에 누적 순수익 5억 달성",
-        penalty: "지분 압박과 투자 회수 통보가 시작된다.",
+        penalty: "지분 압박과 투자 회수 통보가 시작됩니다.",
       },
     ],
     penaltyEffects: [
@@ -178,14 +178,14 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         description: "성과 달성 시 추가 투자 라운드 개설",
       },
     ],
-    personality: "기회가 보이면 크게 베팅하지만, 감정보다 회수 속도를 우선한다.",
+    personality: "기회가 보이면 크게 베팅하지만, 감정보다 회수 속도를 우선합니다.",
   },
   {
     id: "lumiere-beauty",
     name: "루미에르 뷰티",
     type: "cosmetic",
     description:
-      "비주얼 브랜딩과 광고 전환률에 민감한 글로벌 뷰티 기업",
+      "비주얼 브랜딩과 광고 전환율에 민감한 글로벌 뷰티 기업",
     fundAmount: 700000000,
     conditions: [
       // 신인은 스탯 18~32에서 시작하고 포커스 성장이 연 +20~25 수준이라
@@ -197,7 +197,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 50,
         deadlineWeeks: 78,
         description: "1년 반 안에 멤버 비주얼 평균 50 달성",
-        penalty: "브랜드 이미지 불일치로 협찬과 제작 지원이 축소된다.",
+        penalty: "브랜드 이미지 불일치로 협찬과 제작 지원이 축소됩니다.",
       },
       {
         id: "lumiere-model",
@@ -205,7 +205,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: "자사 모델 계약 1건",
         deadlineWeeks: 52,
         description: "1년 안에 자사 광고 모델 계약 체결",
-        penalty: "광고가 파기되고 위약금이 발생한다.",
+        penalty: "광고가 파기되고 위약금이 발생합니다.",
       },
     ],
     penaltyEffects: [
@@ -223,14 +223,14 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     bonusEffects: [
       {
         type: "beautyCollab",
-        description: "뷰티 콘텐츠와 메이크업 브랜드 협업 지원",
+        description: "뷰티 콘텐츠와 메이크업 브랜드 컬래버 지원",
       },
       {
         type: "globalBeautySupport",
         description: "해외 뷰티 유통망과 연동한 글로벌 인지도 강화",
       },
     ],
-    personality: "결과보다 이미지 완성도를 집요하게 보며, 브랜드 핏에 매우 민감하다.",
+    personality: "결과보다 이미지 완성도를 집요하게 보며, 브랜드 핏에 매우 민감합니다.",
   },
   {
     id: "maison-group",
@@ -252,7 +252,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 75,
         deadlineWeeks: 78,
         description: "1년 반 안에 패션 트렌드 적합도 75 달성",
-        penalty: "메인 스타일리스트 지원과 쇼 초청 기회가 축소된다.",
+        penalty: "메인 스타일리스트 지원과 쇼 초청 기회가 축소됩니다.",
       },
       {
         id: "maison-style",
@@ -260,7 +260,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         target: 50,
         deadlineWeeks: 78,
         description: "1년 반 안에 비주얼과 스타일 점수 평균 50 달성",
-        penalty: "프리미엄 스타일링 라인과 촬영 협업이 끊긴다.",
+        penalty: "프리미엄 스타일링 라인과 촬영 컬래버가 끊깁니다.",
       },
     ],
     penaltyEffects: [
@@ -285,7 +285,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
         description: "시즌 전담 스타일리스트 및 화보 컨셉 패키지 제공",
       },
     ],
-    personality: "수치보다 분위기와 화제성을 읽지만, 시즌 감각이 떨어지면 냉정하게 손을 뗀다.",
+    personality: "수치보다 분위기와 화제성을 읽지만, 시즌 감각이 떨어지면 냉정하게 손을 뗍니다.",
   },
 ];
 

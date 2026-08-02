@@ -327,7 +327,7 @@ describe("상황 기반 주간 결정 생성", () => {
     ).find((candidate) => candidate.lane === "opportunity");
 
     expect(card?.summary).toContain("평균 스트레스 60");
-    expect(card?.summary).toContain("마감 D-1");
+    expect(card?.summary).toContain("마감 1주 전");
   });
 
   it("성장 3년차부터 연 1회 서로 다른 장기 확장 경로를 제시한다", () => {

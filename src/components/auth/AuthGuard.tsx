@@ -91,8 +91,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
               인증이 설정되지 않았습니다
             </h1>
             <p className="text-sm leading-6 text-slate-400 [word-break:keep-all]">
-              로그인과 클라우드 저장을 사용하려면 `VITE_SUPABASE_URL`,
-              `VITE_SUPABASE_PUBLISHABLE_KEY`를 로컬 환경 변수에 추가해 주세요.
+              클라우드 저장 설정이 완료되지 않았습니다. 로컬 환경 변수
+              설정을 확인해 주세요.
             </p>
           </div>
         </Card>
@@ -160,7 +160,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
           </Card>
 
           <p className="text-center text-xs leading-5 text-slate-500 [word-break:keep-all]">
-            계정당 3개의 저장 슬롯이 제공되며, 주차가 넘어갈 때 자동 저장됩니다.
+            계정당 3개의 클라우드 슬롯이 제공되며, 주차가 넘어갈 때 자동 저장됩니다.
           </p>
         </div>
       </main>

@@ -7,15 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { GamePhase, WeeklyDecisionTrigger } from "@/types/game";
-
-const PHASE_LABELS: Record<GamePhase, string> = {
-  prologue: "프롤로그",
-  founding: "창단",
-  training: "데뷔 준비",
-  debut: "데뷔 활동",
-  growth: "성장기",
-  peak: "전성기",
-};
+import { PHASE_LABELS } from "@/data/labels";
 
 interface HomeBriefingProps {
   groupName: string;

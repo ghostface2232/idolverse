@@ -86,7 +86,7 @@ export function getFiveYearRouteProgress(
     routeProgress("hitmaker", [
       {
         id: "releases",
-        label: "앨범",
+        label: "발매 앨범 수",
         current: releases,
         target: FIVE_YEAR_REVIEW.hitmaker.minReleases,
         format: "number",
@@ -169,7 +169,7 @@ export function getFiveYearRouteProgress(
       },
       {
         id: "releases",
-        label: "앨범",
+        label: "발매 앨범 수",
         current: releases,
         target: FIVE_YEAR_REVIEW.business.minReleases,
         format: "number",
@@ -178,7 +178,7 @@ export function getFiveYearRouteProgress(
     routeProgress("awards", [
       {
         id: "awards",
-        label: "수상",
+        label: "수상 횟수",
         current: input.awards,
         target: FIVE_YEAR_REVIEW.awards.minAwards,
         format: "number",

@@ -1,5 +1,7 @@
 import type { PromotionActivity } from "@/types/game";
 
+// cost·income 단위: 만 원 — promotionSystem의 COST_UNIT(10000)을 곱해 원화로 환산한다.
+
 export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
   {
     id: "musicShow",
@@ -29,7 +31,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
     requirements: {
       phase: "debut+",
     },
-    sideEffect: "해당 멤버는 이번 주 그룹 훈련에 제대로 참여하지 못한다.",
+    sideEffect: "해당 멤버는 이번 주 그룹 훈련에 제대로 참여하지 못합니다. 대중 노출은 커지지만 코어 팬 일부는 예능 소모를 반기지 않습니다.",
   },
   {
     id: "youtubeContent",
@@ -107,6 +109,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       minFandom: 35, // 최소한의 티켓 수요가 필요하다.
     },
     income: 20000, // 작은 흑자 단계. 확정 대박이 아니라 팬덤 관리와 겸하는 수익원이다.
+    sideEffect: "이틀의 공연 준비로 전원 컨디션이 조금 떨어집니다.",
   },
   {
     id: "midConcert",
@@ -125,6 +128,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       minFandom: 50, // 중극장은 명확한 코어 팬덤을 요구한다.
     },
     income: 58000, // 자금 회수 체감은 남기되, 다른 활동을 밀어내는 확정 정답은 아니게 한다.
+    sideEffect: "2주 공연 일정의 소모로 전원 컨디션이 떨어집니다.",
   },
   {
     id: "largeConcert",
@@ -144,6 +148,7 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       minIndustry: 50, // 운영 역량에 대한 업계 신뢰도도 요구한다.
     },
     income: 152000, // 성공 시 큰 현금 흐름. 다만 컨디션 대가와 3주 구속을 상쇄할 만큼만.
+    sideEffect: "3주를 통째로 쓰는 대형 공연이라 준비 여파로 전원 컨디션이 크게 떨어집니다.",
   },
   {
     id: "domeConcert",
@@ -164,5 +169,6 @@ export const PROMOTION_ACTIVITIES: PromotionActivity[] = [
       minIndustry: 65, // 신뢰도 없는 돔 공연은 설득력이 떨어진다.
     },
     income: 400000, // 대형 보상은 유지하되 순이익 10억 단위의 유일 지배 전략은 되지 않게 한다.
+    sideEffect: "4주를 통째로 쓰는 최대 규모 베팅입니다. 끝나면 전원이 지친 채로 다음 사이클을 맞습니다.",
   },
 ];

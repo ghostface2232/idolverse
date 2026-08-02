@@ -342,7 +342,7 @@ export function evaluateMusicShow(input: MusicShowInput): MusicShowBattle {
   ].sort((a, b) => composite(b) - composite(a));
 
   const rival = rivalPool[0] ?? {
-    name: "차트 상위권 그룹",
+    name: "이번 주 차트 1위 팀",
     power: input.playerPower * 0.9,
     fanVote: MUSIC_SHOW_SCORE.marketBaselineFanVote,
   };
@@ -591,7 +591,7 @@ export function processComebackProjectWeek(
             week: input.cumulativeWeek,
             score: melonRank,
             passed: false,
-            summary: `차트 ${melonRank > 0 ? `${melonRank}위` : "권 밖"}. 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했습니다.`,
+            summary: `${melonRank > 0 ? `차트 ${melonRank}위` : "차트 100위권 밖"}. 1위 후보권(${MUSIC_SHOW_CANDIDACY.maxChartRank}위 이내)에 들지 못했습니다.`,
           },
         },
       };

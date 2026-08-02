@@ -109,7 +109,8 @@ export function WeekReport({
     (delta) => delta.target.kind === "fandom",
   );
 
-  // 헤드라인 우선순위: 컴백 정산 > 경고 첫 건 > 부상 첫 건.
+  // 헤드라인 우선순위: 컴백 정산 > 경고 첫 건 > 부상 첫 건 > 좋은 소식 첫 건.
+  const highlights = report.highlights ?? [];
   const headlineWarning = report.comebackSettlement
     ? null
     : (report.warnings[0] ?? null);
@@ -123,6 +124,13 @@ export function WeekReport({
   const remainingInjuries = headlineInjury
     ? report.injuries.slice(1)
     : report.injuries;
+  const headlineHighlight =
+    report.comebackSettlement || headlineWarning || headlineInjury
+      ? null
+      : (highlights[0] ?? null);
+  const remainingHighlights = headlineHighlight
+    ? highlights.slice(1)
+    : highlights;
 
   const netHistory = buildNetHistory(incomeHistory, expenseHistory, 12);
 
@@ -138,13 +146,15 @@ export function WeekReport({
     report.events.length === 0 &&
     report.competitorComebacks.length === 0 &&
     !report.comebackSettlement &&
-    report.warnings.length === 0;
+    report.warnings.length === 0 &&
+    highlights.length === 0;
 
   // 이번 주의 얼굴이 될 헤드라인 씬과 문장.
   const hero = resolveHero({
     report,
     headlineWarning,
     headlineInjury,
+    headlineHighlight,
     statGrowth,
   });
 
@@ -159,7 +169,12 @@ export function WeekReport({
     hashSeed(`${report.week}:${managerContext}`),
   );
 
-  const memberVoices = buildMemberVoices(report, trainees, memberGrowthRows);
+  const memberVoices = buildMemberVoices(
+    report,
+    trainees,
+    memberGrowthRows,
+    isQuietWeek,
+  );
   const decisionOutcomes = buildDecisionOutcomes(deltas);
 
   return (
@@ -443,6 +458,24 @@ export function WeekReport({
           </ReportCard>
         ) : null}
 
+        {remainingHighlights.length > 0 ? (
+          <ReportCard title="이번 주 좋은 소식">
+            <ul className="space-y-2">
+              {remainingHighlights.map((highlight) => (
+                <li key={highlight} className="flex items-start gap-2">
+                  <Sparkles
+                    className="mt-0.5 size-3.5 shrink-0 text-emerald-300"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs leading-5 text-text-secondary [word-break:keep-all]">
+                    {highlight}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </ReportCard>
+        ) : null}
+
         {remainingWarnings.length > 0 ? (
           <ReportCard title="확인할 문제">
             <ul className="space-y-2">
@@ -539,11 +572,13 @@ function resolveHero({
   report,
   headlineWarning,
   headlineInjury,
+  headlineHighlight,
   statGrowth,
 }: {
   report: WeeklyReportSnapshot;
   headlineWarning: string | null;
   headlineInjury: { traineeName: string } | null;
+  headlineHighlight: string | null;
   statGrowth: number;
 }): HeroResult {
   if (report.comebackSettlement) {
@@ -567,6 +602,15 @@ function resolveHero({
       scene: "hospital",
       label: "이번 주 헤드라인",
       text: `${withJosa(headlineInjury.traineeName, "이/가")} 부상을 입었습니다. 이번 주 일정 조정이 필요합니다.`,
+    };
+  }
+
+  // 좋은 소식은 경고와 다른 씬으로 연출한다 — 수상 주에 스캔들 씬이 뜨면 안 된다.
+  if (headlineHighlight) {
+    return {
+      scene: sceneForHeadline(headlineHighlight),
+      label: "이번 주 헤드라인",
+      text: headlineHighlight,
     };
   }
 
@@ -683,6 +727,7 @@ function buildMemberVoices(
   report: WeeklyReportSnapshot,
   trainees: Trainee[],
   growthRows: MemberGrowthRow[],
+  isQuietWeek: boolean,
 ): MemberVoice[] {
   const voices: MemberVoice[] = [];
   const used = new Set<string>();
@@ -705,7 +750,15 @@ function buildMemberVoices(
     });
   };
 
-  // 우선순위: 부상 > 갈등 > 최고 성장 > 지친 멤버 > 기분 좋은 멤버.
+  // 우선순위: 성과(1위/컴백 종료) > 부상 > 갈등 > 최고 성장 > 지친 멤버 >
+  // 크게 불만인 멤버 > 기분 좋은 멤버 > 조용한 주 소감.
+  if (report.comebackSettlement) {
+    const won = (report.comebackSettlement.musicShowWins ?? 0) > 0;
+    const spokesperson =
+      trainees[hashSeed(`${report.week}:settlement`) % Math.max(trainees.length, 1)];
+    pushVoice(spokesperson, won ? "win" : "comeback", won ? "accent" : "default");
+  }
+
   if (report.injuries.length > 0) {
     const injured = trainees.find(
       (candidate) => candidate.id === report.injuries[0].traineeId,
@@ -734,6 +787,13 @@ function buildMemberVoices(
   }
 
   if (voices.length < 2) {
+    const unhappy = trainees.find(
+      (candidate) => candidate.satisfaction <= 30 && !used.has(candidate.id),
+    );
+    pushVoice(unhappy, "unhappy", "warning");
+  }
+
+  if (voices.length < 2) {
     const happy = trainees.find(
       (candidate) =>
         candidate.satisfaction >= 70 &&
@@ -741,6 +801,13 @@ function buildMemberVoices(
         !used.has(candidate.id),
     );
     pushVoice(happy, "happy", "default");
+  }
+
+  // 아무 목소리도 없는 조용한 주에는 일상 소감이라도 싣는다 — 침묵보다 낫다.
+  if (voices.length === 0 && isQuietWeek && trainees.length > 0) {
+    const speaker =
+      trainees[hashSeed(`${report.week}:quiet`) % trainees.length];
+    pushVoice(speaker, "quiet", "default");
   }
 
   return voices;
@@ -978,26 +1045,28 @@ function sumNumericDeltas(
 
 // ── 재정 요약 ──────────────────────────────────────────────────
 
+// 재무 모달(FinanceOverviewModal)과 같은 key에 같은 한국어를 쓴다 —
+// 결산과 재무 화면에서 항목명이 다르면 별개 돈줄로 오독된다.
 const FINANCE_INCOME_LABELS: Record<string, string> = {
   streaming: "음원 스트리밍",
   album: "음반 판매",
-  promotions: "프로모션 활동",
+  promotions: "공연·프로모션",
   commercialContracts: "광고·외부 계약",
-  strategicExpansion: "전략 확장 수익",
+  strategicExpansion: "팬 사업·글로벌 사업",
   emergencyFinancing: "긴급 자금 조달",
-  decisionSupport: "주간 결정 지원",
+  decisionSupport: "협상·지원금",
 };
 
 const FINANCE_EXPENSE_LABELS: Record<string, string> = {
   fixedCosts: "고정 운영비",
-  promotions: "프로모션 비용",
+  promotions: "활동 비용",
   productionBudget: "앨범 제작비",
   staffDevelopment: "스태프 육성",
   facilityInvestment: "시설 투자",
-  strategicExpansion: "전략 확장 유지비",
+  strategicExpansion: "사업 유지비",
   memberSettlement: "멤버 정산",
-  financingRepayment: "차입금 상환",
-  decisionCosts: "주간 결정 비용",
+  financingRepayment: "자금 상환",
+  decisionCosts: "이번 주 선택 비용",
 };
 
 function FinanceSection({

@@ -171,7 +171,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm text-slate-200">포지션 슬롯</p>
+          <p className="text-sm text-slate-200">포지션 배치</p>
           <div className="space-y-3">
             <section className="space-y-2 rounded-[26px] bg-slate-900 p-2.5 ring-1 ring-inset ring-brand-pink/25">
               <div className="flex min-h-10 items-center justify-between gap-2 px-1.5">

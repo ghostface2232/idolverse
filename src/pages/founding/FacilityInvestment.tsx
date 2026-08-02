@@ -103,7 +103,7 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
         />
 
         <Card variant="panel" className="space-y-3">
-          <p className="text-sm text-slate-200">선택적 업그레이드 (일시 비용)</p>
+          <p className="text-sm text-slate-200">선택 업그레이드 — 한 번만 내는 비용</p>
           {(["healthcare", "security"] as const).map((key) => {
             const item = FOUNDING_ONETIME_UPGRADES[key];
             const checked = key === "healthcare" ? sel.hasHealthcare : sel.hasSecurity;
@@ -144,12 +144,12 @@ export function FacilityInvestment({ onNext, onPrev }: FacilityInvestmentProps) 
 
         <Card variant="panel" className="space-y-2 text-center">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">월 고정비 (5인 기준)</span>
+            <span className="text-xs text-slate-400">주간 고정비 (5인 기준)</span>
             <MoneyDisplay amount={monthlyTotal} size="sm" />
           </div>
           {onetimeTotal > 0 && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400">일시 투자</span>
+              <span className="text-xs text-slate-400">한 번만 내는 비용</span>
               <span className="text-sm text-red-300">
                 {formatKoreanWon(onetimeTotal, { symbol: true })}
               </span>

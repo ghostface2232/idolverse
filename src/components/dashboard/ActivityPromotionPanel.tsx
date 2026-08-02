@@ -1,18 +1,20 @@
 import { Sparkle } from "lucide-react";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { radioTileClasses } from "@/components/common/selectionTokens";
-import type { PromotionActivity, PromotionActivityId } from "@/types/game";
+import type { EffectKey, PromotionActivity, PromotionActivityId } from "@/types/game";
+import { METRIC_LABELS } from "@/data/labels";
 
 const PROMOTION_COST_UNIT = 10000;
 
-const EFFECT_LABELS: Record<string, string> = {
-  public: "대중 인지도",
-  fandom: "코어 팬덤",
-  fandomLoyalty: "팬덤 충성도",
-  fandomDisappointment: "팬덤 민심",
-  global: "해외 반응",
-  industry: "업계 평판",
-};
+/** 요약에 노출할 지표 — 라벨 표기는 METRIC_LABELS 단일 사전을 따른다. */
+const SUMMARY_EFFECT_KEYS: readonly EffectKey[] = [
+  "public",
+  "fandom",
+  "fandomLoyalty",
+  "fandomDisappointment",
+  "global",
+  "industry",
+];
 
 // 효과 수치는 사전 공개하지 않는다. 어느 쪽에 도움이 되는지만 전한다.
 function summarizeEffects(effects: PromotionActivity["effects"]): string {
@@ -20,7 +22,9 @@ function summarizeEffects(effects: PromotionActivity["effects"]): string {
   const drawbacks: string[] = [];
   let strongest = 0;
   for (const [key, value] of Object.entries(effects)) {
-    const label = EFFECT_LABELS[key];
+    const label = SUMMARY_EFFECT_KEYS.includes(key as EffectKey)
+      ? METRIC_LABELS[key as EffectKey]
+      : undefined;
     if (!label || !value) continue;
     const goodness = key === "fandomDisappointment" ? -value : value;
     if (goodness > 0) {

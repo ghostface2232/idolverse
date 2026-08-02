@@ -3,10 +3,10 @@ import type { CompetitorTemplate, EventCompetitorTemplate } from "@/types/game";
 export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
   {
     id: "traditionalMajor",
-    name: "대형 기획사 정통파",
+    name: "정통 대형기획사형",
     type: "traditional",
     description: "기본기가 탄탄하고 마케팅이 강하지만 성장 속도는 느린 메이저형 팀",
-    agencyPool: ["크라운뮤직", "빅오션 뮤직", "프라임아츠"],
+    agencyPool: ["크라운뮤직", "빅오션뮤직", "프라임아츠"],
     groupNamePool: {
       female: ["에클라", "프리즘벨", "루미나라", "세라핀", "레드아이리스", "뉴시크"],
       male: ["매그너스", "킹스하이", "인피니엄", "어센드", "크라운나인", "레거시"],
@@ -22,17 +22,17 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     globalRange: { min: 20, max: 45 },
     industryRange: { min: 45, max: 70 },
     comebackIntervalWeeks: { min: 12, max: 16 },
-    strengths: ["안정적인 라이브", "강한 방송 편성", "비주얼 평균치"],
+    strengths: ["안정적인 라이브", "강한 방송 편성", "고른 비주얼 라인"],
     weaknesses: ["느린 성장", "보수적인 컨셉 전환"],
   },
   {
     id: "viralCharacter",
-    name: "바이럴/캐릭터형",
+    name: "바이럴 캐릭터형",
     type: "viral",
     description: "캐릭터와 밈으로 빠르게 치고 오르지만 음악성 논란도 많은 팀",
     agencyPool: ["버즈팩토리", "네온시티", "브릿지노트"],
     groupNamePool: {
-      female: ["피킷", "피지", "팝키스", "글로업", "잇츠미", "슈가팝"],
+      female: ["피킷", "피치스", "팝키스", "글로업", "잇츠미", "슈가팝"],
       male: ["클릭비", "하이퍼", "피버", "노이즈", "밈스타", "트릭스"],
     },
     statRanges: {
@@ -46,7 +46,7 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     globalRange: { min: 10, max: 35 },
     industryRange: { min: 15, max: 40 },
     comebackIntervalWeeks: { min: 10, max: 14 },
-    strengths: ["캐릭터성", "밈 확산력", "예능 화제성"],
+    strengths: ["멤버 캐릭터 각인력", "밈 확산력", "예능 화제성"],
     weaknesses: ["음악성 논란", "짧은 유행 수명"],
   },
   {
@@ -57,7 +57,7 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     agencyPool: ["레드아크", "큐브릭", "스톰라인"],
     groupNamePool: {
       female: ["볼티지", "와일드파이어", "비욘드", "아웃브레이크", "블레이즈", "스톰"],
-      male: ["하드비트", "토크", "스트레이지", "어택", "레이지", "포지"],
+      male: ["하드비트", "토크나이즈", "스트레이지", "어택", "레이지", "포지"],
     },
     statRanges: {
       dance: { min: 85, max: 100 },
@@ -78,7 +78,7 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     name: "해외 특화형",
     type: "global",
     description: "유튜브와 스포티파이에서 강세를 보이지만 국내 차트는 약한 팀",
-    agencyPool: ["스텔라쉽", "하이비전", "넥스트비트 뮤직"],
+    agencyPool: ["스텔라쉽", "하이비전", "넥스트비트뮤직"],
     groupNamePool: {
       female: ["패럴랙스", "코스믹스", "스카이워드", "엔루트", "오로라", "셀레스트"],
       male: ["크로스", "아틀라스", "호라이즌", "바운더리", "엑소더스", "트랜싯"],
@@ -94,18 +94,18 @@ export const COMPETITOR_ARCHETYPES: CompetitorTemplate[] = [
     globalRange: { min: 55, max: 85 },
     industryRange: { min: 30, max: 55 },
     comebackIntervalWeeks: { min: 9, max: 13 },
-    strengths: ["스포티파이", "유튜브", "해외 팬덤 응집"],
+    strengths: ["스포티파이 에디토리얼 진입", "유튜브 알고리즘 강세", "해외 팬덤 응집"],
     weaknesses: ["국내 차트 약세", "내수 화제성 부족"],
   },
   {
     id: "survivalOrigin",
-    name: "서바이벌 출신",
+    name: "서바이벌 출신형",
     type: "survival",
     description: "초기 팬덤은 강하지만 내부 갈등과 소진 위험을 안고 있는 팀",
     agencyPool: ["골든리프", "문라잇", "드림캐스트"],
     groupNamePool: {
-      female: ["유니티", "나인폴드", "링커스", "셀렉트", "아이즈나인", "드림나인"],
-      male: ["제네시스", "원더나인", "프로젝트X", "보이즈넥스트", "얼라이브", "포지원"],
+      female: ["유니티", "나인폴드", "링커스", "셀렉트", "아이리스나인", "드림나인"],
+      male: ["제네시스", "원더라인", "프로젝트제로", "보이즈넥스트", "얼라이브", "포지션원"],
     },
     statRanges: {
       vocal: { min: 55, max: 78 },
@@ -130,10 +130,12 @@ export const EVENT_COMPETITOR_ARCHETYPES: EventCompetitorTemplate[] = [
     type: "traditional",
     triggerType: "mega_rookie",
     description: "모든 기본기가 상위권인 초대형 신인 그룹",
-    agencyPool: ["크라운뮤직", "빅오션 뮤직", "프라임아츠"],
+    agencyPool: ["크라운뮤직", "빅오션뮤직", "프라임아츠"],
+    // 이벤트 경쟁자 이름 풀은 상시 원형과 겹치지 않게 분리한다
+    // (names.ts COMPETITOR_GROUP_NAME_POOL에서 가져온 전용 이름).
     groupNamePool: {
-      female: ["에클라", "프리즘벨", "루미나라", "세라핀", "레드아이리스", "뉴시크"],
-      male: ["매그너스", "킹스하이", "인피니엄", "어센드", "크라운나인", "레거시"],
+      female: ["세이렌", "폴라리스", "벨에포크"],
+      male: ["팬텀", "크림슨", "매버릭"],
     },
     statRanges: {
       vocal: { min: 75, max: 92 },
@@ -158,8 +160,8 @@ export const EVENT_COMPETITOR_ARCHETYPES: EventCompetitorTemplate[] = [
     description: "특정 주에 갑자기 차트가 폭발하는 역주행 그룹",
     agencyPool: ["버즈팩토리", "네온시티", "브릿지노트"],
     groupNamePool: {
-      female: ["피킷", "피지", "팝키스", "글로업", "잇츠미", "슈가팝"],
-      male: ["클릭비", "하이퍼", "피버", "노이즈", "밈스타", "트릭스"],
+      female: ["츄러블", "핑크빔", "라라팝"],
+      male: ["버즈업", "리와인드", "밈로드"],
     },
     statRanges: {
       charm: { min: 82, max: 96 },
@@ -183,8 +185,8 @@ export const EVENT_COMPETITOR_ARCHETYPES: EventCompetitorTemplate[] = [
     description: "특정 시즌에만 유독 강해 해당 분기 차트를 지배하는 팀",
     agencyPool: ["레드아크", "큐브릭", "스톰라인"],
     groupNamePool: {
-      female: ["볼티지", "와일드파이어", "비욘드", "아웃브레이크", "블레이즈", "스톰"],
-      male: ["하드비트", "토크", "스트레이지", "어택", "레이지", "포지"],
+      female: ["템페스트", "발키리", "이그나이트"],
+      male: ["오버드라이브", "그라비티", "임팩트"],
     },
     statRanges: {
       dance: { min: 82, max: 98 },
@@ -206,10 +208,10 @@ export const EVENT_COMPETITOR_ARCHETYPES: EventCompetitorTemplate[] = [
     type: "global",
     triggerType: "global_reverse",
     description: "해외에서 먼저 터진 뒤 국내로 역수입되는 글로벌 화제 그룹",
-    agencyPool: ["스텔라쉽", "하이비전", "넥스트비트 뮤직"],
+    agencyPool: ["스텔라쉽", "하이비전", "넥스트비트뮤직"],
     groupNamePool: {
-      female: ["패럴랙스", "코스믹스", "스카이워드", "엔루트", "오로라", "셀레스트"],
-      male: ["크로스", "아틀라스", "호라이즌", "바운더리", "엑소더스", "트랜싯"],
+      female: ["미라지", "레테", "실루엣", "윈터가든"],
+      male: ["제이드", "베스퍼", "느와르"],
     },
     statRanges: {
       dance: { min: 65, max: 86 },

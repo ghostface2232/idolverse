@@ -26,7 +26,7 @@ export function TopStatusBar({
     <header className="relative z-30 flex min-h-12 shrink-0 items-center justify-between gap-2 bg-surface-shell/92 px-3 shadow-[var(--shadow-chrome)] backdrop-blur-xl sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
         <span className="shrink-0 text-[13px] font-semibold tracking-[-0.01em] tabular-nums text-text-primary sm:text-sm">
-          {year}년차 · {week}주
+          {year}년차 · {week}주차
         </span>
         <span className="rounded-lg bg-action-secondary/10 px-1.5 py-1 text-[11px] font-medium text-action-secondary shadow-[var(--shadow-surface)] sm:px-2 sm:text-xs">
           {seasonLabel} 시즌

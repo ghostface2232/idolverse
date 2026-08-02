@@ -8,6 +8,7 @@ import {
 import { MILESTONE_DEFINITIONS, PHASE_GATES } from "@/data/milestones";
 import { PROJECT_DEFINITIONS_BY_ID } from "@/data/debutProject";
 import { getDebutSchedule } from "@/systems/debutSystem";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import {
   getFiveYearRouteProgress,
   type FiveYearReviewInput,
@@ -241,7 +242,8 @@ const PHASE_PROJECT_CATEGORIES: Record<
 
 function formatMetricValue(metric: MilestoneMetricKey, value: number): string {
   if (metric === "money") {
-    return `${Math.floor(value / 100000000)}억`;
+    // Math.floor(value/1억)은 1억 미만을 "0억"으로 뭉개 진척감을 지운다.
+    return formatKoreanWon(value);
   }
   if (metric === "releasedAlbums") {
     return `${Math.floor(value)}`;
@@ -265,8 +267,7 @@ function formatReviewValue(
   value: number,
 ): string {
   if (format === "money") {
-    const eok = value / 100_000_000;
-    return `${Number.isInteger(eok) ? eok : eok.toFixed(1)}억`;
+    return formatKoreanWon(value);
   }
   return `${Math.floor(value)}`;
 }
@@ -285,7 +286,7 @@ function buildFiveYearReviewLane(
   const deadlineWeeks =
     FIVE_YEAR_REVIEW.year * GAME_BALANCE.weeksPerYear - elapsedWeeks;
   return {
-    deadlineLabel: `W-${Math.max(0, deadlineWeeks)}`,
+    deadlineLabel: `${Math.max(0, deadlineWeeks)}주 남음`,
     pointsPerRoute: FIVE_YEAR_REVIEW.leaderboardPointsPerRoute,
     items: getFiveYearRouteProgress(input.fiveYearReviewInput).map((route) => ({
       id: `five-year:${route.route}`,
@@ -318,10 +319,10 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
       crisisCount > 0 && opportunityCount > 0
         ? `필수 결정 ${crisisCount}건 · 이번 주 기회 ${opportunityCount}건`
         : crisisCount > 0
-          ? `필수 결정 ${crisisCount}건이 당신을 기다립니다`
+          ? `필수 결정 ${crisisCount}건`
           : opportunityCount > 0
             ? `이번 주에만 잡을 수 있는 기회 ${opportunityCount}건`
-        : "훈련과 활동 계획을 살피고 한 주를 보내세요",
+        : "이번 주 계획 점검",
   };
 
   const unachieved = MILESTONE_DEFINITIONS.filter(
@@ -379,8 +380,8 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
               input.metrics.debutReadiness / COMEBACK_REQUIREMENTS.readiness,
             ),
         deadlineLabel: released
-          ? `정산 W-${Math.max(0, COMEBACK_REQUIREMENTS.projectWeeks - elapsed)}`
-          : `발매 D-${Math.max(0, COMEBACK_REQUIREMENTS.releaseWeek - elapsed)}`,
+          ? `정산까지 ${Math.max(0, COMEBACK_REQUIREMENTS.projectWeeks - elapsed)}주`
+          : `발매까지 ${Math.max(0, COMEBACK_REQUIREMENTS.releaseWeek - elapsed)}주`,
         unlocks: stage.unlocks,
       };
     } else {
@@ -399,7 +400,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
         title: stageLabel,
         progressLabel: `준비 ${Math.floor(input.metrics.debutReadiness)}/${DEBUT_REQUIREMENTS.readiness} · 보컬 ${Math.floor(input.metrics.averageVocal)}/${DEBUT_REQUIREMENTS.averageVocal}`,
         progressRatio: Math.min(readinessRatio, vocalRatio),
-        deadlineLabel: `데뷔 D-${Math.max(0, debutWeek - elapsed)}`,
+        deadlineLabel: `데뷔까지 ${Math.max(0, debutWeek - elapsed)}주`,
         unlocks: stage.unlocks,
       };
     }
@@ -418,8 +419,8 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
   ) {
     longTerm.push({
       id: "rookie-award",
-      title: "신인상 도전: 같은 신인들 사이에서 우위를 잡으세요",
-      deadlineLabel: `W-${input.rookieAwardDeadlineWeek - elapsedWeeks}`,
+      title: "신인상 도전 — 같은 신인들 사이의 우위 다툼",
+      deadlineLabel: `${Math.max(0, input.rookieAwardDeadlineWeek - elapsedWeeks)}주 남음`,
     });
   }
   const primaryCondition = input.investorConditions[0];
@@ -427,7 +428,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
     longTerm.push({
       id: `investor:${primaryCondition.id}`,
       title: primaryCondition.description,
-      deadlineLabel: `W-${Math.max(0, primaryCondition.deadlineWeeks - elapsedWeeks)}`,
+      deadlineLabel: `${Math.max(0, primaryCondition.deadlineWeeks - elapsedWeeks)}주 남음`,
     });
   }
 
@@ -449,7 +450,7 @@ export function buildGoalLanes(input: GoalLanesInput): GoalLanes {
   longTerm.push({
     id: "contract-term",
     title: "전속계약 만료",
-    deadlineLabel: `W-${Math.max(0, CONTRACT_TERM_WEEKS - elapsedWeeks)}`,
+    deadlineLabel: `${Math.max(0, CONTRACT_TERM_WEEKS - elapsedWeeks)}주 남음`,
   });
 
   return {

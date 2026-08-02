@@ -57,7 +57,7 @@ export const DEBUT_SCHEDULE_TIERS = [
   },
   {
     id: "long",
-    label: "완성형",
+    label: "장기전",
     debutWeek: 24,
     attentionMult: 0.85,
     rivalDebutChance: 0.6,
@@ -155,21 +155,21 @@ export const COMEBACK_BUDGET_TIERS = [
     label: "절약",
     cost: 30_000_000,
     baseProgress: 12,
-    summary: "최소 예산. 완성도가 낮은 채로 발매될 위험을 감수합니다",
+    summary: "최소 예산이라 완성도가 낮은 채로 발매될 위험을 감수합니다",
   },
   {
     id: "standard",
     label: "표준",
     cost: 60_000_000,
     baseProgress: 20,
-    summary: "무난한 사전 제작과 안정적인 일정",
+    summary: "무난한 사전 제작으로 일정을 안정적으로 가져갑니다",
   },
   {
     id: "blockbuster",
     label: "대형",
     cost: 120_000_000,
     baseProgress: 30,
-    summary: "높은 출발선. 시설·스태프 투자와 자금을 경쟁합니다",
+    summary: "출발선이 가장 높지만 시설·스태프 투자와 자금을 두고 경쟁합니다",
   },
 ] as const;
 
@@ -310,7 +310,7 @@ export const TEMPERAMENT_PROFILES: Record<
   }
 > = {
   ambitious: {
-    label: "야심가",
+    label: "야심형",
     description: "기회와 조건에 민감합니다. 성장이 대우로 돌아오지 않으면 먼저 움직입니다",
     gapSensitivity: 2,
     renegotiationBiasWeeks: -26,
@@ -325,7 +325,7 @@ export const TEMPERAMENT_PROFILES: Record<
   },
   steady: {
     label: "안정형",
-    description: "감정의 진폭이 작고 예측 가능합니다",
+    description: "감정의 진폭이 작고 예측 가능합니다. 대신 큰 성취에도 크게 오르지 않습니다",
     gapSensitivity: 1,
     renegotiationBiasWeeks: 0,
     stressSensitivity: 1,

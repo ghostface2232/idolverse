@@ -27,7 +27,7 @@ interface NewGameProps {
 type Step = "prologue" | "investor" | "group";
 
 const PROLOGUE_TEXT =
-  "당신은 K-POP 업계에서 많은 것을 이뤄낸 디렉터입니다. 능력과 열정을 겸비한 동료들과 수많은 스타를 키워 냈고, 이제 새로운 길을 향해 나아가려 합니다. 바로 당신만의 회사와 그룹을 만드는 것이죠.";
+  "당신은 K-POP 업계에서 많은 것을 이뤄낸 프로듀서입니다. 능력과 열정을 겸비한 동료들과 수많은 스타를 키워 냈고, 이제 새로운 길을 향해 나아가려 합니다. 바로 당신만의 회사와 그룹을 만드는 것이죠.";
 
 const PROLOGUE_IMAGE_SRC = assetUrl("/prologue-director.png");
 
@@ -254,7 +254,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
             <Card className="relative min-h-0 flex-1 overflow-hidden border-brand-cyan/40 p-0">
               <img
                 src={PROLOGUE_IMAGE_SRC}
-                alt="옥상 스튜디오에서 네온 도시를 내려다보는 K-POP 디렉터"
+                alt="옥상 스튜디오에서 네온 도시를 내려다보는 K-POP 프로듀서"
                 className="absolute inset-0 h-full w-full object-cover [image-rendering:auto]"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/6 via-transparent to-slate-950/92" />
@@ -528,9 +528,13 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
                 ))}
               </ul>
             </div>
-            <p className="rounded-2xl border border-slate-600 bg-slate-950 p-4 text-slate-300">
-              {detailInvestor.personality} 이 투자사와 함께하면 회사는 {describePlaystyle(detailInvestor)}에 무게를 두게 됩니다.
-            </p>
+            <div className="space-y-2 rounded-2xl border border-slate-600 bg-slate-950 p-4 text-slate-300">
+              <p>{detailInvestor.personality}</p>
+              <p>
+                이 투자사와 함께하면 회사는 {describePlaystyle(detailInvestor)}에
+                무게를 두게 됩니다.
+              </p>
+            </div>
           </div>
         </Modal>
       ) : null}
@@ -560,7 +564,7 @@ export function NewGame({ onStartGame, onCancel }: NewGameProps) {
             이 투자사를 선택하면 회사의 경영 방향은{" "}
             <span className="text-brand-cyan">
               {describePlaystyle(confirmInvestor)}
-            </span>
+            </span>{" "}
             중심으로 정해집니다.
           </p>
         </Modal>

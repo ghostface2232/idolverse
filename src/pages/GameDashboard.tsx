@@ -421,7 +421,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
       );
     } catch (error) {
       console.error("Presentation event save failed.", error);
-      setWorkflowError("결과를 저장하지 못했습니다. 다시 확인해 주세요.");
+      setWorkflowError("결과를 저장하지 못했습니다. 다시 시도해 주세요.");
       throw error;
     }
   };
@@ -696,7 +696,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
           onClick={() => setComebackPlanningOpen(true)}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-300">
-            제작 슬롯 비어 있음
+            지금은 새 앨범을 기획할 수 있습니다
           </p>
           <p className="mt-1 text-sm font-semibold text-text-primary">
             다음 컴백 기획 시작
@@ -819,7 +819,7 @@ export function GameDashboard({ userId, onExit }: GameDashboardProps) {
               riskSeverity={primaryRisk?.severity}
               hintLabel={
                 canPlanComeback
-                  ? "제작 슬롯 비어 있음, 컴백 기획을 시작할 수 있습니다"
+                  ? "지금은 새 앨범을 기획할 수 있습니다 — 컴백 기획을 시작해 보세요"
                   : activityProject && weeklyFlow.state === "planning_ready"
                     ? "활동기입니다, 프로모션을 고를 수 있습니다"
                     : undefined

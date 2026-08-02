@@ -214,7 +214,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
           disabled={money < FOUNDING_RECRUITMENT_COSTS.staffRefresh}
           onClick={handleRefresh}
         >
-          후보 새로고침 (
+          다른 후보 찾아보기 (
           {formatKoreanWon(FOUNDING_RECRUITMENT_COSTS.staffRefresh, {
             symbol: true,
           })}
@@ -255,7 +255,7 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
             <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
               <span className="text-slate-50">{currentRoleHire.name}</span> 대신{" "}
               <span className="text-slate-50">{confirmTarget.name}</span>
-              (월급{" "}
+              (주급{" "}
               <span className="text-emerald-300">
                 {formatKoreanWon(confirmTarget.salary, { symbol: true })}
               </span>
@@ -263,11 +263,11 @@ export function StaffHiring({ onNext }: StaffHiringProps) {
             </p>
           ) : (
             <p className="text-center text-sm text-slate-300 [word-break:keep-all] [overflow-wrap:break-word]">
-              <span className="text-slate-50">{confirmTarget.name}</span>의 월급{" "}
+              <span className="text-slate-50">{confirmTarget.name}</span>의 주급{" "}
               <span className="text-emerald-300">
                 {formatKoreanWon(confirmTarget.salary, { symbol: true })}
               </span>
-              이 고정비에 추가됩니다.
+              이 주간 고정비에 추가됩니다.
             </p>
           )}
         </Modal>

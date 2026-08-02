@@ -229,7 +229,7 @@ export function StaffManagementModal({
                                   showLabel={false}
                                 />
                                 <span className="text-text-muted">
-                                  월{" "}
+                                  주급{" "}
                                   <MoneyDisplay
                                     amount={candidate.salary}
                                     size="sm"

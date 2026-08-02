@@ -24,7 +24,7 @@ export const MEMBER_TRAITS: MemberTraitDefinition[] = [
   },
   {
     id: "bubbly",
-    label: "귀여움",
+    label: "발랄",
     kind: "personality",
     moodAffinity: { cute: 25, y2k: 10, refreshing: 8, sexy: -10, sophisticated: -6 },
   },
@@ -36,7 +36,7 @@ export const MEMBER_TRAITS: MemberTraitDefinition[] = [
   },
   {
     id: "energetic",
-    label: "활력",
+    label: "활발",
     kind: "personality",
     moodAffinity: { powerful: 15, y2k: 12, refreshing: 10, dreamy: -8, sophisticated: -4 },
   },
@@ -67,7 +67,7 @@ export const MEMBER_TRAITS: MemberTraitDefinition[] = [
   },
   {
     id: "elegant",
-    label: "세련",
+    label: "우아",
     kind: "appearance",
     moodAffinity: { sophisticated: 18, retro: 10, sexy: 8, cute: -4 },
   },

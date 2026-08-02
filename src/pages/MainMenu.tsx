@@ -97,7 +97,7 @@ export function MainMenu({ userId, onNewGame, onLoadGame }: MainMenuProps) {
       {isSettingsOpen ? (
         <Modal title="설정" onClose={() => setIsSettingsOpen(false)}>
           <p className="text-center text-sm leading-6 text-slate-300 [word-break:keep-all]">
-            사운드·알림·접근성 설정은 향후 업데이트에서 제공될 예정입니다.
+            설정은 준비 중입니다.
           </p>
         </Modal>
       ) : null}

@@ -6,35 +6,35 @@ export const GENRE_DATA: Record<
 > = {
   dancePop: {
     label: "댄스팝",
-    description: "대중성과 퍼포먼스 양쪽을 잡기 쉬운 메인스트림 장르",
+    description: "대중성과 퍼포먼스를 동시에 노리는 메인스트림. 실패 확률이 가장 낮습니다.",
   },
   ballad: {
     label: "발라드",
-    description: "보컬 역량과 감정 전달이 중요해지는 장르",
+    description: "보컬이 받쳐주지 않으면 바로 티가 납니다. 감정선이 잡히면 오래갑니다.",
   },
   hiphop: {
     label: "힙합",
-    description: "태도와 개성이 강하게 드러나는 장르",
+    description: "태도로 승부합니다. 다크·걸크러시 컨셉과 만났을 때 폭발력이 큽니다.",
   },
   rnb: {
     label: "R&B",
-    description: "그루브와 세련미, 보컬 톤이 중요한 장르",
+    description: "그루브와 보컬 톤으로 취향을 저격합니다. 시크한 무드와 잘 붙습니다.",
   },
   rock: {
     label: "록",
-    description: "강한 밴드 질감과 무대 에너지를 요구하는 장르",
+    description: "밴드 사운드와 라이브 에너지가 생명입니다. 무대 체력이 뒷받침돼야 합니다.",
   },
   edm: {
     label: "EDM",
-    description: "강한 드롭과 페스티벌 지향 퍼포먼스에 유리한 장르",
+    description: "드롭 한 방으로 페스티벌 무대를 가져옵니다. 여름 시즌에 특히 강합니다.",
   },
   cityPop: {
     label: "시티팝",
-    description: "복고 감성과 도시적 분위기를 살리기 좋은 장르",
+    description: "복고와 도시의 밤 감성. 레트로 컨셉과 만나면 명반 소리를 듣습니다.",
   },
   trot: {
     label: "트로트",
-    description: "특수 이벤트나 숨은 히든 루트에서 빛나는 장르",
+    description: "평소엔 안 팔리지만 특정 무대에서 판을 뒤집는 장르입니다.",
     hidden: true,
   },
 };
@@ -45,43 +45,43 @@ export const CONCEPT_MOOD_DATA: Record<
 > = {
   refreshing: {
     label: "청량",
-    description: "밝고 시원한 에너지로 계절성과 대중성을 노리는 무드",
+    description: "밝고 시원한 에너지. 봄·여름 시즌에 가장 크게 터집니다.",
   },
   dark: {
     label: "다크",
-    description: "긴장감과 서사를 강조하는 무드",
+    description: "긴장감과 서사로 끌고 갑니다. 힙합·록과 붙었을 때 설득력이 삽니다.",
   },
   retro: {
     label: "레트로",
-    description: "복고 감성과 향수를 자극하는 무드",
+    description: "향수를 자극하는 복고 감성. 시티팝과 만나면 최고의 궁합입니다.",
   },
   girlCrush: {
     label: "걸크러시",
-    description: "강한 존재감과 주도권을 드러내는 무드",
+    description: "무대의 주도권을 쥐는 강한 존재감. 힙합과 만났을 때 폭발합니다.",
   },
   cute: {
     label: "큐트",
-    description: "친근함과 캐릭터성을 전면에 내세우는 무드",
+    description: "친근함과 캐릭터로 파고듭니다. 댄스팝 위에서 가장 안정적입니다.",
   },
   sophisticated: {
-    label: "세련",
-    description: "도회적이고 스타일리시한 이미지를 강조하는 무드",
+    label: "시크",
+    description: "도회적이고 스타일리시한 이미지. R&B·시티팝의 결을 살립니다.",
   },
   powerful: {
     label: "파워풀",
-    description: "퍼포먼스 강도와 에너지 전달을 우선하는 무드",
+    description: "퍼포먼스 강도로 압도합니다. EDM·록 무대에서 진가가 드러납니다.",
   },
   dreamy: {
     label: "몽환",
-    description: "감성적이고 비현실적인 분위기를 만드는 무드",
+    description: "현실감을 지우고 분위기로 끌고 갑니다. 발라드와 만나면 깊어집니다.",
   },
   y2k: {
     label: "Y2K",
-    description: "트렌디하고 회전이 빠른 복고-패션 중심 무드",
+    description: "회전이 빠른 복고-패션 트렌드. 댄스팝과 붙으면 바이럴을 노립니다.",
   },
   sexy: {
     label: "섹시",
-    description: "성숙함과 긴장감을 전면에 내세우는 무드",
+    description: "성숙한 긴장감을 전면에 내세웁니다. 호불호는 갈리지만 각인은 확실합니다.",
   },
 };
 

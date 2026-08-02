@@ -6,32 +6,7 @@ import type {
   TraineeActivity,
 } from "@/types/game";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
-
-const EFFECT_LABELS: Record<EffectKey, string> = {
-  money: "자금",
-  public: "대중 반응",
-  fandom: "코어 팬덤",
-  fandomLoyalty: "팬 결속",
-  fandomDisappointment: "팬 실망",
-  global: "해외 반응",
-  industry: "업계 평판",
-  investorPressure: "투자사 압박",
-  condition: "컨디션",
-  stress: "스트레스",
-  satisfaction: "불만",
-  injuryWeeks: "부상 기간",
-  chemistry: "팀워크",
-  visual: "비주얼",
-  vocal: "보컬",
-  dance: "댄스",
-  charm: "매력",
-  stamina: "체력",
-  mental: "멘탈",
-  albumSong: "음원 완성도",
-  albumChoreography: "안무 완성도",
-  albumVisual: "비주얼 완성도",
-  albumMarketing: "홍보 준비",
-};
+import { METRIC_LABELS } from "@/data/labels";
 
 interface ImpactChip {
   id: string;
@@ -115,7 +90,7 @@ function buildImpactChips(option: ImpactSource): ImpactChip[] {
     if (option.staffChange.kind === "raise-salary") {
       chips.push({
         id: "staff-raise",
-        label: `핵심 스태프 월급 +${option.staffChange.percent}% (고정비)`,
+        label: `핵심 스태프 주급 +${option.staffChange.percent}% (고정비)`,
         tone: "negative",
       });
     } else {
@@ -126,7 +101,7 @@ function buildImpactChips(option: ImpactSource): ImpactChip[] {
       });
       chips.push({
         id: "staff-replace-cost",
-        label: "월 고정비 감소",
+        label: "주간 고정비 감소",
         tone: "positive",
       });
     }
@@ -165,7 +140,7 @@ function effectToChip(key: EffectKey, value: number): ImpactChip {
   const direction = directionFor(key, value);
   return {
     id: key,
-    label: `${EFFECT_LABELS[key]} ${direction.repeat(intensityFor(key, value))}`,
+    label: `${METRIC_LABELS[key]} ${direction.repeat(intensityFor(key, value))}`,
     tone: positive ? "positive" : isDangerChange(key, value) ? "danger" : "negative",
   };
 }
@@ -192,8 +167,7 @@ function isPositiveChange(key: EffectKey, value: number) {
   return value > 0;
 }
 
-function directionFor(key: EffectKey, value: number) {
-  if (key === "satisfaction") return value > 0 ? "↓" : "↑";
+function directionFor(_key: EffectKey, value: number) {
   return value > 0 ? "↑" : "↓";
 }
 

@@ -20,7 +20,7 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       summary: "시장 트렌드와 팬 기대치를 읽고 이번 컴백의 색을 정한다",
       weekWindow: [1, 2],
       eventIds: ["comeback-concept-research"],
-      unlocks: "곡 후보 수집",
+      unlocks: "곡 후보",
     },
     {
       id: "song-candidates",
@@ -71,7 +71,7 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       weekWindow: [10, 10],
       eventIds: ["comeback-teaser-reaction", "comeback-teaser-debate"],
       eventPickCount: 1,
-      unlocks: "사전 반응 조사",
+      unlocks: "사전 반응",
     },
     {
       id: "pre-reaction",
@@ -92,7 +92,7 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
       ],
       eventIds: [],
-      unlocks: "음악방송 활동",
+      unlocks: "활동기",
     },
     {
       // 발매 후 활동기 — 매주 음악방송(후보권 진입 시 1위 대결)과 프로모션
@@ -109,7 +109,7 @@ export const COMEBACK_PROJECT: ProjectDefinition = {
       ],
       eventIds: ["comeback-stage-mishap", "comeback-fancam-resurge"],
       eventPickCount: 1,
-      unlocks: "활동 정산",
+      unlocks: "정산·회고",
     },
     {
       id: "settlement",
@@ -137,14 +137,14 @@ export const COMEBACK_PRE_RELEASE_STAGE_IDS = new Set(
 
 /** 컨셉 무드별 컴백 앨범 타이틀 풀. 시드 기반으로 하나를 고른다. */
 export const MOOD_ALBUM_TITLES: Record<ConceptMood, string[]> = {
-  refreshing: ["Clear Sky", "First Splash", "푸른 신호"],
-  dark: ["Black Mirror", "After Midnight", "그림자 극장"],
-  retro: ["Rewind Club", "네온 극장", "1994"],
-  girlCrush: ["No Apology", "Crown Zone", "선전포고"],
-  cute: ["Marshmallow", "두근두근 로그", "Cherry Pop"],
-  sophisticated: ["Velvet Hour", "미드나잇 살롱", "Noir Blanc"],
-  powerful: ["Ignition", "돌파", "Full Throttle"],
-  dreamy: ["Lucid", "달의 정원", "Slow Orbit"],
-  y2k: ["Dial-Up Love", "Y2K Diary", "글리터 시티"],
-  sexy: ["Red Light", "새벽 두 시", "Silk"],
+  refreshing: ["Clear Sky", "First Splash", "푸른 신호", "Soda Wave", "여름의 온도", "Splash!"],
+  dark: ["Black Mirror", "After Midnight", "그림자 극장", "Eclipse", "새벽의 문", "Villain"],
+  retro: ["Rewind Club", "네온 극장", "1994", "Cassette", "토요일의 라디오", "City Lights"],
+  girlCrush: ["No Apology", "Crown Zone", "선전포고", "Queencard Era", "무적", "Savage Bloom"],
+  cute: ["Marshmallow", "두근두근 로그", "Cherry Pop", "말랑 시그널", "Honey Jam", "첫사랑 공식"],
+  sophisticated: ["Velvet Hour", "미드나잇 살롱", "Noir Blanc", "Perfume", "모노로그", "Suite No.9"],
+  powerful: ["Ignition", "정면돌파", "Full Throttle", "Overdrive", "심장박동", "Detonate"],
+  dreamy: ["Lucid", "달의 정원", "Slow Orbit", "Daydream Archive", "수면 위로", "Mirage"],
+  y2k: ["Dial-Up Love", "Y2K Diary", "글리터 시티", "Buffering Heart", "폴더폰 로맨스", "Pixel Kiss"],
+  sexy: ["Red Light", "새벽 두 시", "Silk", "Crimson", "장미의 온도", "Aftertaste"],
 };

@@ -103,7 +103,7 @@ export function FacilityUpgradeModal({
           {(
             [
               { target: "hasHealthcare" as const, label: "메디컬팀", owned: upgrades.hasHealthcare, cost: UPGRADE_COSTS.hasHealthcare },
-              { target: "hasSecurity" as const, label: "보안팀", owned: upgrades.hasSecurity, cost: UPGRADE_COSTS.hasSecurity },
+              { target: "hasSecurity" as const, label: "전담 경호팀", owned: upgrades.hasSecurity, cost: UPGRADE_COSTS.hasSecurity },
             ]
           ).map(({ target, label, owned, cost }) => (
             <div

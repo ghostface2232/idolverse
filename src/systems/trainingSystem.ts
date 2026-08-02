@@ -33,7 +33,7 @@ export interface TrainingSchedule {
 
 export interface TrainingResult {
   trainees: Trainee[];
-  injuries: { traineeId: string; traineeName: string }[];
+  injuries: { traineeId: string; traineeName: string; weeks: number }[];
 }
 
 const TRAINABLE_STATS: TraineeStatKey[] = [
@@ -395,7 +395,7 @@ export function processTrainingWeek(
         const injuryRandom = createSeededRandom(injurySeed + 99);
         t.injuryWeeks = 1 + Math.floor(injuryRandom() * 3);
         t.condition = clamp01(t.condition - 15);
-        injuries.push({ traineeId: t.id, traineeName: t.name });
+        injuries.push({ traineeId: t.id, traineeName: t.name, weeks: t.injuryWeeks });
       }
     }
 

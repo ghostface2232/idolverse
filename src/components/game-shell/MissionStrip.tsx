@@ -89,7 +89,7 @@ export function MissionStrip({
           icon={TrendingUp}
           accent="text-teal-300"
           label="차트 최고"
-          value={bestChartRank !== null ? `차트 ${bestChartRank}위` : "차트 진입 전"}
+          value={bestChartRank !== null ? `${bestChartRank}위` : "진입 전"}
           onPress={onOpenMarket}
         />
 
@@ -102,8 +102,8 @@ export function MissionStrip({
           label="라이벌 컴백"
           value={
             nextRivalComeback.weeksUntil <= 0
-                ? "컴백 이번 주"
-                : `컴백 D-${nextRivalComeback.weeksUntil}주`
+                ? "이번 주"
+                : `${nextRivalComeback.weeksUntil}주 뒤`
             }
             onPress={onOpenMarket}
           />
@@ -117,8 +117,8 @@ export function MissionStrip({
             label="신인상 도전"
             value={
               rookieGoal.deadlineLabel
-                ? `신인상 ${rookieGoal.deadlineLabel}`
-                : "신인상 도전 중"
+                ? rookieGoal.deadlineLabel
+                : "도전 중"
             }
             onPress={onOpenGoals}
           />
@@ -130,7 +130,7 @@ export function MissionStrip({
             icon={CalendarClock}
             accent="text-slate-300"
             label="전속계약"
-            value={`계약 ${contractDeadlineLabel}`}
+            value={contractDeadlineLabel}
             onPress={onOpenContracts}
           />
         ) : null}

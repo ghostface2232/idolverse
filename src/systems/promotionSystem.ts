@@ -69,12 +69,29 @@ function checkRequirements(
   activity: PromotionActivity,
   ctx: PromotionContext,
 ): boolean {
+  return listUnmetRequirements(activity, ctx).length === 0;
+}
+
+/** 미달 요건을 사람이 읽을 문장으로 돌려준다 — "요구 조건 미충족"만으로는 다음 행동을 못 정한다. */
+function listUnmetRequirements(
+  activity: PromotionActivity,
+  ctx: PromotionContext,
+): string[] {
   const req = activity.requirements;
-  if (req.phase && !meetsPhaseRequirement(ctx.phase, req.phase)) return false;
-  if (req.minPublic !== undefined && ctx.public < req.minPublic) return false;
-  if (req.minFandom !== undefined && ctx.fandom < req.minFandom) return false;
-  if (req.minIndustry !== undefined && ctx.industry < req.minIndustry) return false;
-  return true;
+  const unmet: string[] = [];
+  if (req.phase && !meetsPhaseRequirement(ctx.phase, req.phase)) {
+    unmet.push("아직 열리지 않은 단계입니다");
+  }
+  if (req.minPublic !== undefined && ctx.public < req.minPublic) {
+    unmet.push(`대중 인지도 ${req.minPublic} 필요 (현재 ${Math.floor(ctx.public)})`);
+  }
+  if (req.minFandom !== undefined && ctx.fandom < req.minFandom) {
+    unmet.push(`코어 팬덤 ${req.minFandom} 필요 (현재 ${Math.floor(ctx.fandom)})`);
+  }
+  if (req.minIndustry !== undefined && ctx.industry < req.minIndustry) {
+    unmet.push(`업계 평판 ${req.minIndustry} 필요 (현재 ${Math.floor(ctx.industry)})`);
+  }
+  return unmet;
 }
 
 /**
@@ -135,7 +152,9 @@ export function executePromotion(
       income: 0,
       cost: 0,
       memberActivityChanges: [],
-      warnings: [`${activity.name}: 요구 조건 미충족`],
+      warnings: [
+        `${activity.name}: ${listUnmetRequirements(activity, ctx).join(" · ") || "요구 조건 미충족"}`,
+      ],
     };
   }
 
@@ -190,7 +209,7 @@ export function executePromotion(
   const warnings: string[] = [];
   if (!success) {
     warnings.push(
-      `${activity.name} 성과 미달 (성공률 ${Math.round(successRate * 100)}%)`,
+      `${activity.name} 성과 미달 — 팀 역량이 기준의 ${Math.round(successRate * 100)}%에 그쳤습니다`,
     );
   }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PHASE_LABELS } from "@/data/labels";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Modal } from "@/components/common/Modal";
@@ -29,16 +30,9 @@ function formatSavedAt(value: string | null) {
 }
 
 function formatPhase(value: string | null) {
-  const labels: Record<string, string> = {
-    prologue: "프롤로그",
-    founding: "창업기",
-    training: "트레이닝",
-    debut: "데뷔",
-    growth: "성장기",
-    peak: "전성기",
-  };
-
-  return value ? labels[value] ?? value : "-";
+  return value
+    ? PHASE_LABELS[value as keyof typeof PHASE_LABELS] ?? value
+    : "-";
 }
 
 export function SaveSlots({
@@ -152,11 +146,11 @@ export function SaveSlots({
                   <p className="mt-1 text-sm text-slate-400">
                     {save.hasData
                       ? save.companyName ?? "회사명 정보 없음"
-                      : "새로운 프로듀싱을 시작할 수 있습니다."}
+                      : "새 회사를 차릴 수 있습니다."}
                   </p>
                 </div>
                 <span className="rounded-full border border-slate-500 bg-slate-950/60 px-3 py-1 text-xs text-slate-200">
-                  {save.hasData ? formatPhase(save.currentPhase) : "비어 있음"}
+                  {save.hasData ? formatPhase(save.currentPhase) : "기록 없음"}
                 </span>
               </div>
 

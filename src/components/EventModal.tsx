@@ -120,7 +120,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
             {saving
               ? "확정 중…"
               : pendingChoiceIndex === null
-                ? "선택 후 확인"
+                ? "대응을 선택해 주세요"
                 : "선택 확정"}
           </Button>
         )
@@ -188,6 +188,11 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
                       <span className="block text-lg font-semibold leading-7 text-text-primary [word-break:keep-all]">
                         {choice.label}
                       </span>
+                      {choice.tradeoff ? (
+                        <span className="mt-1 block text-sm leading-6 text-text-secondary [word-break:keep-all]">
+                          {choice.tradeoff}
+                        </span>
+                      ) : null}
                       <DecisionImpactChips option={choice} className="mt-2" />
                     </span>
                   </span>

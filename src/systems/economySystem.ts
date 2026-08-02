@@ -127,7 +127,7 @@ export function processWeeklyFinances(
   }
 
   if (money < 0) {
-    warnings.push(`자금 부족: ${formatKoreanWon(money)}`);
+    warnings.push(`자금 ${formatKoreanWon(Math.abs(money))} 부족 — 운영비를 감당하지 못하고 있습니다`);
   }
 
   return { money, income, expenses, warnings };

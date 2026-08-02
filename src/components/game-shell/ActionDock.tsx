@@ -42,10 +42,10 @@ export function ActionDock({
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="min-w-0 text-[13px] font-semibold text-text-primary">
           {totalDecisions === 0
-            ? "이번 주는 바로 진행할 수 있어요"
+            ? "이번 주는 바로 진행할 수 있습니다"
             : remainingDecisions > 0
               ? `이번 주 안건 ${completedDecisions}/${totalDecisions}`
-              : "모든 결정을 마쳤어요"}
+              : "모든 결정을 마쳤습니다"}
         </p>
         {totalDecisions > 0 ? (
           <span className="shrink-0 text-xs font-medium tabular-nums text-text-muted">

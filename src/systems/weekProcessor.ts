@@ -178,6 +178,8 @@ export interface PlayerDecisions {
 export interface WeekReport extends WeeklyReportSnapshot {
   promotionResults: PromotionResult[];
   awardResults: AwardShowResult[] | null;
+  /** 좋은 소식·진행 알림. warnings와 분리해 결산 헤드라인 톤을 지킨다. */
+  highlights: string[];
 }
 
 const AWARDS_WEEK = GAME_BALANCE.weeksPerYear - 2;
@@ -204,6 +206,7 @@ export function processWeek(
     news: [],
     finance: { income: {}, expenses: {} },
     warnings: [],
+    highlights: [],
     injuries: [],
     conflicts: [],
     competitorComebacks: [],
@@ -393,8 +396,8 @@ export function processWeek(
           category: win.category,
         },
       ];
-      report.warnings.push(
-        `🏆 ${show.showName} ${categoryLabel(win.category)} 수상!`,
+      report.highlights.push(
+        `${show.showName} ${categoryLabel(win.category)} 수상! 트로피가 회사에 도착했습니다`,
       );
     }
   }
@@ -466,7 +469,7 @@ export function processWeek(
       ) {
         adContractsSigned += 1;
       }
-      report.warnings.push(
+      report.highlights.push(
         `${offer.title} 계약을 체결했습니다. ${offer.durationWeeks}주 동안 매주 ${formatKoreanWon(offer.weeklyIncome)}이 들어오고, 일정 ${offer.scheduleSlots}칸을 사용합니다`,
       );
     }
@@ -711,7 +714,7 @@ export function processWeek(
     ? previousCommercialStreak + 1
     : 0;
   if (excessiveCommercialPenalty > 0) {
-    report.warnings.push("과도한 상업 활동으로 팬 실망도 상승");
+    report.warnings.push("상업 일정이 몰려 팬 실망도가 올랐습니다");
   }
 
   // ── 3. Training
@@ -742,7 +745,10 @@ export function processWeek(
   report.injuries = trainingResult.injuries;
   if (trainingResult.injuries.length > 0) {
     report.warnings.push(
-      ...trainingResult.injuries.map((inj) => `${inj.traineeName} 부상 발생`),
+      ...trainingResult.injuries.map(
+        (inj) =>
+          `${withJosa(inj.traineeName, "이/가")} 훈련 중 부상을 입었습니다. 회복까지 ${inj.weeks}주가 필요합니다`,
+      ),
     );
   }
 
@@ -815,10 +821,12 @@ export function processWeek(
     5,
   );
   for (const risk of satResult.leaveRisks) {
+    const riskCause =
+      risk.reasons.length > 0 ? ` — ${risk.reasons.join(", ")}이 겹쳤습니다` : "";
     report.warnings.push(
       risk.level === "leaving"
-        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction}). 회복하지 못하면 몇 주 안에 떠납니다`
-        : `${risk.traineeName} 이탈 경고 (만족도 ${risk.satisfaction})`,
+        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction})${riskCause}. 회복하지 못하면 몇 주 안에 떠납니다`
+        : `${risk.traineeName} 이탈 경고 (만족도 ${risk.satisfaction})${riskCause}`,
     );
   }
 
@@ -838,7 +846,7 @@ export function processWeek(
   for (const member of departing) {
     if (trainees.length <= MEMBER_LEAVE.minTeamSize) {
       report.warnings.push(
-        `${member.name}의 마음이 떠났지만 팀 해체를 막기 위해 간신히 붙잡았습니다`,
+        `${member.name}의 마음이 떠났지만 팀 최소 인원(${MEMBER_LEAVE.minTeamSize}명)이 걸려 간신히 붙잡았습니다. 다음번엔 막을 수 없습니다`,
       );
       trainees = trainees.map((trainee) =>
         trainee.id === member.id ? { ...trainee, leaveCountdown: 0 } : trainee,
@@ -1018,7 +1026,7 @@ export function processWeek(
     );
     // 진입 순위는 결산에 싣지 않는다 — 차트 공개 연출이 결산 뒤에 오므로
     // 여기서 순위를 쓰면 공개 카운트다운의 긴장이 사라진다.
-    report.warnings.push(`${label}: ${released.title} — 첫 차트 순위 집계 중`);
+    report.highlights.push(`${label}: ${released.title} — 첫 차트 순위 집계 중`);
     report.deltas.push({
       id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
       source: { kind: "album", id: released.id, label },
@@ -1090,7 +1098,7 @@ export function processWeek(
     for (const stageId of debutResult.enteredStageIds) {
       const stage = DEBUT_PROJECT.stages.find((candidate) => candidate.id === stageId);
       if (!stage) continue;
-      report.warnings.push(`프로젝트 진입: ${stage.title}`);
+      report.highlights.push(`프로젝트 진입: ${stage.title}`);
       report.deltas.push({
         id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
         source: { kind: "project", id: DEBUT_PROJECT.id, label: stage.title },
@@ -1185,7 +1193,7 @@ export function processWeek(
           (stageCandidate) => stageCandidate.id === stageId,
         );
         if (!stage) continue;
-        report.warnings.push(`컴백 진행: ${stage.title}`);
+        report.highlights.push(`컴백 진행: ${stage.title}`);
         report.deltas.push({
           id: `y${snapshot.game.currentYear}-w${snapshot.game.currentWeek}-${report.deltas.length}`,
           source: { kind: "project", id: COMEBACK_PROJECT.id, label: stage.title },
@@ -1274,7 +1282,7 @@ export function processWeek(
           ...comebackResult.settlement,
           investorNotes,
         };
-        report.warnings.push(
+        report.highlights.push(
           `컴백 정산 완료: ${comebackResult.settlement.albumTitle}. 다음 앨범 기획이 열렸습니다`,
         );
       }
@@ -1554,7 +1562,7 @@ export function processWeek(
           ? "dud"
           : "normal";
     if (varietyOutcome === "viral") {
-      report.warnings.push("예능 출연이 화제가 되어 대중의 반응이 뜨겁습니다.");
+      report.highlights.push("예능 출연이 화제가 되어 대중의 반응이 뜨겁습니다");
       applyToState(
         {
           public: VARIETY_OUTCOME.viralPublicBonus,
@@ -1564,7 +1572,7 @@ export function processWeek(
         5,
       );
     } else if (varietyOutcome === "dud") {
-      report.warnings.push("예능 출연이 별다른 반응을 얻지 못했습니다.");
+      report.warnings.push("예능 출연이 별다른 반응을 얻지 못했습니다");
     }
   }
 
@@ -1697,7 +1705,7 @@ export function processWeek(
     albumCenterId: activityAlbum?.centerTraineeId ?? null,
   });
   trainees = popularityResult.trainees;
-  report.warnings.push(...popularityResult.highlights);
+  report.highlights.push(...popularityResult.highlights);
 
   // ── 12. Investor condition check
   const investor = INVESTOR_COMPANIES.find(
@@ -1914,7 +1922,7 @@ export function processWeek(
         week: cumulativeWeekForMilestone,
       },
     ];
-    report.warnings.push(
+    report.highlights.push(
       `이정표 달성: ${definition.title}. 이제 ${definition.unlocks}에 도전할 수 있습니다`,
     );
     report.deltas.push({

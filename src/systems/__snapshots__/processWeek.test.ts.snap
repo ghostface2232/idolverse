@@ -12,8 +12,8 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "currentSeason": "winter",
       "kpopNews": [
         {
-          "detail": "트렌드 피로도가 누적되며 세련된 정체성 유지가 중요해지고 있다.",
-          "headline": "연말 결산: 올해 K-POP 키워드는 레트로와 Y2K",
+          "detail": "차분한 발라드와 몽환 계열이 한 해의 끝자락 차트를 이끌고 있다.",
+          "headline": "연말 결산: 올해 K-POP 키워드는 몽환적 감성",
           "id": "news-y1-w50-0",
           "type": "trend",
           "week": 50,
@@ -44,7 +44,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "eventRivals": [
         {
           "activeWeeks": 0,
-          "agency": "빅오션 뮤직",
+          "agency": "빅오션뮤직",
           "debutYear": 1,
           "duration": 2,
           "fandom": 5382,
@@ -53,7 +53,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
           "id": "event-rival-mega_rookie-w50",
           "industry": 56,
           "intensity": 81,
-          "name": "에클라",
+          "name": "세이렌",
           "public": 65,
           "stats": {
             "dance": 77,
@@ -165,7 +165,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
           "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
-          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
+          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡됩니다.",
           "target": 0,
         },
         {
@@ -173,7 +173,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
           "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
-          "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
+          "penalty": "지분 압박과 투자 회수 통보가 시작됩니다.",
           "target": 500000000,
         },
       ],
@@ -187,7 +187,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "notifications": [
         {
           "id": "noti-y1-w50-0",
-          "message": "이벤트 경쟁 그룹 등장: 에클라",
+          "message": "이벤트 경쟁 그룹 등장: 세이렌",
           "title": "주간 알림",
           "type": "warning",
           "week": 50,
@@ -221,7 +221,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
                 "stress": 5,
               },
               "id": "publish-follow-up",
-              "label": "48시간 안에 후속편 공개",
+              "label": "48시간 안에 후속편을 올린다",
               "tradeoff": "흐름을 타면 국내외에 얼굴을 알릴 수 있지만, 이번 주 팀 훈련을 걸러야 하는 강행군입니다.",
             },
             {
@@ -239,13 +239,13 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
                 "max": 3,
                 "min": 2,
               },
-              "tradeoff": "확산력은 덜해도 팀의 색을 기억하는 팬이 남습니다. 참여 멤버는 이번 주 개인 일정으로 움직입니다.",
+              "tradeoff": "확산력은 덜해도 팀의 색을 기억하는 팬이 남습니다. 참여 멤버는 이번 주 팀 훈련 대신 개인 일정으로 빠집니다.",
             },
           ],
           "summary": "연습실 클립의 반응이 커지고 있습니다. 관심이 식기 전에 후속 영상을 낼 수 있습니다.",
           "title": "커버 영상이 알고리즘을 탔다",
           "trigger": {
-            "description": "커버 영상의 비정상적인 조회 상승 감지",
+            "description": "커버 영상 조회수가 이례적으로 급등했습니다.",
             "entityIds": [],
             "kind": "opportunity",
             "severity": "notice",
@@ -804,11 +804,12 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       },
       "income": {},
     },
+    "highlights": [],
     "injuries": [],
     "news": [
       {
-        "detail": "트렌드 피로도가 누적되며 세련된 정체성 유지가 중요해지고 있다.",
-        "headline": "연말 결산: 올해 K-POP 키워드는 레트로와 Y2K",
+        "detail": "차분한 발라드와 몽환 계열이 한 해의 끝자락 차트를 이끌고 있다.",
+        "headline": "연말 결산: 올해 K-POP 키워드는 몽환적 감성",
         "id": "news-y1-w50-0",
         "type": "trend",
         "week": 50,
@@ -827,7 +828,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "트레이니-t2 만족도: 70 → 69 (멤버 만족도)",
     ],
     "warnings": [
-      "이벤트 경쟁 그룹 등장: 에클라",
+      "이벤트 경쟁 그룹 등장: 세이렌",
     ],
     "week": 50,
   },
@@ -846,10 +847,10 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       "currentSeason": "spring",
       "kpopNews": [
         {
-          "detail": "라이브 실력이 검증된 그룹에게 유리한 시즌이 시작된다.",
-          "headline": "대학 축제 시즌 개막, 인기 그룹 섭외 경쟁 치열",
+          "detail": "안무 포인트가 명확한 곡일수록 챌린지 확산 속도가 빠르다.",
+          "headline": "숏폼 챌린지가 만든 역주행, 차트 재진입 사례 등장",
           "id": "news-y1-w5-0",
-          "type": "event",
+          "type": "trend",
           "week": 5,
         },
       ],
@@ -968,7 +969,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
           "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
-          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
+          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡됩니다.",
           "target": 0,
         },
         {
@@ -976,7 +977,7 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
           "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
-          "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
+          "penalty": "지분 압박과 투자 회수 통보가 시작됩니다.",
           "target": 500000000,
         },
       ],
@@ -1027,13 +1028,13 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
                 "stress": 3,
               },
               "id": "send-variety-line",
-              "label": "예능 담당만 보낸다",
+              "label": "예능 에이스만 보낸다",
               "targetSelection": {
-                "label": "출연할 예능 담당",
+                "label": "출연할 멤버",
                 "max": 1,
                 "min": 1,
               },
-              "tradeoff": "노출 효과는 줄어드는 대신 부담이 적습니다. 다녀오는 멤버는 이번 주 팀 합동 연습에서 빠집니다.",
+              "tradeoff": "노출 효과는 줄어드는 대신 부담이 적습니다. 참여 멤버는 이번 주 팀 훈련 대신 개인 일정으로 빠집니다.",
             },
           ],
           "summary": "제작진이 팀의 낯선 매력을 짧은 코너에서 시험해 보고 싶어 합니다.",
@@ -1582,13 +1583,14 @@ exports[`processWeek 골든 스냅샷 > 일반 훈련 주간(5주차)의 출력�
       },
       "income": {},
     },
+    "highlights": [],
     "injuries": [],
     "news": [
       {
-        "detail": "라이브 실력이 검증된 그룹에게 유리한 시즌이 시작된다.",
-        "headline": "대학 축제 시즌 개막, 인기 그룹 섭외 경쟁 치열",
+        "detail": "안무 포인트가 명확한 곡일수록 챌린지 확산 속도가 빠르다.",
+        "headline": "숏폼 챌린지가 만든 역주행, 차트 재진입 사례 등장",
         "id": "news-y1-w5-0",
-        "type": "event",
+        "type": "trend",
         "week": 5,
       },
     ],
@@ -1622,8 +1624,8 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
       "currentSeason": "fall",
       "kpopNews": [
         {
-          "detail": "본 컴백 전에 화제성을 끌어올리는 브릿지 전략이 유행이다.",
-          "headline": "서머 리믹스·선공개 싱글 발매 러시",
+          "detail": "강한 비트의 여름 트랙이 글로벌 플레이리스트를 파고들고 있다.",
+          "headline": "EDM 협업 트랙 발매 붐, 해외 프로듀서 러브콜 이어져",
           "id": "news-y2-w26-0",
           "type": "trend",
           "week": 26,
@@ -1749,7 +1751,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
           "description": "1년 반 안에 최근 분기 영업 현금흐름 흑자 달성",
           "id": "summit-quarterly",
           "metric": "quarterlyRevenue",
-          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡된다.",
+          "penalty": "경영 간섭이 시작되고 활동 우선순위가 왜곡됩니다.",
           "target": 0,
         },
         {
@@ -1757,7 +1759,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
           "description": "3년 안에 누적 순수익 5억 달성",
           "id": "summit-payback",
           "metric": "payback",
-          "penalty": "지분 압박과 투자 회수 통보가 시작된다.",
+          "penalty": "지분 압박과 투자 회수 통보가 시작됩니다.",
           "target": 500000000,
         },
       ],
@@ -1884,7 +1886,7 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
               "tradeoff": "만족도가 크게 떨어지고, 협상이 반년 안에 다시 돌아옵니다.",
             },
           ],
-          "summary": "안정형 트레이니-t1의 처우 협상 시점이 왔습니다 (현재 1등급 · 개인 인기 0). 감정의 진폭이 작고 예측 가능합니다.",
+          "summary": "안정형 트레이니-t1의 처우 협상 시점이 왔습니다 (현재 1등급 · 개인 인기 0). 감정의 진폭이 작고 예측 가능합니다. 대신 큰 성취에도 크게 오르지 않습니다.",
           "title": "트레이니-t1 재계약",
           "trigger": {
             "description": "트레이니-t1 재계약 협상 도래",
@@ -2432,11 +2434,12 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
       },
       "income": {},
     },
+    "highlights": [],
     "injuries": [],
     "news": [
       {
-        "detail": "본 컴백 전에 화제성을 끌어올리는 브릿지 전략이 유행이다.",
-        "headline": "서머 리믹스·선공개 싱글 발매 러시",
+        "detail": "강한 비트의 여름 트랙이 글로벌 플레이리스트를 파고들고 있다.",
+        "headline": "EDM 협업 트랙 발매 붐, 해외 프로듀서 러브콜 이어져",
         "id": "news-y2-w26-0",
         "type": "trend",
         "week": 26,

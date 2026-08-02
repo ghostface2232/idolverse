@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/common/Button";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { INVESTOR_PROFILES } from "@/data/investors";
+import { withJosa } from "@/utils/josa";
 import { useFinanceStore } from "@/stores/financeStore";
 import { useGameStore } from "@/stores/gameStore";
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
@@ -51,7 +52,7 @@ export function MoreOverview({
           <p className="mt-2 text-base font-semibold text-text-primary">{companyName}</p>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-text-muted">
             <Landmark className="size-3.5" aria-hidden="true" />
-            {investor.label}와 함께 운영 중
+            {withJosa(investor.label, "과/와")} 함께 운영 중
           </p>
         </article>
         <button

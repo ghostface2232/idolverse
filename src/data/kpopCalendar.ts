@@ -9,45 +9,9 @@ import type {
 export const NEWS_TYPE_LABELS: Record<KPopNewsType, string> = {
   competitor: "경쟁 그룹",
   trend: "트렌드",
-  event: "업계 일정",
-  industry: "업계",
+  event: "행사·일정",
+  industry: "산업 동향",
 };
-
-export const SEASONAL_NEWS_TEMPLATES: Record<Season, string[]> = {
-  spring: [
-    "[대형 기획사]의 신인 [그룹명], 다음 달 데뷔 예정",
-    "신인 시즌 개막, 이번 분기 데뷔 팀 [N]팀 예상",
-    "봄 시즌 청량 컨셉 컴백 러시, 차트 경쟁 치열",
-    "올해 상반기 주목할 루키 그룹 TOP 5 공개",
-  ],
-  summer: [
-    "여름 시즌 컴백 경쟁 치열, 이번 주만 [N]팀 동시 컴백",
-    "음악 페스티벌 라인업 공개",
-    "여름 시즌송 대전, 올해는 누가 '여름 여왕' 차지할까",
-    "워터밤·뮤직페스티벌 출연진 확정, 티켓 전쟁 예고",
-  ],
-  fall: [
-    "연말 시상식 앞두고 주요 가수 컴백 러시",
-    "올해의 앨범 후보 초집계",
-    "3분기 음반 판매량 역대 최고 기록, 팬덤 파워 입증",
-    "가을 감성 컴백 대전, 발라드·레트로 트랙 강세",
-  ],
-  winter: [
-    "MMA/MAMA/골든디스크 시상식 일정 확정",
-    "연말 결산: 올해 K-POP 키워드는?",
-    "연말 무대 출연 라인업 공개, 콜라보 무대 기대",
-    "올해 음반 총판매량 전년 대비 [N]% 증가",
-  ],
-};
-
-export const GENERIC_NEWS_TEMPLATES = [
-  "[경쟁그룹명] 컴백 D-[N]",
-  "[장르] 트렌드 [상승/하락]세",
-  "아이돌 서바이벌 프로그램 화제",
-  "음원 차트 개편 논의, 스트리밍 반영 비율 변경 가능성",
-  "해외 팬 투표 플랫폼 영향력 확대 논란",
-  "아이돌 건강 관리 이슈로 업계 스케줄 관행 재점검",
-];
 
 export const SEASONAL_NEWS_POOL: Record<
   Season,
@@ -66,7 +30,7 @@ export const SEASONAL_NEWS_POOL: Record<
     },
     {
       headline: "봄 시즌 청량 컨셉 수요 급증",
-      detail: "청량·Y2K 계열이 초봄 차트에서 강한 흐름을 보이고 있다.",
+      detail: "청량 계열 댄스팝이 초봄 차트에서 강한 흐름을 보이고 있다.",
       type: "trend",
     },
     {
@@ -85,7 +49,7 @@ export const SEASONAL_NEWS_POOL: Record<
       type: "industry",
     },
     {
-      headline: "숏폼 챌린지 발 신곡 역주행 사례 등장",
+      headline: "숏폼 챌린지가 만든 역주행, 차트 재진입 사례 등장",
       detail: "안무 포인트가 명확한 곡일수록 챌린지 확산 속도가 빠르다.",
       type: "trend",
     },
@@ -104,11 +68,36 @@ export const SEASONAL_NEWS_POOL: Record<
       detail: "예능감이 검증된 멤버를 보유한 팀에게 섭외가 몰리고 있다.",
       type: "event",
     },
+    {
+      headline: "댄스팝 신곡 물량 공세, 봄 발매 캘린더 빼곡",
+      detail: "청량 계열 댄스팝이 봄 차트의 기본값으로 자리잡는 분위기다.",
+      type: "trend",
+    },
+    {
+      headline: "다크 컨셉 팀들, 봄 시즌 컴백 연기설 솔솔",
+      detail: "어둡고 무거운 컨셉은 봄 시장과 결이 맞지 않는다는 판단이 읽힌다.",
+      type: "industry",
+    },
+    {
+      headline: "신학기 맞은 팬 커뮤니티, 신규 유입 최고치",
+      detail: "새 학기 커뮤니티 활동량 증가가 신인 팀의 입덕 창구를 넓히고 있다.",
+      type: "trend",
+    },
+    {
+      headline: "경쟁 신인들, 데뷔 쇼케이스 일정 줄줄이 발표",
+      detail: "봄 데뷔 러시 속에서 첫인상 경쟁이 그 어느 때보다 치열하다.",
+      type: "competitor",
+    },
+    {
+      headline: "음원 사이트 봄 테마 기획전 개막",
+      detail: "산뜻한 무드의 곡이 플레이리스트 상단 배치 효과를 누리고 있다.",
+      type: "event",
+    },
   ],
   summer: [
     {
       headline: "여름 시즌 컴백 경쟁 치열, 이번 주만 5팀 동시 컴백",
-      detail: "청량과 파워풀 퍼포먼스 트랙의 체감 경쟁 강도가 크게 오른다.",
+      detail: "파워풀·EDM 계열 트랙의 체감 경쟁 강도가 크게 오른다.",
       type: "trend",
     },
     {
@@ -156,15 +145,40 @@ export const SEASONAL_NEWS_POOL: Record<
       detail: "팬과의 접점을 늘린 팀들이 코어 팬덤 결속에서 재미를 보고 있다.",
       type: "event",
     },
+    {
+      headline: "EDM 협업 트랙 발매 붐, 해외 프로듀서 러브콜 이어져",
+      detail: "강한 비트의 여름 트랙이 글로벌 플레이리스트를 파고들고 있다.",
+      type: "trend",
+    },
+    {
+      headline: "발라드 진영, 여름 비수기 피해 가을 컴백으로 선회",
+      detail: "잔잔한 곡은 여름 차트에서 힘을 쓰기 어렵다는 판단이 지배적이다.",
+      type: "industry",
+    },
+    {
+      headline: "야외 음악 방송 여름 특집 편성 확정",
+      detail: "체력과 라이브 안정감이 검증된 팀에게 기회가 돌아가는 무대다.",
+      type: "event",
+    },
+    {
+      headline: "라이벌 그룹들, 여름 페스티벌 무대 격돌 예고",
+      detail: "같은 무대에 서는 순간 퍼포먼스 체급이 그대로 비교된다.",
+      type: "competitor",
+    },
+    {
+      headline: "글로벌 숏폼, 파워풀 안무 챌린지 대세",
+      detail: "포인트 안무의 임팩트가 여름 바이럴의 성패를 가르고 있다.",
+      type: "trend",
+    },
   ],
   fall: [
     {
       headline: "연말 시상식 앞두고 주요 가수 컴백 러시",
-      detail: "레트로·세련·몽환 계열이 업계 내러티브에서 강세를 보인다.",
+      detail: "레트로·시티팝 계열이 업계 내러티브에서 강세를 보인다.",
       type: "industry",
     },
     {
-      headline: "올해의 앨범 후보 초집계 공개",
+      headline: "올해의 앨범 후보 1차 집계 공개",
       detail: "디지털과 음반 모두 고르게 잡은 팀이 유리하다는 분석이 나온다.",
       type: "trend",
     },
@@ -204,7 +218,7 @@ export const SEASONAL_NEWS_POOL: Record<
       type: "industry",
     },
     {
-      headline: "낙엽 감성 플레이리스트 열풍, 수록곡 재조명",
+      headline: "가을 플레이리스트 열풍, 수록곡 재조명",
       detail: "타이틀 외 수록곡의 완성도가 팬덤 유입의 숨은 통로가 되고 있다.",
       type: "trend",
     },
@@ -216,8 +230,8 @@ export const SEASONAL_NEWS_POOL: Record<
       type: "event",
     },
     {
-      headline: "연말 결산: 올해 K-POP 키워드는 레트로와 Y2K",
-      detail: "트렌드 피로도가 누적되며 세련된 정체성 유지가 중요해지고 있다.",
+      headline: "연말 결산: 올해 K-POP 키워드는 몽환적 감성",
+      detail: "차분한 발라드와 몽환 계열이 한 해의 끝자락 차트를 이끌고 있다.",
       type: "trend",
     },
     {
@@ -298,5 +312,4 @@ export const DEFAULT_MARKET_TRENDS: Record<
   },
 };
 
-export const MARKET_TREND_ROTATION_RULE =
-  "시즌 전환 시 hotGenre/coldGenre/hotMood/coldMood를 갱신한다.";
+// 시장 트렌드 순환 규칙: 시즌 전환 시 hotGenre/coldGenre/hotMood/coldMood를 갱신한다.

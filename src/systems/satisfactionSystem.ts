@@ -56,7 +56,18 @@ export interface LeaveRiskResult {
   traineeName: string;
   level: "warning" | "leaving";
   satisfaction: number;
+  /** 이번 주 만족도를 깎은 원인 라벨 (긍정 사유 제외). 경고 문구에 그대로 노출한다. */
+  reasons: string[];
 }
+
+/** 이탈 경고에 노출하지 않는 사유 — 긍정 사유와 시스템 내부 용어. */
+const HIDDEN_RISK_REASONS = new Set([
+  "적합 컨셉",
+  "적절한 휴식",
+  "시상식 수상",
+  "팬 반응 좋음",
+  "기준점 회귀",
+]);
 
 export interface SatisfactionResult {
   deltas: SatisfactionDelta[];
@@ -249,12 +260,16 @@ export function updateSatisfaction(
       reasons,
     });
 
+    const negativeReasons = reasons.filter(
+      (reason) => !HIDDEN_RISK_REASONS.has(reason),
+    );
     if (effective <= SATISFACTION_LEAVE_THRESHOLD) {
       leaveRisks.push({
         traineeId: trainee.id,
         traineeName: trainee.name,
         level: "leaving",
         satisfaction: effective,
+        reasons: negativeReasons,
       });
     } else if (effective <= SATISFACTION_WARNING_THRESHOLD) {
       leaveRisks.push({
@@ -262,6 +277,7 @@ export function updateSatisfaction(
         traineeName: trainee.name,
         level: "warning",
         satisfaction: effective,
+        reasons: negativeReasons,
       });
     }
   }

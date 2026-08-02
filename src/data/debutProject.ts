@@ -13,7 +13,7 @@ export const DEBUT_POSITION_TRIAL_WEEK = 6;
 export const DEBUT_PROJECT: ProjectDefinition = {
   id: DEBUT_PROJECT_ID,
   kind: "debut",
-  title: "첫 데뷔 프로젝트",
+  title: "데뷔 프로젝트",
   allowsOverlap: false,
   stages: [
     {
@@ -27,7 +27,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
     },
     {
       id: "position-evaluation",
-      title: "포지션 선발전 준비 · 곡 후보",
+      title: "포지션 선발전",
       summary: "가배정 역할을 집중 훈련하고 선발전과 데뷔곡 후보를 준비한다",
       weekWindow: [4, 6],
       eventIds: [
@@ -35,7 +35,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
         "debut-song-candidates",
         "debut-evaluation-upset",
       ],
-      unlocks: "포지션 최종 확정",
+      unlocks: "컨셉 테스트",
     },
     {
       id: "concept-test",
@@ -73,7 +73,7 @@ export const DEBUT_PROJECT: ProjectDefinition = {
       weekWindow: [14, DEBUT_REQUIREMENTS.projectWeeks],
       entryRequirements: [
         { metric: "titleTrackSelected", target: 1, label: "타이틀곡 확정" },
-        { metric: "launchReady", target: 1, label: "데뷔 일정 도래" },
+        { metric: "launchReady", target: 1, label: "데뷔 일정 진입" },
       ],
       eventIds: ["debut-promotion-launch"],
       unlocks: "앨범 발매 · 차트 공개",

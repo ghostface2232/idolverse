@@ -430,7 +430,7 @@ function buildOpportunityCard(
     ctx.projectDeadlineWeeks !== null &&
     ctx.projectDeadlineWeeks <= OPPORTUNITY_PACING.deadlineWarningWeeks
   ) {
-    contextWarnings.push(`핵심 프로젝트 마감 D-${ctx.projectDeadlineWeeks}`);
+    contextWarnings.push(`핵심 프로젝트 마감 ${ctx.projectDeadlineWeeks}주 전`);
   }
   const warning =
     contextWarnings.length > 0
@@ -731,13 +731,13 @@ function buildFinancingRepaymentCard(
     id: `financing-repayment:${financing.id}`,
     lane: "crisis",
     category: "경영",
-    title: `상환 만기 D-${remainingWeeks}주`,
+    title: `상환 만기 ${remainingWeeks}주 전`,
     summary: `상환액 ${formatKoreanWon(financing.repaymentAmount)}, 만기까지 ${remainingWeeks}주 남았습니다.`,
     trigger: createTrigger(
       "finance",
       remainingWeeks <= 4 ? "critical" : "warning",
       [],
-      `상환 만기 D-${remainingWeeks}주`,
+      `상환 만기 ${remainingWeeks}주 전`,
     ),
     options: [
       {

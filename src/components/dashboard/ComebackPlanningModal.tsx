@@ -92,7 +92,7 @@ function expectationBadge(
 ): { label: string; tone: string } {
   const expectation = calculateFandomExpectation(conceptHistory, mood);
   if (conceptHistory.length === 0) {
-    return { label: "첫 색", tone: "bg-cyan-400/12 text-cyan-200" };
+    return { label: "첫 시도", tone: "bg-cyan-400/12 text-cyan-200" };
   }
   if (expectation.publicBonus < 0) {
     return { label: "식상 위험", tone: "bg-amber-400/12 text-amber-200" };
@@ -101,7 +101,7 @@ function expectationBadge(
     return { label: "승부수", tone: "bg-pink-400/12 text-pink-200" };
   }
   if (expectation.fitScore === 3) {
-    return { label: "점진 변화", tone: "bg-violet-400/12 text-violet-200" };
+    return { label: "무난한 변화", tone: "bg-violet-400/12 text-violet-200" };
   }
   return { label: "안정", tone: "bg-emerald-400/12 text-emerald-200" };
 }
@@ -352,7 +352,7 @@ export function ComebackPlanningModal({
                     </span>
                     <span
                       className="shrink-0 text-right text-[11px] leading-4"
-                      title="비주얼·매력 스탯 기준의 센터 포지션 적합도입니다"
+                      title="비주얼·끼 능력치를 기준으로 본 센터 적합도입니다"
                     >
                       <span className="block text-[10px] text-text-muted">
                         센터 적합도

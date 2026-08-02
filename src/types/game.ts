@@ -961,7 +961,9 @@ export interface WeeklyReportSnapshot {
   news: KPopNews[];
   finance: { income: Record<string, number>; expenses: Record<string, number> };
   warnings: string[];
-  injuries: { traineeId: string; traineeName: string }[];
+  /** 좋은 소식·진행 알림. 경고와 분리해 헤드라인 톤 오판을 막는다. 구버전 리포트에는 없다. */
+  highlights?: string[];
+  injuries: { traineeId: string; traineeName: string; weeks?: number }[];
   conflicts: { a: string; b: string; resolved: boolean }[];
   competitorComebacks: string[];
   /** 컴백 정산 주에만 채워진다. 구버전 리포트에는 없다. */

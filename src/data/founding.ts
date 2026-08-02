@@ -72,7 +72,7 @@ export const FOUNDING_FACILITY_TIERS = {
       level: 1,
       name: "소형",
       monthlyCost: 1_000_000,
-      effect: "연습할 수 있는 최소한의 공간",
+      effect: "몸 하나 겨우 펴는 최소한의 공간이라 훈련 효율이 떨어집니다",
       illustrationImagePath: "/facilities/studio-spritesheet.png",
       illustrationSpriteIndex: 0,
     },
@@ -80,7 +80,7 @@ export const FOUNDING_FACILITY_TIERS = {
       level: 2,
       name: "중형",
       monthlyCost: 2_500_000,
-      effect: "연습에 탄력이 붙는 환경",
+      effect: "거울과 방음이 갖춰져 연습에 탄력이 붙습니다",
       illustrationImagePath: "/facilities/studio-spritesheet.png",
       illustrationSpriteIndex: 1,
     },
@@ -88,7 +88,7 @@ export const FOUNDING_FACILITY_TIERS = {
       level: 3,
       name: "대형",
       monthlyCost: 4_000_000,
-      effect: "수준 높은 훈련이 가능한 환경",
+      effect: "수준 높은 훈련이 가능해 성장 속도가 눈에 띄게 오릅니다",
       illustrationImagePath: "/facilities/studio-spritesheet.png",
       illustrationSpriteIndex: 2,
     },
@@ -96,21 +96,21 @@ export const FOUNDING_FACILITY_TIERS = {
       level: 4,
       name: "프리미엄",
       monthlyCost: 6_000_000,
-      effect: "대형 기획사 부럽지 않은 훈련 환경",
+      effect: "대형 기획사 부럽지 않은 환경이라 훈련 성과가 극대화됩니다",
       illustrationImagePath: "/facilities/studio-spritesheet.png",
       illustrationSpriteIndex: 3,
     },
   ] satisfies FacilityTier[],
   equipment: [
-    { level: 1, name: "기본", monthlyCost: 500_000, effect: "낡은 장비라 작업물의 완성도가 아쉽습니다" },
-    { level: 2, name: "중급", monthlyCost: 1_200_000, effect: "업계 표준 수준의 장비" },
-    { level: 3, name: "고급", monthlyCost: 2_000_000, effect: "고급 장비로 작업물의 때깔이 달라집니다" },
-    { level: 4, name: "최상", monthlyCost: 3_500_000, effect: "최상급 장비로 완성도가 확연히 달라집니다" },
+    { level: 1, name: "보급형", monthlyCost: 500_000, effect: "낡은 장비라 작업물의 완성도가 아쉽습니다" },
+    { level: 2, name: "표준형", monthlyCost: 1_200_000, effect: "업계 표준 장비라 무난한 완성도가 나옵니다" },
+    { level: 3, name: "고급형", monthlyCost: 2_000_000, effect: "고급 장비로 작업물의 때깔이 달라집니다" },
+    { level: 4, name: "최상급", monthlyCost: 3_500_000, effect: "최상급 장비로 완성도가 확연히 달라집니다" },
   ] satisfies FacilityTier[],
   livingExpense: [
     {
       level: 1,
-      name: "최소",
+      name: "절약",
       perPersonCost: 500_000,
       effect: "빠듯한 생활이 이어져 불만이 쌓이기 쉽습니다",
       illustrationImagePath: "/facilities/money-spritesheet.png",
@@ -118,15 +118,15 @@ export const FOUNDING_FACILITY_TIERS = {
     },
     {
       level: 2,
-      name: "기본",
+      name: "표준",
       perPersonCost: 1_000_000,
-      effect: "부족하지 않은 평범한 생활",
+      effect: "부족하지 않은 평범한 생활이라 불만 없이 지낼 수 있습니다",
       illustrationImagePath: "/facilities/money-spritesheet.png",
       illustrationSpriteIndex: 1,
     },
     {
       level: 3,
-      name: "넉넉",
+      name: "여유",
       perPersonCost: 1_500_000,
       effect: "생활에 여유가 생겨 멤버들의 표정이 밝아집니다",
       illustrationImagePath: "/facilities/money-spritesheet.png",
@@ -144,8 +144,8 @@ export const FOUNDING_FACILITY_TIERS = {
 } as const;
 
 export const FOUNDING_ONETIME_UPGRADES = {
-  healthcare: { cost: OPTIONAL_FACILITY_COSTS.healthcare.upfront, name: "전담 메디컬팀", description: "전담 의료진이 상주해 부상을 미리 살피고, 다친 멤버의 회복을 돕습니다" },
-  security: { cost: OPTIONAL_FACILITY_COSTS.security.upfront, name: "보안팀", description: "경호팀이 멤버들의 사생활을 지켜 구설수와 사생팬 위협을 크게 줄입니다" },
+  healthcare: { cost: OPTIONAL_FACILITY_COSTS.healthcare.upfront, name: "전담 메디컬팀", description: "상주 의료진이 부상을 미리 잡아내고, 다친 멤버의 회복 기간을 줄여줍니다" },
+  security: { cost: OPTIONAL_FACILITY_COSTS.security.upfront, name: "전담 경호팀", description: "경호팀이 멤버들의 사생활을 지켜 구설수와 사생팬 위협을 크게 줄입니다" },
 } as const;
 
 export const FOUNDING_RECRUITMENT_COSTS = {
@@ -185,7 +185,7 @@ interface RecruitmentBudgetMilestone {
 
 const RECRUITMENT_BUDGET_MILESTONES: RecruitmentBudgetMilestone[] = [
   { threshold: 0, label: "기본" },
-  { threshold: 50_000_000, label: "심화" },
+  { threshold: 50_000_000, label: "정예" },
   { threshold: 75_000_000, label: "프리미엄" },
 ];
 
@@ -226,7 +226,7 @@ export const POSITION_LABELS: Record<Position, string> = {
   center: "센터",
   visual: "비주얼",
   variety: "예능",
-  producing: "프로듀싱",
+  producing: "프로듀서",
 };
 
 export const ALL_POSITIONS: Position[] = [
@@ -263,10 +263,10 @@ export const NATIONALITY_FLAGS: Record<Nationality, string> = {
 };
 
 export const STAFF_MISSING_WARNINGS: Record<StaffRole, string> = {
-  manager: "매니저 없이는 스케줄 관리가 불가능합니다.",
-  producer: "프로듀서 없이 앨범 제작이 어렵습니다.",
-  designer: "디자이너 없이 비주얼 품질이 낮아집니다.",
-  marketer: "마케터 없이 홍보 효과가 크게 떨어집니다.",
+  manager: "매니저가 없으면 스케줄을 아예 잡을 수 없습니다.",
+  producer: "프로듀서가 없으면 앨범 완성도가 크게 떨어집니다.",
+  designer: "디자이너가 없으면 비주얼 콘텐츠 품질이 떨어집니다.",
+  marketer: "마케터가 없으면 홍보 효과가 절반 이하로 줄어듭니다.",
 };
 
 export function calculatePositionFitness(
