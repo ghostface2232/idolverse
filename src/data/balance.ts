@@ -605,7 +605,10 @@ export const STATE_PRUNE_LIMITS = {
 } as const;
 
 export const DECISION_TRIGGER_THRESHOLDS = {
-  highStress: 70,
+  // 70이던 시절에는 스트레스가 만성적으로 임계 위에 머물러 과로 카드가
+  // 5년 내내 2.6~3.3주마다 떴다(2026-08 페이싱 프로브, 78~102회/260주).
+  // 진짜 위험 구간에서만 카드가 서게 문턱을 올린다.
+  highStress: 80,
   fandomDisappointment: 50,
   lowFandomLoyalty: 30,
   minFandomForLoyaltyIssue: 10,
@@ -623,7 +626,9 @@ export const DECISION_TRIGGER_THRESHOLDS = {
  */
 export const CRISIS_CARD_COOLDOWN_WEEKS: Readonly<Record<string, number>> = {
   "fandom-crisis": 4,
-  overwork: 3,
+  // 3주였을 때는 만성 고스트레스 런에서 과로 카드가 사실상 격주 배경
+  // 세금이었다 — 한 번 대응하면 한 달 반은 매니저가 후속을 맡는다.
+  overwork: 6,
   morale: 3,
   conflict: 4,
 };

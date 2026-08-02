@@ -922,7 +922,10 @@ function buildOverworkCard(member: DecisionMemberContext): WeeklyDecision {
     summary: `${member.name}의 스트레스가 한계에 가깝습니다. 부상이나 만족도 하락으로 번지기 전에 일정 조정이 필요합니다.`,
     trigger: createTrigger(
       "overwork",
-      member.stress >= 90 ? "critical" : "warning",
+      // critical은 쿨다운을 절반으로 줄여 재소환을 앞당긴다. 90이던 시절에는
+      // 만성 고스트레스 런 전체가 critical로 묶여 과로 카드가 3주마다 떴다 —
+      // 극단적 방치(95+)에만 가속을 건다.
+      member.stress >= 95 ? "critical" : "warning",
       targetTraineeIds,
       `${member.name} 과로 신호`,
     ),

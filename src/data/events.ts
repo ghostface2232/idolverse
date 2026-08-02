@@ -533,9 +533,11 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "훈련 중 부상",
     description: "과훈련 여파로 핵심 멤버가 다쳐 예정된 일정 일부를 조정해야 합니다.",
-    probability: 0.05,
+    // 컨디션 계열 이벤트 3종(부상·건강·슬럼프)은 문턱이 낮으면 상시 자격이라
+    // 합산 빈도가 격주 수준까지 올라간다 — 진짜 혹사 구간에서만 발생시킨다.
+    probability: 0.025,
     conditions: {
-      minStress: 55,
+      minStress: 70,
     },
     effects: {
       condition: -18,
@@ -620,7 +622,7 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     title: "멤버 혹사 논란",
     description:
       "지친 멤버들의 모습이 팬 커뮤니티에서 화제가 되며 회사의 일정 운영을 향한 비판이 커지고 있습니다.",
-    probability: 0.06,
+    probability: 0.04,
     conditions: {
       phase: ["debut", "growth", "peak"],
       minStress: 92,
@@ -794,9 +796,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "멤버 건강 이슈",
     description: "과로 누적으로 한 멤버가 건강 문제를 호소하고 있습니다.",
-    probability: 0.04,
+    probability: 0.025,
     conditions: {
-      minStress: 50,
+      minStress: 65,
       phase: ["debut", "growth", "peak"],
     },
     effects: {
@@ -1065,9 +1067,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
     type: "negative",
     title: "멤버 슬럼프 신호",
     description: "한 멤버가 최근 무대가 무섭다고 털어놨습니다. 표정이 눈에 띄게 어두워졌습니다.",
-    probability: 0.04,
+    probability: 0.025,
     conditions: {
-      minStress: 45,
+      minStress: 60,
     },
     effects: {
       stress: 4,
