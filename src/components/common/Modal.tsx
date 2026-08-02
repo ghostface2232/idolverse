@@ -22,6 +22,11 @@ interface ModalProps {
   contentClassName?: string;
   isCloseDisabled?: boolean;
   /**
+   * 시트 뒤에 겹쳐 보이는 대기 카드 수(최대 2장 표시). 이벤트 큐처럼
+   * 같은 모달이 연속으로 이어질 때 스택으로 보이게 한다.
+   */
+  stackDepth?: number;
+  /**
    * 결정을 내려야만 닫히는 모달. 눌리지 않는 X를 남기는 대신 닫기 버튼을
    * 아예 그리지 않는다 — 죽은 출구는 잘못된 신호다.
    */
@@ -38,6 +43,7 @@ export function Modal({
   className = "",
   contentClassName = "px-5 py-5",
   isCloseDisabled = false,
+  stackDepth = 0,
   forced = false,
   stepLabel,
 }: ModalProps) {
@@ -61,7 +67,10 @@ export function Modal({
       <AriaModal
         className={({ isEntering, isExiting }) =>
           [
-            "flex max-h-full w-full flex-col overflow-hidden rounded-t-3xl bg-surface-panel pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-raised)] outline-none sm:max-h-[88dvh] sm:max-w-md sm:rounded-3xl sm:pb-0",
+            // 시각 스타일(배경·모서리·클리핑)은 Dialog가 갖는다 — 시트 위로
+            // 삐져나오는 스택 카드 셸을 그리려면 이 레이어는 overflow를
+            // 허용해야 한다.
+            "flex max-h-full w-full flex-col outline-none sm:max-h-[88dvh] sm:max-w-md",
             "relative transition-[transform,scale,opacity] duration-150 ease-out",
             isEntering ? "animate-sheet-in" : "",
             isExiting
@@ -71,7 +80,17 @@ export function Modal({
           ].join(" ")
         }
       >
-        <Dialog className="flex min-h-0 flex-col outline-none">
+        {stackDepth > 0 ? (
+          // 뒤에 대기 중인 카드가 실제 시트처럼 겹쳐 보이는 스택 셸.
+          // 큐가 줄면 transition으로 자리를 내려앉는다.
+          <div aria-hidden="true" className="pointer-events-none">
+            {stackDepth > 1 ? (
+              <span className="absolute inset-x-7 -top-4 h-10 rounded-t-2xl bg-surface-panel/55 shadow-[var(--shadow-raised)] transition-all duration-300" />
+            ) : null}
+            <span className="absolute inset-x-3.5 -top-2 h-10 rounded-t-2xl bg-surface-panel/85 shadow-[var(--shadow-raised)] transition-all duration-300" />
+          </div>
+        ) : null}
+        <Dialog className="relative flex min-h-0 flex-col overflow-hidden rounded-t-3xl bg-surface-panel pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-raised)] outline-none sm:rounded-3xl sm:pb-0">
           <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 bg-surface-raised/76 px-5 py-3 shadow-[var(--shadow-chrome)] backdrop-blur-xl sm:min-h-16">
             <Heading slot="title" className="text-lg font-semibold text-text-primary">
               {title}

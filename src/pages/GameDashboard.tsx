@@ -1134,8 +1134,9 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
       activeEvent &&
       !activeEvent.presentation ? (
         <EventModal
-          key={activeEvent.id}
           event={activeEvent}
+          queueIndex={weeklyFlow.eventQueueIds.indexOf(activeEvent.id)}
+          queueTotal={weeklyFlow.eventQueueIds.length}
           onResolve={(choiceIndex) => handleResolveEvent(activeEvent, choiceIndex)}
           onClose={handleCloseEvent}
         />

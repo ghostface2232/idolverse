@@ -391,6 +391,30 @@ select {
   animation: chart-rank-sweep 420ms var(--ease-out-strong) both;
 }
 
+/* 이번 주 소식 카드 전환 — 모달은 유지한 채 뒤에 쌓인 다음 카드가
+   스택 셸 위치(위쪽·축소)에서 앞으로 내려앉는다 */
+.event-card-in {
+  animation: event-card-in 280ms var(--ease-out-strong) both;
+}
+
+@keyframes event-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.965);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-card-in {
+    animation: none;
+  }
+}
+
 /* 주 넘김 요일 티커의 델타 토스트 등장 */
 .week-toast-in {
   animation: week-toast-in 300ms var(--ease-out-strong) both;

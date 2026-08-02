@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/common/Button";
@@ -11,6 +11,9 @@ import type { GameEvent, RandomEventTone } from "@/types/game";
 
 interface EventModalProps {
   event: GameEvent;
+  /** 이번 주 소식 큐에서의 위치(0부터). 스택 표기·전환 연출에 쓴다. */
+  queueIndex?: number;
+  queueTotal?: number;
   onResolve: (choiceIndex: number | null) => void | Promise<void>;
   onClose: () => void | Promise<void>;
 }
@@ -27,22 +30,39 @@ const TONE_LABELS: Record<RandomEventTone, string> = {
   neutral: "새 소식",
 };
 
-export function EventModal({ event, onResolve, onClose }: EventModalProps) {
+export function EventModal({
+  event,
+  queueIndex,
+  queueTotal,
+  onResolve,
+  onClose,
+}: EventModalProps) {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingChoiceIndex, setPendingChoiceIndex] = useState<number | null>(
     null,
   );
+  const cardRef = useRef<HTMLDivElement>(null);
   const tone = event.tone ?? inferTone(event.type);
   const choices = event.choices ?? [];
   const selectedChoice =
     event.resolvedChoiceIndex == null
       ? null
       : choices[event.resolvedChoiceIndex] ?? null;
+  // 큐가 2건 이상일 때만 위치를 표기한다. 모달은 큐가 도는 동안 마운트를
+  // 유지하고(백드롭 깜빡임 방지), 카드 본문만 스택에서 한 장씩 올라온다.
+  const showQueuePosition =
+    queueTotal != null && queueTotal > 1 && queueIndex != null && queueIndex >= 0;
+  const remainingInQueue = showQueuePosition
+    ? Math.max(0, queueTotal - queueIndex - 1)
+    : 0;
 
   useEffect(() => {
     setPendingChoiceIndex(null);
     setErrorMessage(null);
+    // 카드가 바뀌면 스크롤을 맨 위로 되돌린다 — 스크롤 컨테이너(Modal 내부)는
+    // 마운트를 유지하므로 이전 카드의 스크롤 위치가 남는다.
+    cardRef.current?.parentElement?.scrollTo({ top: 0 });
   }, [event.id]);
 
   const handleClose = async () => {
@@ -99,9 +119,14 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
 
   return (
     <Modal
-      title="이번 주 소식"
+      title={
+        showQueuePosition
+          ? `이번 주 소식 ${queueIndex + 1}/${queueTotal}`
+          : "이번 주 소식"
+      }
       onClose={handleClose}
       isCloseDisabled={saving}
+      stackDepth={Math.min(remainingInQueue, 2)}
       footer={
         event.resolved ? (
           <Button className="w-full" isDisabled={saving} onPress={handleClose}>
@@ -126,7 +151,7 @@ export function EventModal({ event, onResolve, onClose }: EventModalProps) {
         )
       }
     >
-      <div className="space-y-5">
+      <div key={event.id} ref={cardRef} className="event-card-in space-y-5">
         <SceneThumb scene={sceneForEvent(event)} variant="banner" label={null}>
           <span
             className={[
