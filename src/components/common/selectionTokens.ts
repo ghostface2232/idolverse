@@ -3,24 +3,33 @@
  * - 라디오(하나만 선택): 시안 강조. 그룹에 선택이 있으면 나머지 항목은 dim.
  * - 체크(복수 선택): 에메랄드 강조. 비선택 항목은 dim하지 않는다(선택 가능 암시).
  * 하이라이트는 ring으로만 낸다(호출부의 shadow 유틸리티와 합성 가능해야 한다).
+ * 호출부가 outline-none을 쓰는 전제라, 키보드 포커스 링은 여기서 일괄 복원한다
+ * (react-aria는 data-focus-visible, 네이티브 요소는 :focus-visible).
  */
+const FOCUS_RING =
+  "data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-action-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-secondary";
+
 export function radioTileClasses(
   selected: boolean,
   groupHasSelection: boolean,
 ): string {
   if (selected) {
-    return "border-brand-cyan bg-brand-cyan/[0.08] ring-[3px] ring-brand-cyan/20";
+    return `border-brand-cyan bg-brand-cyan/[0.08] ring-[3px] ring-brand-cyan/20 ${FOCUS_RING}`;
   }
   return [
     "border-white/12 bg-surface-shell/60 hover:border-brand-cyan/40",
     groupHasSelection ? "opacity-85 hover:opacity-100" : "",
+    FOCUS_RING,
   ]
     .filter(Boolean)
     .join(" ");
 }
 
 export function checkTileClasses(selected: boolean): string {
-  return selected
-    ? "border-emerald-400 bg-emerald-400/[0.08] ring-[3px] ring-emerald-400/20"
-    : "border-white/12 bg-surface-shell/60 hover:border-emerald-400/40";
+  return [
+    selected
+      ? "border-emerald-400 bg-emerald-400/[0.08] ring-[3px] ring-emerald-400/20"
+      : "border-white/12 bg-surface-shell/60 hover:border-emerald-400/40",
+    FOCUS_RING,
+  ].join(" ");
 }

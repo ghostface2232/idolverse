@@ -5,6 +5,7 @@ import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { SceneThumb } from "@/components/visual/SceneThumb";
+import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import { MARKETING_CHANNELS, MARKETING_PLAN } from "@/data/balance";
 import type {
   MarketingChannelId,
@@ -16,6 +17,7 @@ interface MarketingPlanModalProps {
   money: number;
   isSaving: boolean;
   errorMessage?: string | null;
+  stepLabel?: string;
   onConfirm: (allocation: MarketingPlanAllocation) => void | Promise<void>;
 }
 
@@ -24,6 +26,7 @@ export function MarketingPlanModal({
   money,
   isSaving,
   errorMessage,
+  stepLabel,
   onConfirm,
 }: MarketingPlanModalProps) {
   const [allocation, setAllocation] = useState<
@@ -37,13 +40,16 @@ export function MarketingPlanModal({
   const totalCost = totalPoints * MARKETING_PLAN.costPerPoint;
   const canAfford = totalCost <= money;
 
+  // 예산을 넘는 배정은 처음부터 막는다 — 담게 두고 나중에 벌하지 않는다.
+  const canAddMore =
+    totalPoints < MARKETING_PLAN.maxTotalPoints &&
+    totalCost + MARKETING_PLAN.costPerPoint <= money;
+
   const adjust = (channelId: MarketingChannelId, delta: number) => {
     setAllocation((current) => {
       const next = current[channelId] + delta;
       if (next < 0 || next > MARKETING_PLAN.maxPerChannel) return current;
-      if (delta > 0 && totalPoints >= MARKETING_PLAN.maxTotalPoints) {
-        return current;
-      }
+      if (delta > 0 && !canAddMore) return current;
       return { ...current, [channelId]: next };
     });
   };
@@ -51,8 +57,8 @@ export function MarketingPlanModal({
   return (
     <Modal
       title="발매 전 마케팅 캠페인"
-      onClose={() => undefined}
-      isCloseDisabled
+      forced
+      stepLabel={stepLabel}
       footer={
         <Button
           className="w-full"
@@ -77,9 +83,9 @@ export function MarketingPlanModal({
           </h2>
           <p className="mt-2 text-pretty leading-6 text-text-secondary">
             채널마다 반응하는 팬층이 다릅니다. 최대{" "}
-            {MARKETING_PLAN.maxTotalPoints}포인트, 포인트당{" "}
-            <MoneyDisplay amount={MARKETING_PLAN.costPerPoint} size="sm" />
-            이며, 효과는 발매 주에 나타납니다.
+            {MARKETING_PLAN.maxTotalPoints}구좌까지 집행할 수 있고 구좌당{" "}
+            {formatKoreanWon(MARKETING_PLAN.costPerPoint)}이 들며, 성과는
+            발매 주에 드러납니다.
           </p>
         </div>
 
@@ -89,12 +95,7 @@ export function MarketingPlanModal({
             return (
               <div
                 key={channel.id}
-                className={[
-                  "rounded-2xl border-2 p-3 transition-colors duration-150",
-                  points > 0
-                    ? "border-brand-cyan/50 bg-brand-cyan/[0.06]"
-                    : "border-white/10 bg-white/[0.03]",
-                ].join(" ")}
+                className="rounded-2xl bg-surface-shell/72 p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
@@ -105,31 +106,41 @@ export function MarketingPlanModal({
                       {channel.summary}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex shrink-0 items-center">
                     <button
                       type="button"
-                      aria-label={`${channel.label} 포인트 줄이기`}
+                      aria-label={`${channel.label} 배정 줄이기`}
                       disabled={isSaving || points === 0}
-                      className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-text-secondary transition active:scale-[0.92] disabled:opacity-35"
+                      className="grid min-h-11 min-w-11 place-items-center transition active:scale-[0.96] disabled:opacity-45"
                       onClick={() => adjust(channel.id, -1)}
                     >
-                      <Minus className="size-4" aria-hidden="true" />
+                      <span className="grid size-8 place-items-center rounded-xl bg-white/[0.06] text-text-secondary">
+                        <Minus className="size-4" aria-hidden="true" />
+                      </span>
                     </button>
-                    <span className="w-4 text-center text-sm font-semibold tabular-nums text-text-primary">
+                    <span
+                      aria-live="polite"
+                      className={[
+                        "w-5 text-center text-sm font-semibold tabular-nums",
+                        points > 0 ? "text-emerald-200" : "text-text-primary",
+                      ].join(" ")}
+                    >
                       {points}
                     </span>
                     <button
                       type="button"
-                      aria-label={`${channel.label} 포인트 올리기`}
+                      aria-label={`${channel.label} 배정 늘리기`}
                       disabled={
                         isSaving ||
                         points >= MARKETING_PLAN.maxPerChannel ||
-                        totalPoints >= MARKETING_PLAN.maxTotalPoints
+                        !canAddMore
                       }
-                      className="grid size-9 place-items-center rounded-xl bg-white/[0.06] text-text-secondary transition active:scale-[0.92] disabled:opacity-35"
+                      className="grid min-h-11 min-w-11 place-items-center transition active:scale-[0.96] disabled:opacity-45"
                       onClick={() => adjust(channel.id, 1)}
                     >
-                      <Plus className="size-4" aria-hidden="true" />
+                      <span className="grid size-8 place-items-center rounded-xl bg-white/[0.06] text-text-secondary">
+                        <Plus className="size-4" aria-hidden="true" />
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -139,8 +150,8 @@ export function MarketingPlanModal({
         </div>
 
         <div className="flex items-center justify-between rounded-xl bg-surface-shell/72 px-3 py-2 text-xs">
-          <span className="text-text-muted">
-            {totalPoints}/{MARKETING_PLAN.maxTotalPoints}포인트 배분
+          <span className="tabular-nums text-text-muted">
+            {totalPoints}/{MARKETING_PLAN.maxTotalPoints}구좌 배정
           </span>
           <span className="flex items-center gap-1.5 font-semibold text-text-primary">
             총 비용 <MoneyDisplay amount={totalCost} size="sm" />

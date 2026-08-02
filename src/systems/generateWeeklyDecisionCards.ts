@@ -517,8 +517,8 @@ function buildRecontractCard(
       },
       {
         id: "bonus",
-        label: "일시 보너스로 달래기",
-        description: "등급은 유지하되 일시 보너스를 지급합니다.",
+        label: "일시 격려금으로 달래기",
+        description: "등급은 유지하되 일시 격려금을 지급합니다.",
         tradeoff: "비용은 절반이지만 협상이 절반 주기로 다시 돌아옵니다.",
         effects: { money: -roundToMillionWon(signing / 2), satisfaction: 5 },
         targetTraineeIds: [member.id],
@@ -669,23 +669,23 @@ function buildInvestorPressureCard(complianceCount: number): WeeklyDecision {
 
 function buildFinancialCrisisCard(money: number, runwayWeeks: number): WeeklyDecision {
   const runwayLabel = Number.isFinite(runwayWeeks)
-    ? `${Math.max(0, runwayWeeks).toFixed(1)}주`
+    ? `${Math.max(0, Math.floor(runwayWeeks))}주분`
     : "충분";
   return {
     id: "financial-crisis",
     lane: "crisis",
     category: "경영",
-    title: `현금 런웨이 ${runwayLabel}`,
+    title: `운영 자금 ${runwayLabel}`,
     summary: `현재 자금은 ${formatKoreanWon(money)}입니다. ${
       Number.isFinite(runwayWeeks)
-        ? `고정비 기준 ${Math.max(0, runwayWeeks).toFixed(1)}주 버틸 수 있습니다.`
+        ? `고정비 기준 ${Math.max(0, Math.floor(runwayWeeks))}주가량 버틸 수 있습니다.`
         : "고정비 기준 여유는 충분합니다."
     }`,
     trigger: createTrigger(
       "finance",
       money < 0 ? "critical" : "warning",
       [],
-      `현금 런웨이 ${runwayLabel}`,
+      `운영 자금 ${runwayLabel}`,
     ),
     options: [
       {
@@ -744,7 +744,7 @@ function buildFinancingRepaymentCard(
         id: "repay",
         label: "지금 바로 상환하기",
         description: "원금과 약정 비용을 상환해 긴급 조달 한도를 회복합니다.",
-        tradeoff: "현금이 줄지만 미상환 슬롯 한 칸이 다시 열립니다.",
+        tradeoff: "현금이 줄지만 긴급 조달 여력이 한 건 다시 생깁니다.",
         effects: { money: -financing.repaymentAmount, industry: 2 },
       },
       {
@@ -893,8 +893,8 @@ function buildMoraleCard(member: DecisionMemberContext): WeeklyDecision {
       },
       {
         id: "reward",
-        label: "보너스와 특별 휴식 제공하기",
-        description: "즉시 체감할 수 있는 보상과 휴식을 제공합니다.",
+        label: "격려금과 특별 휴가 제공하기",
+        description: "즉시 체감할 수 있는 격려금과 휴식을 제공합니다.",
         tradeoff: "바로 숨을 돌릴 수 있지만 운영 자금이 줄어듭니다.",
         effects: { satisfaction: 8, condition: 6, money: -10000000 },
         targetTraineeIds,

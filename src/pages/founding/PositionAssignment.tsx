@@ -346,7 +346,9 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
                       {relevantStatKeys.map((key) => (
                         <span key={key} className="whitespace-nowrap">
                           {STAT_LABELS[key]}{" "}
-                          <span className="text-slate-200">{trainee.stats[key]}</span>
+                          <span className="text-slate-200">
+                            {Math.round(trainee.stats[key])}
+                          </span>
                         </span>
                       ))}
                     </span>
@@ -359,7 +361,7 @@ export function PositionAssignment({ onComplete, onPrev }: PositionAssignmentPro
               );
             })}
             <p className="px-1 pt-1 text-[11px] leading-5 text-slate-400">
-              이름 아래 수치는 이 포지션에 반영되는 현재 능력치입니다. 별은
+              이름 아래 수치는 이 포지션에 반영되는 현재 실력입니다. 별은
               현재 멤버끼리 비교한 상대 평가입니다. 역할에 맞는 분야별 강점을
               중심으로 성장 잠재력을 함께 보며, 비슷한 후보는 같은 별을 받을 수
               있습니다.

@@ -56,7 +56,7 @@ const INTENSITY_OPTIONS: {
   {
     key: "extreme",
     label: "극한",
-    description: "돌파 확률이 가장 높지만 부상 위험도 몇 배로 뜁니다 — 몸과 마음이 버텨줘야 합니다",
+    description: "벽을 넘을 가능성이 가장 크지만 부상 위험도 크게 뛰어오릅니다 — 몸과 마음이 버텨줘야 합니다",
   },
 ];
 
@@ -127,8 +127,8 @@ function statusIcon(
 }
 
 function formatChance(probability: number): string {
-  const pct = probability * 100;
-  return pct >= 1 ? `${Math.round(pct)}%` : `${pct.toFixed(1)}%`;
+  // 1% 미만도 소수점 대신 정수로만 말한다 — 화면에 소수가 남지 않게.
+  return `${Math.max(1, Math.round(probability * 100))}%`;
 }
 
 function injuryRiskLabel(probability: number): string | null {
@@ -350,13 +350,13 @@ export function Training({ onBack }: TrainingProps) {
             {intensityDescription}
           </p>
           {trainingModePreviews.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-              <span className="rounded-lg bg-brand-cyan/12 px-2 py-1 text-cyan-200">
-                돌파 확률 {formatChance(teamBreakthroughChance)}
+            <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
+              <span className="inline-flex min-h-8 items-center rounded-full bg-brand-cyan/10 px-3 py-1.5 tabular-nums text-cyan-200">
+                급성장 가능성 {formatChance(teamBreakthroughChance)}
               </span>
               <span
                 className={[
-                  "rounded-lg px-2 py-1",
+                  "inline-flex min-h-8 items-center rounded-full px-3 py-1.5 tabular-nums",
                   teamMaxInjuryProbability >= INJURY_RISK_CRITICAL_THRESHOLD
                     ? "bg-state-danger/15 text-red-200"
                     : teamMaxInjuryProbability >= INJURY_RISK_WARNING_THRESHOLD

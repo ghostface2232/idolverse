@@ -153,7 +153,7 @@ export function TraineeCandidateCard({ trainee, selected, onToggle }: TraineeCan
             </span>
           ))}
           {isForeign && (
-            <BadgeIcon icon={flag} label="해외 팬덤 보너스" tone="amber" />
+            <BadgeIcon icon={flag} label="해외 반응 유리" tone="amber" />
           )}
         </div>
       </Card>

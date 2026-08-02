@@ -5,16 +5,33 @@ import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { MoneyDisplay } from "@/components/common/MoneyDisplay";
 import { radioTileClasses } from "@/components/common/selectionTokens";
+import {
+  ImpactChipRow,
+  type ImpactChip,
+} from "@/components/dashboard/DecisionImpactChips";
 import { SceneThumb } from "@/components/visual/SceneThumb";
 import { MV_DIRECTIONS } from "@/data/balance";
 import type { MvDirectionId } from "@/types/game";
 
 // 방향별 제작 진행도·발매 효과의 요약. 수치 원본은 MV_DIRECTIONS(balance).
-const DIRECTION_EFFECT_HINTS: Record<MvDirectionId, string> = {
-  practical: "제작 진행도 소폭 상승",
-  performance: "안무 완성도 크게 상승 · 발매 주 대중·업계 반응",
-  cinematic: "비주얼 완성도 크게 상승 · 발매 주 코어 팬덤 결집",
-  viral: "마케팅 완성도 크게 상승 · 발매 주 글로벌 반응",
+const DIRECTION_EFFECT_CHIPS: Record<MvDirectionId, ImpactChip[]> = {
+  practical: [
+    { id: "progress", label: "비주얼 완성도 ↑", tone: "positive" },
+    { id: "buzz", label: "화제성 기대 어려움", tone: "negative" },
+  ],
+  performance: [
+    { id: "choreo", label: "안무 완성도 ↑↑", tone: "positive" },
+    { id: "release", label: "발매 주 대중·업계 반응", tone: "positive" },
+  ],
+  cinematic: [
+    { id: "visual", label: "비주얼 완성도 ↑↑", tone: "positive" },
+    { id: "release", label: "발매 주 코어 팬덤 결집", tone: "positive" },
+    { id: "cost", label: "고비용", tone: "negative" },
+  ],
+  viral: [
+    { id: "marketing", label: "홍보 준비 ↑↑", tone: "positive" },
+    { id: "release", label: "발매 주 해외 팬덤 반응", tone: "positive" },
+  ],
 };
 
 interface MvDirectionModalProps {
@@ -22,6 +39,7 @@ interface MvDirectionModalProps {
   money: number;
   isSaving: boolean;
   errorMessage?: string | null;
+  stepLabel?: string;
   onConfirm: (directionId: MvDirectionId) => void | Promise<void>;
 }
 
@@ -30,6 +48,7 @@ export function MvDirectionModal({
   money,
   isSaving,
   errorMessage,
+  stepLabel,
   onConfirm,
 }: MvDirectionModalProps) {
   const [selectedId, setSelectedId] = useState<MvDirectionId | null>(null);
@@ -37,8 +56,8 @@ export function MvDirectionModal({
   return (
     <Modal
       title="MV 제작 방향"
-      onClose={() => undefined}
-      isCloseDisabled
+      forced
+      stepLabel={stepLabel}
       footer={
         <Button
           className="w-full"
@@ -83,13 +102,13 @@ export function MvDirectionModal({
                     // border·패딩이 라인 박스 단위로 쪼개질 수 있다.
                     "block min-h-11 cursor-pointer rounded-2xl border-2 p-3 outline-none transition duration-150 ease-out",
                     isDisabled ? "cursor-not-allowed opacity-45" : "",
-                    isPressed ? "scale-[0.97]" : "scale-100",
+                    isPressed ? "scale-[0.96]" : "scale-100",
                     radioTileClasses(isSelected, selectedId !== null),
                   ].join(" ")
                 }
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-text-primary">
+                  <span className="text-lg font-semibold leading-7 text-text-primary [word-break:keep-all]">
                     {direction.label}
                   </span>
                   {direction.cost > 0 ? (
@@ -103,9 +122,10 @@ export function MvDirectionModal({
                 <span className="mt-1 block text-pretty text-xs leading-5 text-text-muted">
                   {direction.summary}
                 </span>
-                <span className="mt-1.5 inline-block rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-semibold text-text-secondary">
-                  {DIRECTION_EFFECT_HINTS[direction.id]}
-                </span>
+                <ImpactChipRow
+                  chips={DIRECTION_EFFECT_CHIPS[direction.id]}
+                  className="mt-2"
+                />
               </Radio>
             );
           })}

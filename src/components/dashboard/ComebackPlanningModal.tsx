@@ -424,7 +424,7 @@ export function ComebackPlanningModal({
                     </span>
                     <span
                       className="shrink-0 text-right text-[11px] leading-4"
-                      title="비주얼·끼 능력치를 기준으로 본 센터 적합도입니다"
+                      title="비주얼·끼를 기준으로 본 센터 적합도입니다"
                     >
                       <span className="block text-[10px] text-text-muted">
                         센터 적합도

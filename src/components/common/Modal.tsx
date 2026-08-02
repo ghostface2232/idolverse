@@ -11,7 +11,7 @@ import { Button } from "@/components/common/Button";
 interface ModalProps {
   title: string;
   children: ReactNode;
-  onClose: () => void | Promise<void>;
+  onClose?: () => void | Promise<void>;
   footer?: ReactNode;
   className?: string;
   /**
@@ -21,6 +21,13 @@ interface ModalProps {
    */
   contentClassName?: string;
   isCloseDisabled?: boolean;
+  /**
+   * 결정을 내려야만 닫히는 모달. 눌리지 않는 X를 남기는 대신 닫기 버튼을
+   * 아예 그리지 않는다 — 죽은 출구는 잘못된 신호다.
+   */
+  forced?: boolean;
+  /** 강제 결정 시퀀스에서의 위치 표기(예: "2/4"). forced일 때 X 자리에 노출. */
+  stepLabel?: string;
 }
 
 export function Modal({
@@ -31,14 +38,16 @@ export function Modal({
   className = "",
   contentClassName = "px-5 py-5",
   isCloseDisabled = false,
+  forced = false,
+  stepLabel,
 }: ModalProps) {
   return (
     <ModalOverlay
       isOpen
       onOpenChange={(isOpen) => {
-        if (!isOpen) void onClose();
+        if (!isOpen) void onClose?.();
       }}
-      isDismissable={!isCloseDisabled}
+      isDismissable={!forced && !isCloseDisabled}
       className={({ isEntering, isExiting }) =>
         [
           // 모바일: 바텀시트 정렬(하단 밀착). sm 이상: 센터 다이얼로그.
@@ -67,15 +76,23 @@ export function Modal({
             <Heading slot="title" className="text-lg font-semibold text-text-primary">
               {title}
             </Heading>
-            <Button
-              slot="close"
-              tone="ghost"
-              className="min-w-11 px-0"
-              aria-label="닫기"
-              isDisabled={isCloseDisabled}
-            >
-              <X className="size-5" aria-hidden="true" />
-            </Button>
+            {forced ? (
+              stepLabel ? (
+                <span className="text-xs font-semibold tabular-nums text-text-muted">
+                  {stepLabel}
+                </span>
+              ) : null
+            ) : (
+              <Button
+                slot="close"
+                tone="ghost"
+                className="min-w-11 px-0"
+                aria-label="닫기"
+                isDisabled={isCloseDisabled}
+              >
+                <X className="size-5" aria-hidden="true" />
+              </Button>
+            )}
           </header>
           <div
             className={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${contentClassName}`}

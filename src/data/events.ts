@@ -997,9 +997,9 @@ export const RANDOM_EVENT_POOL: RandomEventTemplate[] = [
         effects: { fandom: 5, fandomLoyalty: 4, condition: -3, stress: 3 },
       },
       {
-        label: "깜짝 이벤트로 남긴다",
+        label: "깜짝 라이브로 남긴다",
         description: "부담 없이 가끔만 켜기로 합니다.",
-        tradeoff: "확산 효과는 작지만 멤버들이 편하게 임할 수 있습니다.",
+        tradeoff: "확산은 더디지만 멤버들이 편하게 임할 수 있습니다.",
         effects: { fandomLoyalty: 3, satisfaction: 2 },
       },
     ],

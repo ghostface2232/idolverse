@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FastForward } from "lucide-react";
 import { Alert } from "@/components/common/Alert";
-import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverviewModal";
-import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
-import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
 import { ActivityPromotionPanel } from "@/components/dashboard/ActivityPromotionPanel";
 import { CampaignOverScreen } from "@/components/dashboard/CampaignOverScreen";
 import { ChartRevealOverlay } from "@/components/dashboard/ChartRevealOverlay";
 import { ComebackPlanningModal } from "@/components/dashboard/ComebackPlanningModal";
+import { ContractsOverviewModal } from "@/components/dashboard/ContractsOverviewModal";
+import { DecisionCardDeck } from "@/components/dashboard/DecisionCardDeck";
 import { FacilityUpgradeModal } from "@/components/dashboard/FacilityUpgradeModal";
 import { FinanceOverviewModal } from "@/components/dashboard/FinanceOverviewModal";
-import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
-import { StaffManagementModal } from "@/components/dashboard/StaffManagementModal";
-import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
-import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
-import { MvDirectionModal } from "@/components/dashboard/MvDirectionModal";
+import { GoalsOverviewModal } from "@/components/dashboard/GoalsOverviewModal";
 import { MarketingPlanModal } from "@/components/dashboard/MarketingPlanModal";
-import { PartAssignmentModal } from "@/components/dashboard/PartAssignmentModal";
+import { MusicShowOverlay } from "@/components/dashboard/MusicShowOverlay";
+import { MvDirectionModal } from "@/components/dashboard/MvDirectionModal";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
+import { PartAssignmentModal } from "@/components/dashboard/PartAssignmentModal";
+import { PositionReviewModal } from "@/components/dashboard/PositionReviewModal";
+import { StaffManagementModal } from "@/components/dashboard/StaffManagementModal";
+import { TitleTrackSelectionModal } from "@/components/dashboard/TitleTrackSelectionModal";
 import { TrainingSummaryCard } from "@/components/dashboard/TrainingSummaryCard";
 import { WeekTickerOverlay } from "@/components/dashboard/WeekTickerOverlay";
 import { ActionDock } from "@/components/game-shell/ActionDock";
@@ -292,6 +292,16 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
     (project) =>
       project.decisionStatuses[MARKETING_PLAN_DECISION_ID] === "available",
   );
+  // 강제 결정 모달이 연달아 뜰 때, 지금 몇 건이 더 기다리는지 헤더에 알린다.
+  const pendingPlanningCount = [
+    positionReviewProject,
+    titleTrackProject,
+    partAssignmentProject,
+    mvDirectionProject,
+    marketingPlanProject,
+  ].filter(Boolean).length;
+  const planningStepLabel =
+    pendingPlanningCount > 1 ? `남은 결정 ${pendingPlanningCount}건` : undefined;
   const displayedWeekReport =
     weeklyFlow.state === "report_ready" && !isAdvancing && !weekTickerActive
       ? weeklyFlow.report
@@ -398,7 +408,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
       );
     } catch (error) {
       console.error("Event choice save failed.", error);
-      setWorkflowError("이벤트 결과를 저장하지 못했습니다. 다시 시도해 주세요.");
+      setWorkflowError("진행 결과를 저장하지 못했습니다. 다시 시도해 주세요.");
     }
   };
 
@@ -477,7 +487,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
       await advanceWeeklyEventAndSave(userId, slotNumber);
     } catch (error) {
       console.error("Event advance save failed.", error);
-      setWorkflowError("이벤트 진행을 저장하지 못했습니다. 다시 시도해 주세요.");
+      setWorkflowError("진행 상황을 저장하지 못했습니다. 다시 시도해 주세요.");
     }
   };
 
@@ -912,7 +922,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
       </button>
       {autoAdvance ? (
         <p className="px-1 text-[11px] leading-4 text-text-muted">
-          결정, 이벤트, 활동기가 나타나면 자동으로 멈춥니다.
+          결정할 일이나 새 소식, 활동기가 생기면 자동으로 멈춥니다.
         </p>
       ) : null}
     </div>
@@ -1156,6 +1166,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           trainees={trainees}
           trialSeed={positionReviewProject.startedAtWeek * 997 + 41}
           isSaving={isPositionReviewSaving}
+          stepLabel={planningStepLabel}
           onConfirm={handleCompletePositionReview}
         />
       ) : null}
@@ -1170,6 +1181,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           isDebut={releasedAlbums.length === 0}
           isSaving={isTitleTrackSaving}
           errorMessage={workflowError}
+          stepLabel={planningStepLabel}
           onConfirm={handleCompleteTitleTrackSelection}
         />
       ) : null}
@@ -1185,6 +1197,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           trainees={trainees}
           isSaving={isProductionDecisionSaving}
           errorMessage={workflowError}
+          stepLabel={planningStepLabel}
           onConfirm={handleCompletePartAssignment}
         />
       ) : null}
@@ -1200,6 +1213,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           money={money}
           isSaving={isProductionDecisionSaving}
           errorMessage={workflowError}
+          stepLabel={planningStepLabel}
           onConfirm={handleCompleteMvDirection}
         />
       ) : null}
@@ -1216,6 +1230,7 @@ export function GameDashboard({ userId, slotNumber, onExit }: GameDashboardProps
           money={money}
           isSaving={isProductionDecisionSaving}
           errorMessage={workflowError}
+          stepLabel={planningStepLabel}
           onConfirm={handleCompleteMarketingPlan}
         />
       ) : null}

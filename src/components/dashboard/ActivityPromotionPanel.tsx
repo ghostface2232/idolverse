@@ -75,15 +75,29 @@ export function ActivityPromotionPanel({
 }: ActivityPromotionPanelProps) {
   if (activities.length === 0) return null;
 
+  // 활동기(앰버·핑크)와 비활동기 운영(시안)은 다른 상태다 — 표면 색으로 구분한다.
+  const isInterlude = mode === "interlude";
+
   return (
-    <section className="rounded-2xl bg-[linear-gradient(120deg,rgba(251,191,36,0.1),rgba(236,72,153,0.08))] p-3 shadow-[inset_0_0_0_1px_rgba(251,191,36,0.25)]">
+    <section
+      className={
+        isInterlude
+          ? "rounded-2xl bg-[linear-gradient(120deg,rgba(34,211,238,0.08),rgba(59,130,246,0.06))] p-3 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]"
+          : "rounded-2xl bg-[linear-gradient(120deg,rgba(251,191,36,0.1),rgba(236,72,153,0.08))] p-3 shadow-[inset_0_0_0_1px_rgba(251,191,36,0.25)]"
+      }
+    >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+        <h3
+          className={[
+            "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em]",
+            isInterlude ? "text-cyan-200" : "text-amber-300",
+          ].join(" ")}
+        >
           <Sparkle className="size-3.5" aria-hidden="true" />
-          {mode === "interlude" ? "이번 주 운영 활동" : "활동기 프로모션"}
+          {isInterlude ? "이번 주 운영 활동" : "활동기 프로모션"}
         </h3>
         <span className="text-[11px] tabular-nums text-text-muted">
-          {mode === "interlude"
+          {isInterlude
             ? "주당 1건 · 팬덤과 인지도를 지키는 비활동기 운영"
             : `활동 종료까지 ${activityWeeksLeft}주 · 주당 1건 · 같은 활동은 1회만`}
         </span>
@@ -102,7 +116,7 @@ export function ActivityPromotionPanel({
               type="button"
               disabled={disabled || !affordable || alreadyUsed}
               className={[
-                "min-h-11 w-full rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.98] [word-break:keep-all]",
+                "min-h-11 w-full rounded-xl border-2 px-3 py-2 text-left transition duration-150 ease-out active:scale-[0.96] [word-break:keep-all]",
                 !affordable || disabled || alreadyUsed
                   ? "cursor-not-allowed opacity-45"
                   : "",
@@ -117,7 +131,7 @@ export function ActivityPromotionPanel({
                 <span className="flex items-center gap-2 text-[11px] tabular-nums">
                   {alreadyUsed ? (
                     <span className="rounded-md bg-white/[0.08] px-1.5 py-0.5 font-semibold text-text-muted">
-                      이번 활동기 진행 완료
+                      {isInterlude ? "이번 주 진행 완료" : "이번 활동기 진행 완료"}
                     </span>
                   ) : (
                     <>

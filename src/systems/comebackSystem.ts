@@ -448,7 +448,7 @@ export function buildAttributionLines(
       )
     : 0;
   if (marketingPoints > 0) {
-    lines.push(`마케팅 캠페인 ${marketingPoints}포인트가 초동을 밀었습니다`);
+    lines.push(`마케팅 캠페인 투입이 초동을 밀었습니다`);
   }
   if (album.partAssignment?.mode === "ace") {
     const names = album.partAssignment.pushTraineeIds

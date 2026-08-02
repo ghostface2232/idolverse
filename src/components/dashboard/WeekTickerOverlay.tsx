@@ -216,14 +216,12 @@ function buildDayToasts(deltas: WeekDelta[]): DayToast[] {
     });
 
     const diff = (top.after as number) - (top.before as number);
-    const rounded = Math.round(diff * 10) / 10;
+    const rounded = Math.round(diff);
     if (rounded === 0) continue;
     const magnitude =
       top.target.kind === "finance"
         ? formatKoreanWon(Math.abs(diff))
-        : Number.isInteger(Math.abs(rounded))
-          ? String(Math.abs(rounded))
-          : Math.abs(rounded).toFixed(1);
+        : String(Math.abs(rounded));
     const isGood = isGoodWeekDelta(top);
 
     toasts.push({

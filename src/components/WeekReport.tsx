@@ -944,12 +944,12 @@ function ComebackSettlementSection({
       ) : null}
       {settlement.attribution && settlement.attribution.length > 0 ? (
         <div className="mt-3 rounded-xl bg-surface-raised/60 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-action-secondary">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-action-secondary">
             성적을 움직인 요인
           </p>
           <ul className="mt-1.5 space-y-1 text-xs leading-5 text-text-secondary [word-break:keep-all]">
             {settlement.attribution.map((line) => (
-              <li key={line}>· {line}</li>
+              <li key={line}>{line}</li>
             ))}
           </ul>
         </div>
@@ -1261,17 +1261,16 @@ function sumValues(values: Record<string, number>) {
 }
 
 function deltaTone(value: number): "good" | "bad" | "neutral" {
-  if (value >= 0.05) return "good";
-  if (value <= -0.05) return "bad";
+  // 표시가 정수 반올림이므로 톤 기준도 동일하게 맞춰, "0"이 초록/빨강으로 칠해지는 모순을 막는다.
+  if (Math.round(value) > 0) return "good";
+  if (Math.round(value) < 0) return "bad";
   return "neutral";
 }
 
 function formatDelta(value: number) {
-  const rounded = Math.round(value * 10) / 10;
+  const rounded = Math.round(value);
   if (rounded === 0) return "0";
-  const abs = Math.abs(rounded);
-  const text = Number.isInteger(abs) ? String(abs) : abs.toFixed(1);
-  return `${rounded > 0 ? "+" : "-"}${text}`;
+  return `${rounded > 0 ? "+" : "-"}${Math.abs(rounded)}`;
 }
 
 function formatCompact(amount: number) {

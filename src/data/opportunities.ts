@@ -80,7 +80,7 @@ export const OPPORTUNITY_DEFINITIONS: readonly OpportunityDefinition[] = [
     category: "광고 제안",
     title: "급상승 브랜드의 단기 캠페인",
     summary: "화제성이 높은 브랜드가 빠른 계약과 이번 주 촬영을 조건으로 제안해 왔습니다.",
-    triggerDescription: "브랜드 캠페인 슬롯이 이번 주에만 유효",
+    triggerDescription: "브랜드 캠페인 자리가 이번 주에만 열려 있습니다",
     phases: ["debut", "growth", "peak"],
     options: [
       {

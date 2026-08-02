@@ -147,7 +147,7 @@ export function StaffManagementModal({
                     <div className="mt-1.5 rounded-xl border border-action-secondary/25 bg-action-secondary/5 p-2.5">
                       <p className="px-1 text-xs leading-5 text-text-muted">
                         비용을 들여 새 경험을 쌓게 하되, 훈련은 1주에 1회만
-                        진행할 수 있고 같은 활동을 반복하면 효과가 줄어듭니다.
+                        진행할 수 있고 같은 활동을 반복하면 성과가 줄어듭니다.
                       </p>
                       <div className="mt-2 space-y-1.5">
                         {trainings.map((training) => {

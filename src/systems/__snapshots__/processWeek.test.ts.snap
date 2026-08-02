@@ -188,7 +188,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "notifications": [
         {
           "id": "noti-y1-w50-0",
-          "message": "이벤트 경쟁 그룹 등장: 세이렌",
+          "message": "새 경쟁 그룹 등장: 세이렌",
           "title": "주간 알림",
           "type": "warning",
           "week": 50,
@@ -830,7 +830,7 @@ exports[`processWeek 골든 스냅샷 > 시상식 주간(50주차)의 출력이 
       "트레이니-t2 만족도: 70 → 69 (멤버 만족도)",
     ],
     "warnings": [
-      "이벤트 경쟁 그룹 등장: 세이렌",
+      "새 경쟁 그룹 등장: 세이렌",
     ],
     "week": 50,
   },
@@ -1866,13 +1866,13 @@ exports[`processWeek 골든 스냅샷 > 투자사 첫 평가 주간(VC 마감 78
               "tradeoff": "계약금 1000만 원이 즉시 나갑니다. 인기와 회사의 지급 여력을 함께 반영한 금액입니다.",
             },
             {
-              "description": "등급은 유지하되 일시 보너스를 지급합니다.",
+              "description": "등급은 유지하되 일시 격려금을 지급합니다.",
               "effects": {
                 "money": -5000000,
                 "satisfaction": 5,
               },
               "id": "bonus",
-              "label": "일시 보너스로 달래기",
+              "label": "일시 격려금으로 달래기",
               "targetTraineeIds": [
                 "t1",
               ],

@@ -837,8 +837,8 @@ export function processWeek(
       risk.reasons.length > 0 ? ` — ${risk.reasons.join(", ")}이 겹쳤습니다` : "";
     report.warnings.push(
       risk.level === "leaving"
-        ? `${risk.traineeName} 이탈 임박 (만족도 ${risk.satisfaction})${riskCause}. 회복하지 못하면 몇 주 안에 떠납니다`
-        : `${risk.traineeName} 이탈 경고 (만족도 ${risk.satisfaction})${riskCause}`,
+        ? `${risk.traineeName} 이탈 임박 (만족도 ${Math.round(risk.satisfaction)})${riskCause}. 회복하지 못하면 몇 주 안에 떠납니다`
+        : `${risk.traineeName} 이탈 경고 (만족도 ${Math.round(risk.satisfaction)})${riskCause}`,
     );
   }
 
@@ -1002,7 +1002,7 @@ export function processWeek(
     return true;
   };
   if (eventRival && pushEventRival(eventRival)) {
-    report.warnings.push(`이벤트 경쟁 그룹 등장: ${eventRival.name}`);
+    report.warnings.push(`새 경쟁 그룹 등장: ${eventRival.name}`);
   }
   eventRivals = eventRivals
     .map((e) => ({ ...e, duration: e.duration - 1 }))

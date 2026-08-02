@@ -34,7 +34,7 @@ interface TraineeDetailProps {
 type DetailTab = "stats" | "relations" | "condition";
 
 const DETAIL_TABS: { key: DetailTab; label: string }[] = [
-  { key: "stats", label: "능력치" },
+  { key: "stats", label: "실력" },
   { key: "relations", label: "관계" },
   { key: "condition", label: "상태" },
 ];
@@ -376,7 +376,7 @@ export function TraineeDetail({
                 viewBox={`-${RADAR_VIEW_HALF} -${RADAR_VIEW_HALF} ${RADAR_VIEW_HALF * 2} ${RADAR_VIEW_HALF * 2}`}
                 className="h-auto w-full max-w-60"
                 role="img"
-                aria-label="능력치 레이더 차트"
+                aria-label="실력 분포 도표"
               >
                 {[0.25, 0.5, 0.75, 1].map((scale) => (
                   <polygon

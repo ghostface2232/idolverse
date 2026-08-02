@@ -6,7 +6,7 @@ export const GENRE_DATA: Record<
 > = {
   dancePop: {
     label: "댄스팝",
-    description: "대중성과 퍼포먼스를 동시에 노리는 메인스트림. 실패 확률이 가장 낮습니다.",
+    description: "대중성과 퍼포먼스를 동시에 노리는 메인스트림. 실패할 가능성이 가장 낮습니다.",
   },
   ballad: {
     label: "발라드",

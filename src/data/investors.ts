@@ -49,7 +49,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
       {
         type: "marketingCut",
         severity: "high",
-        description: "디지털 마케팅 제작비 및 광고 슬롯 지원 중단",
+        description: "디지털 마케팅 제작비 및 광고 지면 지원 중단",
       },
       {
         type: "followUpRefusal",
@@ -278,7 +278,7 @@ export const INVESTOR_COMPANIES: InvestorCompany[] = [
     bonusEffects: [
       {
         type: "fashionWeekInvite",
-        description: "해외 패션위크 참석 이벤트와 글로벌 미디어 노출 지원",
+        description: "해외 패션위크 참석 기회와 글로벌 미디어 노출 지원",
       },
       {
         type: "stylistSupport",

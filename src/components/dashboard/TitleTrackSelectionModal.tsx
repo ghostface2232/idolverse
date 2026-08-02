@@ -49,6 +49,7 @@ interface TitleTrackSelectionModalProps {
   /** 데뷔 앨범이면 true. 아직 팬덤이 없는 전제의 전략 문구를 쓴다. */
   isDebut?: boolean;
   errorMessage?: string | null;
+  stepLabel?: string;
   onConfirm: (trackId: string) => void | Promise<void>;
 }
 
@@ -58,6 +59,7 @@ export function TitleTrackSelectionModal({
   isSaving,
   isDebut = false,
   errorMessage,
+  stepLabel,
   onConfirm,
 }: TitleTrackSelectionModalProps) {
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
@@ -65,8 +67,8 @@ export function TitleTrackSelectionModal({
   return (
     <Modal
       title="타이틀곡 전략 결정"
-      onClose={() => undefined}
-      isCloseDisabled
+      forced
+      stepLabel={stepLabel}
       footer={
         <Button
           className="w-full"

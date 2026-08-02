@@ -108,7 +108,7 @@ describe("buildAttributionLines", () => {
     expect(lines.some((line) => line.includes("트렌드 적중"))).toBe(true);
     expect(lines.some((line) => line.includes("NOVA"))).toBe(true);
     expect(lines.some((line) => line.includes("시네마틱"))).toBe(true);
-    expect(lines.some((line) => line.includes("3포인트"))).toBe(true);
+    expect(lines.some((line) => line.includes("마케팅 캠페인"))).toBe(true);
     expect(lines.some((line) => line.includes("가온"))).toBe(true);
   });
 });

@@ -35,7 +35,7 @@ export function staffPotentialToStars(staff: Staff): 1 | 2 | 3 | 4 | 5 {
 export function getTrainingFamiliarity(repetitionCount: number) {
   if (repetitionCount === 0) return "처음 시도";
   if (repetitionCount === 1) return "익숙해지는 중";
-  if (repetitionCount === 2) return "효과가 줄어드는 중";
+  if (repetitionCount === 2) return "성과가 줄어드는 중";
   if (repetitionCount < 5) return "새로운 자극이 적음";
   return "거의 익숙해짐";
 }

@@ -8,7 +8,7 @@ import type {
 import { formatKoreanWon } from "@/utils/formatKoreanWon";
 import { METRIC_LABELS } from "@/data/labels";
 
-interface ImpactChip {
+export interface ImpactChip {
   id: string;
   label: string;
   tone: "positive" | "negative" | "danger" | "neutral";
@@ -30,8 +30,20 @@ export function DecisionImpactChips({
   option,
   className = "",
 }: DecisionImpactChipsProps) {
-  const chips = buildImpactChips(option);
+  return <ImpactChipRow chips={buildImpactChips(option)} className={className} />;
+}
 
+/**
+ * 효과 요약 칩의 단일 렌더러. EffectMap 없이 손으로 쓴 칩(신규 결정 모달의
+ * 방향 힌트 등)도 반드시 이 톤 코딩을 거친다 — 회색 프로즈 힌트 금지.
+ */
+export function ImpactChipRow({
+  chips,
+  className = "",
+}: {
+  chips: readonly ImpactChip[];
+  className?: string;
+}) {
   return (
     <span className={["flex flex-wrap gap-1.5", className].join(" ")}>
       {chips.map((chip) => (

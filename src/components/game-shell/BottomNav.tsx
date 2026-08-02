@@ -33,7 +33,7 @@ export function BottomNav({
 }: BottomNavProps) {
   return (
     <Tabs
-      aria-label="게임 메뉴"
+      aria-label="주요 메뉴"
       selectedKey={selectedKey}
       onSelectionChange={(key) => onSelectionChange(key as GameSection)}
       className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[88px_minmax(0,1fr)] lg:grid-rows-1"

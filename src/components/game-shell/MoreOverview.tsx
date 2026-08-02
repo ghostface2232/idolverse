@@ -160,8 +160,8 @@ export function MoreOverview({
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">메인 화면으로 나가기</span>
             <span className="mt-0.5 block text-xs font-normal leading-5 text-text-muted [word-break:keep-all]">
-              진행 상황은 자동 저장됩니다. 세이브 슬롯과 새 게임은 메인
-              화면에서 열 수 있습니다.
+              진행 상황은 자동 저장됩니다. 저장 기록 관리와 새로 시작하기는
+              메인 화면에서 열 수 있습니다.
             </span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden="true" />

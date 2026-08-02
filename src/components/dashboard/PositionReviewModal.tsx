@@ -21,6 +21,7 @@ interface PositionReviewModalProps {
   trainees: readonly Trainee[];
   trialSeed: number;
   isSaving: boolean;
+  stepLabel?: string;
   onConfirm: (
     assignments: Partial<Record<Position, string | null>>,
   ) => void | Promise<void>;
@@ -47,6 +48,7 @@ export function PositionReviewModal({
   trainees,
   trialSeed,
   isSaving,
+  stepLabel,
   onConfirm,
 }: PositionReviewModalProps) {
   const initial = useMemo(() => currentAssignments(trainees), [trainees]);
@@ -84,8 +86,8 @@ export function PositionReviewModal({
   return (
     <Modal
       title="포지션 선발전 결과"
-      onClose={() => undefined}
-      isCloseDisabled
+      forced
+      stepLabel={stepLabel}
       footer={
         <div className="space-y-2">
           <p className="text-center text-xs tabular-nums text-text-muted">
@@ -228,7 +230,7 @@ export function PositionReviewModal({
                                       <span key={key} className="whitespace-nowrap">
                                         {STAT_LABELS[key]}{" "}
                                         <span className="text-text-secondary">
-                                          {trainee.stats[key]}
+                                          {Math.round(trainee.stats[key])}
                                         </span>
                                       </span>
                                     ),
